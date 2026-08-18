@@ -45,6 +45,22 @@ Wardveil is a security identity and presentation layer. It does not replace the 
 
 When Wardveil displays or summarizes technical state, the underlying authoritative system or record remains the source of truth.
 
+## Status and evidence contract
+
+Wardveil may normalize authoritative technical state for presentation, but it does not originate or certify that state.
+
+The approved normalized presentation states are:
+
+- **Protected** — current authoritative evidence supports the explicit scope;
+- **Attention** — review or action is recommended;
+- **Degraded** — a protection or evidence path is below its intended state;
+- **Unknown** — required evidence is unavailable, stale, incomplete, or unverified;
+- **Not applicable** — the control does not apply to the current scope.
+
+Missing evidence is not passing evidence. A `Protected by Wardveil` claim is permitted only for the explicit scope of a status record whose normalized state is protected, whose identified source is authoritative, and whose required evidence is current.
+
+The interoperable semantics and machine-readable structure are defined in `STATUS.md` and `contracts/wardveil.status.schema.json`. Status records must remain data-minimized and must not copy reusable secrets, active credentials, private keys, tokens, recovery material, unrestricted diagnostics, or unnecessary private topology into broad Wardveil presentation.
+
 ## Relationship to Glaze UI
 
 Glaze UI remains GoreeCloud's shared design and interaction language. Wardveil is not a replacement design system.
