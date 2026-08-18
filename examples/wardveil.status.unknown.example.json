@@ -1,0 +1,32 @@
+{
+  "contract_version": "0.1.0",
+  "scope": {
+    "kind": "service",
+    "id": "example-service",
+    "display_name": "Example Service"
+  },
+  "authority": {
+    "system": "example-authoritative-monitor",
+    "control": "example-security-control",
+    "authoritative": true
+  },
+  "state": "unknown",
+  "source_state": "evidence-stale",
+  "evidence": {
+    "status": "stale",
+    "observed_at": "2026-08-18T19:00:00Z",
+    "valid_until": "2026-08-18T20:00:00Z",
+    "summary": "The last observation is outside the source-defined freshness window.",
+    "reference": "security-status/example-service"
+  },
+  "claim": {
+    "protected_by_wardveil": false
+  },
+  "privacy": {
+    "details_withheld": true,
+    "redactions": [
+      "network identifiers",
+      "raw diagnostic details"
+    ]
+  }
+}
