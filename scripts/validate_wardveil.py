@@ -12,6 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 REQUIRED_FILES = (
     "README.md",
     "IDENTITY.md",
+    "ICON.md",
     "INTEGRATION.md",
     "CONFORMANCE.md",
     "VERSION",
@@ -34,6 +35,8 @@ RESERVED_NAMES = (
     "Wardveil Watch",
     "Wardveil Security Center",
 )
+
+CANONICAL_ICON_PATH = "branding/wardveil-security-icon.svg"
 
 
 def fail(message: str) -> None:
@@ -81,8 +84,39 @@ def main() -> None:
     ):
         fail("legal status must remain explicit and fail closed while external clearance is pending")
 
+    visual = contract.get("visual_identity")
+    if not isinstance(visual, dict):
+        fail("identity contract must contain visual_identity metadata")
+
+    if visual.get("description_document") != "ICON.md":
+        fail("ICON.md must remain the canonical Wardveil icon-description contract")
+
+    if visual.get("canonical_asset_path") != CANONICAL_ICON_PATH:
+        fail("canonical Wardveil icon path changed without a foundation update")
+
+    visual_status = visual.get("canonical_visual_identity_status")
+    showcase_status = visual.get("showcase_status")
+    icon_exists = (ROOT / CANONICAL_ICON_PATH).is_file()
+
+    if visual_status == "pending-canonical-icon":
+        if showcase_status != "blocked-pending-canonical-icon":
+            fail("showcase must remain blocked while the canonical Wardveil icon is pending")
+        if icon_exists:
+            fail("canonical icon asset exists but visual identity is still marked pending; approve and reconcile status explicitly")
+    elif visual_status == "approved":
+        if showcase_status != "approved":
+            fail("approved canonical icon requires an explicitly approved showcase status")
+        if not icon_exists:
+            fail(f"approved visual identity requires {CANONICAL_ICON_PATH}")
+    else:
+        fail(f"unsupported canonical visual identity status: {visual_status!r}")
+
+    if visual.get("temporary_icon_substitution_allowed") is not False:
+        fail("temporary icon substitution must remain disallowed")
+
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     identity_doc = (ROOT / "IDENTITY.md").read_text(encoding="utf-8")
+    icon_doc = (ROOT / "ICON.md").read_text(encoding="utf-8")
     conformance = (ROOT / "CONFORMANCE.md").read_text(encoding="utf-8")
 
     for name in APPROVED_NAMES:
@@ -94,6 +128,12 @@ def main() -> None:
 
     if "technical authority" not in conformance.lower():
         fail("CONFORMANCE.md must preserve the technical-authority boundary")
+
+    if "two softly curved, layered veil panels" not in icon_doc:
+        fail("ICON.md must preserve the canonical Wardveil icon concept")
+
+    if "not visually showcase-ready" not in icon_doc.lower():
+        fail("ICON.md must preserve the fail-closed showcase gate")
 
     print("Wardveil Security foundation validation passed.")
 
