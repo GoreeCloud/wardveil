@@ -42,9 +42,25 @@ Wardveil-facing interfaces use Glaze UI. Wardveil may present Privacy Shield sta
 
 ## Repository purpose
 
-This repository is the source-controlled foundation for shared Wardveil identity and integration guidance. It is intended to contain reusable, security-facing presentation contracts and validation material while keeping technical authority with the applications, services, policies, and controls that actually enforce security.
+This repository is the source-controlled foundation for shared Wardveil identity, integration, status, security, and validation contracts. It provides reusable security-facing presentation semantics while keeping technical authority with the applications, services, policies, and controls that actually enforce security.
 
 The repository must not become a dumping ground for unrelated security implementation, reusable secrets, private keys, tokens, credentials, production topology, or sensitive operational evidence.
+
+## Status contract
+
+Wardveil 0.2 adds a privacy-conscious interoperable status contract for GoreeCloud applications and services.
+
+- `STATUS.md` defines the semantic contract.
+- `contracts/wardveil.status.schema.json` defines the machine-readable structure and normalized values.
+- `examples/wardveil.status.example.json` provides a non-sensitive conforming example.
+
+The normalized states are `protected`, `attention`, `degraded`, `unknown`, and `not_applicable`. Missing, stale, unavailable, or unverified required evidence must never be promoted to a passing state.
+
+**Protected by Wardveil** may be asserted only for the explicit scope of a record backed by current authoritative evidence. Wardveil branding itself is never evidence that a control succeeded.
+
+## Security and privacy
+
+`SECURITY.md` defines the repository security boundary. Wardveil records and examples are data-minimized and must not contain reusable secrets, active credentials, private keys, tokens, recovery material, or unrestricted private diagnostics. `.gitignore` provides an additional source-control guard for common secret-bearing files.
 
 ## Icon and visual identity
 
@@ -63,6 +79,18 @@ The future canonical Wardveil visual identity must remain distinct from the Gore
 ## Showcase gate
 
 Wardveil is not visually showcase-ready until its canonical icon exists, is explicitly approved, is stored in this repository as the canonical vector source, and passes small-size, monochrome, light-theme, dark-theme, and identity-distinction review. Public showcase also remains subject to the separate external name-conflict and legal-clearance boundary.
+
+Status-contract and text-based integration may proceed before this gate passes. Temporary artwork may not be represented as the official Wardveil identity.
+
+## Validation
+
+Run:
+
+```bash
+python3 scripts/validate_wardveil.py
+```
+
+The validator checks canonical naming, authority boundaries, legal status, icon/showcase gating, status-contract invariants, protection-claim fail-closed behavior, repository secret exclusions, and required documentation.
 
 ## Legal and public-release boundary
 
