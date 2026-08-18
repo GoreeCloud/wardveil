@@ -4,6 +4,8 @@
 
 Wardveil Security is the official GoreeCloud platform-wide security and protection identity.
 
+Wardveil Security is an original GoreeCloud identity. No conflicting Wardveil Security identity is identified in the current GoreeCloud project records.
+
 Approved presentations are:
 
 - **Wardveil Security by GoreeCloud** — full attributed presentation.
@@ -105,8 +107,10 @@ Avoid stereotypical cybersecurity imagery such as neon hacker motifs, skulls, ag
 
 The future canonical Wardveil visual identity must remain distinguishable from the GoreeCloud platform logo, Glaze UI, Privacy Shield, GoreeCloud Identity, GoreeCloud Monitor, and other GoreeCloud product identities.
 
-## Legal boundary
+## Original identity and optional future due diligence
 
-The GoreeCloud naming decision is approved internally. This repository does not establish trademark clearance, domain availability, package-name availability, or freedom to operate in any jurisdiction or commercial context.
+Wardveil Security is documented as an original GoreeCloud identity, and the current GoreeCloud project records do not identify a conflicting Wardveil Security identity.
 
-External name-conflict and legal review must be completed before Wardveil is treated as a legally cleared public brand.
+This statement records GoreeCloud authorship and current project knowledge. It is not a trademark registration or a legal guarantee of exclusivity in every jurisdiction.
+
+Formal trademark or name-clearance review is optional future due diligence. GoreeCloud may perform such a review later if trademark registration, commercialization, package or application-store publication, or another expanded public use makes it useful. That optional review is not a current blocker for GoreeCloud use or visual showcase once the canonical icon requirement is satisfied.
