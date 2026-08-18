@@ -9,9 +9,12 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
-FOUNDATION_VERSION = "0.2.0"
+FOUNDATION_VERSION = "0.3.0"
 STATUS_CONTRACT_VERSION = "0.1.0"
 STATUS_SCHEMA_ID = "urn:goreecloud:wardveil:status:0.1.0"
+LEGAL_STATUS = (
+    "original-goreecloud-identity-no-known-conflict-formal-clearance-optional-future-due-diligence"
+)
 
 REQUIRED_FILES = (
     ".gitignore",
@@ -132,6 +135,22 @@ def validate_identity_contract() -> None:
     if identity != expected:
         fail("machine-readable approved identity does not match the canonical naming contract")
 
+    origin = contract.get("origin")
+    if not isinstance(origin, dict):
+        fail("identity contract must contain origin metadata")
+    if origin.get("status") != "original-goreecloud-identity":
+        fail("Wardveil must remain recorded as an original GoreeCloud identity")
+    if origin.get("known_conflicting_wardveil_security_identity") is not False:
+        fail("current project records must not claim a known conflicting Wardveil Security identity")
+    if origin.get("knowledge_scope") != "current-goreecloud-project-records":
+        fail("origin knowledge scope must remain explicit")
+    if origin.get("formal_name_or_trademark_clearance_required_for_current_use") is not False:
+        fail("formal name or trademark clearance must not be a current GoreeCloud use gate")
+    if origin.get("future_due_diligence") != (
+        "optional-for-expanded-public-commercial-or-registration-use"
+    ):
+        fail("future name/trademark due diligence must remain optional and scoped")
+
     if contract.get("technical_authority") is not False:
         fail("Wardveil must not be marked as the underlying technical authority")
 
@@ -155,10 +174,8 @@ def validate_identity_contract() -> None:
     if status_contract.get("protected_claim_requires_current_authoritative_evidence") is not True:
         fail("Protected by Wardveil must require current authoritative evidence")
 
-    if contract.get("legal_status") != (
-        "internal-naming-approved-external-name-conflict-and-legal-clearance-pending"
-    ):
-        fail("legal status must remain explicit and fail closed while external clearance is pending")
+    if contract.get("legal_status") != LEGAL_STATUS:
+        fail("Wardveil original-identity and optional-due-diligence status changed unexpectedly")
 
     visual = contract.get("visual_identity")
     if not isinstance(visual, dict):
@@ -335,8 +352,17 @@ def validate_documentation() -> None:
         if name not in readme and name not in identity_doc:
             fail(f"approved identity term is missing from canonical documentation: {name}")
 
-    if "external name-conflict" not in readme.lower():
-        fail("README must preserve the external name-conflict clearance boundary")
+    for document_name, document_text in (
+        ("README.md", readme),
+        ("IDENTITY.md", identity_doc),
+        ("INTEGRATION.md", integration),
+        ("CONFORMANCE.md", conformance),
+    ):
+        if "original goreecloud identity" not in document_text.lower():
+            fail(f"{document_name} must preserve Wardveil's original GoreeCloud identity status")
+
+    if "optional future due diligence" not in readme.lower():
+        fail("README must preserve the optional future name/trademark due-diligence boundary")
 
     if "technical authority" not in conformance.lower():
         fail("CONFORMANCE.md must preserve the technical-authority boundary")
@@ -347,6 +373,9 @@ def validate_documentation() -> None:
     if "not visually showcase-ready" not in icon_doc.lower():
         fail("ICON.md must preserve the fail-closed showcase gate")
 
+    if "formal trademark or name-clearance work is optional future due diligence" not in icon_doc.lower():
+        fail("ICON.md must not make formal name clearance part of the visual showcase gate")
+
     if "contracts/wardveil.status.schema.json" not in status_doc:
         fail("STATUS.md must identify the machine-readable status schema")
     if "examples/wardveil.status.unknown.example.json" not in status_doc:
@@ -355,12 +384,12 @@ def validate_documentation() -> None:
     if "missing evidence" not in integration.lower():
         fail("INTEGRATION.md must preserve fail-closed missing-evidence behavior")
 
-    if "## 0.2.0" not in changelog:
+    if "## 0.3.0" not in changelog:
         fail("CHANGELOG.md must record the current Wardveil foundation version")
     if "canonical wardveil icon artwork remains pending" not in changelog.lower():
         fail("CHANGELOG.md must preserve the pending canonical-icon gate")
-    if "external name-conflict and legal clearance remain pending" not in changelog.lower():
-        fail("CHANGELOG.md must preserve the pending legal-clearance gate")
+    if "formal trademark or name-clearance review is optional future due diligence" not in changelog.lower():
+        fail("CHANGELOG.md must preserve the updated optional due-diligence boundary")
 
 
 def main() -> None:
