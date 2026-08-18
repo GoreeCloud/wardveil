@@ -1,0 +1,32 @@
+{
+  "contract_version": "0.1.0",
+  "scope": {
+    "kind": "service",
+    "id": "example-service",
+    "display_name": "Example Service"
+  },
+  "authority": {
+    "system": "example-authoritative-monitor",
+    "control": "example-security-control",
+    "authoritative": true
+  },
+  "state": "protected",
+  "source_state": "passing",
+  "evidence": {
+    "status": "current",
+    "observed_at": "2026-08-18T21:00:00Z",
+    "valid_until": "2026-08-18T22:00:00Z",
+    "summary": "Current authoritative evidence supports the defined protection scope.",
+    "reference": "security-status/example-service"
+  },
+  "claim": {
+    "protected_by_wardveil": true
+  },
+  "privacy": {
+    "details_withheld": true,
+    "redactions": [
+      "network identifiers",
+      "raw diagnostic details"
+    ]
+  }
+}
