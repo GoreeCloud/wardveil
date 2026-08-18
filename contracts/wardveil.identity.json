@@ -1,11 +1,18 @@
 {
   "schema_version": "0.1.0",
-  "foundation_version": "0.2.0",
+  "foundation_version": "0.3.0",
   "identity": {
     "full_presentation": "Wardveil Security by GoreeCloud",
     "primary_name": "Wardveil Security",
     "short_name": "Wardveil",
     "protection_phrase": "Protected by Wardveil"
+  },
+  "origin": {
+    "status": "original-goreecloud-identity",
+    "known_conflicting_wardveil_security_identity": false,
+    "knowledge_scope": "current-goreecloud-project-records",
+    "formal_name_or_trademark_clearance_required_for_current_use": false,
+    "future_due_diligence": "optional-for-expanded-public-commercial-or-registration-use"
   },
   "role": "platform-wide security and protection identity and presentation layer",
   "technical_authority": false,
@@ -57,5 +64,5 @@
     "concept": "two softly curved layered veil panels folding inward around a small protected central core with a restrained W-shaped negative space",
     "temporary_icon_substitution_allowed": false
   },
-  "legal_status": "internal-naming-approved-external-name-conflict-and-legal-clearance-pending"
+  "legal_status": "original-goreecloud-identity-no-known-conflict-formal-clearance-optional-future-due-diligence"
 }
