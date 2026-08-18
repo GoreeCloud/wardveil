@@ -81,6 +81,8 @@ The authoritative system should retain detailed evidence when required. Wardveil
 
 The status and integration contracts may be implemented before Wardveil's canonical icon is approved. Until the icon gate in `ICON.md` passes, applications may use text-based Wardveil integration but must not present a generic, inherited, or temporary icon as the official Wardveil visual identity.
 
-## Public-release boundary
+## Original identity boundary
 
-Wardveil remains internally approved while external name-conflict and legal clearance are pending. Integrations may be developed inside GoreeCloud repositories, but public branding and release decisions must respect that separate clearance gate.
+Wardveil Security is the original GoreeCloud security identity defined by this foundation. Current GoreeCloud project records do not identify a conflicting Wardveil Security identity.
+
+Formal trademark or name-clearance work is optional future due diligence. It is not a current integration, release, or visual-showcase gate. If GoreeCloud later pursues trademark registration, broad commercialization, app-store distribution, package publication, or another expanded public use, a separate review may be performed without changing the current Wardveil technical integration contract.
