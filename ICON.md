@@ -91,7 +91,8 @@ Wardveil Security is **not visually showcase-ready** until all of the following 
 - the canonical SVG is stored in this repository;
 - small-size and monochrome legibility have been reviewed;
 - light and dark Glaze UI presentation has been reviewed;
-- the icon is confirmed distinct from existing GoreeCloud identities;
-- any required public name-conflict and legal review for the intended public use is separately complete.
+- the icon is confirmed distinct from existing GoreeCloud identities.
+
+The Wardveil identity is documented as original to GoreeCloud with no conflicting Wardveil Security identity identified in current GoreeCloud project records. Formal trademark or name-clearance work is optional future due diligence and is not part of this visual showcase gate.
 
 Until this gate passes, applications may develop internal Wardveil functionality and text-based integration, but they must not present a temporary icon as if it were the official Wardveil visual identity.
