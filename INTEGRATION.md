@@ -83,6 +83,6 @@ The status and integration contracts may be implemented before Wardveil's canoni
 
 ## Original identity boundary
 
-Wardveil Security is the original GoreeCloud security identity defined by this foundation. Current GoreeCloud project records do not identify a conflicting Wardveil Security identity.
+Wardveil Security is an original GoreeCloud identity created for GoreeCloud's platform-wide security and protection presentation. Current GoreeCloud project records do not identify a conflicting Wardveil Security identity.
 
 Formal trademark or name-clearance work is optional future due diligence. It is not a current integration, release, or visual-showcase gate. If GoreeCloud later pursues trademark registration, broad commercialization, app-store distribution, package publication, or another expanded public use, a separate review may be performed without changing the current Wardveil technical integration contract.
