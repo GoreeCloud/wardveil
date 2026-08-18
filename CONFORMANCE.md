@@ -35,6 +35,15 @@ A GoreeCloud-controlled integration conforms to this Wardveil foundation when th
 - Avoids stereotypical hacker, skull, neon-threat, or generic antivirus presentation.
 - Keeps Wardveil visually distinguishable from the GoreeCloud platform identity, Privacy Shield, and other GoreeCloud products.
 
+## Canonical icon and showcase
+
+- Treats `ICON.md` as the canonical icon-description and visual-identity contract.
+- Does not use a generic shield, lock, emoji, GoreeCloud platform logo, Privacy Shield icon, application icon, or temporary security glyph as the official Wardveil icon.
+- Does not visually showcase Wardveil inside an application, service, website, dashboard, documentation hero, or release asset until the canonical icon has been created and explicitly approved.
+- Stores the approved canonical vector source at `branding/wardveil-security-icon.svg` before declaring Wardveil visually showcase-ready.
+- Verifies small-size, monochrome, light-theme, dark-theme, and identity-distinction behavior before showcase approval.
+- Keeps all derived assets faithful to the same canonical Wardveil mark.
+
 ## Privacy Shield
 
 - Preserves Privacy Shield as GoreeCloud Browser's named first-party Browser-level privacy and content-protection subsystem.
@@ -50,3 +59,5 @@ A GoreeCloud-controlled integration conforms to this Wardveil foundation when th
 ## Stable-use gate
 
 Before a GoreeCloud application treats a Wardveil integration as production-ready, the application should validate the exact source or release candidate and preserve evidence appropriate to its own Role and Purpose. Wardveil conformance cannot approve the application's underlying security implementation on its behalf.
+
+Before a GoreeCloud application or service **showcases Wardveil visually**, the canonical Wardveil icon gate must also pass. Until then, internal functionality and text-based integration may proceed, but temporary artwork must not be represented as the official Wardveil visual identity.
