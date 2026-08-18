@@ -5,6 +5,7 @@ A GoreeCloud-controlled integration conforms to this Wardveil foundation when th
 ## Identity
 
 - Uses only approved Wardveil naming for approved purposes.
+- Treats Wardveil Security as the original GoreeCloud security identity defined by this foundation.
 - Does not promote a reserved Wardveil component name as an implemented product or module without separate approval.
 - Preserves GoreeCloud product identity and does not present Wardveil as a replacement for the application itself.
 
@@ -68,8 +69,9 @@ A GoreeCloud-controlled integration conforms to this Wardveil foundation when th
 - Stores no reusable secrets or production credentials in this repository.
 - Preserves `.gitignore` exclusions for common secret-bearing files and protected local artifacts.
 - Preserves `SECURITY.md` private-reporting and evidence-minimization requirements.
-- Keeps public-release and legal-clearance decisions separate from internal naming approval.
-- Treats external name-conflict and legal clearance as pending until separately verified and documented.
+- Records Wardveil Security as an original GoreeCloud identity with no conflicting Wardveil Security identity identified in current GoreeCloud project records.
+- Does not misrepresent the project record as a trademark registration or a legal guarantee of exclusivity.
+- Treats formal trademark or name-clearance work as optional future due diligence rather than a current GoreeCloud use, release, or showcase gate.
 
 ## Stable-use gate
 
