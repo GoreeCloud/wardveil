@@ -71,6 +71,16 @@ The following names are reserved concepts and are **not approved module or produ
 
 Additional component names require a separate documented approval before implementation as named Wardveil products or modules.
 
+## Canonical icon requirement
+
+Wardveil Security must have its own canonical icon before Wardveil is showcased as a visual identity inside any GoreeCloud application, service, dashboard, website, documentation hero, release asset, or equivalent branded surface.
+
+The canonical icon description, asset requirements, prohibited motifs, and showcase gate are defined in `ICON.md`.
+
+Until the icon exists and is approved, GoreeCloud software may implement internal Wardveil functionality and text-based Wardveil presentation, but it must not present a temporary, generic, inherited, or application-specific security icon as if it were the official Wardveil visual identity.
+
+The intended mark is based on two softly curved, layered veil panels that fold inward around a small protected central core. Their spacing or overlap should create a subtle W-shaped negative space without relying on a literal standalone W or a generic stock shield.
+
 ## Visual direction
 
 Wardveil should communicate protection, trust, privacy, clarity, and control through a calm, polished, modern identity integrated with Glaze UI.
