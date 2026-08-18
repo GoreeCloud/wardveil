@@ -1,0 +1,23 @@
+# GoreeCloud sensitive-information separation
+.env
+.env.*
+!.env.example
+!.env.template
+secrets/
+credentials.json
+token.json
+*.key
+*.pem
+*.p12
+*.pfx
+*.jks
+*.keystore
+
+# Local development artifacts
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.DS_Store
+Thumbs.db
