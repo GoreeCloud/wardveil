@@ -1,0 +1,86 @@
+# Wardveil Security Identity Contract
+
+## Canonical identity
+
+Wardveil Security is the official GoreeCloud platform-wide security and protection identity.
+
+Approved presentations are:
+
+- **Wardveil Security by GoreeCloud** — full attributed presentation.
+- **Wardveil Security** — primary product and technology name.
+- **Wardveil** — approved short name.
+- **Protected by Wardveil** — approved protection-status phrase when supported by current technical evidence.
+
+The words **by GoreeCloud** establish ownership and attribution. They do not need to appear after every Wardveil reference when the GoreeCloud relationship is already clear.
+
+## Meaning
+
+The name combines two protective ideas:
+
+- **Ward** — guarding, protection, and keeping something safe.
+- **Veil** — privacy, controlled visibility, and protection from unnecessary exposure.
+
+Wardveil therefore represents a protective layer around GoreeCloud without reducing security to antivirus, firewalling, identity, or any other single technology.
+
+## Scope
+
+Wardveil may present security posture and capabilities involving:
+
+- access and authorization;
+- network protection and exposure control;
+- application and service security;
+- integrity and verification;
+- vulnerability and security-update status;
+- device trust and security posture;
+- credential, key, token, and secret protection;
+- threat and suspicious-activity visibility;
+- security-event history and audit information;
+- compromise response and security-related recovery.
+
+This scope does not automatically create a new service, security control, or product module. Any future Wardveil component must receive its own documented Role and Purpose and implementation authority when required.
+
+## Authority boundary
+
+Wardveil is a security identity and presentation layer. It does not replace the systems that authenticate users, authorize access, filter traffic, manage private networking, protect credentials, apply security updates, detect vulnerabilities, perform backups, verify recovery, or enforce application-specific controls.
+
+When Wardveil displays or summarizes technical state, the underlying authoritative system or record remains the source of truth.
+
+## Relationship to Glaze UI
+
+Glaze UI remains GoreeCloud's shared design and interaction language. Wardveil is not a replacement design system.
+
+Wardveil interfaces, status surfaces, settings, dashboards, alerts, and future dedicated security experiences must use Glaze UI or an approved platform-native equivalent consistent with GoreeCloud application-branding requirements.
+
+## Relationship to Privacy Shield
+
+GoreeCloud Privacy Shield remains the first-party Browser-level privacy and content-protection subsystem within GoreeCloud Browser.
+
+Wardveil does not rename or absorb Privacy Shield. Wardveil may present Privacy Shield status within a broader security view while preserving Privacy Shield's own identity and Browser-specific technical authority.
+
+## Reserved terminology
+
+The following names are reserved concepts and are **not approved module or product names**:
+
+- Wardveil Access
+- Wardveil Network
+- Wardveil Integrity
+- Wardveil Threats
+- Wardveil Verify
+- Wardveil Watch
+- Wardveil Security Center
+
+Additional component names require a separate documented approval before implementation as named Wardveil products or modules.
+
+## Visual direction
+
+Wardveil should communicate protection, trust, privacy, clarity, and control through a calm, polished, modern identity integrated with Glaze UI.
+
+Avoid stereotypical cybersecurity imagery such as neon hacker motifs, skulls, aggressive threat graphics, or generic antivirus styling.
+
+The future canonical Wardveil visual identity must remain distinguishable from the GoreeCloud platform logo, Glaze UI, Privacy Shield, GoreeCloud Identity, GoreeCloud Monitor, and other GoreeCloud product identities.
+
+## Legal boundary
+
+The GoreeCloud naming decision is approved internally. This repository does not establish trademark clearance, domain availability, package-name availability, or freedom to operate in any jurisdiction or commercial context.
+
+External name-conflict and legal review must be completed before Wardveil is treated as a legally cleared public brand.
