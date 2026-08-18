@@ -18,10 +18,16 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Check out repository
+      - name: Check out exact source revision
         uses: actions/checkout@v4
         with:
           persist-credentials: false
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+
+      - name: Verify exact source revision
+        env:
+          EXPECTED_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -30,3 +36,9 @@ jobs:
 
       - name: Validate Wardveil foundation
         run: python3 scripts/validate_wardveil.py
+
+      - name: Self-test canonical icon validator
+        run: python3 scripts/validate_wardveil_icon.py --self-test
+
+      - name: Validate canonical icon state
+        run: python3 scripts/validate_wardveil_icon.py
