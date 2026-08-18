@@ -62,10 +62,11 @@ Records should also avoid raw request or response bodies, cookies, unnecessary p
 
 The interoperable JSON structure is defined by:
 
-- `contracts/wardveil.status.schema.json` — schema and allowed values;
-- `examples/wardveil.status.example.json` — non-sensitive conforming example.
+- `contracts/wardveil.status.schema.json` — schema, allowed values, and machine-enforced fail-closed constraints;
+- `examples/wardveil.status.example.json` — non-sensitive protected-state example backed by current authoritative evidence;
+- `examples/wardveil.status.unknown.example.json` — non-sensitive fail-closed example showing stale evidence mapped to `unknown` with the Wardveil protection claim disabled.
 
-The repository validator checks the example and key fail-closed invariants using only the Python standard library.
+The repository validator checks both examples, the canonical state vocabulary, protected-state invariants, protection-claim invariants, privacy metadata, and common secret-bearing material using only the Python standard library.
 
 ## Visual identity boundary
 
