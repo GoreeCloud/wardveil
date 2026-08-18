@@ -9,6 +9,8 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
+FOUNDATION_VERSION = "0.2.0"
+STATUS_CONTRACT_VERSION = "0.1.0"
 
 REQUIRED_FILES = (
     ".gitignore",
@@ -106,6 +108,9 @@ def walk_json(value: Any) -> None:
 def validate_identity_contract() -> None:
     contract = load_json("contracts/wardveil.identity.json")
 
+    if contract.get("foundation_version") != FOUNDATION_VERSION:
+        fail("identity contract foundation_version must match VERSION")
+
     identity = contract.get("identity")
     if not isinstance(identity, dict):
         fail("identity contract must contain an identity object")
@@ -125,6 +130,22 @@ def validate_identity_contract() -> None:
     reserved = contract.get("reserved_unapproved_component_names")
     if reserved != list(RESERVED_NAMES):
         fail("reserved Wardveil component-name list changed without a foundation update")
+
+    status_contract = contract.get("status_contract")
+    if not isinstance(status_contract, dict):
+        fail("identity contract must declare the Wardveil status contract")
+    if status_contract.get("document") != "STATUS.md":
+        fail("STATUS.md must remain the canonical status semantics document")
+    if status_contract.get("schema") != "contracts/wardveil.status.schema.json":
+        fail("Wardveil status schema path changed without a foundation update")
+    if status_contract.get("contract_version") != STATUS_CONTRACT_VERSION:
+        fail("unexpected Wardveil status contract version")
+    if set(status_contract.get("normalized_states") or []) != ALLOWED_STATES:
+        fail("identity contract normalized state vocabulary changed unexpectedly")
+    if status_contract.get("missing_evidence_fails_closed") is not True:
+        fail("missing evidence must fail closed")
+    if status_contract.get("protected_claim_requires_current_authoritative_evidence") is not True:
+        fail("Protected by Wardveil must require current authoritative evidence")
 
     if contract.get("legal_status") != (
         "internal-naming-approved-external-name-conflict-and-legal-clearance-pending"
@@ -180,8 +201,12 @@ def validate_status_contract() -> None:
     if set(schema_states or []) != ALLOWED_STATES:
         fail("status schema normalized state vocabulary changed unexpectedly")
 
-    if example.get("contract_version") != "0.1.0":
-        fail("status example must use contract version 0.1.0")
+    contract_version_schema = schema.get("properties", {}).get("contract_version", {}).get("const")
+    if contract_version_schema != STATUS_CONTRACT_VERSION:
+        fail("status schema contract version changed unexpectedly")
+
+    if example.get("contract_version") != STATUS_CONTRACT_VERSION:
+        fail(f"status example must use contract version {STATUS_CONTRACT_VERSION}")
 
     state = example.get("state")
     if state not in ALLOWED_STATES:
@@ -281,7 +306,7 @@ def main() -> None:
         fail(f"missing required files: {', '.join(missing)}")
 
     version = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
-    if version != "0.2.0":
+    if version != FOUNDATION_VERSION:
         fail(f"unexpected foundation version: {version!r}")
 
     validate_identity_contract()
