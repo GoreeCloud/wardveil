@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://goreecloud.example/contracts/wardveil.status.schema.json",
+  "$id": "urn:goreecloud:wardveil:status:0.1.0",
   "title": "Wardveil Security Status Record",
   "description": "Privacy-conscious presentation contract for security state produced by an authoritative GoreeCloud system or control.",
   "type": "object",
@@ -140,5 +140,75 @@
         }
       }
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "state": {
+            "const": "protected"
+          }
+        },
+        "required": ["state"]
+      },
+      "then": {
+        "properties": {
+          "authority": {
+            "properties": {
+              "authoritative": {
+                "const": true
+              }
+            },
+            "required": ["authoritative"]
+          },
+          "evidence": {
+            "properties": {
+              "status": {
+                "const": "current"
+              }
+            },
+            "required": ["status"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "claim": {
+            "properties": {
+              "protected_by_wardveil": {
+                "const": true
+              }
+            },
+            "required": ["protected_by_wardveil"]
+          }
+        },
+        "required": ["claim"]
+      },
+      "then": {
+        "properties": {
+          "state": {
+            "const": "protected"
+          },
+          "authority": {
+            "properties": {
+              "authoritative": {
+                "const": true
+              }
+            },
+            "required": ["authoritative"]
+          },
+          "evidence": {
+            "properties": {
+              "status": {
+                "const": "current"
+              }
+            },
+            "required": ["status"]
+          }
+        }
+      }
+    }
+  ]
 }
