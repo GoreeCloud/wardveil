@@ -1,22 +1,28 @@
 #!/usr/bin/env python3
-"""Validate the Wardveil Security repository foundation using only the Python standard library."""
+"""Validate Wardveil Security foundation contracts using only the Python standard library."""
 
 from __future__ import annotations
 
 import json
 import sys
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 
 REQUIRED_FILES = (
+    ".gitignore",
     "README.md",
     "IDENTITY.md",
     "ICON.md",
     "INTEGRATION.md",
+    "STATUS.md",
     "CONFORMANCE.md",
+    "SECURITY.md",
     "VERSION",
     "contracts/wardveil.identity.json",
+    "contracts/wardveil.status.schema.json",
+    "examples/wardveil.status.example.json",
 )
 
 APPROVED_NAMES = (
@@ -36,7 +42,37 @@ RESERVED_NAMES = (
     "Wardveil Security Center",
 )
 
+ALLOWED_STATES = {
+    "protected",
+    "attention",
+    "degraded",
+    "unknown",
+    "not_applicable",
+}
+
+ALLOWED_EVIDENCE_STATUS = {"current", "stale", "unavailable", "unverified"}
 CANONICAL_ICON_PATH = "branding/wardveil-security-icon.svg"
+
+FORBIDDEN_EXAMPLE_KEYS = {
+    "password",
+    "passphrase",
+    "private_key",
+    "api_key",
+    "access_token",
+    "refresh_token",
+    "setup_key",
+    "recovery_code",
+    "mfa_seed",
+    "session_token",
+    "client_secret",
+    "cookie",
+}
+
+FORBIDDEN_STRING_MARKERS = (
+    "-----BEGIN PRIVATE KEY-----",
+    "-----BEGIN RSA PRIVATE KEY-----",
+    "Bearer ",
+)
 
 
 def fail(message: str) -> None:
@@ -44,20 +80,31 @@ def fail(message: str) -> None:
     raise SystemExit(1)
 
 
-def main() -> None:
-    missing = [path for path in REQUIRED_FILES if not (ROOT / path).is_file()]
-    if missing:
-        fail(f"missing required files: {', '.join(missing)}")
-
-    version = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
-    if version != "0.1.0":
-        fail(f"unexpected foundation version: {version!r}")
-
-    contract_path = ROOT / "contracts/wardveil.identity.json"
+def load_json(relative_path: str) -> Any:
+    path = ROOT / relative_path
     try:
-        contract = json.loads(contract_path.read_text(encoding="utf-8"))
+        return json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
-        fail(f"invalid JSON in {contract_path.relative_to(ROOT)}: {exc}")
+        fail(f"invalid JSON in {relative_path}: {exc}")
+
+
+def walk_json(value: Any) -> None:
+    if isinstance(value, dict):
+        for key, child in value.items():
+            if key.lower() in FORBIDDEN_EXAMPLE_KEYS:
+                fail(f"status example contains forbidden secret-bearing key: {key}")
+            walk_json(child)
+    elif isinstance(value, list):
+        for child in value:
+            walk_json(child)
+    elif isinstance(value, str):
+        for marker in FORBIDDEN_STRING_MARKERS:
+            if marker in value:
+                fail("status example contains secret-like material")
+
+
+def validate_identity_contract() -> None:
+    contract = load_json("contracts/wardveil.identity.json")
 
     identity = contract.get("identity")
     if not isinstance(identity, dict):
@@ -102,7 +149,10 @@ def main() -> None:
         if showcase_status != "blocked-pending-canonical-icon":
             fail("showcase must remain blocked while the canonical Wardveil icon is pending")
         if icon_exists:
-            fail("canonical icon asset exists but visual identity is still marked pending; approve and reconcile status explicitly")
+            fail(
+                "canonical icon asset exists but visual identity is still marked pending; "
+                "approve and reconcile status explicitly"
+            )
     elif visual_status == "approved":
         if showcase_status != "approved":
             fail("approved canonical icon requires an explicitly approved showcase status")
@@ -114,9 +164,92 @@ def main() -> None:
     if visual.get("temporary_icon_substitution_allowed") is not False:
         fail("temporary icon substitution must remain disallowed")
 
+
+def validate_status_contract() -> None:
+    schema = load_json("contracts/wardveil.status.schema.json")
+    example = load_json("examples/wardveil.status.example.json")
+
+    if schema.get("type") != "object" or schema.get("additionalProperties") is not False:
+        fail("status schema must remain a closed top-level object")
+
+    schema_states = (
+        schema.get("properties", {}).get("state", {}).get("enum")
+        if isinstance(schema.get("properties"), dict)
+        else None
+    )
+    if set(schema_states or []) != ALLOWED_STATES:
+        fail("status schema normalized state vocabulary changed unexpectedly")
+
+    if example.get("contract_version") != "0.1.0":
+        fail("status example must use contract version 0.1.0")
+
+    state = example.get("state")
+    if state not in ALLOWED_STATES:
+        fail(f"invalid normalized Wardveil state in example: {state!r}")
+
+    scope = example.get("scope")
+    if not isinstance(scope, dict) or not scope.get("kind") or not scope.get("id"):
+        fail("status example must identify a bounded scope")
+
+    authority = example.get("authority")
+    if not isinstance(authority, dict):
+        fail("status example must identify the authoritative source")
+    if not authority.get("system") or not authority.get("control"):
+        fail("status example requires non-empty authority system and control identifiers")
+
+    evidence = example.get("evidence")
+    if not isinstance(evidence, dict):
+        fail("status example must contain evidence metadata")
+    if evidence.get("status") not in ALLOWED_EVIDENCE_STATUS:
+        fail("status example contains an unsupported evidence status")
+    if not evidence.get("observed_at"):
+        fail("status example requires an evidence observation timestamp")
+
+    claim = example.get("claim")
+    if not isinstance(claim, dict) or not isinstance(claim.get("protected_by_wardveil"), bool):
+        fail("status example requires an explicit Protected by Wardveil boolean")
+
+    protected_claim = claim["protected_by_wardveil"]
+    claim_allowed = (
+        state == "protected"
+        and authority.get("authoritative") is True
+        and evidence.get("status") == "current"
+        and bool(authority.get("system"))
+        and bool(authority.get("control"))
+    )
+    if protected_claim and not claim_allowed:
+        fail("Protected by Wardveil claim violates fail-closed evidence rules")
+
+    privacy = example.get("privacy")
+    if not isinstance(privacy, dict):
+        fail("status example must contain privacy metadata")
+    if not isinstance(privacy.get("details_withheld"), bool):
+        fail("status example must explicitly state whether details are withheld")
+    if not isinstance(privacy.get("redactions"), list):
+        fail("status example privacy.redactions must be an array")
+
+    walk_json(example)
+
+
+def validate_repository_security() -> None:
+    ignore = (ROOT / ".gitignore").read_text(encoding="utf-8")
+    for required_pattern in (".env", "secrets/", "*.key", "*.pem", "credentials.json", "token.json"):
+        if required_pattern not in ignore:
+            fail(f".gitignore is missing sensitive-information exclusion: {required_pattern}")
+
+    security_doc = (ROOT / "SECURITY.md").read_text(encoding="utf-8").lower()
+    if "reusable secrets" not in security_doc:
+        fail("SECURITY.md must preserve the reusable-secret boundary")
+    if "private" not in security_doc or "report" not in security_doc:
+        fail("SECURITY.md must preserve private security-reporting guidance")
+
+
+def validate_documentation() -> None:
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     identity_doc = (ROOT / "IDENTITY.md").read_text(encoding="utf-8")
     icon_doc = (ROOT / "ICON.md").read_text(encoding="utf-8")
+    integration = (ROOT / "INTEGRATION.md").read_text(encoding="utf-8")
+    status_doc = (ROOT / "STATUS.md").read_text(encoding="utf-8")
     conformance = (ROOT / "CONFORMANCE.md").read_text(encoding="utf-8")
 
     for name in APPROVED_NAMES:
@@ -134,6 +267,27 @@ def main() -> None:
 
     if "not visually showcase-ready" not in icon_doc.lower():
         fail("ICON.md must preserve the fail-closed showcase gate")
+
+    if "contracts/wardveil.status.schema.json" not in status_doc:
+        fail("STATUS.md must identify the machine-readable status schema")
+
+    if "missing evidence" not in integration.lower():
+        fail("INTEGRATION.md must preserve fail-closed missing-evidence behavior")
+
+
+def main() -> None:
+    missing = [path for path in REQUIRED_FILES if not (ROOT / path).is_file()]
+    if missing:
+        fail(f"missing required files: {', '.join(missing)}")
+
+    version = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
+    if version != "0.2.0":
+        fail(f"unexpected foundation version: {version!r}")
+
+    validate_identity_contract()
+    validate_status_contract()
+    validate_repository_security()
+    validate_documentation()
 
     print("Wardveil Security foundation validation passed.")
 
