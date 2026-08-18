@@ -11,9 +11,11 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 FOUNDATION_VERSION = "0.2.0"
 STATUS_CONTRACT_VERSION = "0.1.0"
+STATUS_SCHEMA_ID = "urn:goreecloud:wardveil:status:0.1.0"
 
 REQUIRED_FILES = (
     ".gitignore",
+    "CHANGELOG.md",
     "README.md",
     "IDENTITY.md",
     "ICON.md",
@@ -25,6 +27,12 @@ REQUIRED_FILES = (
     "contracts/wardveil.identity.json",
     "contracts/wardveil.status.schema.json",
     "examples/wardveil.status.example.json",
+    "examples/wardveil.status.unknown.example.json",
+)
+
+STATUS_EXAMPLES = (
+    "examples/wardveil.status.example.json",
+    "examples/wardveil.status.unknown.example.json",
 )
 
 APPROVED_NAMES = (
@@ -90,19 +98,19 @@ def load_json(relative_path: str) -> Any:
         fail(f"invalid JSON in {relative_path}: {exc}")
 
 
-def walk_json(value: Any) -> None:
+def walk_json(value: Any, relative_path: str) -> None:
     if isinstance(value, dict):
         for key, child in value.items():
             if key.lower() in FORBIDDEN_EXAMPLE_KEYS:
-                fail(f"status example contains forbidden secret-bearing key: {key}")
-            walk_json(child)
+                fail(f"{relative_path} contains forbidden secret-bearing key: {key}")
+            walk_json(child, relative_path)
     elif isinstance(value, list):
         for child in value:
-            walk_json(child)
+            walk_json(child, relative_path)
     elif isinstance(value, str):
         for marker in FORBIDDEN_STRING_MARKERS:
             if marker in value:
-                fail("status example contains secret-like material")
+                fail(f"{relative_path} contains secret-like material")
 
 
 def validate_identity_contract() -> None:
@@ -186,74 +194,119 @@ def validate_identity_contract() -> None:
         fail("temporary icon substitution must remain disallowed")
 
 
-def validate_status_contract() -> None:
+def validate_status_schema() -> None:
     schema = load_json("contracts/wardveil.status.schema.json")
-    example = load_json("examples/wardveil.status.example.json")
+
+    if schema.get("$id") != STATUS_SCHEMA_ID:
+        fail("status schema must use the canonical versioned URN identifier")
 
     if schema.get("type") != "object" or schema.get("additionalProperties") is not False:
         fail("status schema must remain a closed top-level object")
 
-    schema_states = (
-        schema.get("properties", {}).get("state", {}).get("enum")
-        if isinstance(schema.get("properties"), dict)
-        else None
-    )
+    properties = schema.get("properties")
+    if not isinstance(properties, dict):
+        fail("status schema must contain a properties object")
+
+    schema_states = properties.get("state", {}).get("enum")
     if set(schema_states or []) != ALLOWED_STATES:
         fail("status schema normalized state vocabulary changed unexpectedly")
 
-    contract_version_schema = schema.get("properties", {}).get("contract_version", {}).get("const")
+    contract_version_schema = properties.get("contract_version", {}).get("const")
     if contract_version_schema != STATUS_CONTRACT_VERSION:
         fail("status schema contract version changed unexpectedly")
 
-    if example.get("contract_version") != STATUS_CONTRACT_VERSION:
-        fail(f"status example must use contract version {STATUS_CONTRACT_VERSION}")
+    all_of = schema.get("allOf")
+    if not isinstance(all_of, list) or len(all_of) < 2:
+        fail("status schema must preserve machine-enforced fail-closed constraints")
 
-    state = example.get("state")
+    serialized_constraints = json.dumps(all_of, sort_keys=True)
+    for invariant in ("protected_by_wardveil", "authoritative", "current", "protected"):
+        if invariant not in serialized_constraints:
+            fail(f"status schema fail-closed constraints are missing invariant: {invariant}")
+
+
+def validate_status_record(relative_path: str) -> dict[str, Any]:
+    record = load_json(relative_path)
+    if not isinstance(record, dict):
+        fail(f"{relative_path} must contain a JSON object")
+
+    if record.get("contract_version") != STATUS_CONTRACT_VERSION:
+        fail(f"{relative_path} must use contract version {STATUS_CONTRACT_VERSION}")
+
+    state = record.get("state")
     if state not in ALLOWED_STATES:
-        fail(f"invalid normalized Wardveil state in example: {state!r}")
+        fail(f"{relative_path} contains invalid normalized Wardveil state: {state!r}")
 
-    scope = example.get("scope")
+    scope = record.get("scope")
     if not isinstance(scope, dict) or not scope.get("kind") or not scope.get("id"):
-        fail("status example must identify a bounded scope")
+        fail(f"{relative_path} must identify a bounded scope")
 
-    authority = example.get("authority")
+    authority = record.get("authority")
     if not isinstance(authority, dict):
-        fail("status example must identify the authoritative source")
+        fail(f"{relative_path} must identify the authoritative source")
     if not authority.get("system") or not authority.get("control"):
-        fail("status example requires non-empty authority system and control identifiers")
+        fail(f"{relative_path} requires non-empty authority system and control identifiers")
+    if not isinstance(authority.get("authoritative"), bool):
+        fail(f"{relative_path} authority.authoritative must be boolean")
 
-    evidence = example.get("evidence")
+    evidence = record.get("evidence")
     if not isinstance(evidence, dict):
-        fail("status example must contain evidence metadata")
+        fail(f"{relative_path} must contain evidence metadata")
     if evidence.get("status") not in ALLOWED_EVIDENCE_STATUS:
-        fail("status example contains an unsupported evidence status")
+        fail(f"{relative_path} contains an unsupported evidence status")
     if not evidence.get("observed_at"):
-        fail("status example requires an evidence observation timestamp")
+        fail(f"{relative_path} requires an evidence observation timestamp")
 
-    claim = example.get("claim")
+    claim = record.get("claim")
     if not isinstance(claim, dict) or not isinstance(claim.get("protected_by_wardveil"), bool):
-        fail("status example requires an explicit Protected by Wardveil boolean")
+        fail(f"{relative_path} requires an explicit Protected by Wardveil boolean")
 
-    protected_claim = claim["protected_by_wardveil"]
-    claim_allowed = (
-        state == "protected"
-        and authority.get("authoritative") is True
+    privacy = record.get("privacy")
+    if not isinstance(privacy, dict):
+        fail(f"{relative_path} must contain privacy metadata")
+    if not isinstance(privacy.get("details_withheld"), bool):
+        fail(f"{relative_path} must explicitly state whether details are withheld")
+    if not isinstance(privacy.get("redactions"), list):
+        fail(f"{relative_path} privacy.redactions must be an array")
+
+    protected_conditions = (
+        authority.get("authoritative") is True
         and evidence.get("status") == "current"
         and bool(authority.get("system"))
         and bool(authority.get("control"))
     )
-    if protected_claim and not claim_allowed:
-        fail("Protected by Wardveil claim violates fail-closed evidence rules")
 
-    privacy = example.get("privacy")
-    if not isinstance(privacy, dict):
-        fail("status example must contain privacy metadata")
-    if not isinstance(privacy.get("details_withheld"), bool):
-        fail("status example must explicitly state whether details are withheld")
-    if not isinstance(privacy.get("redactions"), list):
-        fail("status example privacy.redactions must be an array")
+    if state == "protected" and not protected_conditions:
+        fail(f"{relative_path} uses protected state without current authoritative evidence")
 
-    walk_json(example)
+    protected_claim = claim["protected_by_wardveil"]
+    if protected_claim and not (state == "protected" and protected_conditions):
+        fail(f"{relative_path} Protected by Wardveil claim violates fail-closed evidence rules")
+
+    if state != "protected" and protected_claim:
+        fail(f"{relative_path} non-protected state must not carry a Wardveil protection claim")
+
+    walk_json(record, relative_path)
+    return record
+
+
+def validate_status_contract() -> None:
+    validate_status_schema()
+    records = {path: validate_status_record(path) for path in STATUS_EXAMPLES}
+
+    protected = records["examples/wardveil.status.example.json"]
+    if protected.get("state") != "protected":
+        fail("protected status example must demonstrate the protected state")
+    if protected.get("claim", {}).get("protected_by_wardveil") is not True:
+        fail("protected status example must demonstrate a valid evidence-scoped protection claim")
+
+    unknown = records["examples/wardveil.status.unknown.example.json"]
+    if unknown.get("state") != "unknown":
+        fail("fail-closed status example must demonstrate the unknown state")
+    if unknown.get("evidence", {}).get("status") != "stale":
+        fail("fail-closed status example must demonstrate stale evidence")
+    if unknown.get("claim", {}).get("protected_by_wardveil") is not False:
+        fail("fail-closed status example must disable the Wardveil protection claim")
 
 
 def validate_repository_security() -> None:
@@ -276,6 +329,7 @@ def validate_documentation() -> None:
     integration = (ROOT / "INTEGRATION.md").read_text(encoding="utf-8")
     status_doc = (ROOT / "STATUS.md").read_text(encoding="utf-8")
     conformance = (ROOT / "CONFORMANCE.md").read_text(encoding="utf-8")
+    changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
 
     for name in APPROVED_NAMES:
         if name not in readme and name not in identity_doc:
@@ -295,9 +349,18 @@ def validate_documentation() -> None:
 
     if "contracts/wardveil.status.schema.json" not in status_doc:
         fail("STATUS.md must identify the machine-readable status schema")
+    if "examples/wardveil.status.unknown.example.json" not in status_doc:
+        fail("STATUS.md must document the fail-closed unknown-state example")
 
     if "missing evidence" not in integration.lower():
         fail("INTEGRATION.md must preserve fail-closed missing-evidence behavior")
+
+    if "## 0.2.0" not in changelog:
+        fail("CHANGELOG.md must record the current Wardveil foundation version")
+    if "canonical wardveil icon artwork remains pending" not in changelog.lower():
+        fail("CHANGELOG.md must preserve the pending canonical-icon gate")
+    if "external name-conflict and legal clearance remain pending" not in changelog.lower():
+        fail("CHANGELOG.md must preserve the pending legal-clearance gate")
 
 
 def main() -> None:
