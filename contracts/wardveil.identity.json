@@ -1,5 +1,6 @@
 {
   "schema_version": "0.1.0",
+  "foundation_version": "0.2.0",
   "identity": {
     "full_presentation": "Wardveil Security by GoreeCloud",
     "primary_name": "Wardveil Security",
@@ -34,6 +35,20 @@
     "Wardveil Watch",
     "Wardveil Security Center"
   ],
+  "status_contract": {
+    "document": "STATUS.md",
+    "schema": "contracts/wardveil.status.schema.json",
+    "contract_version": "0.1.0",
+    "normalized_states": [
+      "protected",
+      "attention",
+      "degraded",
+      "unknown",
+      "not_applicable"
+    ],
+    "missing_evidence_fails_closed": true,
+    "protected_claim_requires_current_authoritative_evidence": true
+  },
   "visual_identity": {
     "description_document": "ICON.md",
     "canonical_asset_path": "branding/wardveil-security-icon.svg",
