@@ -34,6 +34,13 @@
     "Wardveil Watch",
     "Wardveil Security Center"
   ],
-  "legal_status": "internal-naming-approved-external-name-conflict-and-legal-clearance-pending",
-  "canonical_visual_identity_status": "not-yet-approved"
+  "visual_identity": {
+    "description_document": "ICON.md",
+    "canonical_asset_path": "branding/wardveil-security-icon.svg",
+    "canonical_visual_identity_status": "pending-canonical-icon",
+    "showcase_status": "blocked-pending-canonical-icon",
+    "concept": "two softly curved layered veil panels folding inward around a small protected central core with a restrained W-shaped negative space",
+    "temporary_icon_substitution_allowed": false
+  },
+  "legal_status": "internal-naming-approved-external-name-conflict-and-legal-clearance-pending"
 }
