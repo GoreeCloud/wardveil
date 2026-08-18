@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://goreecloud.example/contracts/wardveil.status.schema.json",
+  "title": "Wardveil Security Status Record",
+  "description": "Privacy-conscious presentation contract for security state produced by an authoritative GoreeCloud system or control.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "scope",
+    "authority",
+    "state",
+    "evidence",
+    "claim",
+    "privacy"
+  ],
+  "properties": {
+    "contract_version": {
+      "const": "0.1.0"
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "account",
+            "application",
+            "service",
+            "device",
+            "network",
+            "data",
+            "control",
+            "platform",
+            "other"
+          ]
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "display_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        }
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["system", "control", "authoritative"],
+      "properties": {
+        "system": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "control": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "authoritative": {
+          "type": "boolean"
+        }
+      }
+    },
+    "state": {
+      "type": "string",
+      "enum": [
+        "protected",
+        "attention",
+        "degraded",
+        "unknown",
+        "not_applicable"
+      ]
+    },
+    "source_state": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "observed_at"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["current", "stale", "unavailable", "unverified"]
+        },
+        "observed_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "valid_until": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "summary": {
+          "type": "string",
+          "maxLength": 240
+        },
+        "reference": {
+          "type": "string",
+          "maxLength": 256
+        }
+      }
+    },
+    "claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protected_by_wardveil"],
+      "properties": {
+        "protected_by_wardveil": {
+          "type": "boolean"
+        }
+      }
+    },
+    "privacy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["details_withheld", "redactions"],
+      "properties": {
+        "details_withheld": {
+          "type": "boolean"
+        },
+        "redactions": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        }
+      }
+    }
+  }
+}
