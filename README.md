@@ -4,7 +4,7 @@ Wardveil Security is GoreeCloud's platform-wide security and protection identity
 
 It provides a consistent way to identify and present security posture, protection state, warnings, recommendations, audit information, and security-focused experiences across GoreeCloud without replacing the technical systems that produce or enforce that state.
 
-> **Current status:** Private foundation. The GoreeCloud naming decision is approved internally; external name-conflict and legal clearance remain pending. The canonical Wardveil icon is also pending, so Wardveil is not yet visually showcase-ready.
+> **Current status:** Private foundation. Wardveil Security is documented as an original GoreeCloud identity, and no conflicting Wardveil Security identity is identified in the current GoreeCloud project records. Formal trademark or name-clearance work is optional future due diligence rather than a current GoreeCloud use or showcase blocker. The canonical Wardveil icon remains pending, so Wardveil is not yet visually showcase-ready.
 
 ## Role
 
@@ -48,11 +48,12 @@ The repository must not become a dumping ground for unrelated security implement
 
 ## Status contract
 
-Wardveil 0.2 adds a privacy-conscious interoperable status contract for GoreeCloud applications and services.
+Wardveil includes a privacy-conscious interoperable status contract for GoreeCloud applications and services.
 
 - `STATUS.md` defines the semantic contract.
 - `contracts/wardveil.status.schema.json` defines the machine-readable structure and normalized values.
-- `examples/wardveil.status.example.json` provides a non-sensitive conforming example.
+- `examples/wardveil.status.example.json` provides a non-sensitive conforming protected-state example.
+- `examples/wardveil.status.unknown.example.json` provides a fail-closed stale-evidence example.
 
 The normalized states are `protected`, `attention`, `degraded`, `unknown`, and `not_applicable`. Missing, stale, unavailable, or unverified required evidence must never be promoted to a passing state.
 
@@ -78,7 +79,7 @@ The future canonical Wardveil visual identity must remain distinct from the Gore
 
 ## Showcase gate
 
-Wardveil is not visually showcase-ready until its canonical icon exists, is explicitly approved, is stored in this repository as the canonical vector source, and passes small-size, monochrome, light-theme, dark-theme, and identity-distinction review. Public showcase also remains subject to the separate external name-conflict and legal-clearance boundary.
+Wardveil is not visually showcase-ready until its canonical icon exists, is explicitly approved, is stored in this repository as the canonical vector source, and passes small-size, monochrome, light-theme, dark-theme, and identity-distinction review.
 
 Status-contract and text-based integration may proceed before this gate passes. Temporary artwork may not be represented as the official Wardveil identity.
 
@@ -90,8 +91,10 @@ Run:
 python3 scripts/validate_wardveil.py
 ```
 
-The validator checks canonical naming, authority boundaries, legal status, icon/showcase gating, status-contract invariants, protection-claim fail-closed behavior, repository secret exclusions, and required documentation.
+The validator checks canonical naming, originality/status metadata, authority boundaries, icon/showcase gating, status-contract invariants, protection-claim fail-closed behavior, repository secret exclusions, and required documentation.
 
-## Legal and public-release boundary
+## Original identity and optional future due diligence
 
-This repository does not establish trademark clearance, domain availability, package-name availability, or freedom to operate. Public branding or release decisions must remain separate from the internal GoreeCloud naming decision until the appropriate external name-conflict review is complete.
+Wardveil Security is documented here as an original GoreeCloud identity. No conflicting Wardveil Security identity is identified in the current GoreeCloud project records.
+
+This project record is not a trademark registration or a legal guarantee of exclusivity in every jurisdiction. If future commercialization, trademark registration, app-store distribution, package publication, or another expanded public use makes formal clearance useful, GoreeCloud may perform separate name or trademark due diligence at that time. That optional future review is not a current blocker for GoreeCloud use or for visual showcase once the canonical icon gate passes.
