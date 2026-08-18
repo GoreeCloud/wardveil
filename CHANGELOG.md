@@ -2,6 +2,25 @@
 
 All notable source-controlled changes to the Wardveil Security foundation are recorded here.
 
+## Unreleased
+
+### Added
+
+- Added `scripts/validate_wardveil_icon.py`, a zero-dependency fail-closed validator for the eventual canonical SVG.
+- Added deterministic self-tests covering valid static vector content and rejection of DTD/entity declarations, scripts, raster embedding, external references, event handlers, duplicate IDs, dangling references, missing viewBox metadata, text/font-dependent construction, and foreign namespaces.
+
+### Changed
+
+- Hardened GitHub Actions to check out and verify the exact pull-request head or push revision before validation.
+- Added canonical icon validator self-tests and repository-state validation to the permanent Wardveil workflow.
+- Expanded `ICON.md` with canonical SVG security, portability, determinism, complexity, internal-reference, and active-content requirements.
+
+### Unchanged gates
+
+- No canonical Wardveil icon artwork has been generated or approved.
+- Wardveil remains blocked from visual showcase until issue #2 is completed and the approved SVG is stored at `branding/wardveil-security-icon.svg`.
+- Technical SVG validation does not replace explicit aesthetic identity approval, small-size review, monochrome review, Glaze UI light/dark review, or identity-distinction review.
+
 ## 0.3.0 — 2026-08-18
 
 ### Changed

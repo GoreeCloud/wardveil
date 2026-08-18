@@ -82,6 +82,27 @@ The canonical vector source should be suitable for deriving at least:
 - 128 px and 256 px high-density presentation;
 - 512 px release or showcase presentation.
 
+## Canonical SVG security and portability requirements
+
+The canonical SVG is a source asset that may be consumed by browsers, desktop environments, mobile build pipelines, documentation systems, and GoreeCloud applications. It therefore must remain static, self-contained, deterministic, and safe to process.
+
+The canonical SVG must:
+
+- be valid UTF-8 XML in the standard SVG namespace;
+- declare a finite, positive `viewBox` so derived assets are resolution-independent;
+- remain within a bounded source size and structural-complexity limit;
+- contain only static vector geometry, grouping, definitions, gradients, clipping, masks, titles, and descriptions required by the mark;
+- use unique, valid IDs and only resolvable internal `#fragment` references;
+- avoid external network references, remote fonts, linked stylesheets, external `<use>` targets, and data-URI resources;
+- avoid scripts, event-handler attributes, executable URI schemes, DTD/entity declarations, animation, embedded HTML, raster images, video, audio, canvas, filters, and other active or non-portable content;
+- avoid text and font-dependent glyph construction so the Wardveil mark remains independent of installed fonts and cannot collapse into a literal letter-based identity;
+- avoid mixed foreign namespaces or XML base-URI overrides that could change how relative references resolve;
+- remain suitable for deterministic derivation into platform-specific assets without fetching or executing external content.
+
+Repository validation for this contract is implemented in `scripts/validate_wardveil_icon.py`. The validator runs both deterministic hostile/valid fixture self-tests and repository-state validation in GitHub Actions. If the canonical SVG is absent, the validator requires the machine-readable visual state to remain pending and the showcase state to remain blocked. If the SVG exists, validation fails unless the visual identity and showcase states are explicitly approved and the asset passes the SVG safety and portability checks.
+
+These technical checks do not approve the artwork aesthetically. Explicit identity approval, small-size review, monochrome review, Glaze UI light/dark review, and identity-distinction review remain separate required acceptance decisions.
+
 ## Showcase gate
 
 Wardveil Security is **not visually showcase-ready** until all of the following are true:
@@ -89,6 +110,7 @@ Wardveil Security is **not visually showcase-ready** until all of the following 
 - the canonical icon artwork exists;
 - the icon has been explicitly approved as the Wardveil identity;
 - the canonical SVG is stored in this repository;
+- the canonical SVG passes the repository security and portability validator;
 - small-size and monochrome legibility have been reviewed;
 - light and dark Glaze UI presentation has been reviewed;
 - the icon is confirmed distinct from existing GoreeCloud identities.
