@@ -1,0 +1,39 @@
+{
+  "schema_version": "0.1.0",
+  "identity": {
+    "full_presentation": "Wardveil Security by GoreeCloud",
+    "primary_name": "Wardveil Security",
+    "short_name": "Wardveil",
+    "protection_phrase": "Protected by Wardveil"
+  },
+  "role": "platform-wide security and protection identity and presentation layer",
+  "technical_authority": false,
+  "relationships": {
+    "platform": "GoreeCloud",
+    "design_system": "Glaze UI",
+    "browser_privacy_subsystem": "Privacy Shield"
+  },
+  "approved_scope": [
+    "access-and-authorization",
+    "network-protection-and-exposure-control",
+    "application-and-service-security",
+    "integrity-and-verification",
+    "vulnerability-and-security-update-status",
+    "device-trust-and-security-posture",
+    "credential-key-token-and-secret-protection",
+    "threat-and-suspicious-activity-visibility",
+    "security-event-history-and-audit-information",
+    "compromise-response-and-security-related-recovery"
+  ],
+  "reserved_unapproved_component_names": [
+    "Wardveil Access",
+    "Wardveil Network",
+    "Wardveil Integrity",
+    "Wardveil Threats",
+    "Wardveil Verify",
+    "Wardveil Watch",
+    "Wardveil Security Center"
+  ],
+  "legal_status": "internal-naming-approved-external-name-conflict-and-legal-clearance-pending",
+  "canonical_visual_identity_status": "not-yet-approved"
+}
