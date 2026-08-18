@@ -53,23 +53,33 @@ A Wardveil-integrated surface should be able to answer, where applicable:
 - **What action can an authorized user take?**
 - **What information is intentionally withheld for privacy or least privilege?**
 
-Unknown or unavailable security evidence must remain unknown or unavailable. Wardveil must not convert missing evidence into a passing status.
+Missing evidence is not passing evidence. Unknown, stale, unavailable, skipped, or unverified required security evidence must remain non-passing and must never be silently converted into a protected state.
 
-## Suggested status vocabulary
+## Interoperable status records
 
-Applications may map their own authoritative technical state into a small Wardveil-facing presentation vocabulary when useful:
+Applications that need a shared machine-readable representation should use the Wardveil status contract in `STATUS.md` and `contracts/wardveil.status.schema.json`.
+
+The normalized presentation vocabulary is:
 
 - **Protected** — current evidence supports the defined protection scope.
 - **Attention** — action or review is recommended.
 - **Degraded** — a protection or evidence path is operating below its intended state.
-- **Unknown** — the required evidence is unavailable, stale, or not yet verified.
+- **Unknown** — the required evidence is unavailable, stale, incomplete, or not yet verified.
 - **Not applicable** — the control does not apply to the current scope.
 
 These labels are presentation semantics only. They do not replace application-specific state machines or policy definitions.
 
+A `Protected by Wardveil` claim is permitted only for the explicit scope of a record whose normalized state is protected, whose underlying source is authoritative, and whose required evidence is current. The claim must fail closed to false whenever those conditions are not satisfied.
+
 ## Security and privacy boundary
 
 Wardveil integrations should prefer bounded, structured, privacy-conscious evidence. Broad presentation and observability paths should avoid reusable secrets, passwords, authentication material, request or response bodies, cookies, private keys, recovery codes, unnecessary network identifiers, and raw exception content unless a separately authorized security workflow genuinely requires them.
+
+The authoritative system should retain detailed evidence when required. Wardveil-facing integrations should normally receive only the minimum state, source attribution, timestamps, sanitized summary, and authorized action information necessary for the user's decision.
+
+## Canonical icon boundary
+
+The status and integration contracts may be implemented before Wardveil's canonical icon is approved. Until the icon gate in `ICON.md` passes, applications may use text-based Wardveil integration but must not present a generic, inherited, or temporary icon as the official Wardveil visual identity.
 
 ## Public-release boundary
 
