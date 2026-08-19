@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
-  <title id="title">Wardveil Security</title>
+  <title id="title">Wardveil Security candidate icon</title>
   <desc id="desc">Two layered veil panels fold inward around a protected central core, forming a subtle W-shaped negative space.</desc>
   <g fill="none" stroke="currentColor" stroke-width="18" stroke-linecap="round" stroke-linejoin="round">
     <path d="M48 54 C66 72 82 86 101 98 C111 104 119 113 128 126 C137 113 145 104 155 98 C174 86 190 72 208 54 C207 105 199 145 181 174 C167 197 149 214 128 226"/>
