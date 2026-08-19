@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wardveil Security Candidate Icon Review</title>
+<style>
+:root{color-scheme:light dark;font-family:system-ui,sans-serif;background:#f5f7fb;color:#172033}body{margin:0;padding:32px}.wrap{max-width:1100px;margin:auto}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}.card{border:1px solid color-mix(in srgb,currentColor 14%,transparent);border-radius:20px;padding:20px;background:color-mix(in srgb,Canvas 92%,transparent)}.dark{background:#0d1726;color:#f4f8ff}.light{background:#f8fbff;color:#152033}.sizes{display:flex;align-items:end;gap:18px;flex-wrap:wrap}.sample{text-align:center;font-size:12px}.sample img{display:block;margin:0 auto 8px;color:currentColor}.mono img{filter:none}.note{line-height:1.5;max-width:75ch}code{font-family:ui-monospace,monospace}@media(prefers-color-scheme:dark){:root{background:#09111d;color:#edf4ff}.card{background:#101b2a}}</style>
+</head>
+<body>
+<main class="wrap">
+<h1>Wardveil Security Candidate Icon Review</h1>
+<p class="note">Candidate-only review surface. This page does not grant canonical approval. It renders the exact repository candidate with no generated replacement artwork.</p>
+<section class="card light"><h2>Glaze UI light surface</h2><div class="sizes" id="light"></div></section>
+<section class="card dark"><h2>Glaze UI dark surface</h2><div class="sizes" id="dark"></div></section>
+<section class="card mono"><h2>Monochrome / constrained sizes</h2><div class="sizes" id="mono"></div></section>
+<section class="grid">
+<div class="card"><h2>Review questions</h2><p>Does the two-panel enclosure remain recognizable? Does the central core remain distinct? Does the negative space suggest Wardveil without becoming a literal W? Does the silhouette avoid a generic shield or lock?</p></div>
+<div class="card"><h2>Approval boundary</h2><p>Only explicit approval after the documented review matrix permits promotion to <code>branding/wardveil-security-icon.svg</code>.</p></div>
+</section>
+</main>
+<script>
+const sizes=[16,24,32,48,64,128,256];
+for(const id of ['light','dark','mono']){
+ const host=document.getElementById(id);
+ for(const size of sizes){
+  const box=document.createElement('div');box.className='sample';
+  const img=document.createElement('img');img.src='../branding/candidates/wardveil-security-icon.svg';img.width=size;img.height=size;img.alt='Wardveil Security candidate icon';
+  const label=document.createElement('div');label.textContent=size+' px';
+  box.append(img,label);host.append(box);
+ }
+}
+</script>
+</body>
+</html>

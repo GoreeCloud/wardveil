@@ -43,5 +43,8 @@ jobs:
       - name: Self-test canonical icon validator
         run: python3 scripts/validate_wardveil_icon.py --self-test
 
+      - name: Validate candidate icon safety
+        run: python3 scripts/validate_wardveil_icon_candidate.py
+
       - name: Validate canonical icon state
         run: python3 scripts/validate_wardveil_icon.py
