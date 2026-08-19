@@ -21,60 +21,19 @@
     "design_system": "Glaze UI",
     "browser_privacy_subsystem": "Privacy Shield"
   },
-  "approved_scope": [
-    "access-and-authorization",
-    "network-protection-and-exposure-control",
-    "application-and-service-security",
-    "integrity-and-verification",
-    "vulnerability-and-security-update-status",
-    "device-trust-and-security-posture",
-    "credential-key-token-and-secret-protection",
-    "threat-and-suspicious-activity-visibility",
-    "security-event-history-and-audit-information",
-    "compromise-response-and-security-related-recovery"
-  ],
-  "reserved_unapproved_component_names": [
-    "Wardveil Access",
-    "Wardveil Network",
-    "Wardveil Integrity",
-    "Wardveil Threats",
-    "Wardveil Verify",
-    "Wardveil Watch",
-    "Wardveil Security Center"
-  ],
-  "status_contract": {
-    "document": "STATUS.md",
-    "schema": "contracts/wardveil.status.schema.json",
-    "contract_version": "0.1.0",
-    "normalized_states": [
-      "protected",
-      "attention",
-      "degraded",
-      "unknown",
-      "not_applicable"
-    ],
-    "missing_evidence_fails_closed": true,
-    "protected_claim_requires_current_authoritative_evidence": true
-  },
-  "aggregation_contract": {
-    "document": "AGGREGATION.md",
-    "vectors": "contracts/wardveil.aggregation.vectors.json",
-    "contract_version": "0.1.0",
-    "deterministic": true,
-    "empty_required_set_fails_closed": true
-  },
-  "compatibility": {
-    "document": "COMPATIBILITY.md",
-    "foundation_version_must_match_version_file": true,
-    "status_contract_version": "0.1.0",
-    "aggregation_contract_version": "0.1.0"
-  },
+  "approved_scope": ["access-and-authorization","network-protection-and-exposure-control","application-and-service-security","integrity-and-verification","vulnerability-and-security-update-status","device-trust-and-security-posture","credential-key-token-and-secret-protection","threat-and-suspicious-activity-visibility","security-event-history-and-audit-information","compromise-response-and-security-related-recovery"],
+  "reserved_unapproved_component_names": ["Wardveil Access","Wardveil Network","Wardveil Integrity","Wardveil Threats","Wardveil Verify","Wardveil Watch","Wardveil Security Center"],
+  "status_contract": {"document":"STATUS.md","schema":"contracts/wardveil.status.schema.json","contract_version":"0.1.0","normalized_states":["protected","attention","degraded","unknown","not_applicable"],"missing_evidence_fails_closed":true,"protected_claim_requires_current_authoritative_evidence":true},
+  "aggregation_contract": {"document":"AGGREGATION.md","vectors":"contracts/wardveil.aggregation.vectors.json","contract_version":"0.1.0","deterministic":true,"empty_required_set_fails_closed":true},
+  "compatibility": {"document":"COMPATIBILITY.md","foundation_version_must_match_version_file":true,"status_contract_version":"0.1.0","aggregation_contract_version":"0.1.0"},
   "visual_identity": {
     "description_document": "ICON.md",
     "canonical_asset_path": "branding/wardveil-security-icon.svg",
-    "canonical_visual_identity_status": "pending-canonical-icon",
-    "showcase_status": "blocked-pending-canonical-icon",
+    "canonical_visual_identity_status": "approved",
+    "showcase_status": "approved",
     "concept": "two softly curved layered veil panels folding inward around a small protected central core with a restrained W-shaped negative space",
+    "design_rationale": "The paired veil forms express layered protection and privacy; their convergence suggests a W without a literal letter; the central form represents the protected resource; the enclosing downward sweep conveys guarding without a conventional shield; simple geometry preserves recognition across small, monochrome, light, and dark uses.",
+    "approved_by_owner": true,
     "temporary_icon_substitution_allowed": false
   },
   "legal_status": "original-goreecloud-identity-no-known-conflict-formal-clearance-optional-future-due-diligence"
