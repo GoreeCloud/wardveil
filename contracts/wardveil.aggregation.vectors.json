@@ -1,0 +1,15 @@
+{
+  "contract_version": "0.1.0",
+  "precedence": ["degraded", "attention", "unknown", "protected", "not_applicable"],
+  "vectors": [
+    {"name": "all-protected", "states": ["protected", "protected"], "expected_state": "protected", "expected_claim": true},
+    {"name": "protected-with-not-applicable", "states": ["protected", "not_applicable"], "expected_state": "protected", "expected_claim": true},
+    {"name": "all-not-applicable", "states": ["not_applicable", "not_applicable"], "expected_state": "not_applicable", "expected_claim": false},
+    {"name": "required-unknown-blocks-protected", "states": ["protected", "unknown"], "expected_state": "unknown", "expected_claim": false},
+    {"name": "attention-outranks-unknown", "states": ["unknown", "attention", "protected"], "expected_state": "attention", "expected_claim": false},
+    {"name": "degraded-outranks-attention", "states": ["attention", "degraded", "protected"], "expected_state": "degraded", "expected_claim": false},
+    {"name": "single-protected", "states": ["protected"], "expected_state": "protected", "expected_claim": true},
+    {"name": "empty-fails-closed", "states": [], "expected_error": "empty-required-set"},
+    {"name": "invalid-state-fails-closed", "states": ["protected", "passing"], "expected_error": "invalid-state"}
+  ]
+}

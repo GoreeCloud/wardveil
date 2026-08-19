@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
-FOUNDATION_VERSION = "0.4.0"
+FOUNDATION_VERSION = "0.5.0"
 STATUS_CONTRACT_VERSION = "0.1.0"
 STATUS_SCHEMA_ID = "urn:goreecloud:wardveil:status:0.1.0"
 LEGAL_STATUS = (
@@ -28,11 +28,14 @@ REQUIRED_FILES = (
     "SECURITY.md",
     "THREAT-MODEL.md",
     "ADOPTION.md",
+    "AGGREGATION.md",
     "VERSION",
     "contracts/wardveil.identity.json",
     "contracts/wardveil.status.schema.json",
+    "contracts/wardveil.aggregation.vectors.json",
     "examples/wardveil.status.example.json",
     "examples/wardveil.status.unknown.example.json",
+    "scripts/validate_wardveil_aggregation.py",
 )
 
 STATUS_EXAMPLES = (
@@ -45,16 +48,6 @@ APPROVED_NAMES = (
     "Wardveil Security",
     "Wardveil",
     "Protected by Wardveil",
-)
-
-RESERVED_NAMES = (
-    "Wardveil Access",
-    "Wardveil Network",
-    "Wardveil Integrity",
-    "Wardveil Threats",
-    "Wardveil Verify",
-    "Wardveil Watch",
-    "Wardveil Security Center",
 )
 
 ALLOWED_STATES = {"protected", "attention", "degraded", "unknown", "not_applicable"}
@@ -97,7 +90,6 @@ def walk_keys(value: Any) -> list[str]:
 def validate_status_example(path: str, example: Any) -> None:
     if not isinstance(example, dict):
         fail(f"{path} must contain a JSON object")
-
     keys = set(walk_keys(example))
     leaked = sorted(keys & FORBIDDEN_EXAMPLE_KEYS)
     if leaked:
@@ -107,7 +99,6 @@ def validate_status_example(path: str, example: Any) -> None:
     evidence = example.get("evidence")
     claim = example.get("claim")
     authority = example.get("authority")
-
     if state not in ALLOWED_STATES:
         fail(f"{path} contains invalid normalized state: {state!r}")
     if not isinstance(evidence, dict) or evidence.get("status") not in ALLOWED_EVIDENCE_STATUS:
@@ -119,7 +110,6 @@ def validate_status_example(path: str, example: Any) -> None:
 
     protected_claim = claim["protected_by_wardveil"]
     evidence_status = evidence["status"]
-
     if state == "protected":
         if evidence_status != "current":
             fail(f"{path} asserts protected state without current evidence")
@@ -127,9 +117,6 @@ def validate_status_example(path: str, example: Any) -> None:
             fail(f"{path} asserts protected state without an eligible Wardveil protection claim")
     elif protected_claim:
         fail(f"{path} asserts a Wardveil protection claim for non-protected state {state!r}")
-
-    if evidence_status != "current" and state == "protected":
-        fail(f"{path} converts non-current evidence into protected state")
 
 
 def main() -> None:
@@ -154,12 +141,16 @@ def main() -> None:
 
     threat_model = read_text("THREAT-MODEL.md")
     adoption = read_text("ADOPTION.md")
+    aggregation = read_text("AGGREGATION.md")
     for phrase in ("authoritative producer", "fail closed", "Aggregation rule", "read-only"):
         if phrase.lower() not in threat_model.lower():
             fail(f"threat model missing required security concept: {phrase}")
     for phrase in ("authoritative producer", "stale or missing evidence", "accessible", "exact-revision"):
         if phrase.lower() not in adoption.lower():
             fail(f"adoption contract missing required integration concept: {phrase}")
+    for phrase in ("deterministic precedence", "degraded", "attention", "unknown", "not_applicable", "fail closed", "read-only"):
+        if phrase.lower() not in aggregation.lower():
+            fail(f"aggregation contract missing required concept: {phrase}")
 
     schema = read_json("contracts/wardveil.status.schema.json")
     if schema.get("$id") != STATUS_SCHEMA_ID:
@@ -171,6 +162,10 @@ def main() -> None:
     for evidence_state in ALLOWED_EVIDENCE_STATUS:
         if evidence_state not in schema_text:
             fail(f"status schema missing evidence state: {evidence_state}")
+
+    vectors = read_json("contracts/wardveil.aggregation.vectors.json")
+    if vectors.get("contract_version") != "0.1.0" or not isinstance(vectors.get("vectors"), list):
+        fail("aggregation conformance vectors are invalid")
 
     for path in STATUS_EXAMPLES:
         validate_status_example(path, read_json(path))

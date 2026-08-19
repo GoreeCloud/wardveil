@@ -2,6 +2,29 @@
 
 All notable source-controlled changes to the Wardveil Security foundation are recorded here.
 
+## 0.5.0 — 2026-08-18
+
+### Added
+
+- Added `AGGREGATION.md` with deterministic, conservative multi-source presentation semantics.
+- Added `contracts/wardveil.aggregation.vectors.json` with protected, unknown, attention, degraded, not-applicable, empty-input, and invalid-input conformance cases.
+- Added `scripts/validate_wardveil_aggregation.py`, a zero-dependency reference implementation and conformance validator.
+- Added exact-head CI coverage for aggregation conformance.
+
+### Changed
+
+- Advanced the foundation version to 0.5.0.
+- Made the 0.4 conservative aggregation rule deterministic with explicit precedence: degraded, attention, unknown, protected, then not applicable.
+- Required empty required sets and malformed states to fail closed rather than produce a protected summary.
+- Required aggregate protection claims to remain false unless every required applicable record is protected.
+
+### Unchanged gates
+
+- Wardveil remains read-only by default and does not define a generic remediation or execute API.
+- Underlying authoritative producers remain responsible for technical security state.
+- No canonical Wardveil icon artwork has been generated or approved.
+- Wardveil remains blocked from visual showcase until issue #2 is completed and the approved SVG is stored at `branding/wardveil-security-icon.svg`.
+
 ## 0.4.0 — 2026-08-18
 
 ### Added
