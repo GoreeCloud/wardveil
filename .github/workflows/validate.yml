@@ -43,8 +43,13 @@ jobs:
       - name: Self-test canonical icon validator
         run: python3 scripts/validate_wardveil_icon.py --self-test
 
-      - name: Validate candidate icon safety
-        run: python3 scripts/validate_wardveil_icon_candidate.py
+      - name: Validate candidate icon safety before canonical promotion
+        run: |
+          if [ -f branding/wardveil-security-icon.svg ]; then
+            echo "Canonical Wardveil icon exists; candidate-only validation is not applicable."
+          else
+            python3 scripts/validate_wardveil_icon_candidate.py
+          fi
 
       - name: Validate canonical icon state
         run: python3 scripts/validate_wardveil_icon.py
