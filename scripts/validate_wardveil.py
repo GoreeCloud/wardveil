@@ -9,8 +9,9 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
-FOUNDATION_VERSION = "0.5.0"
+FOUNDATION_VERSION = "0.6.0"
 STATUS_CONTRACT_VERSION = "0.1.0"
+AGGREGATION_CONTRACT_VERSION = "0.1.0"
 STATUS_SCHEMA_ID = "urn:goreecloud:wardveil:status:0.1.0"
 LEGAL_STATUS = (
     "original-goreecloud-identity-no-known-conflict-formal-clearance-optional-future-due-diligence"
@@ -25,6 +26,7 @@ REQUIRED_FILES = (
     "INTEGRATION.md",
     "STATUS.md",
     "CONFORMANCE.md",
+    "COMPATIBILITY.md",
     "SECURITY.md",
     "THREAT-MODEL.md",
     "ADOPTION.md",
@@ -134,14 +136,33 @@ def main() -> None:
 
     identity = read_json("contracts/wardveil.identity.json")
     serialized_identity = json.dumps(identity, sort_keys=True)
+    if identity.get("foundation_version") != version:
+        fail("identity contract foundation_version does not match VERSION")
     if LEGAL_STATUS not in serialized_identity:
         fail("identity contract does not preserve the approved originality/legal-status boundary")
     if CANONICAL_ICON_PATH not in serialized_identity:
         fail("identity contract does not preserve the canonical icon path")
 
+    status_metadata = identity.get("status_contract")
+    if not isinstance(status_metadata, dict) or status_metadata.get("contract_version") != STATUS_CONTRACT_VERSION:
+        fail("identity contract status-contract version is inconsistent")
+    aggregation_metadata = identity.get("aggregation_contract")
+    if not isinstance(aggregation_metadata, dict) or aggregation_metadata.get("contract_version") != AGGREGATION_CONTRACT_VERSION:
+        fail("identity contract aggregation-contract version is inconsistent")
+    compatibility_metadata = identity.get("compatibility")
+    if not isinstance(compatibility_metadata, dict):
+        fail("identity contract compatibility metadata is missing")
+    if compatibility_metadata.get("foundation_version_must_match_version_file") is not True:
+        fail("identity contract does not require foundation/version consistency")
+    if compatibility_metadata.get("status_contract_version") != STATUS_CONTRACT_VERSION:
+        fail("identity compatibility metadata advertises the wrong status contract version")
+    if compatibility_metadata.get("aggregation_contract_version") != AGGREGATION_CONTRACT_VERSION:
+        fail("identity compatibility metadata advertises the wrong aggregation contract version")
+
     threat_model = read_text("THREAT-MODEL.md")
     adoption = read_text("ADOPTION.md")
     aggregation = read_text("AGGREGATION.md")
+    compatibility = read_text("COMPATIBILITY.md")
     for phrase in ("authoritative producer", "fail closed", "Aggregation rule", "read-only"):
         if phrase.lower() not in threat_model.lower():
             fail(f"threat model missing required security concept: {phrase}")
@@ -151,11 +172,16 @@ def main() -> None:
     for phrase in ("deterministic precedence", "degraded", "attention", "unknown", "not_applicable", "fail closed", "read-only"):
         if phrase.lower() not in aggregation.lower():
             fail(f"aggregation contract missing required concept: {phrase}")
+    for phrase in ("version domains", "fail-closed metadata consistency", "foundation_version", "unsupported versions"):
+        if phrase.lower() not in compatibility.lower():
+            fail(f"compatibility contract missing required concept: {phrase}")
 
     schema = read_json("contracts/wardveil.status.schema.json")
     if schema.get("$id") != STATUS_SCHEMA_ID:
         fail("unexpected Wardveil status schema id")
     schema_text = json.dumps(schema, sort_keys=True)
+    if STATUS_CONTRACT_VERSION not in schema_text:
+        fail("status schema does not preserve the expected contract version")
     for state in ALLOWED_STATES:
         if state not in schema_text:
             fail(f"status schema missing normalized state: {state}")
@@ -164,7 +190,7 @@ def main() -> None:
             fail(f"status schema missing evidence state: {evidence_state}")
 
     vectors = read_json("contracts/wardveil.aggregation.vectors.json")
-    if vectors.get("contract_version") != "0.1.0" or not isinstance(vectors.get("vectors"), list):
+    if vectors.get("contract_version") != AGGREGATION_CONTRACT_VERSION or not isinstance(vectors.get("vectors"), list):
         fail("aggregation conformance vectors are invalid")
 
     for path in STATUS_EXAMPLES:

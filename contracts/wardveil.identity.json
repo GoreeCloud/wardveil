@@ -1,6 +1,6 @@
 {
   "schema_version": "0.1.0",
-  "foundation_version": "0.3.0",
+  "foundation_version": "0.6.0",
   "identity": {
     "full_presentation": "Wardveil Security by GoreeCloud",
     "primary_name": "Wardveil Security",
@@ -55,6 +55,19 @@
     ],
     "missing_evidence_fails_closed": true,
     "protected_claim_requires_current_authoritative_evidence": true
+  },
+  "aggregation_contract": {
+    "document": "AGGREGATION.md",
+    "vectors": "contracts/wardveil.aggregation.vectors.json",
+    "contract_version": "0.1.0",
+    "deterministic": true,
+    "empty_required_set_fails_closed": true
+  },
+  "compatibility": {
+    "document": "COMPATIBILITY.md",
+    "foundation_version_must_match_version_file": true,
+    "status_contract_version": "0.1.0",
+    "aggregation_contract_version": "0.1.0"
   },
   "visual_identity": {
     "description_document": "ICON.md",
