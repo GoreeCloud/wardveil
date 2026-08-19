@@ -53,3 +53,9 @@ jobs:
 
       - name: Validate canonical icon state
         run: python3 scripts/validate_wardveil_icon.py
+
+      - name: Compile public-site tooling
+        run: python3 -m py_compile website/build.py website/validate.py
+
+      - name: Build and validate Wardveil public website
+        run: python3 website/validate.py
