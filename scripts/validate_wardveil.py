@@ -94,6 +94,44 @@ def walk_keys(value: Any) -> list[str]:
     return keys
 
 
+def validate_status_example(path: str, example: Any) -> None:
+    if not isinstance(example, dict):
+        fail(f"{path} must contain a JSON object")
+
+    keys = set(walk_keys(example))
+    leaked = sorted(keys & FORBIDDEN_EXAMPLE_KEYS)
+    if leaked:
+        fail(f"{path} contains forbidden sensitive key(s): {', '.join(leaked)}")
+
+    state = example.get("state")
+    evidence = example.get("evidence")
+    claim = example.get("claim")
+    authority = example.get("authority")
+
+    if state not in ALLOWED_STATES:
+        fail(f"{path} contains invalid normalized state: {state!r}")
+    if not isinstance(evidence, dict) or evidence.get("status") not in ALLOWED_EVIDENCE_STATUS:
+        fail(f"{path} contains invalid or missing evidence status")
+    if not isinstance(claim, dict) or not isinstance(claim.get("protected_by_wardveil"), bool):
+        fail(f"{path} must contain a boolean claim.protected_by_wardveil")
+    if not isinstance(authority, dict) or authority.get("authoritative") is not True:
+        fail(f"{path} must identify an authoritative producer")
+
+    protected_claim = claim["protected_by_wardveil"]
+    evidence_status = evidence["status"]
+
+    if state == "protected":
+        if evidence_status != "current":
+            fail(f"{path} asserts protected state without current evidence")
+        if protected_claim is not True:
+            fail(f"{path} asserts protected state without an eligible Wardveil protection claim")
+    elif protected_claim:
+        fail(f"{path} asserts a Wardveil protection claim for non-protected state {state!r}")
+
+    if evidence_status != "current" and state == "protected":
+        fail(f"{path} converts non-current evidence into protected state")
+
+
 def main() -> None:
     for path in REQUIRED_FILES:
         read_text(path)
@@ -135,14 +173,7 @@ def main() -> None:
             fail(f"status schema missing evidence state: {evidence_state}")
 
     for path in STATUS_EXAMPLES:
-        example = read_json(path)
-        keys = set(walk_keys(example))
-        leaked = sorted(keys & FORBIDDEN_EXAMPLE_KEYS)
-        if leaked:
-            fail(f"{path} contains forbidden sensitive key(s): {', '.join(leaked)}")
-        text = json.dumps(example, sort_keys=True).lower()
-        if "protected" in text and "current" not in text:
-            fail(f"{path} appears to assert protected state without current evidence")
+        validate_status_example(path, read_json(path))
 
     icon = ROOT / CANONICAL_ICON_PATH
     if not icon.exists():
