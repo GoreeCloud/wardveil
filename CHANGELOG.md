@@ -2,6 +2,29 @@
 
 All notable source-controlled changes to the Wardveil Security foundation are recorded here.
 
+## 0.7.0 — 2026-08-20
+
+### Added
+
+- Promoted the Privacy Shield read-only status-presentation boundary into explicit foundation metadata with a versioned interoperability contract.
+- Added machine-readable Privacy Shield presentation compatibility metadata, including read-only behavior, privacy-authority separation, raw-private-activity prohibition, and exclusion from the primary required-control aggregation by default.
+- Added release-discipline guidance requiring foundation version, identity metadata, compatibility metadata, changelog state, and validator expectations to remain synchronized.
+
+### Changed
+
+- Advanced the Wardveil Security foundation to 0.7.0.
+- Updated the canonical relationship metadata from the older Browser-specific Privacy Shield label to the platform-wide `GoreeCloud Privacy Shield` identity.
+- Updated the repository status to reflect the approved canonical icon, implemented public Wardveil site, and versioned Privacy Shield interoperability contract.
+- Clarified that Wardveil 0.7 remains read-only by default and that application-owned remediation remains outside the shared foundation.
+
+### Security and authority boundaries
+
+- Privacy Shield remains the authoritative privacy capability and runtime owner; Wardveil is only a privacy-safe read-only presenter of its status.
+- Privacy Shield status remains excluded from Wardveil's primary required-control protection aggregation by default.
+- A Privacy Shield `protected` record does not authorize `Protected by Wardveil` by itself.
+- Missing, malformed, unsafe, stale, unsupported, or ambiguous Privacy Shield evidence fails closed to an unknown/unavailable presentation.
+- Wardveil foundation acceptance remains separate from product-specific runtime acceptance and production approval.
+
 ## 0.6.0 — 2026-08-18
 
 ### Fixed
