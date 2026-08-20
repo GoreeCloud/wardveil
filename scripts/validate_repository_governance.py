@@ -13,6 +13,7 @@ DEPENDABOT = ROOT / ".github/dependabot.yml"
 CODEOWNERS = ROOT / ".github/CODEOWNERS"
 GOVERNANCE = ROOT / "REPOSITORY-GOVERNANCE.md"
 SECURITY = ROOT / "SECURITY.md"
+LICENSE = ROOT / "LICENSE"
 RUNNER = "ubuntu-24.04"
 
 ACTION_PIN_PATTERN = re.compile(
@@ -58,12 +59,23 @@ def validate_action_pins(workflow: str) -> None:
             fail(f"validation workflow reference for {action} is not an immutable 40-character commit SHA")
 
 
+def validate_license(license_text: str) -> None:
+    for phrase in (
+        "MIT License",
+        "Copyright (c) 2026 LaDamian Goree / GoreeCloud",
+        "Permission is hereby granted, free of charge",
+        "THE SOFTWARE IS PROVIDED \"AS IS\"",
+    ):
+        require(license_text, phrase, "LICENSE")
+
+
 def main() -> None:
     workflow = read(WORKFLOW)
     dependabot = read(DEPENDABOT)
     codeowners = read(CODEOWNERS)
     governance = read(GOVERNANCE)
     security = read(SECURITY)
+    license_text = read(LICENSE)
 
     require(workflow, "permissions:\n  contents: read", "validation workflow")
     require(workflow, "persist-credentials: false", "validation workflow")
@@ -88,6 +100,7 @@ def main() -> None:
         "* @GoreeCloud",
         ".github/ @GoreeCloud",
         "SECURITY.md @GoreeCloud",
+        "LICENSE @GoreeCloud",
         "REPOSITORY-GOVERNANCE.md @GoreeCloud",
         "contracts/ @GoreeCloud",
         "branding/ @GoreeCloud",
@@ -115,6 +128,8 @@ def main() -> None:
     ):
         if phrase.lower() not in security.lower():
             fail(f"security policy missing required repository boundary: {phrase}")
+
+    validate_license(license_text)
 
     print("Wardveil repository governance validation passed.")
 
