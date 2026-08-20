@@ -9,9 +9,10 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
-FOUNDATION_VERSION = "0.6.0"
+FOUNDATION_VERSION = "0.7.0"
 STATUS_CONTRACT_VERSION = "0.1.0"
 AGGREGATION_CONTRACT_VERSION = "0.1.0"
+PRIVACY_SHIELD_PRESENTATION_CONTRACT_VERSION = "0.1.0"
 STATUS_SCHEMA_ID = "urn:goreecloud:wardveil:status:0.1.0"
 LEGAL_STATUS = (
     "original-goreecloud-identity-no-known-conflict-formal-clearance-optional-future-due-diligence"
@@ -146,12 +147,30 @@ def main() -> None:
     if CANONICAL_ICON_PATH not in serialized_identity:
         fail("identity contract does not preserve the canonical icon path")
 
+    relationships = identity.get("relationships")
+    if not isinstance(relationships, dict) or relationships.get("privacy_identity") != "GoreeCloud Privacy Shield":
+        fail("identity contract does not preserve the canonical platform-wide Privacy Shield relationship")
+
     status_metadata = identity.get("status_contract")
     if not isinstance(status_metadata, dict) or status_metadata.get("contract_version") != STATUS_CONTRACT_VERSION:
         fail("identity contract status-contract version is inconsistent")
     aggregation_metadata = identity.get("aggregation_contract")
     if not isinstance(aggregation_metadata, dict) or aggregation_metadata.get("contract_version") != AGGREGATION_CONTRACT_VERSION:
         fail("identity contract aggregation-contract version is inconsistent")
+    privacy_metadata = identity.get("privacy_shield_presentation_contract")
+    if not isinstance(privacy_metadata, dict):
+        fail("identity contract Privacy Shield presentation metadata is missing")
+    if privacy_metadata.get("contract_version") != PRIVACY_SHIELD_PRESENTATION_CONTRACT_VERSION:
+        fail("identity contract Privacy Shield presentation version is inconsistent")
+    if privacy_metadata.get("read_only") is not True:
+        fail("Privacy Shield presentation contract must remain read-only")
+    if privacy_metadata.get("raw_private_activity_allowed") is not False:
+        fail("Privacy Shield presentation contract must forbid raw private activity")
+    if privacy_metadata.get("privacy_authority_transferred") is not False:
+        fail("Privacy Shield presentation contract must not transfer privacy authority")
+    if privacy_metadata.get("included_in_primary_required_control_aggregation_by_default") is not False:
+        fail("Privacy Shield status must remain excluded from primary required-control aggregation by default")
+
     compatibility_metadata = identity.get("compatibility")
     if not isinstance(compatibility_metadata, dict):
         fail("identity contract compatibility metadata is missing")
@@ -161,6 +180,8 @@ def main() -> None:
         fail("identity compatibility metadata advertises the wrong status contract version")
     if compatibility_metadata.get("aggregation_contract_version") != AGGREGATION_CONTRACT_VERSION:
         fail("identity compatibility metadata advertises the wrong aggregation contract version")
+    if compatibility_metadata.get("privacy_shield_presentation_contract_version") != PRIVACY_SHIELD_PRESENTATION_CONTRACT_VERSION:
+        fail("identity compatibility metadata advertises the wrong Privacy Shield presentation contract version")
 
     threat_model = read_text("THREAT-MODEL.md")
     adoption = read_text("ADOPTION.md")
