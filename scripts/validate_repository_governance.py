@@ -14,6 +14,8 @@ CODEOWNERS = ROOT / ".github/CODEOWNERS"
 GOVERNANCE = ROOT / "REPOSITORY-GOVERNANCE.md"
 SECURITY = ROOT / "SECURITY.md"
 LICENSE = ROOT / "LICENSE"
+README = ROOT / "README.md"
+VERSION = ROOT / "VERSION"
 RUNNER = "ubuntu-24.04"
 
 ACTION_PIN_PATTERN = re.compile(
@@ -69,6 +71,25 @@ def validate_license(license_text: str) -> None:
         require(license_text, phrase, "LICENSE")
 
 
+def validate_readme_release_status(readme: str, version_text: str) -> None:
+    version = version_text.strip()
+    match = re.fullmatch(r"(\d+)\.(\d+)\.(\d+)", version)
+    if not match:
+        fail("VERSION must contain exactly one semantic version")
+
+    release_line = f"> **Current status:** Foundation {match.group(1)}.{match.group(2)} active."
+    require(readme, release_line, "README release status")
+
+    if re.search(r"> \*\*Current status:\*\* Foundation \d+\.\d+ development\.", readme):
+        fail("README release status still identifies an accepted foundation as development")
+
+    require(
+        readme,
+        "README current-status declaration synchronized",
+        "README release discipline",
+    )
+
+
 def main() -> None:
     workflow = read(WORKFLOW)
     dependabot = read(DEPENDABOT)
@@ -76,6 +97,8 @@ def main() -> None:
     governance = read(GOVERNANCE)
     security = read(SECURITY)
     license_text = read(LICENSE)
+    readme = read(README)
+    version_text = read(VERSION)
 
     require(workflow, "permissions:\n  contents: read", "validation workflow")
     require(workflow, "persist-credentials: false", "validation workflow")
@@ -130,6 +153,7 @@ def main() -> None:
             fail(f"security policy missing required repository boundary: {phrase}")
 
     validate_license(license_text)
+    validate_readme_release_status(readme, version_text)
 
     print("Wardveil repository governance validation passed.")
 

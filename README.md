@@ -4,7 +4,7 @@ Wardveil Security is GoreeCloud's platform-wide security and protection identity
 
 It provides a consistent way to identify and present security posture, protection state, warnings, recommendations, audit information, and security-focused experiences across GoreeCloud without replacing the technical systems that produce or enforce that state.
 
-> **Current status:** Foundation 0.7 development. The canonical Wardveil Security icon is approved and stored at `branding/wardveil-security-icon.svg`. The public Wardveil site is implemented, and the Privacy Shield status-presentation boundary is now a versioned shared contract. Runtime adoption and evidence remain product-specific and must pass their own acceptance boundaries.
+> **Current status:** Foundation 0.7 active. The canonical Wardveil Security icon is approved and stored at `branding/wardveil-security-icon.svg`. The public Wardveil site is implemented, and the Privacy Shield status-presentation boundary is now a versioned shared contract. Runtime adoption and evidence remain product-specific and must pass their own acceptance boundaries.
 
 ## Core boundary
 
@@ -81,7 +81,7 @@ Privacy Shield presentation additionally requires the privacy-safe producer guar
 
 ## Release discipline
 
-Foundation releases must keep `VERSION`, `contracts/wardveil.identity.json`, `CHANGELOG.md`, compatibility metadata, and validator expectations synchronized. Material shared-contract additions are release changes, not undocumented post-release drift.
+Foundation releases must keep `VERSION`, `contracts/wardveil.identity.json`, `CHANGELOG.md`, compatibility metadata, validator expectations, and the README current-status declaration synchronized. Material shared-contract additions are release changes, not undocumented post-release drift.
 
 Product-specific runtime acceptance is deliberately separate from Wardveil foundation release acceptance. A passing Wardveil foundation does not make a consuming application production-approved.
 
