@@ -1,0 +1,11 @@
+# Wardveil Security repository ownership
+* @GoreeCloud
+
+# Security-sensitive repository governance and validation
+.github/ @GoreeCloud
+SECURITY.md @GoreeCloud
+REPOSITORY-GOVERNANCE.md @GoreeCloud
+scripts/validate_*.py @GoreeCloud
+contracts/ @GoreeCloud
+branding/ @GoreeCloud
+website/ @GoreeCloud
