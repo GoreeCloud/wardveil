@@ -40,6 +40,9 @@ jobs:
       - name: Validate aggregation conformance
         run: python3 scripts/validate_wardveil_aggregation.py
 
+      - name: Validate Privacy Shield consumer conformance
+        run: python3 scripts/validate_wardveil_privacy_shield.py
+
       - name: Self-test canonical icon validator
         run: python3 scripts/validate_wardveil_icon.py --self-test
 
