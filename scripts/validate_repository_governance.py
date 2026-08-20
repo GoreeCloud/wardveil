@@ -13,10 +13,12 @@ DEPENDABOT = ROOT / ".github/dependabot.yml"
 CODEOWNERS = ROOT / ".github/CODEOWNERS"
 GOVERNANCE = ROOT / "REPOSITORY-GOVERNANCE.md"
 SECURITY = ROOT / "SECURITY.md"
-
-CHECKOUT_SHA = "34e114876b0b11c390a56381ad16ebd13914f8d5"
-SETUP_PYTHON_SHA = "a26af69be951a213d495a4c3e4e4022e16d87065"
 RUNNER = "ubuntu-24.04"
+
+ACTION_PIN_PATTERN = re.compile(
+    r"uses:\s+(actions/(?:checkout|setup-python))@([0-9a-f]{40})\s+#\s+(v\d+\.\d+\.\d+)"
+)
+EXPECTED_ACTIONS = {"actions/checkout", "actions/setup-python"}
 
 
 def fail(message: str) -> None:
@@ -35,6 +37,27 @@ def require(text: str, token: str, context: str) -> None:
         fail(f"{context} missing required control: {token}")
 
 
+def validate_action_pins(workflow: str) -> None:
+    matches = ACTION_PIN_PATTERN.findall(workflow)
+    action_names = [name for name, _, _ in matches]
+
+    for action in EXPECTED_ACTIONS:
+        count = action_names.count(action)
+        if count != 1:
+            fail(f"validation workflow must contain exactly one immutable annotated pin for {action}; found {count}")
+
+    unexpected = set(action_names) - EXPECTED_ACTIONS
+    if unexpected:
+        fail(f"validation workflow contains unexpected governed Action pins: {sorted(unexpected)}")
+
+    for action in EXPECTED_ACTIONS:
+        loose_refs = re.findall(rf"uses:\s+{re.escape(action)}@([^\s#]+)", workflow)
+        if len(loose_refs) != 1:
+            fail(f"validation workflow must contain exactly one reference for {action}")
+        if not re.fullmatch(r"[0-9a-f]{40}", loose_refs[0]):
+            fail(f"validation workflow reference for {action} is not an immutable 40-character commit SHA")
+
+
 def main() -> None:
     workflow = read(WORKFLOW)
     dependabot = read(DEPENDABOT)
@@ -45,10 +68,9 @@ def main() -> None:
     require(workflow, "permissions:\n  contents: read", "validation workflow")
     require(workflow, "persist-credentials: false", "validation workflow")
     require(workflow, f"runs-on: {RUNNER}", "validation workflow")
-    require(workflow, f"actions/checkout@{CHECKOUT_SHA}", "validation workflow")
-    require(workflow, f"actions/setup-python@{SETUP_PYTHON_SHA}", "validation workflow")
     require(workflow, "github.event.pull_request.head.sha || github.sha", "validation workflow")
     require(workflow, "Verify exact source revision", "validation workflow")
+    validate_action_pins(workflow)
 
     if "runs-on: ubuntu-latest" in workflow:
         fail("validation workflow contains floating ubuntu-latest runner label")
@@ -80,6 +102,8 @@ def main() -> None:
         "GitHub reports `main` as unprotected",
         "do not substitute for branch protection",
         "Issue #34",
+        "full immutable commit SHA",
+        "human review",
     ):
         if phrase.lower() not in governance.lower():
             fail(f"repository governance document missing required boundary: {phrase}")
