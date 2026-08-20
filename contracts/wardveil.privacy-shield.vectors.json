@@ -1,0 +1,77 @@
+{
+  "contract_version": 1,
+  "vectors": [
+    {
+      "name": "accepted-protected-runtime",
+      "privacy_shield_state": "protected",
+      "production_approved": true,
+      "privacy_safe": true,
+      "runtime_acceptance_required": true,
+      "expected_wardveil_state": "protected",
+      "expected_protected_by_wardveil": false
+    },
+    {
+      "name": "unaccepted-protected-runtime",
+      "privacy_shield_state": "protected",
+      "production_approved": false,
+      "privacy_safe": true,
+      "runtime_acceptance_required": true,
+      "expected_wardveil_state": "unknown",
+      "expected_protected_by_wardveil": false
+    },
+    {
+      "name": "partial-runtime",
+      "privacy_shield_state": "partial",
+      "production_approved": true,
+      "privacy_safe": true,
+      "runtime_acceptance_required": true,
+      "expected_wardveil_state": "attention",
+      "expected_protected_by_wardveil": false
+    },
+    {
+      "name": "attention-runtime",
+      "privacy_shield_state": "attention",
+      "production_approved": false,
+      "privacy_safe": true,
+      "runtime_acceptance_required": true,
+      "expected_wardveil_state": "attention",
+      "expected_protected_by_wardveil": false
+    },
+    {
+      "name": "unavailable-runtime",
+      "privacy_shield_state": "unavailable",
+      "production_approved": false,
+      "privacy_safe": true,
+      "runtime_acceptance_required": true,
+      "expected_wardveil_state": "unknown",
+      "expected_protected_by_wardveil": false
+    },
+    {
+      "name": "development-runtime",
+      "privacy_shield_state": "development",
+      "production_approved": false,
+      "privacy_safe": true,
+      "runtime_acceptance_required": true,
+      "expected_wardveil_state": "unknown",
+      "expected_protected_by_wardveil": false
+    },
+    {
+      "name": "unsafe-private-activity",
+      "privacy_shield_state": "protected",
+      "production_approved": true,
+      "privacy_safe": false,
+      "runtime_acceptance_required": true,
+      "expected_wardveil_state": "unknown",
+      "expected_protected_by_wardveil": false
+    },
+    {
+      "name": "acceptance-boundary-removed",
+      "privacy_shield_state": "protected",
+      "production_approved": true,
+      "privacy_safe": true,
+      "runtime_acceptance_required": false,
+      "expected_wardveil_state": "unknown",
+      "expected_protected_by_wardveil": false
+    }
+  ]
+}

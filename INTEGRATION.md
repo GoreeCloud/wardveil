@@ -12,7 +12,7 @@ This guide defines how GoreeCloud applications and services should adopt Wardvei
 4. **Keep security details useful but minimized.** Do not expose secrets, reusable credentials, private keys, tokens, recovery codes, sensitive topology, raw diagnostics, or unnecessary personal information merely to make a Wardveil view appear detailed.
 5. **Use Glaze UI.** Wardveil-facing user interfaces follow Glaze UI semantics and accessibility expectations.
 6. **Keep product identities intact.** Wardveil may appear within GoreeCloud Manager, Browser, Monitor, Network, Backup, Notify, Memos, or other applications without replacing the identity of those products.
-7. **Keep Privacy Shield intact.** Browser-level Privacy Shield remains a named subsystem and may appear as one capability inside a broader Wardveil view.
+7. **Keep Privacy Shield intact.** GoreeCloud Privacy Shield remains the platform-wide privacy and privacy-control identity and shared privacy foundation. Wardveil may present sanitized Privacy Shield status, but it must not absorb Privacy Shield's name, icon, enforcement authority, capabilities, or runtime acceptance boundary.
 
 ## Appropriate uses
 
@@ -28,7 +28,7 @@ Appropriate Wardveil integrations include:
 - integrity and verification status;
 - security-event history and audit presentation;
 - compromise-response or security-recovery status;
-- Privacy Shield status inside a broader Browser security view.
+- sanitized Privacy Shield status inside a broader GoreeCloud protection view, using the dedicated `PRIVACY-SHIELD.md` consumer boundary.
 
 ## Inappropriate uses
 
@@ -38,8 +38,9 @@ Do not use Wardveil to:
 - imply that a service is secure merely because Wardveil branding is present;
 - conceal which system, policy, service, user, device, or control produced a security state;
 - create a new security module solely from a reserved Wardveil name;
-- duplicate authentication, firewall, VPN, secrets-management, vulnerability-management, backup, or recovery responsibilities without a separately approved architecture;
-- collect additional telemetry or sensitive data merely to populate Wardveil presentation.
+- duplicate authentication, firewall, VPN, secrets-management, vulnerability-management, backup, recovery, or Privacy Shield enforcement responsibilities without a separately approved architecture;
+- collect additional telemetry or sensitive data merely to populate Wardveil presentation;
+- convert Privacy Shield protection into a `Protected by Wardveil` claim or treat Privacy Shield availability as authorization to include it in Wardveil's primary required-control aggregation.
 
 ## Minimum presentation contract
 
@@ -71,11 +72,15 @@ These labels are presentation semantics only. They do not replace application-sp
 
 A `Protected by Wardveil` claim is permitted only for the explicit scope of a record whose normalized state is protected, whose underlying source is authoritative, and whose required evidence is current. The claim must fail closed to false whenever those conditions are not satisfied.
 
+Privacy Shield status uses its own producer-to-consumer contract and state vocabulary. Wardveil's permitted read-only mapping of that contract is defined separately in `PRIVACY-SHIELD.md`; Privacy Shield records never independently authorize `Protected by Wardveil`.
+
 ## Security and privacy boundary
 
 Wardveil integrations should prefer bounded, structured, privacy-conscious evidence. Broad presentation and observability paths should avoid reusable secrets, passwords, authentication material, request or response bodies, cookies, private keys, recovery codes, unnecessary network identifiers, and raw exception content unless a separately authorized security workflow genuinely requires them.
 
 The authoritative system should retain detailed evidence when required. Wardveil-facing integrations should normally receive only the minimum state, source attribution, timestamps, sanitized summary, and authorized action information necessary for the user's decision.
+
+For Privacy Shield specifically, Wardveil accepts only status that explicitly excludes raw private activity, credentials, and identifying content. Wardveil does not request browsing, DNS, network, or application-private activity merely to render Privacy Shield status.
 
 ## Canonical icon boundary
 

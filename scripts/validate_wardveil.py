@@ -31,13 +31,16 @@ REQUIRED_FILES = (
     "THREAT-MODEL.md",
     "ADOPTION.md",
     "AGGREGATION.md",
+    "PRIVACY-SHIELD.md",
     "VERSION",
     "contracts/wardveil.identity.json",
     "contracts/wardveil.status.schema.json",
     "contracts/wardveil.aggregation.vectors.json",
+    "contracts/wardveil.privacy-shield.vectors.json",
     "examples/wardveil.status.example.json",
     "examples/wardveil.status.unknown.example.json",
     "scripts/validate_wardveil_aggregation.py",
+    "scripts/validate_wardveil_privacy_shield.py",
 )
 
 STATUS_EXAMPLES = (
@@ -163,6 +166,7 @@ def main() -> None:
     adoption = read_text("ADOPTION.md")
     aggregation = read_text("AGGREGATION.md")
     compatibility = read_text("COMPATIBILITY.md")
+    privacy_shield = read_text("PRIVACY-SHIELD.md")
     for phrase in ("authoritative producer", "fail closed", "Aggregation rule", "read-only"):
         if phrase.lower() not in threat_model.lower():
             fail(f"threat model missing required security concept: {phrase}")
@@ -175,6 +179,9 @@ def main() -> None:
     for phrase in ("version domains", "fail-closed metadata consistency", "foundation_version", "unsupported versions"):
         if phrase.lower() not in compatibility.lower():
             fail(f"compatibility contract missing required concept: {phrase}")
+    for phrase in ("platform-wide goreecloud privacy", "separate platform-wide security", "read-only presenter", "primary required-control protection aggregation by default"):
+        if phrase.lower() not in privacy_shield.lower():
+            fail(f"Privacy Shield consumer contract missing required boundary: {phrase}")
 
     schema = read_json("contracts/wardveil.status.schema.json")
     if schema.get("$id") != STATUS_SCHEMA_ID:
@@ -192,6 +199,10 @@ def main() -> None:
     vectors = read_json("contracts/wardveil.aggregation.vectors.json")
     if vectors.get("contract_version") != AGGREGATION_CONTRACT_VERSION or not isinstance(vectors.get("vectors"), list):
         fail("aggregation conformance vectors are invalid")
+
+    privacy_vectors = read_json("contracts/wardveil.privacy-shield.vectors.json")
+    if privacy_vectors.get("contract_version") != 1 or not isinstance(privacy_vectors.get("vectors"), list):
+        fail("Privacy Shield consumer conformance vectors are invalid")
 
     for path in STATUS_EXAMPLES:
         validate_status_example(path, read_json(path))
