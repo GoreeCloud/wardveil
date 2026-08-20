@@ -44,7 +44,7 @@ def main() -> None:
         "contains_credentials",
         "contains_identifiers",
         "runtime_acceptance_required",
-        "does not authorize `claim.protected_by_wardveil=true`",
+        "claim.protected_by_wardveil=true",
         "excluded from wardveil's primary required-control protection aggregation by default",
         "presentation interoperability contract only",
     ):
