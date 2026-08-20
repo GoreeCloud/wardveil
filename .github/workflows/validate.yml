@@ -34,6 +34,9 @@ jobs:
         with:
           python-version: "3.13"
 
+      - name: Validate repository governance
+        run: python3 scripts/validate_repository_governance.py
+
       - name: Validate Wardveil foundation
         run: python3 scripts/validate_wardveil.py
 
@@ -57,8 +60,8 @@ jobs:
       - name: Validate canonical icon state
         run: python3 scripts/validate_wardveil_icon.py
 
-      - name: Compile public-site tooling
-        run: python3 -m py_compile website/build.py website/validate.py
+      - name: Compile repository and public-site tooling
+        run: python3 -m py_compile scripts/validate_repository_governance.py website/build.py website/validate.py
 
       - name: Build and validate Wardveil public website
         run: python3 website/validate.py
