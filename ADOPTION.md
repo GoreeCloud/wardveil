@@ -30,9 +30,26 @@ A consumer must:
 
 A dashboard may combine multiple Wardveil records, but aggregation must remain conservative. A summary cannot be `protected` when any required component is `unknown`, `degraded`, or otherwise non-passing. The dashboard must allow the operator to identify which source and scope caused the summary state.
 
+## Compact and wearable presentation
+
+Wardveil may appear on compact, glanceable, wearable, notification, tile, complication, or similarly constrained Glaze UI surfaces, but reduced space does not reduce evidence requirements.
+
+A constrained presentation must:
+
+- preserve the normalized state in text or an equivalent accessible semantic instead of relying on iconography or color alone;
+- preserve whether the represented evidence is current, stale, unavailable, or unverified whenever freshness materially affects the claim;
+- preserve the represented scope and authoritative source through the immediately visible surface or an accessible focused detail path;
+- show `unknown`, `attention`, or `degraded` honestly rather than hiding the state to simplify the layout;
+- never display `Protected by Wardveil` when the full underlying record would not authorize that claim;
+- avoid moving raw diagnostics, secrets, identifiers, or sensitive evidence onto a wearable merely to provide more detail;
+- use a focused deep link to the authoritative owning application when remediation or detailed evidence cannot safely fit on the constrained surface;
+- follow the current Stable Glaze UI contract for the target form factor before the consuming application may claim production conformance.
+
+A compact Wardveil card is a view of an existing evidence-backed record. It does not create a new security state, broaden the producer's authority, or substitute for application-specific runtime acceptance.
+
 ## Remediation links
 
-Wardveil may direct an authorized user to an application's existing remediation workflow. The link must not imply that Wardveil performed the remediation. Generic cross-service execution is outside the 0.4 contract.
+Wardveil may direct an authorized user to an application's existing remediation workflow. The link must not imply that Wardveil performed the remediation. Generic cross-service execution is outside the Wardveil 0.7 foundation contract.
 
 ## Adoption evidence
 
@@ -45,4 +62,6 @@ Before a project claims Wardveil integration, its repository should contain:
 - a source-level or rendered accessibility check for state labels;
 - exact-revision CI evidence for the integration change.
 
-Manual visual acceptance is additionally required when the canonical Wardveil icon is eventually approved and used.
+For compact or wearable surfaces, adoption evidence must additionally demonstrate that constrained rendering preserves normalized state, required freshness meaning, authority/scope discoverability, and fail-closed handling without exposing additional sensitive evidence.
+
+Manual visual acceptance is required when the canonical Wardveil icon is used in a new target form factor; icon presence never substitutes for status semantics or runtime evidence.
