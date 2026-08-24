@@ -1,0 +1,15 @@
+{
+  "contract_version": 1,
+  "design_system": "Glaze UI",
+  "presentation_only": true,
+  "authority_transferred": false,
+  "color_only_allowed": false,
+  "branding_may_override_semantics": false,
+  "state_to_semantic_role": {
+    "protected": "protected",
+    "attention": "warning",
+    "degraded": "danger",
+    "unknown": "unavailable",
+    "not_applicable": "surface"
+  }
+}
