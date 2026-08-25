@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "platform": "wardveil-security",
   "producer_repository": "GoreeCloud/goreecloud-wardveil-security",
   "consumer_repository": "GoreeCloud/goreecloud-mesh",
@@ -9,5 +9,10 @@
   "runtime_acceptance_implied": false,
   "stable_acceptance_implied": false,
   "sensitive_information_allowed": false,
-  "purpose": "Allows GoreeCloud Mesh to consume bounded Wardveil Security status evidence while Wardveil remains authoritative for security, protection state, evidence semantics, and protection presentation."
+  "evidence_validity": {
+    "authority": "producer-or-applicable-policy",
+    "valid_until_required_for_validated": true,
+    "consumer_override_allowed": false
+  },
+  "purpose": "Allows GoreeCloud Mesh to consume bounded Wardveil Security status evidence while Wardveil remains authoritative for security, protection state, evidence semantics, evidence validity, and protection presentation."
 }
