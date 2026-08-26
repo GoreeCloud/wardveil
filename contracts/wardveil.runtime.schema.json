@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:goreecloud:wardveil:runtime:0.1.0",
+  "title": "Wardveil Runtime Security Record",
+  "type": "object",
+  "required": ["contract_version", "record_type", "record_id", "producer", "scope", "observed_at", "evidence_refs"],
+  "properties": {
+    "contract_version": {"const": "0.1.0"},
+    "record_type": {
+      "enum": ["trust_decision", "policy_decision", "detection_finding", "scan_finding", "protection_action", "quarantine_record", "incident_record", "audit_event"]
+    },
+    "record_id": {"type": "string", "minLength": 1},
+    "correlation_id": {"type": "string", "minLength": 1},
+    "producer": {
+      "type": "object",
+      "required": ["id", "authoritative"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "authoritative": {"const": true}
+      },
+      "additionalProperties": false
+    },
+    "scope": {
+      "type": "object",
+      "required": ["resource_type", "resource_id"],
+      "properties": {
+        "resource_type": {"type": "string", "minLength": 1},
+        "resource_id": {"type": "string", "minLength": 1},
+        "operation": {"type": "string", "minLength": 1},
+        "principal_class": {"enum": ["user", "device", "application", "service", "machine", "system"]}
+      },
+      "additionalProperties": false
+    },
+    "observed_at": {"type": "string", "format": "date-time"},
+    "valid_until": {"type": "string", "format": "date-time"},
+    "evidence_refs": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "trust_state": {"enum": ["trusted", "normal", "elevated_risk", "restricted", "blocked"]},
+    "policy_decision": {"enum": ["allow", "allow_and_log", "warn", "step_up", "restrict", "quarantine", "revoke", "block", "isolate", "escalate"]},
+    "detection_disposition": {"enum": ["informational", "suspicious", "likely_malicious", "confirmed_malicious", "unknown"]},
+    "scan_result": {"enum": ["clean", "suspicious", "malicious", "unknown", "unsupported"]},
+    "severity": {"enum": ["informational", "low", "medium", "high", "critical"]},
+    "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+    "executor": {"type": "string", "minLength": 1},
+    "idempotency_key": {"type": "string", "minLength": 1},
+    "execution_status": {"enum": ["requested", "authorized", "executing", "succeeded", "failed", "rejected", "expired"]},
+    "review_state": {"enum": ["pending", "under_review", "released", "removed", "retained"]},
+    "incident_status": {"enum": ["open", "contained", "remediating", "recovering", "verified", "closed"]},
+    "event_type": {"type": "string", "minLength": 1},
+    "outcome": {"enum": ["success", "failure", "denied", "blocked", "partial", "unknown"]}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"record_type": {"const": "trust_decision"}}},
+      "then": {"required": ["trust_state", "valid_until"]}
+    },
+    {
+      "if": {"properties": {"record_type": {"const": "policy_decision"}}},
+      "then": {"required": ["policy_decision", "valid_until"]}
+    },
+    {
+      "if": {"properties": {"record_type": {"const": "detection_finding"}}},
+      "then": {"required": ["detection_disposition", "severity", "confidence"]}
+    },
+    {
+      "if": {"properties": {"record_type": {"const": "scan_finding"}}},
+      "then": {"required": ["scan_result"]}
+    },
+    {
+      "if": {"properties": {"record_type": {"const": "protection_action"}}},
+      "then": {"required": ["policy_decision", "executor", "idempotency_key", "execution_status", "valid_until"]}
+    },
+    {
+      "if": {"properties": {"record_type": {"const": "quarantine_record"}}},
+      "then": {"required": ["review_state"]}
+    },
+    {
+      "if": {"properties": {"record_type": {"const": "incident_record"}}},
+      "then": {"required": ["incident_status", "severity"]}
+    },
+    {
+      "if": {"properties": {"record_type": {"const": "audit_event"}}},
+      "then": {"required": ["event_type", "outcome"]}
+    }
+  ],
+  "additionalProperties": true
+}
