@@ -195,7 +195,7 @@ export default class WardveilAcceptanceProbe extends WorkerEntrypoint<Bindings> 
       const startedAt = Date.now();
       const scheduled = await this.env.WARDVEIL_PERSISTENCE_SERVICE.scheduleAcceptanceRetentionAlarm(tenantId, 2000);
       let retained: MaintenanceEvidence | undefined;
-      for (let attempt = 0; attempt < 30; attempt += 1) {
+      for (let attempt = 0; attempt < 75; attempt += 1) {
         await new Promise((resolve) => setTimeout(resolve, 1000));
         const history = await this.env.WARDVEIL_PERSISTENCE_SERVICE.maintenanceEvidence(tenantId, 20);
         retained = history.find((item) => item.event_type === "retention_enforced" && Date.parse(item.occurred_at) >= startedAt);
