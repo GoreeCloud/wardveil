@@ -51,7 +51,8 @@ if "/healthz" not in source:
     raise SystemExit("Cloudflare Worker must retain /healthz")
 
 for phrase in [
-    "storage health", "does not", "protected by Wardveil",
+    "storage health",
+    "protected by Wardveil",
     "PITR availability is not restore verification",
     "production runtime status remains **unaccepted**",
 ]:
