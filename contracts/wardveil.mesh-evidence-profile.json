@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0.0",
+  "system": "wardveil-security",
+  "producer_repository": "GoreeCloud/goreecloud-wardveil-security",
+  "authority_domains": ["security"],
+  "mesh_envelope": {
+    "version": "goreecloud.evidence-envelope.v1",
+    "repository": "GoreeCloud/goreecloud-mesh",
+    "revision": "f1b1b8256773f67ce6ac10a9a9a682ee5192a5fa",
+    "path": "contracts/mesh.evidence-envelope.schema.json"
+  },
+  "producer_contracts": [
+    "contracts/wardveil.status.schema.json",
+    "contracts/wardveil.capabilities.json"
+  ],
+  "permitted_assertion_families": [
+    "security-status",
+    "runtime-acceptance",
+    "trust-evaluation",
+    "policy-decision",
+    "protection-result",
+    "detection-finding",
+    "scan-finding",
+    "quarantine-state",
+    "incident-state",
+    "response-state",
+    "security-audit-state"
+  ],
+  "minimization": {
+    "allowed_data_classes": ["public", "operational", "derived"],
+    "raw_user_content": "prohibited",
+    "credentials_keys_tokens": "prohibited",
+    "raw_scan_payloads": "prohibited",
+    "message_or_file_bodies": "prohibited",
+    "preferred_content": "bounded reason codes, derived state, opaque producer references, freshness, and optional digests"
+  },
+  "authority_rules": [
+    "Wardveil remains authoritative for Wardveil-native security assertions.",
+    "Mesh validates transport/provenance and must not upgrade, broaden, or reinterpret Wardveil security authority.",
+    "Privacy Shield privacy state and Everkeep recovery state may be consumed by Wardveil only through their own producer-authoritative contracts.",
+    "A valid Mesh envelope is not by itself evidence that a security assertion is true or accepted."
+  ],
+  "status": "source-profile",
+  "production_acceptance": false
+}
