@@ -19,7 +19,7 @@ jobs:
   deploy-and-collect:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 20
     environment: wardveil-production
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -108,7 +108,7 @@ jobs:
           cat /tmp/wardveil-acceptance-runner.log >&2
           exit 1
 
-      - name: Collect privileged service-binding evidence
+      - name: Collect privileged service-binding and retention evidence
         run: |
           set -euo pipefail
           code="$(curl --silent --show-error --output /tmp/wardveil-probe.json --write-out '%{http_code}' \
@@ -118,6 +118,39 @@ jobs:
             http://127.0.0.1:8788/run)"
           cat /tmp/wardveil-probe.json
           test "$code" = "200"
+
+      - name: Collect bounded observability failure evidence
+        working-directory: cloudflare
+        run: |
+          set -euo pipefail
+          marker="acceptance-$(python3 - <<'PY'
+          import uuid
+          print(uuid.uuid4())
+          PY
+          )"
+          printf '%s' "$marker" > /tmp/wardveil-observability-marker
+          npx wrangler tail goreecloud-wardveil-persistence --format json --search "$marker" > /tmp/wardveil-tail.log 2>&1 &
+          echo $! > /tmp/wardveil-tail.pid
+          sleep 3
+          code="$(curl --silent --show-error --output /tmp/wardveil-observability-response.json --write-out '%{http_code}' \
+            --request POST \
+            --header 'content-type: application/json' \
+            --data "{\"revision\":\"$GITHUB_SHA\",\"marker\":\"$marker\"}" \
+            http://127.0.0.1:8788/observe-failure)"
+          cat /tmp/wardveil-observability-response.json
+          test "$code" = "200"
+          grep -q '"expected_failure_observed":true' /tmp/wardveil-observability-response.json
+          observed=false
+          for attempt in $(seq 1 30); do
+            if grep -q "$marker" /tmp/wardveil-tail.log; then
+              observed=true
+              break
+            fi
+            sleep 1
+          done
+          kill "$(cat /tmp/wardveil-tail.pid)" || true
+          cat /tmp/wardveil-tail.log
+          test "$observed" = "true"
 
       - name: Build revision-bound runtime evidence manifest
         env:
@@ -145,12 +178,20 @@ jobs:
               'authorized_append_read',
               'duplicate_record_rejection',
               'checkpoint_non_regression',
+              'retention_alarm_evidence',
               'payload_digest_verification',
               'pitr_availability',
           ]
           for requirement in internal_required:
               if by_requirement.get(requirement, {}).get('state') != 'passed':
                   raise SystemExit(f'internal runtime evidence failed: {requirement}')
+
+          observability = json.loads(Path('/tmp/wardveil-observability-response.json').read_text())
+          if observability.get('expected_failure_observed') is not True:
+              raise SystemExit('bounded observability failure was not observed by the probe')
+          marker = Path('/tmp/wardveil-observability-marker').read_text()
+          if marker not in Path('/tmp/wardveil-tail.log').read_text():
+              raise SystemExit('bounded observability failure marker missing from Cloudflare tail evidence')
 
           def passed(summary, observed_at=None):
               return {'status': 'passed', 'observed_at': observed_at or now, 'source': source, 'summary': summary}
@@ -164,11 +205,11 @@ jobs:
               'authorized_append_read': passed('Internal service-binding append/read probe passed.', by_requirement['authorized_append_read']['observed_at']),
               'duplicate_record_rejection': passed('Duplicate record ID rejection probe passed.', by_requirement['duplicate_record_rejection']['observed_at']),
               'checkpoint_non_regression': passed('Consumer checkpoint regression was rejected.', by_requirement['checkpoint_non_regression']['observed_at']),
-              'retention_alarm_evidence': pending('Requires a later time-bounded observation proving a retention alarm executed against deployed runtime state.'),
+              'retention_alarm_evidence': passed('A bounded acceptance-tenant Durable Object alarm executed the real retention handler.', by_requirement['retention_alarm_evidence']['observed_at']),
               'payload_digest_verification': passed('Persisted payload digest matched canonical probe payload.', by_requirement['payload_digest_verification']['observed_at']),
               'pitr_availability': passed('Durable Object PITR capability and current bookmark were reported by the runtime.', by_requirement['pitr_availability']['observed_at']),
               'restore_verification_exercise': pending('Requires a separate Everkeep-governed restore verification exercise.'),
-              'observability_failure_evidence': pending('Requires a bounded failure-path exercise and retained observability evidence.'),
+              'observability_failure_evidence': passed(f'Controlled failure {marker} was observed through Cloudflare Worker tail evidence.'),
               'public_mutation_surface_absent': passed('Generic public POST /records remained unavailable with HTTP 404/405.'),
           }
 
@@ -199,11 +240,13 @@ jobs:
             echo '- Authorized service-binding append/read: passed'
             echo '- Duplicate-record rejection: passed'
             echo '- Checkpoint non-regression: passed'
+            echo '- Retention alarm execution: passed in dedicated acceptance tenant'
             echo '- Payload digest verification: passed'
             echo '- PITR capability evidence: passed'
+            echo '- Bounded observability failure path: passed through Cloudflare Worker tail evidence'
             echo '- Public health endpoint: passed'
             echo '- Generic public mutation endpoint: absent (404/405)'
-            echo '- Remaining pending acceptance evidence: retention-alarm execution, Everkeep-governed restore verification, and bounded observability failure evidence'
+            echo '- Remaining pending acceptance evidence: Everkeep-governed restore verification'
             echo '- Runtime acceptance status: **unaccepted** until every required check is passed for this exact revision'
             echo
             echo '<details><summary>Machine-readable evidence manifest</summary>'
@@ -214,9 +257,12 @@ jobs:
             echo '</details>'
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Stop local acceptance runner
+      - name: Stop local acceptance processes
         if: always()
         run: |
+          if [ -f /tmp/wardveil-tail.pid ]; then
+            kill "$(cat /tmp/wardveil-tail.pid)" || true
+          fi
           if [ -f /tmp/wardveil-acceptance-runner.pid ]; then
             kill "$(cat /tmp/wardveil-acceptance-runner.pid)" || true
           fi
