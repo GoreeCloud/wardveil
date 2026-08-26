@@ -40,6 +40,9 @@ jobs:
       - name: Validate Wardveil foundation
         run: python3 scripts/validate_wardveil.py
 
+      - name: Validate first-party capability architecture
+        run: python3 scripts/validate_wardveil_capabilities.py
+
       - name: Validate evidence validity
         run: python3 scripts/validate_evidence_validity.py
 
@@ -64,7 +67,7 @@ jobs:
         run: python3 scripts/validate_wardveil_icon.py
 
       - name: Compile repository and public-site tooling
-        run: python3 -m py_compile scripts/validate_repository_governance.py scripts/validate_evidence_validity.py website/build.py website/validate.py
+        run: python3 -m py_compile scripts/validate_repository_governance.py scripts/validate_evidence_validity.py scripts/validate_wardveil_capabilities.py website/build.py website/validate.py
 
       - name: Build and validate Wardveil public website
         run: python3 website/validate.py
