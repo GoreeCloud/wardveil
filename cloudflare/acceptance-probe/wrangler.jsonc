@@ -1,0 +1,23 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "goreecloud-wardveil-acceptance-probe",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-26",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "preview_urls": false,
+  "services": [
+    {
+      "binding": "WARDVEIL_PERSISTENCE_SERVICE",
+      "service": "goreecloud-wardveil-persistence"
+    }
+  ],
+  "vars": {
+    "ACCEPTANCE_TENANT": "wardveil-runtime-acceptance",
+    "EXPECTED_REVISION": "UNSET_AT_DEPLOYMENT"
+  },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1.0
+  }
+}

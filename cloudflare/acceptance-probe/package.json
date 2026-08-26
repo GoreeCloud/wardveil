@@ -1,0 +1,17 @@
+{
+  "name": "@goreecloud/wardveil-cloudflare-acceptance-probe",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "check": "tsc --noEmit",
+    "types": "wrangler types -c wrangler.jsonc -c ../wrangler.jsonc",
+    "dev": "wrangler dev -c wrangler.jsonc -c ../wrangler.jsonc",
+    "deploy": "wrangler deploy -c wrangler.jsonc"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260820.0",
+    "typescript": "^5.9.2",
+    "wrangler": "^4.33.1"
+  }
+}
