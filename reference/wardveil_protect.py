@@ -78,9 +78,10 @@ class ProtectEngine:
         now: datetime | None = None,
     ) -> ProtectionResult:
         observed_at = now or datetime.now(timezone.utc)
+        safe_key = idempotency_key.strip() if isinstance(idempotency_key, str) else ""
 
-        if idempotency_key in self._results:
-            return self._results[idempotency_key]
+        if safe_key and safe_key in self._results:
+            return self._results[safe_key]
 
         action = policy_record.get("policy_decision")
         scope = policy_record.get("scope")
@@ -88,23 +89,24 @@ class ProtectEngine:
         valid_until = _parse_time(policy_record.get("valid_until"))
         reasons: list[str] = []
 
+        if not safe_key:
+            return _rejected(action, scope, evidence_refs, authority, observed_at, "missing_idempotency_key", "missing-idempotency-key", valid_until)
         if policy_record.get("record_type") != "policy_decision":
-            return self._remember(idempotency_key, _rejected(action, scope, evidence_refs, authority, observed_at, "invalid_policy_record_type"))
+            return self._remember(safe_key, _rejected(action, scope, evidence_refs, authority, observed_at, "invalid_policy_record_type", safe_key, valid_until))
         if policy_record.get("producer", {}).get("authoritative") is not True:
-            return self._remember(idempotency_key, _rejected(action, scope, evidence_refs, authority, observed_at, "non_authoritative_policy_record"))
+            return self._remember(safe_key, _rejected(action, scope, evidence_refs, authority, observed_at, "non_authoritative_policy_record", safe_key, valid_until))
         if action not in POLICY_ACTIONS:
-            return self._remember(idempotency_key, _rejected(action, scope, evidence_refs, authority, observed_at, "unsupported_policy_action"))
+            return self._remember(safe_key, _rejected(action, scope, evidence_refs, authority, observed_at, "unsupported_policy_action", safe_key, valid_until))
         if not isinstance(scope, dict) or not scope.get("resource_type") or not scope.get("resource_id"):
-            return self._remember(idempotency_key, _rejected(action, scope, evidence_refs, authority, observed_at, "invalid_target_scope"))
+            return self._remember(safe_key, _rejected(action, scope, evidence_refs, authority, observed_at, "invalid_target_scope", safe_key, valid_until))
         if valid_until is None or valid_until <= observed_at:
-            return self._remember(idempotency_key, _rejected(action, scope, evidence_refs, authority, observed_at, "expired_or_missing_policy_validity"))
+            return self._remember(safe_key, _rejected(action, scope, evidence_refs, authority, observed_at, "expired_or_missing_policy_validity", safe_key, valid_until))
         if not authority.executor_id:
-            return self._remember(idempotency_key, _rejected(action, scope, evidence_refs, authority, observed_at, "missing_executor_identity", valid_until))
+            return self._remember(safe_key, _rejected(action, scope, evidence_refs, authority, observed_at, "missing_executor_identity", safe_key, valid_until))
         if not authority.authorizes(action, scope["resource_type"]):
-            return self._remember(idempotency_key, _rejected(action, scope, evidence_refs, authority, observed_at, "executor_not_authorized", valid_until))
-
+            return self._remember(safe_key, _rejected(action, scope, evidence_refs, authority, observed_at, "executor_not_authorized", safe_key, valid_until))
         if action in HIGH_IMPACT_ACTIONS and handler is None:
-            return self._remember(idempotency_key, _rejected(action, scope, evidence_refs, authority, observed_at, "missing_execution_handler", valid_until))
+            return self._remember(safe_key, _rejected(action, scope, evidence_refs, authority, observed_at, "missing_execution_handler", safe_key, valid_until))
 
         if action in {"allow", "allow_and_log", "warn", "step_up"} and handler is None:
             succeeded = True
@@ -128,12 +130,12 @@ class ProtectEngine:
             reason_codes=tuple(reasons),
             evidence_refs=evidence_refs,
             executor_id=authority.executor_id,
-            idempotency_key=idempotency_key,
+            idempotency_key=safe_key,
             observed_at=observed_at,
             valid_until=valid_until,
             scope=dict(scope),
         )
-        return self._remember(idempotency_key, result)
+        return self._remember(safe_key, result)
 
     def _remember(self, key: str, result: ProtectionResult) -> ProtectionResult:
         self._results[key] = result
@@ -159,6 +161,7 @@ def _rejected(
     authority: ExecutorAuthority,
     observed_at: datetime,
     reason: str,
+    idempotency_key: str,
     valid_until: datetime | None = None,
 ) -> ProtectionResult:
     safe_scope = dict(scope) if isinstance(scope, dict) else {"resource_type": "unknown", "resource_id": "unknown"}
@@ -169,7 +172,7 @@ def _rejected(
         reason_codes=(reason,),
         evidence_refs=evidence_refs,
         executor_id=authority.executor_id or "unassigned",
-        idempotency_key="pending",
+        idempotency_key=idempotency_key,
         observed_at=observed_at,
         valid_until=valid_until or observed_at,
         scope=safe_scope,
