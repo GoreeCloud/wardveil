@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "component": "Wardveil Cloudflare persistence runtime",
+  "worker_name": "goreecloud-wardveil-persistence",
+  "durable_object_binding": "WARDVEIL_PERSISTENCE",
+  "durable_object_class": "WardveilPersistenceDO",
+  "storage_engine": "sqlite-backed durable object",
+  "public_http_surface": ["/healthz"],
+  "mutation_surface": "authenticated service binding / RPC",
+  "required_acceptance_evidence": [
+    "deployed_revision_match",
+    "health_endpoint",
+    "authorized_append_read",
+    "duplicate_record_rejection",
+    "checkpoint_non_regression",
+    "retention_alarm_evidence",
+    "payload_digest_verification",
+    "pitr_availability",
+    "restore_verification_exercise",
+    "observability_failure_evidence",
+    "public_mutation_surface_absent"
+  ],
+  "storage_health_is_protection_claim": false,
+  "pitr_availability_is_restore_verification": false,
+  "cloudflare_authority_transferred_to_security_state": false,
+  "everkeep_recovery_authority_preserved": true,
+  "production_runtime_status": "unaccepted"
+}
