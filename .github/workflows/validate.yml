@@ -52,6 +52,9 @@ jobs:
       - name: Test Wardveil Protect reference executor
         run: python3 scripts/test_wardveil_protect_reference.py
 
+      - name: Test Wardveil Detect and Scan reference SDK
+        run: python3 scripts/test_wardveil_detect_scan_reference.py
+
       - name: Validate evidence validity
         run: python3 scripts/validate_evidence_validity.py
 
@@ -76,7 +79,7 @@ jobs:
         run: python3 scripts/validate_wardveil_icon.py
 
       - name: Compile repository and public-site tooling
-        run: python3 -m py_compile reference/wardveil_decision.py reference/wardveil_protect.py scripts/test_wardveil_decision_reference.py scripts/test_wardveil_protect_reference.py scripts/validate_repository_governance.py scripts/validate_evidence_validity.py scripts/validate_wardveil_capabilities.py scripts/validate_wardveil_runtime_contracts.py website/build.py website/validate.py
+        run: python3 -m py_compile reference/wardveil_decision.py reference/wardveil_protect.py reference/wardveil_detect_scan.py scripts/test_wardveil_decision_reference.py scripts/test_wardveil_protect_reference.py scripts/test_wardveil_detect_scan_reference.py scripts/validate_repository_governance.py scripts/validate_evidence_validity.py scripts/validate_wardveil_capabilities.py scripts/validate_wardveil_runtime_contracts.py website/build.py website/validate.py
 
       - name: Build and validate Wardveil public website
         run: python3 website/validate.py
