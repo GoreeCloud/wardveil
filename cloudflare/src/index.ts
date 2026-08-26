@@ -1,6 +1,7 @@
 import { DurableObject, WorkerEntrypoint } from "cloudflare:workers";
 
 const SCHEMA_VERSION = 1;
+const ACCEPTANCE_TENANT_ID = "wardveil-runtime-acceptance";
 const RETENTION_MS: Record<string, number> = {
   transient: 24 * 60 * 60 * 1000,
   security_event: 30 * 24 * 60 * 60 * 1000,
@@ -34,6 +35,13 @@ type StoredRecord = {
   retention_class: string;
   digest: string;
   payload: WardveilRecord;
+};
+
+type MaintenanceEvidence = {
+  id: number;
+  event_type: string;
+  occurred_at: string;
+  detail: Record<string, unknown>;
 };
 
 function canonical(value: unknown): string {
@@ -177,6 +185,33 @@ export class WardveilPersistenceDO extends DurableObject<Bindings> {
     return rows.length ? rows[0].sequence : 0;
   }
 
+  async maintenanceEvidence(limit = 20): Promise<MaintenanceEvidence[]> {
+    const safeLimit = Math.max(1, Math.min(100, Math.trunc(limit)));
+    return this.ctx.storage.sql.exec<{ id: number; event_type: string; occurred_at: string; detail_json: string }>(
+      "SELECT id,event_type,occurred_at,detail_json FROM maintenance_evidence ORDER BY id DESC LIMIT ?",
+      safeLimit,
+    ).toArray().map((row) => ({
+      id: row.id,
+      event_type: row.event_type,
+      occurred_at: row.occurred_at,
+      detail: JSON.parse(row.detail_json) as Record<string, unknown>,
+    }));
+  }
+
+  async scheduleAcceptanceRetentionAlarm(delayMs: number): Promise<{ scheduled_for: string }> {
+    const boundedDelay = Math.trunc(delayMs);
+    if (boundedDelay < 1000 || boundedDelay > 60000) throw new Error("invalid_acceptance_alarm_delay");
+    const scheduledFor = Date.now() + boundedDelay;
+    await this.ctx.storage.setAlarm(scheduledFor);
+    return { scheduled_for: new Date(scheduledFor).toISOString() };
+  }
+
+  async emitAcceptanceObservabilityFailure(marker: string): Promise<never> {
+    if (!/^acceptance-[0-9a-f-]{36}$/.test(marker)) throw new Error("invalid_acceptance_marker");
+    console.error(JSON.stringify({ event: "wardveil_acceptance_observability_probe", marker }));
+    throw new Error("acceptance_observability_probe");
+  }
+
   async health(): Promise<Record<string, unknown>> {
     const schema = this.ctx.storage.sql.exec<{ value: string }>("SELECT value FROM wardveil_meta WHERE key='schema_version'").one();
     const currentBookmark = await this.ctx.storage.getCurrentBookmark();
@@ -214,6 +249,11 @@ export default class WardveilPersistenceWorker extends WorkerEntrypoint<Bindings
     return this.env.WARDVEIL_PERSISTENCE.getByName(tenantId);
   }
 
+  private acceptanceStub(tenantId: string) {
+    if (tenantId !== ACCEPTANCE_TENANT_ID) throw new Error("acceptance_tenant_required");
+    return this.stub(tenantId);
+  }
+
   async append(tenantId: string, record: WardveilRecord, retentionClass = "security_event") {
     return this.stub(tenantId).append(record, retentionClass);
   }
@@ -232,6 +272,18 @@ export default class WardveilPersistenceWorker extends WorkerEntrypoint<Bindings
 
   async health(tenantId: string) {
     return this.stub(tenantId).health();
+  }
+
+  async maintenanceEvidence(tenantId: string, limit = 20) {
+    return this.stub(tenantId).maintenanceEvidence(limit);
+  }
+
+  async scheduleAcceptanceRetentionAlarm(tenantId: string, delayMs = 2000) {
+    return this.acceptanceStub(tenantId).scheduleAcceptanceRetentionAlarm(delayMs);
+  }
+
+  async emitAcceptanceObservabilityFailure(tenantId: string, marker: string) {
+    return this.acceptanceStub(tenantId).emitAcceptanceObservabilityFailure(marker);
   }
 
   async fetch(request: Request): Promise<Response> {

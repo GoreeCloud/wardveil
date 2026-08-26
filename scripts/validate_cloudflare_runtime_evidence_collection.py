@@ -4,7 +4,7 @@ import json
 import re
 
 ROOT = Path(__file__).resolve().parents[1]
-workflow = (ROOT / ".github" / "workflows" / "deploy-cloudflare-persistence.yml").read_text()
+workflow = (ROOT / ".github/workflows/deploy-cloudflare-persistence.yml").read_text()
 runner_config_text = (ROOT / "cloudflare" / "acceptance-runner" / "wrangler.jsonc").read_text()
 runner_source = (ROOT / "cloudflare" / "acceptance-runner" / "src" / "index.ts").read_text()
 doc = (ROOT / "CLOUDFLARE-RUNTIME-EVIDENCE-COLLECTION.md").read_text()
@@ -22,10 +22,11 @@ assert "routes" not in runner_config, "local-only runner must not gain routes"
 
 for token in [
     'url.pathname === "/healthz"',
-    'url.pathname !== "/run"',
+    '"/observe-failure"',
     'request.method !== "POST"',
-    'WARDVEIL_ACCEPTANCE_PROBE.runAcceptance(revision)',
-    '/^[0-9a-f]{40}$/.test(revision)',
+    'WARDVEIL_ACCEPTANCE_PROBE.runAcceptance(body.revision)',
+    'WARDVEIL_ACCEPTANCE_PROBE.runObservabilityFailure(body.revision, body.marker)',
+    '/^[0-9a-f]{40}$/.test(value)',
 ]:
     assert token in runner_source, f"missing acceptance runner invariant: {token}"
 
@@ -39,7 +40,10 @@ for token in [
     "--var EXPECTED_REVISION:$GITHUB_SHA",
     "--var ACCEPTANCE_TENANT:wardveil-runtime-acceptance",
     "acceptance-runner/wrangler.jsonc",
-    "Collect privileged service-binding evidence",
+    "Collect privileged service-binding and retention evidence",
+    "Collect bounded observability failure evidence",
+    "wrangler tail goreecloud-wardveil-persistence --format json --search",
+    "/observe-failure",
     "authorized_append_read",
     "duplicate_record_rejection",
     "checkpoint_non_regression",
@@ -60,6 +64,7 @@ assert "contents: write" not in workflow, "runtime evidence collection must not 
 assert "curl --silent --show-error --output /tmp/wardveil-probe.json" in workflow
 assert "test \"$code\" = \"200\"" in workflow
 assert "Generic public POST /records" in workflow or "public POST /records" in doc
+assert "Remaining pending acceptance evidence: Everkeep-governed restore verification" in workflow
 
 for phrase in [
     "PITR availability is not restore verification.",

@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "consumer": "Wardveil Security",
+  "provider": "Everkeep",
+  "provider_repository": "GoreeCloud/goreecloud-everkeep",
+  "provider_contract_id": "https://goreecloud.dev/everkeep/contracts/everkeep.restore-verification.schema.json",
+  "provider_contract_version": "1.0",
+  "provider_contract_introduced_in_revision": "33c5c6e85cbe6057225199811891644c4c65cac5",
+  "accepted_environment": "production",
+  "target": {
+    "system": "Wardveil Security",
+    "component": "Cloudflare persistence runtime",
+    "resource_id": "goreecloud-wardveil-persistence",
+    "deployed_revision_must_match_exactly": true
+  },
+  "required_provider_evidence": {
+    "status": "pass",
+    "authoritative": true,
+    "isolated_verification": true,
+    "integrity_verified": true,
+    "restored_state_verified": true,
+    "evidence_refs_required": true
+  },
+  "satisfies_only": "restore_verification_exercise",
+  "pitr_availability_is_restore_verification": false,
+  "everkeep_recovery_authority_preserved": true,
+  "security_state_authority_transferred": false,
+  "protection_claim_authority_transferred": false,
+  "accepted_restore_evidence_creates_protected_by_wardveil_claim": false
+}
