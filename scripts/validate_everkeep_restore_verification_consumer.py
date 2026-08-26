@@ -58,6 +58,7 @@ def main():
         "provider_repository": "GoreeCloud/goreecloud-everkeep",
         "provider_contract_id": "https://goreecloud.dev/everkeep/contracts/everkeep.restore-verification.schema.json",
         "provider_contract_version": "1.0",
+        "provider_contract_introduced_in_revision": "33c5c6e85cbe6057225199811891644c4c65cac5",
         "accepted_environment": "production",
         "satisfies_only": "restore_verification_exercise",
         "pitr_availability_is_restore_verification": False,
@@ -97,7 +98,7 @@ def main():
         "verificationId": "wardveil-restore-test",
         "environment": "production",
         "capturedAt": "2026-08-26T21:30:00Z",
-        "everkeepSourceRevision": "e246fb0e7c97a6f1da75188b25042b0611c57095",
+        "everkeepSourceRevision": "33c5c6e85cbe6057225199811891644c4c65cac5",
         "target": {
             "system": "Wardveil Security",
             "component": "Cloudflare persistence runtime",
