@@ -2,6 +2,32 @@
 
 All notable source-controlled changes to the Wardveil Security foundation are recorded here.
 
+## 0.8.0 — 2026-08-26
+
+### Added
+
+- Added `ARCHITECTURE.md` as the canonical first-party security architecture for Wardveil Trust, Protect, Detect, Scan, Policy, Quarantine, Audit, Response, and Security Center.
+- Added `contracts/wardveil.capabilities.json` with machine-readable capability responsibilities, authority declarations, lifecycle ordering, and cross-cutting security invariants.
+- Added `scripts/validate_wardveil_capabilities.py` and exact-revision CI enforcement for the canonical capability contract.
+- Added explicit Everkeep and GoreeCloud Mesh relationship metadata to the Wardveil identity contract.
+
+### Changed
+
+- Advanced the Wardveil Security foundation to 0.8.0.
+- Upgraded Wardveil from a primarily status/presentation description to a scoped first-party security system and shared security plane while preserving external producer authority boundaries.
+- Approved Wardveil Security Center as a substantive first-party capability rather than a reserved concept.
+- Reworked the README around the first-party security lifecycle, technical authority boundaries, fail-closed mutation, least privilege, auditability, and application integration.
+- Updated the main foundation validator to require the new architecture, capability contract, platform relationships, and synchronized 0.8 metadata.
+
+### Security invariants
+
+- Evidence remains mandatory before reassurance or a `Protected by Wardveil` claim.
+- Missing, stale, unsupported, malformed, or unverified required evidence continues to fail closed.
+- Wardveil-native technical authority is explicitly scoped; unrelated producers retain authority over their own underlying technical state until integrated through a Wardveil contract.
+- High-impact security mutation requires explicit executor authority and audit evidence.
+- Unknown scan results are not interpreted as clean, and anomaly detection alone is not treated as proof of malicious activity.
+- Privacy Shield remains a separate privacy authority; Everkeep remains the resilience/recovery authority; GoreeCloud Mesh remains the coordination/governance plane; Glaze UI remains the presentation and interaction system.
+
 ## 0.7.0 — 2026-08-20
 
 ### Added
