@@ -5,6 +5,7 @@
   "provider_repository": "GoreeCloud/goreecloud-everkeep",
   "provider_contract_id": "https://goreecloud.dev/everkeep/contracts/everkeep.restore-verification.schema.json",
   "provider_contract_version": "1.0",
+  "provider_contract_introduced_in_revision": "33c5c6e85cbe6057225199811891644c4c65cac5",
   "accepted_environment": "production",
   "target": {
     "system": "Wardveil Security",
