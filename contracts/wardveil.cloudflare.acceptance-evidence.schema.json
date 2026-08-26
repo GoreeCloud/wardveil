@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://goreecloud.com/schemas/wardveil.cloudflare.acceptance-evidence.schema.json",
+  "title": "Wardveil Cloudflare Runtime Acceptance Evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "component",
+    "environment",
+    "deployed_revision",
+    "collected_at",
+    "acceptance_status",
+    "checks",
+    "storage_health_is_protection_claim",
+    "everkeep_recovery_authority_preserved"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "component": { "const": "Wardveil Cloudflare persistence runtime" },
+    "environment": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "deployed_revision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "collected_at": { "type": "string", "format": "date-time" },
+    "acceptance_status": { "enum": ["unaccepted", "degraded", "accepted"] },
+    "checks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "deployed_revision_match",
+        "health_endpoint",
+        "authorized_append_read",
+        "duplicate_record_rejection",
+        "checkpoint_non_regression",
+        "retention_alarm_evidence",
+        "payload_digest_verification",
+        "pitr_availability",
+        "restore_verification_exercise",
+        "observability_failure_evidence",
+        "public_mutation_surface_absent"
+      ],
+      "properties": {
+        "deployed_revision_match": { "$ref": "#/$defs/check" },
+        "health_endpoint": { "$ref": "#/$defs/check" },
+        "authorized_append_read": { "$ref": "#/$defs/check" },
+        "duplicate_record_rejection": { "$ref": "#/$defs/check" },
+        "checkpoint_non_regression": { "$ref": "#/$defs/check" },
+        "retention_alarm_evidence": { "$ref": "#/$defs/check" },
+        "payload_digest_verification": { "$ref": "#/$defs/check" },
+        "pitr_availability": { "$ref": "#/$defs/check" },
+        "restore_verification_exercise": { "$ref": "#/$defs/check" },
+        "observability_failure_evidence": { "$ref": "#/$defs/check" },
+        "public_mutation_surface_absent": { "$ref": "#/$defs/check" }
+      }
+    },
+    "storage_health_is_protection_claim": { "const": false },
+    "everkeep_recovery_authority_preserved": { "const": true }
+  },
+  "$defs": {
+    "check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "observed_at", "source", "summary"],
+      "properties": {
+        "status": { "enum": ["pending", "passed", "failed", "expired", "unavailable"] },
+        "observed_at": { "type": ["string", "null"], "format": "date-time" },
+        "source": { "type": ["string", "null"], "maxLength": 512 },
+        "summary": { "type": "string", "minLength": 1, "maxLength": 2000 }
+      }
+    }
+  }
+}
