@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "component": "Wardveil Cloudflare persistence runtime",
+  "environment": "production",
+  "deployed_revision": "0000000000000000000000000000000000000000",
+  "collected_at": "1970-01-01T00:00:00Z",
+  "acceptance_status": "unaccepted",
+  "checks": {
+    "deployed_revision_match": {"status":"pending","observed_at":null,"source":null,"summary":"Live deployment evidence not yet collected."},
+    "health_endpoint": {"status":"pending","observed_at":null,"source":null,"summary":"Live health evidence not yet collected."},
+    "authorized_append_read": {"status":"pending","observed_at":null,"source":null,"summary":"Authorized service-binding append/read evidence not yet collected."},
+    "duplicate_record_rejection": {"status":"pending","observed_at":null,"source":null,"summary":"Duplicate rejection evidence not yet collected."},
+    "checkpoint_non_regression": {"status":"pending","observed_at":null,"source":null,"summary":"Checkpoint non-regression evidence not yet collected."},
+    "retention_alarm_evidence": {"status":"pending","observed_at":null,"source":null,"summary":"Retention alarm evidence not yet collected."},
+    "payload_digest_verification": {"status":"pending","observed_at":null,"source":null,"summary":"Persisted digest verification evidence not yet collected."},
+    "pitr_availability": {"status":"pending","observed_at":null,"source":null,"summary":"PITR availability evidence not yet collected."},
+    "restore_verification_exercise": {"status":"pending","observed_at":null,"source":null,"summary":"Everkeep-governed restore verification evidence not yet collected."},
+    "observability_failure_evidence": {"status":"pending","observed_at":null,"source":null,"summary":"Bounded failure-path observability evidence not yet collected."},
+    "public_mutation_surface_absent": {"status":"pending","observed_at":null,"source":null,"summary":"Public mutation-surface verification not yet collected."}
+  },
+  "storage_health_is_protection_claim": false,
+  "everkeep_recovery_authority_preserved": true
+}
