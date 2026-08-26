@@ -15,7 +15,7 @@ def record(record_id,record_type="protection_action",**extra):
     return base
 
 store=AppendOnlyStore()
-r1=store.append(record("r1",execution_status="succeeded",valid_until=(NOW+timedelta(minutes=15)).isoformat()),now=NOW)
+r1=store.append(record("r1",execution_status="succeeded",valid_until=(NOW+timedelta(minutes=15)).isoformat()),retention_class="transient",now=NOW)
 r2=store.append(record("r2","audit_event",event_type="test",outcome="recorded"),retention_class="audit_evidence",now=NOW)
 assert r1.sequence==1 and r2.sequence==2
 assert store.verify()
