@@ -2,7 +2,7 @@
 
 Wardveil Security is GoreeCloud's platform-wide first-party security system and shared security plane. It coordinates evidence-backed trust, policy, protection, detection, scanning, quarantine, incident response, audit, and security-center experiences across GoreeCloud.
 
-> **Current status:** Foundation 0.8 active. Wardveil now has a canonical first-party capability architecture and machine-readable capability contract while preserving the existing fail-closed evidence, conservative aggregation, Privacy Shield separation, and product-specific acceptance boundaries.
+> **Current status:** Foundation 0.8 active. Wardveil now has a canonical first-party capability architecture, a comprehensive feature specification, and machine-readable capability contract while preserving the existing fail-closed evidence, conservative aggregation, Privacy Shield separation, and product-specific acceptance boundaries.
 
 ## First-party security capabilities
 
@@ -18,7 +18,7 @@ Wardveil Security is the umbrella system for nine cooperating capabilities:
 - **Wardveil Response** — incident containment, remediation, escalation, and recovery coordination.
 - **Wardveil Security Center** — unified user and administrator protection experience.
 
-These are substantive first-party security capabilities, not decorative labels. Their canonical responsibility and authority boundaries are defined in `ARCHITECTURE.md` and `contracts/wardveil.capabilities.json`.
+These are substantive first-party security capabilities, not decorative labels. Their canonical responsibility and authority boundaries are defined in `ARCHITECTURE.md` and `contracts/wardveil.capabilities.json`. Their detailed intended feature scope is defined in `FEATURES.md`.
 
 ## Security lifecycle
 
@@ -44,9 +44,10 @@ This does **not** mean Wardveil automatically becomes authoritative for every un
 
 Branding alone is never evidence of protection or integration.
 
-## Shared contracts
+## Shared contracts and specifications
 
 - `ARCHITECTURE.md` — canonical first-party security architecture and responsibility boundaries.
+- `FEATURES.md` — canonical detailed feature specification across Wardveil services, applications, infrastructure, Security Center, evidence, and platform integrations.
 - `contracts/wardveil.capabilities.json` — machine-readable capability and lifecycle contract.
 - `STATUS.md` and `contracts/wardveil.status.schema.json` — evidence-backed Wardveil status semantics.
 - `AGGREGATION.md` and `contracts/wardveil.aggregation.vectors.json` — conservative multi-record aggregation.
@@ -70,6 +71,8 @@ The normalized status states remain `protected`, `attention`, `degraded`, `unkno
 GoreeCloud applications should consume Wardveil first-party security services rather than independently recreating malware scanning, session-risk evaluation, policy decisions, quarantine semantics, incident response, or security audit behavior.
 
 An integration should map authoritative producers, request or consume Wardveil decisions, honor supported enforcement actions, respect quarantine state, emit security-relevant audit events, exclude prohibited sensitive material, and expose only evidence-backed Wardveil status.
+
+Detailed application scopes for Browser, Mail, Drive, Vault, AI, Messenger, Identity, Search, Gateway, Network, infrastructure, and other authorized services are maintained in `FEATURES.md`.
 
 ## Protected by Wardveil
 
