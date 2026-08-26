@@ -27,6 +27,8 @@ One successful deployment-and-collection run can establish revision-bound eviden
 
 Acceptance records are `test_only`, use the `transient` retention class, and are scoped to the dedicated `wardveil-runtime-acceptance` tenant. Shortened alarm scheduling is accepted only for that tenant; it cannot target arbitrary production tenants. The bounded observability exercise deliberately fails without mutating a production record and must be corroborated by Cloudflare tail output rather than by the probe's return value alone.
 
+The acceptance alarm still uses Cloudflare's normal Durable Object alarm mechanism and the production retention handler. The shortened schedule exists only to make the acceptance exercise bounded; it does not replace the normal six-hour maintenance schedule or create a second retention implementation.
+
 ## Evidence intentionally left pending
 
 The deployment workflow must not self-certify recovery authority. After the expanded runtime probe and independent Cloudflare tail observation complete, the remaining acceptance requirement is:
