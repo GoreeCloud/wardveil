@@ -1,0 +1,80 @@
+{
+  "contract_version": "0.1.0",
+  "foundation_version": "0.8.0",
+  "umbrella": "Wardveil Security",
+  "capabilities": [
+    {
+      "id": "trust",
+      "name": "Wardveil Trust",
+      "responsibility": "identity-session-device-service-and-contextual-risk-evaluation",
+      "authoritative_for": ["wardveil-trust-state", "wardveil-risk-reasons"],
+      "must_fail_closed_on_missing_required_evidence": true
+    },
+    {
+      "id": "protect",
+      "name": "Wardveil Protect",
+      "responsibility": "preventive-controls-enforcement-and-active-protection",
+      "authoritative_for": ["wardveil-enforcement-result"],
+      "must_audit_high_impact_actions": true
+    },
+    {
+      "id": "detect",
+      "name": "Wardveil Detect",
+      "responsibility": "threat-abuse-behavioral-and-anomaly-detection",
+      "authoritative_for": ["wardveil-detection-findings"],
+      "anomaly_is_not_automatic_proof_of_malice": true
+    },
+    {
+      "id": "scan",
+      "name": "Wardveil Scan",
+      "responsibility": "file-content-package-url-attachment-download-and-payload-inspection",
+      "authoritative_for": ["wardveil-scan-findings"],
+      "unknown_is_not_clean": true
+    },
+    {
+      "id": "policy",
+      "name": "Wardveil Policy",
+      "responsibility": "central-security-policy-rules-decisions-and-enforcement-logic",
+      "authoritative_for": ["wardveil-policy-decisions"],
+      "decisions_must_be_versioned_and_auditable": true
+    },
+    {
+      "id": "quarantine",
+      "name": "Wardveil Quarantine",
+      "responsibility": "isolation-containment-review-release-and-remediation",
+      "authoritative_for": ["wardveil-quarantine-state"],
+      "release_requires_authorized_audited_action": true
+    },
+    {
+      "id": "audit",
+      "name": "Wardveil Audit",
+      "responsibility": "security-evidence-events-decisions-and-history",
+      "authoritative_for": ["wardveil-audit-records"],
+      "shared_records_must_exclude_reusable_secrets": true
+    },
+    {
+      "id": "response",
+      "name": "Wardveil Response",
+      "responsibility": "incident-containment-remediation-escalation-and-recovery-coordination",
+      "authoritative_for": ["wardveil-incident-workflow-state"],
+      "cross_system_actions_require_explicit_executor_authority": true
+    },
+    {
+      "id": "security_center",
+      "name": "Wardveil Security Center",
+      "responsibility": "unified-user-and-administrator-security-experience",
+      "authoritative_for": ["wardveil-presentation-and-control-experience"],
+      "presentation_is_not_itself_security_evidence": true
+    }
+  ],
+  "representative_lifecycle": ["trust", "policy", "protect", "detect", "scan", "quarantine", "response", "audit"],
+  "cross_cutting": {
+    "security_center_spans_lifecycle": true,
+    "evidence_before_reassurance": true,
+    "least_privilege": true,
+    "data_minimization": true,
+    "conservative_aggregation": true,
+    "verifiable_public_claims": true,
+    "branding_alone_is_not_integration": true
+  }
+}
