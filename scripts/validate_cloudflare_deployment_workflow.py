@@ -56,10 +56,13 @@ for token in [
     "Deploy internal Wardveil acceptance probe",
     "--var EXPECTED_REVISION:$GITHUB_SHA",
     "acceptance-runner/wrangler.jsonc",
-    "Collect privileged service-binding evidence",
+    "Collect privileged service-binding and retention evidence",
+    "Collect bounded observability failure evidence",
+    "wrangler tail goreecloud-wardveil-persistence --format json --search",
     "curl --fail-with-body",
     "POST \"$origin/records\"",
     "404|405",
+    "Remaining pending acceptance evidence: Everkeep-governed restore verification",
     "Runtime acceptance status: **unaccepted**",
 ]:
     if token not in workflow:
