@@ -4,6 +4,7 @@ import json
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = ROOT / "cloudflare" / "acceptance-probe" / "wrangler.jsonc"
 SOURCE = ROOT / "cloudflare" / "acceptance-probe" / "src" / "index.ts"
+PERSISTENCE = ROOT / "cloudflare" / "src" / "index.ts"
 DOC = ROOT / "CLOUDFLARE-ACCEPTANCE-PROBE.md"
 RUNTIME = ROOT / "contracts" / "wardveil.cloudflare.runtime-acceptance.json"
 
@@ -25,11 +26,12 @@ def require(condition: bool, message: str):
 
 
 def main():
-    for path in (CONFIG, SOURCE, DOC, RUNTIME):
+    for path in (CONFIG, SOURCE, PERSISTENCE, DOC, RUNTIME):
         require(path.exists(), f"missing required file: {path.relative_to(ROOT)}")
 
     config = load_jsonc(CONFIG)
     source = SOURCE.read_text()
+    persistence = PERSISTENCE.read_text()
     doc = DOC.read_text()
     runtime = json.loads(RUNTIME.read_text())
 
@@ -49,12 +51,17 @@ def main():
 
     required_source_tokens = [
         "runAcceptance(expectedRevision",
+        "runObservabilityFailure(expectedRevision",
         "revision_mismatch",
         "authorized_append_read",
         "duplicate_record_rejection",
         "checkpoint_non_regression",
+        "retention_alarm_evidence",
+        "scheduleAcceptanceRetentionAlarm",
+        "maintenanceEvidence",
         "payload_digest_verification",
         "pitr_availability",
+        "emitAcceptanceObservabilityFailure",
         'return new Response("Not Found", { status: 404 })',
         'status: anyFailed ? "degraded" : "unaccepted"',
         'security_state_authority: false',
@@ -64,6 +71,18 @@ def main():
     for token in required_source_tokens:
         require(token in source, f"acceptance probe missing invariant: {token}")
 
+    for token in [
+        'const ACCEPTANCE_TENANT_ID = "wardveil-runtime-acceptance"',
+        "acceptanceStub(tenantId",
+        "acceptance_tenant_required",
+        "scheduleAcceptanceRetentionAlarm",
+        "invalid_acceptance_alarm_delay",
+        "emitAcceptanceObservabilityFailure",
+        "wardveil_acceptance_observability_probe",
+        "acceptance_observability_probe",
+    ]:
+        require(token in persistence, f"persistence acceptance boundary missing: {token}")
+
     required_doc_tokens = [
         "service binding",
         "cannot set production status to `accepted` by itself",
@@ -71,6 +90,8 @@ def main():
         "PITR availability is not restore verification",
         "Everkeep retains resilience and recovery authority",
         "public mutation or generic public acceptance endpoint must not be created",
+        "dedicated acceptance tenant",
+        "Cloudflare Worker tail evidence",
     ]
     for token in required_doc_tokens:
         require(token in doc, f"acceptance probe documentation missing invariant: {token}")
@@ -80,13 +101,13 @@ def main():
         "authorized_append_read",
         "duplicate_record_rejection",
         "checkpoint_non_regression",
+        "retention_alarm_evidence",
         "payload_digest_verification",
         "pitr_availability",
     }
     probe_external = {
         "deployed_revision_match",
         "health_endpoint",
-        "retention_alarm_evidence",
         "restore_verification_exercise",
         "observability_failure_evidence",
         "public_mutation_surface_absent",
