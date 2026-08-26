@@ -1,0 +1,25 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "goreecloud-wardveil-persistence",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-26",
+  "compatibility_flags": ["nodejs_compat"],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "WARDVEIL_PERSISTENCE",
+        "class_name": "WardveilPersistenceDO"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["WardveilPersistenceDO"]
+    }
+  ],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1.0
+  }
+}
