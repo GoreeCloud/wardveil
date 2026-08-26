@@ -22,12 +22,22 @@ type StoredRecord = {
   payload: WardveilRecord;
 };
 
+type MaintenanceEvidence = {
+  id: number;
+  event_type: string;
+  occurred_at: string;
+  detail: Record<string, unknown>;
+};
+
 type PersistenceService = {
   append(tenantId: string, record: WardveilRecord, retentionClass?: string): Promise<StoredRecord>;
   readAfter(tenantId: string, sequence: number, limit?: number): Promise<StoredRecord[]>;
   checkpoint(tenantId: string, consumerId: string, sequence: number): Promise<void>;
   getCheckpoint(tenantId: string, consumerId: string): Promise<number>;
   health(tenantId: string): Promise<Record<string, unknown>>;
+  maintenanceEvidence(tenantId: string, limit?: number): Promise<MaintenanceEvidence[]>;
+  scheduleAcceptanceRetentionAlarm(tenantId: string, delayMs?: number): Promise<{ scheduled_for: string }>;
+  emitAcceptanceObservabilityFailure(tenantId: string, marker: string): Promise<never>;
 };
 
 type Bindings = {
@@ -79,12 +89,15 @@ function evidence(requirement: string, state: EvidenceState, detail: Record<stri
   return { requirement, state, observed_at: new Date().toISOString(), detail };
 }
 
+function requireRevision(expectedRevision: string, configuredRevision: string): void {
+  if (!expectedRevision || expectedRevision !== configuredRevision || expectedRevision === "UNSET_AT_DEPLOYMENT") {
+    throw new Error("revision_mismatch");
+  }
+}
+
 export default class WardveilAcceptanceProbe extends WorkerEntrypoint<Bindings> {
   async runAcceptance(expectedRevision: string): Promise<ProbeResult> {
-    if (!expectedRevision || expectedRevision !== this.env.EXPECTED_REVISION || expectedRevision === "UNSET_AT_DEPLOYMENT") {
-      throw new Error("revision_mismatch");
-    }
-
+    requireRevision(expectedRevision, this.env.EXPECTED_REVISION);
     const tenantId = this.env.ACCEPTANCE_TENANT;
     if (!tenantId) throw new Error("acceptance_tenant_missing");
 
@@ -178,15 +191,34 @@ export default class WardveilAcceptanceProbe extends WorkerEntrypoint<Bindings> 
       results.push(evidence("pitr_availability", "failed", { error: errorCode(error) }));
     }
 
+    try {
+      const startedAt = Date.now();
+      const scheduled = await this.env.WARDVEIL_PERSISTENCE_SERVICE.scheduleAcceptanceRetentionAlarm(tenantId, 2000);
+      let retained: MaintenanceEvidence | undefined;
+      for (let attempt = 0; attempt < 30; attempt += 1) {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        const history = await this.env.WARDVEIL_PERSISTENCE_SERVICE.maintenanceEvidence(tenantId, 20);
+        retained = history.find((item) => item.event_type === "retention_enforced" && Date.parse(item.occurred_at) >= startedAt);
+        if (retained) break;
+      }
+      results.push(evidence("retention_alarm_evidence", retained ? "passed" : "failed", {
+        scheduled_for: scheduled.scheduled_for,
+        maintenance_event_id: retained?.id ?? null,
+        maintenance_occurred_at: retained?.occurred_at ?? null,
+        cloudflare_alarm_handler_observed: Boolean(retained),
+      }));
+    } catch (error) {
+      results.push(evidence("retention_alarm_evidence", "failed", { error: errorCode(error) }));
+    }
+
     for (const requirement of [
       "deployed_revision_match",
       "health_endpoint",
-      "retention_alarm_evidence",
       "restore_verification_exercise",
       "observability_failure_evidence",
       "public_mutation_surface_absent",
     ]) {
-      results.push(evidence(requirement, "pending", { reason: "requires_external_or_time_bounded_runtime_evidence" }));
+      results.push(evidence(requirement, "pending", { reason: "requires_external_runtime_evidence" }));
     }
 
     const anyFailed = results.some((item) => item.state === "failed");
@@ -201,6 +233,20 @@ export default class WardveilAcceptanceProbe extends WorkerEntrypoint<Bindings> 
       protection_claim_authority: false,
       everkeep_recovery_authority_preserved: true,
     };
+  }
+
+  async runObservabilityFailure(expectedRevision: string, marker: string): Promise<{ marker: string; expected_failure_observed: boolean }> {
+    requireRevision(expectedRevision, this.env.EXPECTED_REVISION);
+    if (!/^acceptance-[0-9a-f-]{36}$/.test(marker)) throw new Error("invalid_acceptance_marker");
+    try {
+      await this.env.WARDVEIL_PERSISTENCE_SERVICE.emitAcceptanceObservabilityFailure(this.env.ACCEPTANCE_TENANT, marker);
+    } catch (error) {
+      if (errorCode(error).includes("acceptance_observability_probe")) {
+        return { marker, expected_failure_observed: true };
+      }
+      throw error;
+    }
+    throw new Error("acceptance_observability_probe_did_not_fail");
   }
 
   async fetch(): Promise<Response> {
