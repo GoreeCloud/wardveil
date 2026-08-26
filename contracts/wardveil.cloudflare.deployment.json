@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "component": "Wardveil Cloudflare persistence deployment",
+  "workflow": ".github/workflows/deploy-cloudflare-persistence.yml",
+  "worker_name": "goreecloud-wardveil-persistence",
+  "wrangler_version": "4.33.1",
+  "deployment_trigger": "manual workflow_dispatch",
+  "required_branch": "main",
+  "required_environment": "wardveil-production",
+  "required_secrets": [
+    "CLOUDFLARE_API_TOKEN",
+    "CLOUDFLARE_ACCOUNT_ID",
+    "WARDVEIL_HEALTH_URL"
+  ],
+  "exact_revision_required": true,
+  "public_health_path": "/healthz",
+  "generic_public_mutation_path": "/records",
+  "generic_public_mutation_allowed": false,
+  "service_binding_required_for_privileged_operations": true,
+  "deployment_success_is_runtime_acceptance": false,
+  "health_success_is_protection_claim": false,
+  "storage_health_is_protection_claim": false,
+  "production_runtime_status_source": "contracts/wardveil.cloudflare.runtime-acceptance.json"
+}
