@@ -6,7 +6,7 @@ It does not provide a production message bus, key-management system, or durable 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from hashlib import sha256
 import hmac
 import json
@@ -16,6 +16,9 @@ from uuid import uuid4
 ALLOWED_RECORD_TYPES = {
     "trust_decision", "policy_decision", "detection_finding", "scan_finding",
     "protection_action", "quarantine_record", "incident_record", "audit_event",
+}
+VALIDITY_REQUIRED_TYPES = {
+    "trust_decision", "policy_decision", "detection_finding", "scan_finding", "protection_action"
 }
 RETENTION_CLASSES = {"transient", "security_event", "incident_evidence", "audit_evidence"}
 
@@ -97,6 +100,7 @@ def create_envelope(
     replay_key: str,
     retention_class: str = "security_event",
     now: datetime | None = None,
+    delivery_ttl: timedelta = timedelta(minutes=5),
 ) -> MeshEnvelope:
     observed = now or datetime.now(timezone.utc)
     _validate_record(record, observed)
@@ -109,9 +113,12 @@ def create_envelope(
         raise ValueError("replay key is required")
     if retention_class not in RETENTION_CLASSES:
         raise ValueError("unsupported retention class")
+    if delivery_ttl <= timedelta(0):
+        raise ValueError("delivery ttl must be positive")
 
-    valid_until = _parse_time(record.get("valid_until")) or observed
-    expires = min(valid_until, observed.replace(microsecond=0) if valid_until <= observed else valid_until)
+    delivery_expires = observed + delivery_ttl
+    evidence_valid_until = _parse_time(record.get("valid_until"))
+    expires = min(delivery_expires, evidence_valid_until) if evidence_valid_until else delivery_expires
     if expires <= observed:
         raise ValueError("cannot transport expired security evidence")
 
@@ -216,5 +223,5 @@ def _validate_record(record: dict, now: datetime) -> None:
     valid_until = _parse_time(record.get("valid_until"))
     if valid_until is not None and valid_until <= now:
         raise ValueError("expired_security_evidence")
-    if record.get("record_type") in {"trust_decision", "policy_decision", "detection_finding", "scan_finding", "protection_action"} and valid_until is None:
+    if record.get("record_type") in VALIDITY_REQUIRED_TYPES and valid_until is None:
         raise ValueError("missing_security_evidence_validity")
