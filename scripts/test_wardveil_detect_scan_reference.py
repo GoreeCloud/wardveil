@@ -1,7 +1,16 @@
 #!/usr/bin/env python3
-from datetime import datetime, timezone
+"""Self-tests for the dependency-free Wardveil Detect + Scan reference SDK."""
 
-from reference.wardveil_detect_scan import (
+from __future__ import annotations
+
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from reference.wardveil_detect_scan import (  # noqa: E402
     DetectionInput,
     EvidenceSignal,
     ScanInput,
