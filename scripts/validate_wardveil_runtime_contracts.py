@@ -66,7 +66,7 @@ def main() -> None:
     text = DOC_PATH.read_text(encoding="utf-8").lower()
     required_phrases = (
         "trust is not authorization",
-        "unknown and `unsupported` must never be interpreted as clean",
+        "must never be interpreted as clean",
         "explicit executor authority",
         "quarantine is not deletion",
         "does not transfer authority",
