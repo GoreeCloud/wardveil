@@ -10,8 +10,10 @@ acceptance = json.loads((ROOT / "contracts/wardveil.cloudflare.runtime-acceptanc
 wrangler = (ROOT / "cloudflare/wrangler.jsonc").read_text()
 
 required = {
+    "schema_version": 2,
     "worker_name": "goreecloud-wardveil-persistence",
-    "wrangler_version": "4.33.1",
+    "acceptance_probe_worker_name": "goreecloud-wardveil-acceptance-probe",
+    "wrangler_version": "4.37.0",
     "deployment_trigger": "manual workflow_dispatch",
     "required_branch": "main",
     "required_environment": "wardveil-production",
@@ -20,6 +22,8 @@ required = {
     "generic_public_mutation_path": "/records",
     "generic_public_mutation_allowed": False,
     "service_binding_required_for_privileged_operations": True,
+    "acceptance_probe_public_route_allowed": False,
+    "remote_service_binding_evidence_collection": True,
     "deployment_success_is_runtime_acceptance": False,
     "health_success_is_protection_claim": False,
     "storage_health_is_protection_claim": False,
@@ -47,18 +51,24 @@ for token in [
     "persist-credentials: false",
     'test "$GITHUB_SHA" = "$EXPECTED_SHA"',
     'test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"',
-    "wrangler@4.33.1",
+    "wrangler@4.37.0",
     "npx wrangler deploy --config wrangler.jsonc",
+    "Deploy internal Wardveil acceptance probe",
+    "--var EXPECTED_REVISION:$GITHUB_SHA",
+    "acceptance-runner/wrangler.jsonc",
+    "Collect privileged service-binding evidence",
     "curl --fail-with-body",
     "POST \"$origin/records\"",
     "404|405",
-    "full Wardveil production acceptance still requires",
+    "Runtime acceptance status: **unaccepted**",
 ]:
     if token not in workflow:
         raise SystemExit(f"Cloudflare deployment workflow missing: {token}")
 
 if "contents: read" not in workflow:
     raise SystemExit("Deployment workflow must retain least-privilege contents: read")
+if "contents: write" in workflow:
+    raise SystemExit("Deployment workflow may not gain repository write permission")
 if "ubuntu-latest" in workflow:
     raise SystemExit("Deployment workflow may not use moving ubuntu-latest runner")
 if "@v" in workflow:

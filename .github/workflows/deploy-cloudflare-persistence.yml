@@ -16,10 +16,10 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  deploy-and-collect:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 15
     environment: wardveil-production
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -59,13 +59,21 @@ jobs:
           node --version
           npm --version
 
-      - name: Install exact Wrangler release
+      - name: Install exact Wrangler release with remote-binding support
         working-directory: cloudflare
-        run: npm install --no-save --ignore-scripts wrangler@4.33.1
+        run: npm install --no-save --ignore-scripts wrangler@4.37.0
 
       - name: Deploy Wardveil persistence Worker
         working-directory: cloudflare
         run: npx wrangler deploy --config wrangler.jsonc
+
+      - name: Deploy internal Wardveil acceptance probe
+        working-directory: cloudflare
+        run: >-
+          npx wrangler deploy
+          --config acceptance-probe/wrangler.jsonc
+          --var EXPECTED_REVISION:$GITHUB_SHA
+          --var ACCEPTANCE_TENANT:wardveil-runtime-acceptance
 
       - name: Verify public health endpoint
         run: |
@@ -85,14 +93,130 @@ jobs:
             *) echo "Unexpected public mutation response: HTTP $code" >&2; exit 1 ;;
           esac
 
-      - name: Record deployment evidence summary
+      - name: Start local-only acceptance runner with remote service binding
+        working-directory: cloudflare
         run: |
+          set -euo pipefail
+          npx wrangler dev --config acceptance-runner/wrangler.jsonc --ip 127.0.0.1 --port 8788 > /tmp/wardveil-acceptance-runner.log 2>&1 &
+          echo $! > /tmp/wardveil-acceptance-runner.pid
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:8788/healthz > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/wardveil-acceptance-runner.log >&2
+          exit 1
+
+      - name: Collect privileged service-binding evidence
+        run: |
+          set -euo pipefail
+          code="$(curl --silent --show-error --output /tmp/wardveil-probe.json --write-out '%{http_code}' \
+            --request POST \
+            --header 'content-type: application/json' \
+            --data "{\"revision\":\"$GITHUB_SHA\"}" \
+            http://127.0.0.1:8788/run)"
+          cat /tmp/wardveil-probe.json
+          test "$code" = "200"
+
+      - name: Build revision-bound runtime evidence manifest
+        env:
+          EVIDENCE_SOURCE: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import datetime
+          import json
+          import os
+          from pathlib import Path
+
+          probe = json.loads(Path('/tmp/wardveil-probe.json').read_text())
+          sha = os.environ['GITHUB_SHA']
+          source = os.environ['EVIDENCE_SOURCE']
+          now = datetime.datetime.now(datetime.timezone.utc).isoformat().replace('+00:00', 'Z')
+
+          if probe.get('revision') != sha:
+              raise SystemExit('probe revision does not match deployed revision')
+          if probe.get('status') != 'unaccepted':
+              raise SystemExit('probe must remain unaccepted when no probe failure exists')
+
+          by_requirement = {item['requirement']: item for item in probe['evidence']}
+          internal_required = [
+              'authorized_append_read',
+              'duplicate_record_rejection',
+              'checkpoint_non_regression',
+              'payload_digest_verification',
+              'pitr_availability',
+          ]
+          for requirement in internal_required:
+              if by_requirement.get(requirement, {}).get('state') != 'passed':
+                  raise SystemExit(f'internal runtime evidence failed: {requirement}')
+
+          def passed(summary, observed_at=None):
+              return {'status': 'passed', 'observed_at': observed_at or now, 'source': source, 'summary': summary}
+
+          def pending(summary):
+              return {'status': 'pending', 'observed_at': None, 'source': None, 'summary': summary}
+
+          checks = {
+              'deployed_revision_match': passed(f'Deployed workflow and probe are bound to exact revision {sha}.'),
+              'health_endpoint': passed('Canonical HTTPS persistence /healthz check passed.'),
+              'authorized_append_read': passed('Internal service-binding append/read probe passed.', by_requirement['authorized_append_read']['observed_at']),
+              'duplicate_record_rejection': passed('Duplicate record ID rejection probe passed.', by_requirement['duplicate_record_rejection']['observed_at']),
+              'checkpoint_non_regression': passed('Consumer checkpoint regression was rejected.', by_requirement['checkpoint_non_regression']['observed_at']),
+              'retention_alarm_evidence': pending('Requires a later time-bounded observation proving a retention alarm executed against deployed runtime state.'),
+              'payload_digest_verification': passed('Persisted payload digest matched canonical probe payload.', by_requirement['payload_digest_verification']['observed_at']),
+              'pitr_availability': passed('Durable Object PITR capability and current bookmark were reported by the runtime.', by_requirement['pitr_availability']['observed_at']),
+              'restore_verification_exercise': pending('Requires a separate Everkeep-governed restore verification exercise.'),
+              'observability_failure_evidence': pending('Requires a bounded failure-path exercise and retained observability evidence.'),
+              'public_mutation_surface_absent': passed('Generic public POST /records remained unavailable with HTTP 404/405.'),
+          }
+
+          manifest = {
+              'schema_version': 1,
+              'component': 'Wardveil Cloudflare persistence runtime',
+              'environment': 'production',
+              'deployed_revision': sha,
+              'collected_at': now,
+              'acceptance_status': 'unaccepted',
+              'checks': checks,
+              'storage_health_is_protection_claim': False,
+              'everkeep_recovery_authority_preserved': True,
+          }
+          Path('/tmp/wardveil-runtime-evidence.json').write_text(json.dumps(manifest, indent=2) + '\n')
+          print(json.dumps(manifest, indent=2))
+          PY
+
+      - name: Record evidence summary
+        run: |
+          set -euo pipefail
           {
-            echo '## Wardveil Cloudflare persistence deployment'
+            echo '## Wardveil Cloudflare runtime evidence collection'
             echo
-            echo "- Source revision: \`$GITHUB_SHA\`"
-            echo '- Worker: `goreecloud-wardveil-persistence`'
-            echo '- Public health check: passed'
+            echo "- Source/deployed revision: \`$GITHUB_SHA\`"
+            echo '- Persistence Worker deployment: completed'
+            echo '- Internal acceptance-probe deployment: completed with public routes disabled'
+            echo '- Authorized service-binding append/read: passed'
+            echo '- Duplicate-record rejection: passed'
+            echo '- Checkpoint non-regression: passed'
+            echo '- Payload digest verification: passed'
+            echo '- PITR capability evidence: passed'
+            echo '- Public health endpoint: passed'
             echo '- Generic public mutation endpoint: absent (404/405)'
-            echo '- Runtime status: deployed evidence only; full Wardveil production acceptance still requires the remaining service-binding, retention, PITR, restore, and observability evidence in `contracts/wardveil.cloudflare.runtime-acceptance.json`.'
+            echo '- Remaining pending acceptance evidence: retention-alarm execution, Everkeep-governed restore verification, and bounded observability failure evidence'
+            echo '- Runtime acceptance status: **unaccepted** until every required check is passed for this exact revision'
+            echo
+            echo '<details><summary>Machine-readable evidence manifest</summary>'
+            echo
+            echo '```json'
+            cat /tmp/wardveil-runtime-evidence.json
+            echo '```'
+            echo '</details>'
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Stop local acceptance runner
+        if: always()
+        run: |
+          if [ -f /tmp/wardveil-acceptance-runner.pid ]; then
+            kill "$(cat /tmp/wardveil-acceptance-runner.pid)" || true
+          fi
