@@ -13,6 +13,7 @@ Wardveil uses separate version domains for the foundation and for individual int
 - `contracts/wardveil.status.schema.json` has its own status-contract version and schema identifier.
 - `contracts/wardveil.aggregation.vectors.json` has its own aggregation-contract version.
 - `contracts/wardveil.runtime-authorization.json` has its own runtime authorization contract version for cross-service execution binding and replay semantics.
+- `contracts/wardveil.execution-state.json` has its own durable execution-state contract version for replay/idempotency claims, uncertain-outcome handling, and execution receipts.
 
 A foundation release may advance without changing an interoperability contract when that contract's semantics are unchanged. Consumers must therefore compare the contract version they implement, not infer contract compatibility solely from the foundation version.
 
@@ -24,6 +25,7 @@ Repository validation must fail when any of the following occurs:
 - the identity contract advertises a status-contract version different from the canonical status schema contract version;
 - the identity contract advertises an aggregation-contract version different from the canonical aggregation vectors;
 - the identity contract advertises a runtime authorization version different from the canonical runtime authorization contract;
+- the identity contract advertises an execution-state version different from the canonical execution-state contract;
 - the status schema identifier does not match the expected versioned identifier;
 - a required compatibility document or machine-readable contract is absent.
 
@@ -36,6 +38,8 @@ A consumer claiming Wardveil compatibility must record the exact contract versio
 Backward-compatible additions may be accepted only when the relevant contract permits them. The current Wardveil status schema uses `additionalProperties: false`; therefore unrecognized fields are not implicitly compatible with status contract 0.1.0.
 
 For runtime authorization, an executor must reject an unsupported authorization version, signature algorithm, or binding set. An unknown future runtime authorization contract must never be treated as equivalent to 0.1.0 for a high-impact action.
+
+For durable execution state, an executor or persistence adapter must reject an unsupported claim/receipt contract version instead of resetting, ignoring, or reinterpreting pending state. Unknown future state must never be treated as permission to retry an uncertain side effect.
 
 ## Upgrade behavior
 
@@ -51,3 +55,5 @@ When a contract changes incompatibly, its contract version must change and all o
 ## Security boundary
 
 Compatibility handling does not transfer technical authority to Wardveil, weaken fail-closed protection claims, or allow an executor to infer authorization from version compatibility alone. Runtime authorization remains separate from the underlying target system's own execution authority and production deployment acceptance.
+
+Durable execution-state compatibility also does not authorize a retry. A pending or unknown execution state must remain non-executable until the applicable contract can be interpreted safely or the authoritative target state is reconciled.
