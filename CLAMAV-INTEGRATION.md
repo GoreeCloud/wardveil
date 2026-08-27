@@ -119,6 +119,18 @@ Cross-project source evidence is recorded in `contracts/wardveil.mail.consumer-s
 
 Therefore the ClamAV `application_consumer_integration` production acceptance requirement is not considered satisfied solely by this source milestone. Runtime acceptance remains separately evidence-backed.
 
+## GoreeCloud Drive source-consumer milestone
+
+GoreeCloud Drive now has an executable source-level Wardveil Scan file consumer at accepted revision `fb2d813063d3f567c9a8db977ffef71ab21c9a0b`. The merged revision has source tree `3a862cb144410d438ee0236dea4b75b1a5090bd9`, identical to the source tree tested by Drive CI run 35 at PR revision `8e82b0a166dcc76e932458870b4955ffbe3c6edb`.
+
+The Drive consumer binds Wardveil evidence to the exact `drive_file` identity and SHA-256 digest. Its current concrete enforcement point is resumable-upload finalization: staged content is scanned before active publication, a current authoritative clean finding with evidence is required for release, and the staged bytes are re-hashed after scanning so a changed object fails closed. Suspicious, malicious, unknown, unsupported, stale, mismatched, non-authoritative, or unavailable verification does not publish the upload. Drive does not connect directly to ClamAV.
+
+The shared evaluator also defines policy-ready semantics for future open, download, share, and Everkeep restore-release paths, but those runtime routes are not claimed as implemented. Everkeep remains authoritative for backup and restore verification; Wardveil verification is an additional security gate before recovered content is released.
+
+Cross-project source evidence is recorded in `contracts/wardveil.drive.consumer-source-evidence.json`. The record preserves the tested-PR-revision versus merged-revision distinction and confirms their identical source tree. It still does not prove deployed authenticated Drive-to-Wardveil transport, deployed scanner/signature health, concurrency-safe finalization, runtime download/share enforcement, Everkeep restore acceptance, or authorized quarantine execution.
+
+Therefore the ClamAV `application_consumer_integration` production acceptance requirement remains unresolved by source milestones alone. Runtime acceptance remains separately evidence-backed.
+
 ## Production acceptance
 
 `contracts/wardveil.clamav.runtime-acceptance.json` intentionally records `production_runtime_status` as `unaccepted`. Source-level adapter tests, health tests, a healthy container, or a passing CI run cannot change that field by themselves.
