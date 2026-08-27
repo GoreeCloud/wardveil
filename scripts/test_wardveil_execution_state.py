@@ -110,10 +110,11 @@ def main() -> None:
         lambda: store.finalize(authorization.as_dict(), changed_record, now=NOW),
     )
 
-    bad_scope = {**record, "scope": {"resource_type": "file", "resource_id": "other-file"}}
     other_store = InMemoryExecutionStateStore()
     other_auth = auth(nonce="nonce-scope", idem="idem-scope")
     assert other_store.claim(other_auth.as_dict(), now=NOW).status == "new"
+    other_record = protection_record(other_auth)
+    bad_scope = {**other_record, "scope": {"resource_type": "file", "resource_id": "other-file"}}
     expect_raises(
         "protection_scope_mismatch",
         lambda: other_store.finalize(other_auth.as_dict(), bad_scope, now=NOW),
