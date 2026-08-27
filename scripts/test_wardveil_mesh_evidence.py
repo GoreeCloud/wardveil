@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+import copy
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -11,6 +12,7 @@ from reference.wardveil_mesh_evidence import (
     validate_mesh_evidence_refresh_intent,
 )
 from reference.wardveil_mesh_refresh_response import create_mesh_evidence_refresh_response
+from reference.wardveil_mesh_refresh_handoff import create_mesh_evidence_refresh_response_for_evidence
 
 
 def fail(message: str) -> None:
@@ -164,4 +166,76 @@ except ValueError:
 else:
     fail("non-completed refresh response must not claim produced evidence")
 
-print("Wardveil Mesh Evidence Envelope, refresh-intent, and refresh-response adapters: OK")
+handoff_record = dict(record)
+handoff_record["record_id"] = "decision-002"
+handoff_record["scope"] = {"resource_type": "service", "resource_id": "goreecloud-mail", "component": "runtime"}
+handoff_record["valid_until"] = (now + timedelta(hours=1)).isoformat()
+handoff_envelope = create_mesh_evidence_envelope(
+    handoff_record,
+    revision="d" * 40,
+    assertion="security-status",
+    outcome="protected",
+    observed_at=now,
+)
+handoff_response = create_mesh_evidence_refresh_response_for_evidence(
+    refresh,
+    response_id="wardveil-refresh-handoff-001",
+    revision="d" * 40,
+    evidence_envelope=handoff_envelope,
+    responded_at=now,
+    now=now,
+)
+if handoff_response.get("evidence_envelope_id") != handoff_envelope["id"] or not handoff_response["evidence_produced"]:
+    fail("validated handoff did not bind the actual Wardveil evidence envelope")
+if "outcome" in handoff_response or handoff_response["execution_authorized"] or handoff_response["authority_transferred"]:
+    fail("validated handoff receipt crossed the Wardveil authority boundary")
+
+old_handoff = copy.deepcopy(handoff_envelope)
+old_handoff["observed_at"] = (now - timedelta(seconds=1)).isoformat()
+try:
+    create_mesh_evidence_refresh_response_for_evidence(
+        refresh,
+        response_id="wardveil-refresh-handoff-old",
+        revision="d" * 40,
+        evidence_envelope=old_handoff,
+        responded_at=now,
+        now=now,
+    )
+except ValueError:
+    pass
+else:
+    fail("pre-request Wardveil evidence must not satisfy a refresh handoff")
+
+wrong_revision_handoff = copy.deepcopy(handoff_envelope)
+wrong_revision_handoff["producer"]["revision"] = "e" * 40
+try:
+    create_mesh_evidence_refresh_response_for_evidence(
+        refresh,
+        response_id="wardveil-refresh-handoff-revision",
+        revision="d" * 40,
+        evidence_envelope=wrong_revision_handoff,
+        responded_at=now,
+        now=now,
+    )
+except ValueError:
+    pass
+else:
+    fail("Wardveil evidence from another producer revision must be rejected")
+
+wrong_subject_handoff = copy.deepcopy(handoff_envelope)
+wrong_subject_handoff["subject"]["id"] = "goreecloud-drive"
+try:
+    create_mesh_evidence_refresh_response_for_evidence(
+        refresh,
+        response_id="wardveil-refresh-handoff-subject",
+        revision="d" * 40,
+        evidence_envelope=wrong_subject_handoff,
+        responded_at=now,
+        now=now,
+    )
+except ValueError:
+    pass
+else:
+    fail("Wardveil evidence for another subject must be rejected")
+
+print("Wardveil Mesh Evidence Envelope, refresh-intent, refresh-response, and validated handoff adapters: OK")
