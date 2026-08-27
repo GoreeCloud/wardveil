@@ -6,7 +6,10 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from reference.wardveil_mesh_evidence import create_mesh_evidence_envelope
+from reference.wardveil_mesh_evidence import (
+    create_mesh_evidence_envelope,
+    validate_mesh_evidence_refresh_intent,
+)
 
 
 def fail(message: str) -> None:
@@ -77,4 +80,49 @@ except ValueError:
 else:
     fail("expired evidence must be rejected")
 
-print("Wardveil Mesh Evidence Envelope adapter: OK")
+refresh = {
+    "version": "goreecloud.evidence-refresh-intent.v1",
+    "id": "refresh-wardveil-mail-001",
+    "coordinator": {
+        "system": "goreecloud-mesh",
+        "repository": "GoreeCloud/goreecloud-mesh",
+        "revision": "b" * 40,
+        "contract": "contracts/mesh.evidence-refresh-intent.schema.json",
+    },
+    "producer": "wardveil-security",
+    "authority_domain": "security",
+    "subject": {"kind": "service", "id": "goreecloud-mail", "scope": "runtime"},
+    "assertion": "security-status",
+    "reason": "stale",
+    "requested_at": now.isoformat(),
+    "latest_observed_at": (now - timedelta(hours=2)).isoformat(),
+    "contains_user_content": False,
+    "contains_secret_material": False,
+    "authority_transferred": False,
+    "execution_authorized": False,
+}
+accepted = validate_mesh_evidence_refresh_intent(refresh, now=now)
+if accepted["producer"] != "wardveil-security" or accepted["execution_authorized"]:
+    fail("refresh intent changed Wardveil authority or execution boundary")
+if "outcome" in accepted or "security_status" in accepted:
+    fail("refresh intent must not manufacture Wardveil security truth")
+
+wrong_domain = dict(refresh)
+wrong_domain["authority_domain"] = "privacy"
+try:
+    validate_mesh_evidence_refresh_intent(wrong_domain, now=now)
+except ValueError:
+    pass
+else:
+    fail("cross-authority refresh intent must be rejected")
+
+execution = dict(refresh)
+execution["execution_authorized"] = True
+try:
+    validate_mesh_evidence_refresh_intent(execution, now=now)
+except ValueError:
+    pass
+else:
+    fail("refresh intent must not authorize Wardveil execution")
+
+print("Wardveil Mesh Evidence Envelope and refresh-intent adapter: OK")
