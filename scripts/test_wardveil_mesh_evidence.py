@@ -10,6 +10,7 @@ from reference.wardveil_mesh_evidence import (
     create_mesh_evidence_envelope,
     validate_mesh_evidence_refresh_intent,
 )
+from reference.wardveil_mesh_refresh_response import create_mesh_evidence_refresh_response
 
 
 def fail(message: str) -> None:
@@ -125,4 +126,42 @@ except ValueError:
 else:
     fail("refresh intent must not authorize Wardveil execution")
 
-print("Wardveil Mesh Evidence Envelope and refresh-intent adapter: OK")
+response = create_mesh_evidence_refresh_response(
+    refresh,
+    response_id="wardveil-refresh-response-001",
+    revision="d" * 40,
+    status="completed",
+    reason_code="evidence-issued",
+    responded_at=now,
+    evidence_envelope_id="wardveil-decision-002",
+    now=now,
+)
+if response["version"] != "goreecloud.evidence-refresh-response.v1":
+    fail("wrong refresh response version")
+if response["intent"]["id"] != refresh["id"] or response["intent"]["coordinator_revision"] != refresh["coordinator"]["revision"]:
+    fail("refresh response did not bind the exact Mesh intent")
+if response["producer"]["system"] != "wardveil-security" or response["authority_domain"] != "security":
+    fail("refresh response changed Wardveil producer authority")
+if not response["evidence_produced"] or response.get("evidence_envelope_id") != "wardveil-decision-002":
+    fail("completed refresh response did not preserve separate evidence reference")
+for forbidden in ("outcome", "verdict", "fresh", "protected"):
+    if forbidden in response:
+        fail(f"refresh response manufactured Wardveil security truth: {forbidden}")
+if response["execution_authorized"] or response["authority_transferred"]:
+    fail("refresh response granted security execution or transferred authority")
+
+try:
+    create_mesh_evidence_refresh_response(
+        refresh,
+        response_id="wardveil-refresh-response-002",
+        revision="d" * 40,
+        status="received",
+        evidence_envelope_id="wardveil-decision-003",
+        now=now,
+    )
+except ValueError:
+    pass
+else:
+    fail("non-completed refresh response must not claim produced evidence")
+
+print("Wardveil Mesh Evidence Envelope, refresh-intent, and refresh-response adapters: OK")
