@@ -1,0 +1,26 @@
+{
+  "schema_version": "1.0.0",
+  "system": "wardveil-security",
+  "authority_domain": "security",
+  "purpose": "Defines the runtime acceptance gates for Wardveil evidence delivery into GoreeCloud Mesh without transferring security authority.",
+  "required_gates": [
+    "authenticated producer identity equals wardveil-security",
+    "mesh.evidence.write scope is verified by GoreeCloud Identity",
+    "delivery uses HTTPS except explicit loopback development",
+    "submitted envelope passes Mesh provenance and minimization validation",
+    "delivery receipt binds to the submitted evidence id",
+    "delivery receipt binds to producer_service_id wardveil-security",
+    "expired evidence remains auditable but cannot satisfy current-evidence queries",
+    "current transport state never upgrades or weakens the Wardveil security outcome"
+  ],
+  "negative_cases": [
+    "privacy-shield or everkeep credential attempts Wardveil delivery",
+    "receipt returns a different evidence id",
+    "receipt returns a different producer service id",
+    "non-loopback plaintext HTTP destination",
+    "missing bearer credential",
+    "envelope containing secret material or user content",
+    "stale evidence represented as current"
+  ],
+  "production_acceptance": false
+}
