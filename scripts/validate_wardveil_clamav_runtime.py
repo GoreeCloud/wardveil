@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from validate_browser_consumer_source_evidence import main as validate_browser_consumer_source_evidence
 from validate_drive_consumer_source_evidence import main as validate_drive_consumer_source_evidence
 from validate_mail_consumer_source_evidence import main as validate_mail_consumer_source_evidence
 
@@ -117,6 +118,7 @@ def main() -> None:
 
     validate_mail_consumer_source_evidence()
     validate_drive_consumer_source_evidence()
+    validate_browser_consumer_source_evidence()
     print("Wardveil ClamAV runtime health and deployment validation passed.")
 
 
