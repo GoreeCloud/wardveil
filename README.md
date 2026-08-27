@@ -54,7 +54,9 @@ Branding alone is never evidence of protection or integration.
 - `PRIVACY-SHIELD.md` and `contracts/wardveil.privacy-shield.vectors.json` — privacy-safe read-only Privacy Shield presentation boundary.
 - `THREAT-MODEL.md` — trust boundaries and misuse cases.
 - `ADOPTION.md` — minimum integration and acceptance requirements.
-- `CLAMAV-INTEGRATION.md` — initial replaceable malware-engine architecture beneath Wardveil Scan.
+- `CLAMAV-INTEGRATION.md` — replaceable malware-engine, runtime-health, deployment, and acceptance architecture beneath Wardveil Scan.
+- `contracts/wardveil.clamav.health.schema.json` — data-minimized ClamAV component-health evidence.
+- `contracts/wardveil.clamav.runtime-acceptance.json` — production acceptance requirements for the deployed ClamAV runtime.
 - `SECURITY.md` — repository security and sensitive-information boundaries.
 - `ICON.md` — canonical visual-identity contract.
 
@@ -77,15 +79,17 @@ Detailed application scopes for Browser, Mail, Drive, Vault, AI, Messenger, Iden
 
 ## Malware protection engine
 
-Wardveil Scan now has an initial ClamAV adapter in `reference/wardveil_clamav.py`. ClamAV is treated as a replaceable malware-scanning engine underneath Wardveil rather than as the GoreeCloud product boundary.
+Wardveil Scan uses ClamAV as its initial replaceable signature-based malware engine through `reference/wardveil_clamav.py`. The adapter streams content to `clamd` using INSTREAM, preserves positive malware signatures as malicious findings, and fails closed on scanner errors or unsupported/incomplete scans. It does not delete or quarantine files; Wardveil Policy, Protect, and Quarantine retain authorized response authority.
 
-The adapter streams content to `clamd` using INSTREAM, maps completed clean and malware-match responses into Wardveil Scan inputs, and fails closed when the scanner is unavailable, errors, or returns an unrecognized response. It does not delete or quarantine files; Wardveil Policy, Protect, and Quarantine remain responsible for authorized response actions.
+`reference/wardveil_clamav_runtime.py` adds runtime-health evidence and a clean-verdict gate. A ClamAV `OK` result remains `clean` only while associated health evidence is healthy, unexpired, daemon-reachable, and backed by current loaded signature data. Stale, unavailable, expired, future-dated, or unverified health downgrades a would-be clean result to `unknown`; positive malware matches remain malicious even when health is degraded.
 
-The product direction is **Wardveil Malware Protection** within Wardveil Security Center, with ClamAV supplying the first signature-based scanning engine and additional first-party or replaceable detection engines added over time. See `CLAMAV-INTEGRATION.md` for deployment, health-evidence, signature-update, and real-time protection boundaries.
+`deployment/clamav/` provides a loopback-only container baseline, persistent signature database storage, environment-driven limits and freshness policy, and a health collector. `contracts/wardveil.clamav.runtime-acceptance.json` deliberately remains `unaccepted` until deployed runtime tests, an application consumer, and authorized quarantine evidence exist.
+
+The product direction is **Wardveil Malware Protection** within Wardveil Security Center, with ClamAV supplying the first signature-based scanning engine and additional first-party or replaceable detection engines added over time. A healthy ClamAV runtime alone does not authorize a broad `Protected by Wardveil` claim.
 
 ## Protected by Wardveil
 
-`Protected by Wardveil` may be asserted only for an explicit scope backed by current authoritative evidence showing that a Wardveil control or Wardveil-authorized producer actually enforced or verified the represented protection. A Wardveil icon, a Security Center screen, a ClamAV installation, or a Privacy Shield status record does not independently authorize that claim.
+`Protected by Wardveil` may be asserted only for an explicit scope backed by current authoritative evidence showing that a Wardveil control or Wardveil-authorized producer actually enforced or verified the represented protection. A Wardveil icon, a Security Center screen, a ClamAV installation, ClamAV health evidence, or a Privacy Shield status record does not independently authorize that claim.
 
 ## Validation
 
@@ -96,11 +100,13 @@ python3 scripts/validate_wardveil.py
 python3 scripts/validate_wardveil_capabilities.py
 python3 scripts/test_wardveil_detect_scan_reference.py
 python3 scripts/test_wardveil_clamav.py
+python3 scripts/test_wardveil_clamav_runtime.py
+python3 scripts/validate_wardveil_clamav_runtime.py
 python3 scripts/validate_wardveil_aggregation.py
 python3 scripts/validate_wardveil_privacy_shield.py
 ```
 
-CI validates the canonical capability set, lifecycle, version alignment, evidence boundaries, ClamAV adapter protocol/mapping behavior, aggregation behavior, Privacy Shield separation, repository governance, icon state, and public-site tooling against the exact source revision.
+CI validates the canonical capability set, lifecycle, version alignment, evidence boundaries, ClamAV protocol/mapping behavior, ClamAV health/freshness/clean-verdict gating, deployment invariants, aggregation behavior, Privacy Shield separation, repository governance, icon state, and public-site tooling against the exact source revision.
 
 ## Release discipline
 
