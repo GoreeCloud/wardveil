@@ -1,0 +1,69 @@
+{
+  "contract_version": "0.1.0",
+  "foundation_version": "0.9.0",
+  "component": "Wardveil Runtime Execution Authorization",
+  "purpose": "bind an authoritative Wardveil Policy decision to one explicit cross-service executor request without transferring underlying system authority",
+  "applies_to": {
+    "cross_service_protect_execution": true,
+    "high_impact_actions": ["restrict", "quarantine", "revoke", "block", "isolate", "escalate"],
+    "local_non_mutating_reference_evaluation": false
+  },
+  "required_bindings": [
+    "authorization_id",
+    "issuer_id",
+    "policy_record_id",
+    "correlation_id",
+    "executor_id",
+    "action",
+    "scope",
+    "idempotency_key",
+    "nonce",
+    "issued_at",
+    "expires_at",
+    "policy_digest_sha256"
+  ],
+  "security_invariants": {
+    "authoritative_policy_record_required": true,
+    "exact_policy_digest_binding_required": true,
+    "exact_action_binding_required": true,
+    "exact_scope_binding_required": true,
+    "exact_executor_binding_required": true,
+    "authorization_must_not_outlive_policy": true,
+    "maximum_authorization_ttl_seconds": 300,
+    "future_dated_authorization_fails_closed": true,
+    "expired_authorization_fails_closed": true,
+    "invalid_signature_fails_closed": true,
+    "replay_identity_required": true,
+    "idempotent_retry_requires_same_authorization_nonce_and_idempotency_key": true,
+    "nonce_reuse_with_different_authorization_fails_closed": true,
+    "high_impact_execution_requires_authorized_handler": true,
+    "policy_decision_alone_is_execution_authority": false,
+    "authorization_transfers_underlying_resource_authority": false
+  },
+  "privacy": {
+    "data_minimization_required": true,
+    "raw_resource_content_required": false,
+    "reusable_credentials_allowed": false,
+    "signing_secrets_allowed_in_authorization_envelope": false
+  },
+  "reference_cryptography": {
+    "algorithm": "HMAC-SHA256-reference-only",
+    "production_algorithm_prescribed": false,
+    "production_key_management_prescribed": false,
+    "reference_algorithm_is_production_acceptance": false
+  },
+  "production_acceptance": {
+    "status": "unaccepted",
+    "required_evidence": [
+      "approved_production_key_management",
+      "authenticated_authorization_transport",
+      "durable_shared_replay_and_idempotency_ledger",
+      "executor_identity_authentication",
+      "clock_and_expiry_enforcement",
+      "authorized_high_impact_executor_integration",
+      "audit_receipt_persistence",
+      "key_rotation_and_revocation_procedure",
+      "failure_and_replay_runtime_tests"
+    ]
+  }
+}
