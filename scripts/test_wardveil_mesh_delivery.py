@@ -17,6 +17,13 @@ def fail(message: str) -> None:
     raise SystemExit(f"Wardveil Mesh delivery test failed: {message}")
 
 
+def start_server(handler):
+    server = ThreadingHTTPServer(("127.0.0.1", 0), handler)
+    thread = Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    return server, thread
+
+
 now = datetime.now(timezone.utc)
 record = {
     "record_id": "delivery-001",
@@ -26,14 +33,7 @@ record = {
     "valid_until": (now + timedelta(hours=1)).isoformat(),
     "raw_payload": "must not be delivered",
 }
-envelope = create_mesh_evidence_envelope(
-    record,
-    revision="a" * 40,
-    assertion="policy-decision",
-    outcome="allow",
-    observed_at=now,
-)
-
+envelope = create_mesh_evidence_envelope(record, revision="a" * 40, assertion="policy-decision", outcome="allow", observed_at=now)
 received = {}
 
 
@@ -42,10 +42,6 @@ class Handler(BaseHTTPRequestHandler):
         return
 
     def do_POST(self):
-        if self.path != "/v1/evidence/envelopes":
-            self.send_response(404)
-            self.end_headers()
-            return
         length = int(self.headers.get("Content-Length", "0"))
         received["authorization"] = self.headers.get("Authorization")
         received["body"] = json.loads(self.rfile.read(length).decode("utf-8"))
@@ -63,20 +59,11 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(encoded)
 
 
-server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
-thread = Thread(target=server.serve_forever, daemon=True)
-thread.start()
+server, thread = start_server(Handler)
 try:
-    token = "test-identity-credential"
-    receipt = deliver_mesh_evidence(
-        envelope,
-        mesh_base_url=f"http://127.0.0.1:{server.server_port}",
-        bearer_token=token,
-    )
+    receipt = deliver_mesh_evidence(envelope, mesh_base_url=f"http://127.0.0.1:{server.server_port}", bearer_token="test-identity-credential")
 finally:
-    server.shutdown()
-    server.server_close()
-    thread.join(timeout=2)
+    server.shutdown(); server.server_close(); thread.join(timeout=2)
 
 if received.get("authorization") != "Bearer test-identity-credential":
     fail("Identity credential was not sent as bearer authorization")
@@ -87,16 +74,48 @@ if "raw_payload" in received.get("body", {}):
 if receipt.get("producer_service_id") != "wardveil-security" or receipt.get("evidence_id") != envelope["id"]:
     fail("delivery receipt was not producer/evidence bound")
 
+for unsafe in ("http://mesh.example.test", "https://user:pass@mesh.example.test", "https://mesh.example.test?target=other", "https://mesh.example.test#fragment"):
+    try:
+        deliver_mesh_evidence(envelope, mesh_base_url=unsafe, bearer_token="secret")
+    except ValueError:
+        pass
+    else:
+        fail(f"unsafe Mesh base URL must be rejected: {unsafe}")
+
+sink = {"requests": 0, "authorization": None}
+
+class SinkHandler(BaseHTTPRequestHandler):
+    def log_message(self, *_args):
+        return
+    def do_POST(self):
+        sink["requests"] += 1
+        sink["authorization"] = self.headers.get("Authorization")
+        self.send_response(204); self.end_headers()
+
+sink_server, sink_thread = start_server(SinkHandler)
+
+class RedirectHandler(BaseHTTPRequestHandler):
+    def log_message(self, *_args):
+        return
+    def do_POST(self):
+        self.send_response(307)
+        self.send_header("Location", f"http://127.0.0.1:{sink_server.server_port}/capture")
+        self.end_headers()
+
+redirect_server, redirect_thread = start_server(RedirectHandler)
 try:
-    deliver_mesh_evidence(
-        envelope,
-        mesh_base_url="http://mesh.example.test",
-        bearer_token="secret",
-    )
-except ValueError:
-    pass
-else:
-    fail("non-loopback plaintext HTTP must be rejected")
+    try:
+        deliver_mesh_evidence(envelope, mesh_base_url=f"http://127.0.0.1:{redirect_server.server_port}", bearer_token="redirect-sensitive-proof")
+    except RuntimeError:
+        pass
+    else:
+        fail("Mesh redirects must be rejected")
+finally:
+    redirect_server.shutdown(); redirect_server.server_close(); redirect_thread.join(timeout=2)
+    sink_server.shutdown(); sink_server.server_close(); sink_thread.join(timeout=2)
+
+if sink["requests"] != 0 or sink["authorization"] is not None:
+    fail("service identity proof must never be forwarded to a redirect target")
 
 wrong = dict(envelope)
 wrong["producer"] = dict(envelope["producer"])
