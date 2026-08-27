@@ -56,8 +56,27 @@ A successful ClamAV `OK` response is not sufficient by itself for Wardveil to pr
 
 A positive malware signature match remains a malicious finding even if runtime health is degraded. Degraded health must not erase positive threat evidence; it only prevents stale or incomplete scanner state from producing false reassurance.
 
+## Guarded production deployment workflow
+
+`.github/workflows/deploy-clamav-production.yml` is the canonical production deployment path for the VPS-hosted scanner runtime. It is manual-only through `workflow_dispatch`, runs only from `main`, requires the exact approved main SHA, and uses the `wardveil-production` GitHub Environment.
+
+The workflow requires four environment secrets:
+
+- `WARDVEIL_VPS_HOST`;
+- `WARDVEIL_VPS_USER`;
+- `WARDVEIL_VPS_SSH_PRIVATE_KEY`;
+- `WARDVEIL_VPS_SSH_HOST_KEY`.
+
+The SSH host key is pinned from configuration; the workflow does not trust a runtime `ssh-keyscan` result and does not disable host-key verification. The deployment bundle is SHA-256 checked on the host before extraction. The remote deployment requires passwordless non-interactive `sudo`, Docker Compose, and Python 3, installs exact-revision releases under `/opt/goreecloud/wardveil/clamav/releases/`, and keeps `/opt/goreecloud/wardveil/clamav/current` as the accepted release pointer.
+
+The deployment starts ClamAV with the same loopback-only Compose contract, waits for current healthy scanner/signature evidence, and then runs `scripts/collect_wardveil_clamav_acceptance.py`. That live collector requires a healthy runtime, a clean control that remains `clean`, a controlled EICAR sample that becomes `malicious`, and an intentionally unavailable scanner path that fails closed to `unknown`. A failed health or acceptance check attempts to restore the previously accepted release, or stops the initial failed deployment when no previous release exists.
+
+The resulting evidence is sanitized and revision-bound. It does not contain the VPS address, SSH key, clamd socket path, credentials, raw application content, or unrestricted diagnostics.
+
 ## Runtime acceptance
 
-Production acceptance remains `unaccepted` until the evidence listed in `contracts/wardveil.clamav.runtime-acceptance.json` is collected for the deployed environment. At minimum this includes current daemon/signature evidence, a controlled EICAR test, a clean control, fail-closed error behavior, at least one application consumer, and evidence that authorized quarantine execution works where the product claims it.
+Production acceptance remains `unaccepted` until the evidence listed in `contracts/wardveil.clamav.runtime-acceptance.json` is collected for the deployed environment. The guarded workflow can satisfy the scanner-runtime portions of that evidence set: daemon reachability, engine/database version and timestamp, signature freshness, controlled EICAR detection, clean-control behavior, and fail-closed scanner-unavailable behavior.
+
+The remaining production requirements are deliberately separate: a deployed authenticated application-consumer integration and authorized quarantine execution evidence. A successful scanner deployment does not silently satisfy those product/application authority boundaries.
 
 Health alone is not a broad Wardveil protection claim. The health record may describe the narrow scanner-control scope as healthy, but `claim.protected_by_wardveil` remains false until a separate application- or service-specific protection scope is backed by the required authoritative evidence.

@@ -1,0 +1,228 @@
+name: Deploy Wardveil ClamAV production runtime
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected_sha:
+        description: Exact main commit SHA approved for production deployment
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wardveil-clamav-production
+  cancel-in-progress: false
+
+jobs:
+  deploy-and-verify:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: wardveil-production
+    env:
+      WARDVEIL_VPS_HOST: ${{ secrets.WARDVEIL_VPS_HOST }}
+      WARDVEIL_VPS_USER: ${{ secrets.WARDVEIL_VPS_USER }}
+      WARDVEIL_VPS_SSH_PRIVATE_KEY: ${{ secrets.WARDVEIL_VPS_SSH_PRIVATE_KEY }}
+      WARDVEIL_VPS_SSH_HOST_KEY: ${{ secrets.WARDVEIL_VPS_SSH_HOST_KEY }}
+    steps:
+      - name: Check out exact source revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
+
+      - name: Verify approved main revision
+        env:
+          EXPECTED_SHA: ${{ inputs.expected_sha }}
+        run: |
+          set -euo pipefail
+          test -n "$EXPECTED_SHA"
+          test "$GITHUB_SHA" = "$EXPECTED_SHA"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+          test "$GITHUB_REF" = "refs/heads/main"
+
+      - name: Verify required VPS deployment secrets
+        run: |
+          set -euo pipefail
+          test -n "$WARDVEIL_VPS_HOST"
+          test -n "$WARDVEIL_VPS_USER"
+          test -n "$WARDVEIL_VPS_SSH_PRIVATE_KEY"
+          test -n "$WARDVEIL_VPS_SSH_HOST_KEY"
+
+      - name: Establish pinned SSH host trust
+        run: |
+          set -euo pipefail
+          install -d -m 0700 "$HOME/.ssh"
+          printf '%s\n' "$WARDVEIL_VPS_SSH_PRIVATE_KEY" > "$HOME/.ssh/wardveil_vps"
+          chmod 0600 "$HOME/.ssh/wardveil_vps"
+          printf '%s\n' "$WARDVEIL_VPS_SSH_HOST_KEY" > "$HOME/.ssh/known_hosts"
+          chmod 0600 "$HOME/.ssh/known_hosts"
+          ssh-keygen -F "$WARDVEIL_VPS_HOST" -f "$HOME/.ssh/known_hosts" >/dev/null
+          ssh \
+            -i "$HOME/.ssh/wardveil_vps" \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
+            "$WARDVEIL_VPS_USER@$WARDVEIL_VPS_HOST" \
+            'hostname >/dev/null'
+
+      - name: Build exact-revision deployment bundle
+        run: |
+          set -euo pipefail
+          tar -czf "/tmp/wardveil-clamav-${GITHUB_SHA}.tgz" \
+            deployment/clamav \
+            reference/wardveil_clamav.py \
+            reference/wardveil_clamav_runtime.py \
+            reference/wardveil_detect_scan.py \
+            scripts/collect_wardveil_clamav_health.py \
+            scripts/collect_wardveil_clamav_acceptance.py
+          sha256sum "/tmp/wardveil-clamav-${GITHUB_SHA}.tgz" > "/tmp/wardveil-clamav-${GITHUB_SHA}.tgz.sha256"
+
+      - name: Transfer deployment bundle
+        run: |
+          set -euo pipefail
+          scp \
+            -i "$HOME/.ssh/wardveil_vps" \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
+            "/tmp/wardveil-clamav-${GITHUB_SHA}.tgz" \
+            "/tmp/wardveil-clamav-${GITHUB_SHA}.tgz.sha256" \
+            "$WARDVEIL_VPS_USER@$WARDVEIL_VPS_HOST:/tmp/"
+
+      - name: Deploy scanner and collect live acceptance evidence
+        run: |
+          set -euo pipefail
+          ssh \
+            -i "$HOME/.ssh/wardveil_vps" \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
+            "$WARDVEIL_VPS_USER@$WARDVEIL_VPS_HOST" \
+            "bash -s -- '$GITHUB_SHA'" <<'REMOTE'
+          set -euo pipefail
+          revision="$1"
+          base=/opt/goreecloud/wardveil/clamav
+          release="$base/releases/$revision"
+          evidence="$base/evidence/$revision.json"
+          archive="/tmp/wardveil-clamav-$revision.tgz"
+          checksum="$archive.sha256"
+          previous=""
+
+          sudo -n true
+          command -v docker >/dev/null
+          command -v python3 >/dev/null
+          command -v sha256sum >/dev/null
+          sudo docker compose version >/dev/null
+
+          cd /tmp
+          sha256sum --check "$checksum"
+
+          if [ -L "$base/current" ]; then
+            previous="$(readlink -f "$base/current" || true)"
+          fi
+
+          sudo install -d -m 0755 "$base/releases" "$base/evidence"
+          sudo rm -rf "$release"
+          sudo install -d -m 0755 "$release"
+          sudo tar -xzf "$archive" -C "$release"
+          sudo chown -R "$(id -u):$(id -g)" "$release"
+
+          sudo install -d -m 0750 /etc/goreecloud/wardveil
+          if [ ! -f /etc/goreecloud/wardveil/clamav.env ]; then
+            sudo install -m 0640 -o root -g root \
+              "$release/deployment/clamav/.env.example" \
+              /etc/goreecloud/wardveil/clamav.env
+          fi
+
+          compose=(sudo docker compose --project-name wardveil-clamav --env-file /etc/goreecloud/wardveil/clamav.env -f "$release/deployment/clamav/compose.yaml")
+          "${compose[@]}" pull
+          "${compose[@]}" up -d --remove-orphans
+
+          healthy=false
+          for attempt in $(seq 1 90); do
+            if sudo bash -c "set -a; . /etc/goreecloud/wardveil/clamav.env; export PYTHONPATH='$release'; python3 '$release/scripts/collect_wardveil_clamav_health.py' --require-healthy >/tmp/wardveil-clamav-health.json"; then
+              healthy=true
+              break
+            fi
+            sleep 5
+          done
+
+          if [ "$healthy" != true ]; then
+            sudo docker compose --project-name wardveil-clamav --env-file /etc/goreecloud/wardveil/clamav.env -f "$release/deployment/clamav/compose.yaml" logs --no-color --tail=200 || true
+            if [ -n "$previous" ] && [ -f "$previous/deployment/clamav/compose.yaml" ]; then
+              sudo docker compose --project-name wardveil-clamav --env-file /etc/goreecloud/wardveil/clamav.env -f "$previous/deployment/clamav/compose.yaml" up -d --remove-orphans || true
+              sudo ln -sfn "$previous" "$base/current"
+            else
+              "${compose[@]}" down || true
+            fi
+            exit 1
+          fi
+
+          set +e
+          sudo bash -c "set -a; . /etc/goreecloud/wardveil/clamav.env; export PYTHONPATH='$release'; export WARDVEIL_DEPLOYED_REVISION='$revision'; python3 '$release/scripts/collect_wardveil_clamav_acceptance.py' --expected-revision '$revision' --output '$evidence'"
+          acceptance_rc=$?
+          set -e
+
+          if [ "$acceptance_rc" -ne 0 ]; then
+            if [ -n "$previous" ] && [ -f "$previous/deployment/clamav/compose.yaml" ]; then
+              sudo docker compose --project-name wardveil-clamav --env-file /etc/goreecloud/wardveil/clamav.env -f "$previous/deployment/clamav/compose.yaml" up -d --remove-orphans || true
+              sudo ln -sfn "$previous" "$base/current"
+            else
+              "${compose[@]}" down || true
+            fi
+            exit "$acceptance_rc"
+          fi
+
+          sudo chmod 0644 "$evidence"
+          sudo ln -sfn "$release" "$base/current"
+          sudo rm -f "$archive" "$checksum"
+          REMOTE
+
+      - name: Retrieve sanitized runtime evidence
+        run: |
+          set -euo pipefail
+          scp \
+            -i "$HOME/.ssh/wardveil_vps" \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
+            "$WARDVEIL_VPS_USER@$WARDVEIL_VPS_HOST:/opt/goreecloud/wardveil/clamav/evidence/${GITHUB_SHA}.json" \
+            /tmp/wardveil-clamav-production-evidence.json
+          python3 -m json.tool /tmp/wardveil-clamav-production-evidence.json >/dev/null
+          grep -q '"runtime_evidence_status": "passed"' /tmp/wardveil-clamav-production-evidence.json
+          grep -q '"production_runtime_acceptance": "unaccepted"' /tmp/wardveil-clamav-production-evidence.json
+
+      - name: Record deployment evidence summary
+        run: |
+          set -euo pipefail
+          {
+            echo '## Wardveil ClamAV production deployment'
+            echo
+            echo "- Exact deployed source revision: \`$GITHUB_SHA\`"
+            echo '- Scanner transport: loopback-only clamd TCP'
+            echo '- Scanner/signature health: passed'
+            echo '- Controlled clean scan: passed'
+            echo '- Controlled EICAR detection: passed'
+            echo '- Scanner-unavailable fail-closed test: passed'
+            echo '- Public clamd exposure: prohibited by deployment baseline'
+            echo '- Production runtime acceptance: **unaccepted** until deployed application-consumer transport and authorized quarantine execution evidence are accepted'
+            echo
+            echo '<details><summary>Sanitized runtime evidence</summary>'
+            echo
+            echo '```json'
+            cat /tmp/wardveil-clamav-production-evidence.json
+            echo '```'
+            echo '</details>'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Remove local SSH material
+        if: always()
+        run: |
+          rm -f "$HOME/.ssh/wardveil_vps" "$HOME/.ssh/known_hosts"
