@@ -1,13 +1,24 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "system": "wardveil-security",
   "producer_repository": "GoreeCloud/goreecloud-wardveil-security",
   "authority_domains": ["security"],
   "mesh_envelope": {
     "version": "goreecloud.evidence-envelope.v1",
     "repository": "GoreeCloud/goreecloud-mesh",
-    "revision": "d7809ccee889cb4166925a0747459f34290a5144",
     "path": "contracts/mesh.evidence-envelope.schema.json"
+  },
+  "platform_evidence_plane": {
+    "contract": "goreecloud.platform-evidence-plane.v1",
+    "repository": "GoreeCloud/goreecloud-mesh",
+    "path": "contracts/mesh.platform-evidence-plane.v1.json",
+    "authority_transfer": false
+  },
+  "presentation_consumer": {
+    "system": "glaze-ui",
+    "repository": "GoreeCloud/glaze-ui",
+    "path": "contracts/glaze.evidence-presentation.schema.json",
+    "may_upgrade_security_truth": false
   },
   "runtime_delivery": {
     "producer_service_id": "wardveil-security",
@@ -48,6 +59,7 @@
     "Wardveil remains authoritative for Wardveil-native security assertions.",
     "Mesh validates transport/provenance and must not upgrade, broaden, or reinterpret Wardveil security authority.",
     "Privacy Shield privacy state and Everkeep recovery state may be consumed by Wardveil only through their own producer-authoritative contracts.",
+    "Glaze UI may present Wardveil evidence but cannot create, upgrade, or merge Wardveil security truth.",
     "A valid Mesh envelope is not by itself evidence that a security assertion is true or accepted."
   ],
   "status": "source-profile",
