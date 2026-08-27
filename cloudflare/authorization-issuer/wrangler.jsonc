@@ -6,6 +6,7 @@
   "compatibility_flags": ["nodejs_compat"],
   "vars": {
     "WARDVEIL_AUTH_ISSUER_ID": "wardveil-policy-runtime",
+    "WARDVEIL_AUTH_EXECUTOR_ID": "wardveil-protect-executor-runtime",
     "WARDVEIL_AUTH_SIGNING_KEY_ID": "wardveil-auth-current"
   },
   "secrets": {
