@@ -168,8 +168,19 @@ def main() -> None:
         replay_ledger=AuthorizationReplayLedger(), now=rotation_time,
     ).accepted
 
+    # Trust material is resolved before the base authorization TTL check. Once
+    # the retired key's bounded verification overlap ends, the old envelope is
+    # rejected as key-expired even though the envelope is also no longer usable.
     assert verify_identity_bound_execution_authorization(
         auth, policy(), identities=identities, keyring=keyring,
+        replay_ledger=AuthorizationReplayLedger(), now=NOW + timedelta(minutes=3),
+    ).reason == "signing_key_expired"
+
+    # Separately prove authorization expiry while the replacement key remains
+    # active. The new envelope expires at rotation_time + the default two-minute
+    # authorization TTL, well before key B expires.
+    assert verify_identity_bound_execution_authorization(
+        new_auth, policy(), identities=identities, keyring=keyring,
         replay_ledger=AuthorizationReplayLedger(), now=NOW + timedelta(minutes=3),
     ).reason == "expired_authorization"
 
@@ -254,7 +265,7 @@ def main() -> None:
         replay_ledger=AuthorizationReplayLedger(), now=rotation_time,
     ).reason == "service_identity_revoked"
 
-    print("Wardveil service identity and key lifecycle tests passed (18 cases).")
+    print("Wardveil service identity and key lifecycle tests passed (19 cases).")
 
 
 if __name__ == "__main__":
