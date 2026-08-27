@@ -109,6 +109,16 @@ Priority GoreeCloud consumers are:
 
 Each consumer must preserve the Wardveil fail-closed rule: unsupported, incomplete, unavailable, stale, expired, or invalid scan evidence is not a clean verdict.
 
+## GoreeCloud Mail source-consumer milestone
+
+GoreeCloud Mail is the first GoreeCloud application with an executable source-level Wardveil Scan attachment consumer. The accepted Mail revision is `de4b0844c4973a80c11854318956d50536ddbb9e` in `GoreeCloud/goreecloud-mail`.
+
+The Mail consumer binds Wardveil scan evidence to the exact `mail_attachment` scope and SHA-256 attachment digest, allows opening/downloading only for current authoritative clean evidence, holds suspicious content for review, blocks malicious content, and emits a non-destructive Wardveil Quarantine handoff that still requires explicit executor authority. Mail does not connect directly to ClamAV.
+
+Cross-project source evidence is recorded in `contracts/wardveil.mail.consumer-source-evidence.json`. That record is provenance for implementation and exact-revision CI only. It does not prove that a deployed Mail runtime can reach Wardveil Scan, that a deployed ClamAV service is healthy, that provider attachment bytes were bound correctly in production, or that quarantine executed.
+
+Therefore the ClamAV `application_consumer_integration` production acceptance requirement is not considered satisfied solely by this source milestone. Runtime acceptance remains separately evidence-backed.
+
 ## Production acceptance
 
 `contracts/wardveil.clamav.runtime-acceptance.json` intentionally records `production_runtime_status` as `unaccepted`. Source-level adapter tests, health tests, a healthy container, or a passing CI run cannot change that field by themselves.
