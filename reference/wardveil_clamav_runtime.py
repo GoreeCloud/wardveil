@@ -72,6 +72,12 @@ class ClamAVRuntimeMetrics:
     def error_rate(self) -> float:
         return self.scan_errors / self.total_scans if self.total_scans else 0.0
 
+    def validate(self) -> None:
+        if self.total_scans < 0 or self.scan_errors < 0:
+            raise ValueError("scan_metrics_must_be_non_negative")
+        if self.scan_errors > self.total_scans:
+            raise ValueError("scan_errors_cannot_exceed_total_scans")
+
     def record(self, verdict: ClamAVVerdict, *, now: datetime | None = None) -> None:
         self.total_scans += 1
         if verdict.completed:
@@ -231,6 +237,7 @@ def collect_clamav_health(
     policy = policy or ClamAVRuntimePolicy()
     policy.validate()
     metrics = metrics or ClamAVRuntimeMetrics()
+    metrics.validate()
     reasons: list[str] = []
 
     try:
@@ -327,11 +334,17 @@ def gate_clamav_verdict(
         producer_id=producer_id,
     )
     finding = evaluate_scan(request, now=observed_at)
-    if finding.result != "clean" or health.clean_verdicts_eligible:
+    health_current = health.observed_at <= observed_at < health.valid_until
+    if finding.result != "clean" or (health.clean_verdicts_eligible and health_current):
         return finding
 
+    health_reasons = list(health.degraded_reasons)
+    if observed_at < health.observed_at:
+        health_reasons.append("scanner_health_evidence_from_future")
+    elif observed_at >= health.valid_until:
+        health_reasons.append("scanner_health_evidence_expired")
     reasons = ("scanner_health_not_acceptable_for_clean_verdict",) + tuple(
-        f"scanner_health:{reason}" for reason in health.degraded_reasons
+        f"scanner_health:{reason}" for reason in sorted(set(health_reasons))
     )
     evidence = tuple(dict.fromkeys((*finding.evidence_refs, health.evidence_ref)))
     return ScanFinding(
@@ -339,7 +352,7 @@ def gate_clamav_verdict(
         reasons,
         evidence,
         observed_at,
-        min(finding.valid_until, health.valid_until),
+        observed_at + timedelta(minutes=2),
     )
 
 
