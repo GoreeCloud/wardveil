@@ -2,6 +2,8 @@
 
 Wardveil integration is complete only when a GoreeCloud application or service satisfies the requirements below. Branding alone is not adoption.
 
+A conforming consumer must identify every authoritative producer, treat stale or missing evidence as non-passing, keep state communication accessible, and preserve exact-revision acceptance evidence for security-sensitive changes.
+
 ## Required integration contract
 
 A consumer must:
@@ -17,6 +19,17 @@ A consumer must:
 - provide a safe `unknown` experience instead of hiding unavailable security state;
 - document rollback or removal of the Wardveil adapter without disabling the underlying security control.
 
+When a consumer or executor participates in a high-impact cross-service Wardveil action, it must also:
+
+- implement the exact runtime authorization contract version it accepts;
+- reject unsupported authorization versions or signature algorithms;
+- validate the authoritative policy record and its exact digest binding;
+- require exact action, target scope, executor identity, correlation, expiry, nonce, and idempotency binding;
+- reject expired, future-dated, tampered, policy-detached, or conflicting-replay authorization;
+- preserve its own local action/resource permission checks after Wardveil authorization succeeds;
+- make retries idempotent and persist replay/idempotency state with durability appropriate to the executor scope;
+- emit auditable execution evidence without embedding signing secrets or reusable credentials.
+
 ## Recommended integration layout
 
 1. Collect state from the authoritative local control.
@@ -25,6 +38,8 @@ A consumer must:
 4. Apply freshness and scope rules.
 5. Render the result through Glaze UI.
 6. Keep detailed operational diagnostics in the owning system, not in the shared Wardveil payload.
+7. For high-impact cross-service execution, validate Wardveil runtime authorization before invoking the local executor.
+8. Persist the resulting protection action and audit evidence through the owning authoritative path.
 
 ## Aggregated security views
 
@@ -47,9 +62,11 @@ A constrained presentation must:
 
 A compact Wardveil card is a view of an existing evidence-backed record. It does not create a new security state, broaden the producer's authority, or substitute for application-specific runtime acceptance.
 
-## Remediation links
+## Remediation and execution
 
-Wardveil may direct an authorized user to an application's existing remediation workflow. The link must not imply that Wardveil performed the remediation. Generic cross-service execution is outside the Wardveil 0.7 foundation contract.
+Wardveil may direct an authorized user to an application's existing remediation workflow. For cross-service technical execution, Wardveil Foundation 0.9 defines a bounded runtime-authorization contract rather than a generic unrestricted command channel.
+
+A policy decision alone is not execution authority. The runtime authorization must be cryptographically bound to the exact decision and intended executor, and the executor must still independently possess authority for the requested action and target resource. Invalid authorization fails closed. A valid authorization does not imply that production cryptography, transport, durable replay state, or audit persistence has been accepted.
 
 ## Adoption evidence
 
@@ -61,6 +78,8 @@ Before a project claims Wardveil integration, its repository should contain:
 - tests confirming sensitive fields are not emitted;
 - a source-level or rendered accessibility check for state labels;
 - exact-revision CI evidence for the integration change.
+
+For an executor using runtime authorization, adoption evidence must additionally include tamper, expiry, action/scope/executor mismatch, nonce conflict, idempotent retry, unauthorized executor, and execution-failure tests. Production acceptance requires deployed evidence for key management, authenticated transport, durable replay/idempotency storage, executor authentication, audit persistence, and rotation/revocation procedures.
 
 For compact or wearable surfaces, adoption evidence must additionally demonstrate that constrained rendering preserves normalized state, required freshness meaning, authority/scope discoverability, and fail-closed handling without exposing additional sensitive evidence.
 

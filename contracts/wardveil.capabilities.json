@@ -1,6 +1,6 @@
 {
   "contract_version": "0.1.0",
-  "foundation_version": "0.8.0",
+  "foundation_version": "0.9.0",
   "umbrella": "Wardveil Security",
   "capabilities": [
     {
@@ -15,7 +15,8 @@
       "name": "Wardveil Protect",
       "responsibility": "preventive-controls-enforcement-and-active-protection",
       "authoritative_for": ["wardveil-enforcement-result"],
-      "must_audit_high_impact_actions": true
+      "must_audit_high_impact_actions": true,
+      "cross_service_high_impact_execution_requires_bound_authorization": true
     },
     {
       "id": "detect",
@@ -36,7 +37,8 @@
       "name": "Wardveil Policy",
       "responsibility": "central-security-policy-rules-decisions-and-enforcement-logic",
       "authoritative_for": ["wardveil-policy-decisions"],
-      "decisions_must_be_versioned_and_auditable": true
+      "decisions_must_be_versioned_and_auditable": true,
+      "policy_decision_alone_is_execution_authority": false
     },
     {
       "id": "quarantine",
@@ -75,6 +77,9 @@
     "data_minimization": true,
     "conservative_aggregation": true,
     "verifiable_public_claims": true,
-    "branding_alone_is_not_integration": true
+    "branding_alone_is_not_integration": true,
+    "high_impact_execution_requires_bound_authorization": true,
+    "execution_authority_separated_from_policy_decision": true,
+    "replay_resistant_execution": true
   }
 }

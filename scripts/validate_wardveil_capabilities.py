@@ -10,7 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 CONTRACT = ROOT / "contracts" / "wardveil.capabilities.json"
 EXPECTED_VERSION = "0.1.0"
-EXPECTED_FOUNDATION = "0.8.0"
+EXPECTED_FOUNDATION = "0.9.0"
 EXPECTED = {
     "trust": "Wardveil Trust",
     "protect": "Wardveil Protect",
@@ -56,6 +56,11 @@ def main() -> None:
         if not item.get("authoritative_for"):
             fail(f"missing authority declaration for capability {capability_id}")
 
+    if mapped["protect"].get("cross_service_high_impact_execution_requires_bound_authorization") is not True:
+        fail("Wardveil Protect must require bound authorization for cross-service high-impact execution")
+    if mapped["policy"].get("policy_decision_alone_is_execution_authority") is not False:
+        fail("Wardveil Policy decisions must remain separate from execution authority")
+
     if data.get("representative_lifecycle") != EXPECTED_LIFECYCLE:
         fail("representative lifecycle has drifted from the canonical architecture")
 
@@ -68,6 +73,9 @@ def main() -> None:
         "conservative_aggregation",
         "verifiable_public_claims",
         "branding_alone_is_not_integration",
+        "high_impact_execution_requires_bound_authorization",
+        "execution_authority_separated_from_policy_decision",
+        "replay_resistant_execution",
     )
     if not isinstance(cross, dict) or any(cross.get(key) is not True for key in required_true):
         fail("cross-cutting Wardveil security invariants are incomplete")
