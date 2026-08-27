@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Self-tests for Wardveil durable execution-state semantics."""
+"""Self-tests for Wardveil durable execution-state and reconciliation semantics."""
 from __future__ import annotations
 
 import sys
@@ -10,6 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from reference.wardveil_execution_reconciliation import reconcile_uncertain_execution  # noqa: E402
 from reference.wardveil_execution_state import (  # noqa: E402
     DurableAuthorizedProtectCoordinator,
     InMemoryExecutionStateStore,
@@ -84,6 +85,40 @@ def main() -> None:
 
     pending_retry = store.claim(authorization.as_dict(), now=NOW)
     assert pending_retry.status == "execution_reconciliation_required"
+    assert pending_retry.claim is not None
+
+    succeeded_reconciliation = reconcile_uncertain_execution(
+        pending_retry.claim,
+        observed_outcome="succeeded",
+        evidence_ref="wardveil://operator-evidence/execution-1",
+        actor_id="operator:security-admin",
+        now=NOW + timedelta(seconds=30),
+    )
+    assert succeeded_reconciliation.resolved
+    assert succeeded_reconciliation.effective_execution_state == "succeeded"
+    assert not succeeded_reconciliation.new_authorization_required
+    assert succeeded_reconciliation.as_dict()["original_authorization_reusable"] is False
+    assert succeeded_reconciliation.as_dict()["executor_invoked"] is False
+
+    unknown_reconciliation = reconcile_uncertain_execution(
+        pending_retry.claim,
+        observed_outcome="unknown",
+        evidence_ref="wardveil://operator-evidence/incomplete-1",
+        actor_id="operator:security-admin",
+        now=NOW + timedelta(seconds=31),
+    )
+    assert not unknown_reconciliation.resolved
+    assert unknown_reconciliation.effective_execution_state == "execution_reconciliation_required"
+
+    not_executed = reconcile_uncertain_execution(
+        pending_retry.claim,
+        observed_outcome="not_executed",
+        evidence_ref="wardveil://operator-evidence/not-executed-1",
+        actor_id="operator:security-admin",
+        now=NOW + timedelta(seconds=32),
+    )
+    assert not_executed.resolved and not_executed.new_authorization_required
+    assert not_executed.as_dict()["original_authorization_reusable"] is False
 
     conflicting_nonce = replace(authorization, authorization_id="authz-conflicting")
     assert store.claim(conflicting_nonce.as_dict(), now=NOW).status == "authorization_nonce_conflict"
@@ -100,6 +135,17 @@ def main() -> None:
     finalized_retry = store.claim(authorization.as_dict(), now=NOW)
     assert finalized_retry.status == "idempotent_finalized"
     assert finalized_retry.receipt == receipt
+    assert finalized_retry.claim is not None
+    expect_raises(
+        "reconciliation_requires_uncertain_claim",
+        lambda: reconcile_uncertain_execution(
+            finalized_retry.claim,
+            observed_outcome="succeeded",
+            evidence_ref="wardveil://operator-evidence/already-finalized",
+            actor_id="operator:security-admin",
+            now=NOW,
+        ),
+    )
 
     same_receipt = store.finalize(authorization.as_dict(), record, now=NOW + timedelta(seconds=1))
     assert same_receipt == receipt
@@ -141,8 +187,6 @@ def main() -> None:
     assert executed.protection_result is not None and executed.protection_result.status == "succeeded"
     assert calls["count"] == 1
 
-    # A fresh process with a fresh ProtectEngine still does not re-run the handler
-    # because the shared execution-state store already has a finalized receipt.
     second_coordinator = DurableAuthorizedProtectCoordinator(state_store=coordinated_store)
     replayed = second_coordinator.execute(
         policy(), coordinated_auth, authority, signing_key=KEY, handler=handler, now=NOW,
@@ -151,7 +195,6 @@ def main() -> None:
     assert replayed.reason == "idempotent_finalized_execution"
     assert calls["count"] == 1
 
-    # Simulate a crash after durable claim but before a receipt is written.
     uncertain_store = InMemoryExecutionStateStore()
     uncertain_auth = auth(nonce="nonce-uncertain", idem="idem-uncertain")
     assert uncertain_store.claim(uncertain_auth.as_dict(), now=NOW).status == "new"
@@ -162,14 +205,14 @@ def main() -> None:
     assert uncertain.reason == "execution_reconciliation_required"
     assert calls["count"] == 1
 
-    serialized = str(receipt.as_dict()).lower()
+    serialized = str(receipt.as_dict()).lower() + str(succeeded_reconciliation.as_dict()).lower()
     for forbidden in (
         "signing_key", "private_key", "password", "access_token",
         "refresh_token", "session_token", "cookie", "authorization_header",
     ):
         assert forbidden not in serialized
 
-    print("Wardveil durable execution-state tests passed (14 cases).")
+    print("Wardveil durable execution-state and reconciliation tests passed.")
 
 
 if __name__ == "__main__":
