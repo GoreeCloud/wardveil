@@ -1,16 +1,16 @@
 # Wardveil Cloudflare Persistence Adapter
 
-This directory contains the first deployment-oriented persistence adapter for Wardveil Security Foundation 0.8. It maps the accepted Wardveil persistence contract onto a Cloudflare Worker plus a SQLite-backed Durable Object namespace.
+This directory contains Wardveil Security's deployment-oriented persistence adapter. It maps the accepted Wardveil persistence contract and Foundation 0.9 execution-state contract onto a Cloudflare Worker plus a SQLite-backed Durable Object namespace.
 
 ## Architecture
 
-Each bounded Wardveil tenant/security domain is routed deterministically to one `WardveilPersistenceDO` instance. The Durable Object owns ordered SQLite persistence, consumer checkpoints, retention maintenance evidence, schema metadata, and point-in-time-recovery health evidence for that coordination atom.
+Each bounded Wardveil tenant/security domain is routed deterministically to one `WardveilPersistenceDO` instance. The Durable Object owns ordered SQLite persistence, consumer checkpoints, runtime execution-authorization claims, execution receipts, retention maintenance evidence, schema metadata, and point-in-time-recovery health evidence for that coordination atom.
 
-The outer Worker is service-binding/RPC-first. Public HTTP exposes only `/healthz`; record mutation, record reading, checkpoint mutation, and tenant storage health are RPC methods intended for explicitly authorized GoreeCloud service bindings. The adapter does not create a public generic security-record mutation API.
+The outer Worker is service-binding/RPC-first. Public HTTP exposes only `/healthz`; record mutation, record reading, checkpoint mutation, execution-state mutation, execution-receipt reading, and tenant storage health are RPC methods intended for explicitly authorized GoreeCloud service bindings. The adapter does not create a public generic security-record or execution mutation API.
 
 ## Storage behavior
 
-The v1 SQLite schema provides:
+The v1 persistence schema provides:
 
 - ordered Wardveil records with unique `record_id` values;
 - authoritative producer and scope preservation inside the stored payload;
@@ -21,11 +21,25 @@ The v1 SQLite schema provides:
 - schema-version metadata; and
 - Durable Object database-size and PITR bookmark health evidence.
 
-Retention enforcement uses the Durable Object alarm API. The reference schedule is every six hours. Expiry removes the storage copy only; it does not reinterpret producer evidence, revoke or extend security validity, or imply deletion from the authoritative source system.
+Foundation 0.9 also adds execution-state schema version 1 inside the same Durable Object. It provides:
+
+- one durable claim per runtime-authorization nonce;
+- a uniqueness boundary for each executor/idempotency-key pair;
+- exact authorization-digest binding;
+- persisted correlation, executor, action, scope, issue-time, and expiry bindings;
+- fail-closed nonce and idempotency conflicts;
+- `execution_reconciliation_required` for a claimed authorization without a finalized receipt;
+- durable execution receipts containing the normalized authoritative Wardveil Protect record and its SHA-256 digest;
+- receipt-integrity digests and bounded audit-evidence retention; and
+- idempotent retrieval of an already finalized receipt without authorizing the side effect again.
+
+Retention enforcement uses the Durable Object alarm API. The reference schedule is every six hours. Expiry removes eligible storage copies, execution claims, and execution receipts only according to their bounded retention rules; it does not reinterpret producer evidence, revoke or extend security validity, or imply deletion from an authoritative source system.
 
 ## Transactions and migration
 
-Multi-step record insertion and checkpoint advancement use SQLite Durable Object transactional behavior. The current adapter supports schema version 1 only and fails closed on an unexpected schema version. Future schema versions must add explicit migration steps and acceptance tests rather than silently mutating unknown data layouts.
+Multi-step record insertion, checkpoint advancement, execution-authorization claiming, and receipt finalization use SQLite Durable Object transactional behavior. The base persistence schema remains version 1, and the execution-state extension has its own version 1 metadata. Unexpected versions fail closed. Future versions must add explicit migration and acceptance work rather than silently interpreting unknown layouts.
+
+The execution-state claim is intentionally written before an external high-impact side effect. If the executor loses certainty after that claim and before a receipt is durably finalized, a retry receives `execution_reconciliation_required` rather than permission to execute again. The Durable Object cannot by itself make an external non-idempotent API exactly-once; the authoritative executor still requires idempotency or an equivalent state-reconciliation mechanism.
 
 ## Encryption and recovery
 
@@ -33,13 +47,15 @@ Cloudflare documents SQLite-backed Durable Objects as encrypted at rest automati
 
 SQLite-backed Durable Objects expose point-in-time recovery bookmarks. The adapter reports the current bookmark as recovery evidence. A bookmark being available is not proof that a GoreeCloud disaster-recovery exercise succeeded; production recovery acceptance still requires an exercised restore workflow and Everkeep-aligned recovery evidence.
 
+Recovery of execution state must preserve the distinction between finalized and pending claims. A restored pending claim may represent an uncertain external side effect and must not be silently discarded or reset to unused authorization.
+
 ## Authority boundary
 
 Persistence is not a security-state authority. The adapter may preserve and deliver authoritative Wardveil records but may not manufacture, upgrade, extend, repair, or reinterpret Trust, Policy, Protect, Detect, Scan, Quarantine, Response, Audit, or Security Center state.
 
 `storage operational` is not equivalent to `Protected by Wardveil`.
 
-A successful write proves only that a record was accepted into this persistence boundary. It does not prove that the underlying protection action executed, that a finding is true, or that an incident is resolved.
+A successful write or execution-state claim proves only that the persistence boundary accepted that state. It does not prove that the underlying protection action executed, that a finding is true, or that an incident is resolved. A finalized execution receipt represents the authoritative Protect result it contains but does not grant the executor authority or prove unrelated controls succeeded.
 
 ## Deployment boundary
 
@@ -48,10 +64,14 @@ The source is intentionally deployable but is not recorded as a production deplo
 - a connected Cloudflare account and reviewed Worker/Durable Object deployment;
 - `wrangler types` generation and TypeScript compilation against the deployed binding configuration;
 - explicit service-binding consumer authorization;
+- authenticated executor identity and authorization transport;
+- production signing/key-management and rotation/revocation controls;
 - tenant/shard sizing and data-location review;
 - operational retention verification;
-- recovery drill evidence;
-- monitoring/alerting integration;
+- durable replay/idempotency and execution-receipt runtime evidence;
+- executor-side idempotency or authoritative uncertain-outcome reconciliation;
+- crash/replay/storage-failure recovery exercises;
+- monitoring/alerting and Wardveil Audit/Security Center integration;
 - Privacy Shield minimization review for stored record fields;
 - Everkeep recovery coordination where applicable; and
 - product-specific Stable acceptance.

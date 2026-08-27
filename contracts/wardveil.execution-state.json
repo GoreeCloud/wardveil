@@ -1,0 +1,74 @@
+{
+  "contract": "goreecloud.wardveil.execution-state",
+  "contract_version": "0.1.0",
+  "foundation_version": "0.9.0",
+  "purpose": "Durable replay, idempotency, uncertain-outcome, and execution-receipt state for Wardveil runtime execution authorization.",
+  "claim": {
+    "required_bindings": [
+      "authorization_id",
+      "authorization_digest_sha256",
+      "correlation_id",
+      "executor_id",
+      "action",
+      "scope",
+      "idempotency_key",
+      "nonce",
+      "issued_at",
+      "expires_at"
+    ],
+    "nonce_conflict_fails_closed": true,
+    "executor_idempotency_conflict_fails_closed": true,
+    "pending_retry_disposition": "execution_reconciliation_required",
+    "blind_reexecution_after_uncertain_outcome_allowed": false,
+    "expired_authorization_claim_allowed": false
+  },
+  "receipt": {
+    "required_outcomes": ["succeeded", "rejected", "failed"],
+    "protection_record_type": "protection_action",
+    "authoritative_protection_record_required": true,
+    "exact_correlation_binding_required": true,
+    "exact_action_binding_required": true,
+    "exact_scope_binding_required": true,
+    "exact_executor_binding_required": true,
+    "exact_idempotency_binding_required": true,
+    "protection_record_digest_required": true,
+    "receipt_digest_required": true,
+    "conflicting_finalization_fails_closed": true,
+    "idempotent_finalization_returns_original_receipt": true
+  },
+  "privacy": {
+    "signing_secrets_allowed": false,
+    "credentials_allowed": false,
+    "session_tokens_allowed": false,
+    "cookies_allowed": false,
+    "raw_resource_content_required": false,
+    "data_minimization_required": true
+  },
+  "cloudflare_reference": {
+    "backend": "Durable Object SQLite",
+    "public_mutation_api_allowed": false,
+    "service_binding_rpc_only": true,
+    "execution_state_schema_version": 1,
+    "authorization_claim_retention": "bounded",
+    "execution_receipt_retention_class": "audit_evidence"
+  },
+  "authority": {
+    "persistence_is_security_state_authority": false,
+    "persistence_grants_executor_authority": false,
+    "successful_claim_proves_action_executed": false,
+    "successful_receipt_persistence_can_replace_local_executor_authorization": false
+  },
+  "production_runtime_status": "unaccepted",
+  "remaining_acceptance_requirements": [
+    "approved production signing and key-management architecture",
+    "authenticated executor identity and transport",
+    "deployed durable replay and idempotency storage",
+    "deployed durable execution-receipt storage",
+    "authorized high-impact executor integration",
+    "executor-side idempotency for external side effects",
+    "uncertain-outcome reconciliation procedure",
+    "key rotation and revocation",
+    "runtime crash, replay, tamper, expiry, storage-failure, and recovery tests",
+    "audit receipt ingestion and Security Center visibility"
+  ]
+}

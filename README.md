@@ -2,7 +2,7 @@
 
 Wardveil Security is GoreeCloud's platform-wide first-party security system and shared security plane. It coordinates evidence-backed trust, policy, protection, detection, scanning, quarantine, incident response, audit, and security-center experiences across GoreeCloud.
 
-> **Current status:** Foundation 0.9 active. Wardveil now adds a canonical replay-resistant runtime execution-authorization boundary between Policy and Protect while preserving fail-closed evidence, conservative aggregation, Privacy Shield separation, target-system authority, and product-specific production acceptance gates.
+> **Current status:** Foundation 0.9 active. Wardveil adds replay-resistant runtime execution authorization plus a durable execution-state model that prevents uncertain cross-service outcomes from becoming blind duplicate mutations, while preserving fail-closed evidence, Privacy Shield separation, target-system authority, and product-specific production acceptance gates.
 
 ## First-party security capabilities
 
@@ -34,7 +34,7 @@ Wardveil follows evidence before reassurance. Protected state requires current a
 
 Wardveil applies least privilege, data minimization, explicit authority, conservative aggregation, and auditable decision/execution separation. Shared evidence must not become a secret store or unrestricted telemetry lake. Unknown inspection results are not clean results, and anomaly alone is not proof of malicious behavior.
 
-High-impact cross-service technical actions require an explicit authorized executor plus a short-lived authorization bound to the exact policy record, action, scope, executor identity, idempotency key, replay nonce, and validity window.
+High-impact cross-service technical actions require an explicit authorized executor plus a short-lived authorization bound to the exact policy record, action, scope, executor identity, idempotency key, replay nonce, and validity window. Before an authorized high-impact side effect is attempted, the Foundation 0.9 durable execution-state model claims that authorization so an uncertain process failure cannot silently authorize the same mutation again.
 
 ## Authority model
 
@@ -56,9 +56,21 @@ The reference flow is:
 
 The authorization is bound to the exact policy digest, policy record ID, correlation ID, action, target scope, executor ID, idempotency key, nonce, issue time, and expiry. It cannot outlive its policy decision. Invalid signatures, expired or excessive validity windows, future-dated authorization, policy mutation, action/scope/executor mismatch, and conflicting nonce reuse fail closed.
 
-Exact retries of the same authorization/nonce/idempotency identity are treated as idempotent retries and the Protect executor's idempotency ledger prevents the reference mutation from running twice.
-
 The source reference uses `HMAC-SHA256-reference-only` solely for dependency-free contract testing. Production cryptography, key management, rotation/revocation, authenticated transport, durable replay/idempotency storage, and runtime executor evidence remain **unaccepted** until deployed and validated.
+
+## Durable execution state
+
+`EXECUTION-STATE.md`, `contracts/wardveil.execution-state.json`, and `reference/wardveil_execution_state.py` define the next Foundation 0.9 safety layer.
+
+The guarded sequence is:
+
+`verify authorization -> durable claim -> local executor authorization -> execute -> authoritative Protect record -> durable receipt -> Audit/Security Center`
+
+A nonce conflict or executor/idempotency conflict fails closed. An exact retry after a finalized outcome returns the original receipt without invoking the handler again. A claim that exists without a finalized receipt becomes `execution_reconciliation_required`; Wardveil prohibits automatic blind re-execution because the external side effect may already have occurred.
+
+The existing Cloudflare Durable Object persistence adapter now contains source-level service-binding RPC support for execution claims and receipts. It retains the public `/healthz`-only HTTP boundary. This is deployable source, not proof that durable execution state is currently deployed or production-accepted.
+
+A durable claim cannot make a non-idempotent external API exactly-once. Every production executor still requires idempotency or an authoritative state-reconciliation mechanism in the system that owns the side effect.
 
 ## Shared contracts and specifications
 
@@ -66,6 +78,7 @@ The source reference uses `HMAC-SHA256-reference-only` solely for dependency-fre
 - `FEATURES.md` — canonical detailed feature specification across Wardveil services, applications, infrastructure, Security Center, evidence, and platform integrations.
 - `contracts/wardveil.capabilities.json` — machine-readable capability and lifecycle contract.
 - `RUNTIME-AUTHORIZATION.md` and `contracts/wardveil.runtime-authorization.json` — cross-service execution authorization, exact binding, replay, idempotency, and production-acceptance boundary.
+- `EXECUTION-STATE.md` and `contracts/wardveil.execution-state.json` — durable authorization claims, uncertain-outcome handling, idempotency state, execution receipts, and deployment boundary.
 - `STATUS.md` and `contracts/wardveil.status.schema.json` — evidence-backed Wardveil status semantics.
 - `AGGREGATION.md` and `contracts/wardveil.aggregation.vectors.json` — conservative multi-record aggregation.
 - `PRIVACY-SHIELD.md` and `contracts/wardveil.privacy-shield.vectors.json` — privacy-safe read-only Privacy Shield presentation boundary.
@@ -90,7 +103,7 @@ The normalized status states remain `protected`, `attention`, `degraded`, `unkno
 
 GoreeCloud applications should consume Wardveil first-party security services rather than independently recreating malware scanning, session-risk evaluation, policy decisions, quarantine semantics, incident response, or security audit behavior.
 
-An integration should map authoritative producers, request or consume Wardveil decisions, require bound runtime authorization for supported high-impact cross-service actions, preserve local executor authority, respect quarantine state, emit security-relevant audit events, exclude prohibited sensitive material, and expose only evidence-backed Wardveil status.
+An integration should map authoritative producers, request or consume Wardveil decisions, require bound runtime authorization for supported high-impact cross-service actions, preserve local executor authority, use durable execution state for high-impact cross-service mutation, respect quarantine state, emit security-relevant audit events, exclude prohibited sensitive material, and expose only evidence-backed Wardveil status.
 
 Detailed application scopes for Browser, Mail, Drive, Vault, AI, Messenger, Identity, Search, Gateway, Network, infrastructure, and other authorized services are maintained in `FEATURES.md`.
 
@@ -106,7 +119,7 @@ The product direction is **Wardveil Malware Protection** within Wardveil Securit
 
 ## Protected by Wardveil
 
-`Protected by Wardveil` may be asserted only for an explicit scope backed by current authoritative evidence showing that a Wardveil control or Wardveil-authorized producer actually enforced or verified the represented protection. A Wardveil icon, a Security Center screen, a ClamAV installation, ClamAV health evidence, a runtime-authorization envelope, or a Privacy Shield status record does not independently authorize that claim.
+`Protected by Wardveil` may be asserted only for an explicit scope backed by current authoritative evidence showing that a Wardveil control or Wardveil-authorized producer actually enforced or verified the represented protection. A Wardveil icon, a Security Center screen, a ClamAV installation, ClamAV health evidence, a runtime-authorization envelope, a durable execution-state claim, or a Privacy Shield status record does not independently authorize that claim.
 
 ## Validation
 
@@ -117,16 +130,19 @@ python3 scripts/validate_wardveil.py
 python3 scripts/validate_wardveil_capabilities.py
 python3 scripts/test_wardveil_runtime_authorization.py
 python3 scripts/validate_wardveil_runtime_authorization.py
+python3 scripts/test_wardveil_execution_state.py
+python3 scripts/validate_wardveil_execution_state.py
 python3 scripts/test_wardveil_detect_scan_reference.py
 python3 scripts/test_wardveil_clamav.py
 python3 scripts/test_wardveil_clamav_runtime.py
 python3 scripts/validate_wardveil_clamav_runtime.py
+python3 scripts/validate_cloudflare_persistence.py
 python3 scripts/validate_wardveil_aggregation.py
 python3 scripts/validate_wardveil_privacy_shield.py
 ```
 
-CI validates the canonical capability set, lifecycle, version alignment, runtime authorization bindings/replay/idempotency behavior, evidence boundaries, ClamAV protocol/mapping behavior, ClamAV health/freshness/clean-verdict gating, deployment invariants, aggregation behavior, Privacy Shield separation, repository governance, icon state, and public-site tooling against the exact source revision.
+CI validates the canonical capability set, lifecycle, version alignment, runtime authorization bindings, durable execution claims/receipts, uncertain-outcome behavior, evidence boundaries, Cloudflare persistence invariants, ClamAV protocol and runtime-health behavior, deployment invariants, aggregation, Privacy Shield separation, repository governance, icon state, and public-site tooling against the exact source revision.
 
 ## Release discipline
 
-Foundation releases keep `VERSION`, `contracts/wardveil.identity.json`, `contracts/wardveil.capabilities.json`, runtime-authorization metadata, `CHANGELOG.md`, compatibility metadata, validator expectations, and the README current-status declaration synchronized. Product-specific and runtime-specific production acceptance remains separate from Wardveil foundation acceptance.
+Foundation releases keep `VERSION`, `contracts/wardveil.identity.json`, `contracts/wardveil.capabilities.json`, runtime-authorization and execution-state metadata, `CHANGELOG.md`, compatibility metadata, validator expectations, and the README current-status declaration synchronized. Product-specific and runtime-specific production acceptance remains separate from Wardveil foundation acceptance.

@@ -12,6 +12,11 @@ All notable source-controlled changes to the Wardveil Security foundation are re
 - Added replay-ledger semantics that permit only exact idempotent retries and reject conflicting nonce reuse.
 - Added `AuthorizedProtectEngine` so a valid execution authorization is checked before the existing Protect executor receives a cross-service request.
 - Added focused runtime-authorization tests and a contract validator, with exact-revision CI coverage.
+- Added `EXECUTION-STATE.md`, `contracts/wardveil.execution-state.json`, and `reference/wardveil_execution_state.py` for durable authorization claims, executor/idempotency uniqueness, uncertain-outcome reconciliation, and execution receipts.
+- Added `DurableAuthorizedProtectCoordinator`, which demonstrates verify -> durable claim -> Protect execution -> durable receipt sequencing without treating a pending claim as unused authorization.
+- Added 14 focused execution-state tests plus a fail-closed contract validator.
+- Extended the Cloudflare Durable Object persistence source with internal RPC-only execution-authorization claims, finalized execution receipts, bounded retention, receipt integrity digests, and an explicit `execution_reconciliation_required` state.
+- Added CI TypeScript checking for the Cloudflare persistence adapter using exact TypeScript and Workers type-package versions in an isolated temporary dependency directory.
 
 ### Changed
 
@@ -19,15 +24,21 @@ All notable source-controlled changes to the Wardveil Security foundation are re
 - Strengthened the capability contract so high-impact cross-service Protect execution requires bound runtime authorization and a Wardveil Policy decision is explicitly not execution authority by itself.
 - Strengthened architecture, compatibility, integration, threat-model, and adoption guidance around executor identity, target authority, replay resistance, idempotency, expiry, and production key-management boundaries.
 - Extended machine-readable identity metadata with the runtime-authorization contract and an explicit `unaccepted` production-runtime status.
+- Strengthened the Foundation 0.9 runtime flow so a durable claim precedes an external high-impact side effect and a durable authoritative Protect receipt follows it.
+- Extended the existing Cloudflare persistence boundary without adding a public mutation API; execution-state operations remain service-binding/RPC-only.
 
 ### Security invariants
 
 - High-impact cross-service actions fail closed when authorization is absent, expired, future-dated beyond the accepted skew, tampered, bound to a different policy/action/scope/executor, or reused with conflicting replay identity.
 - Authorization cannot outlive the authoritative policy decision that produced it.
 - A valid Wardveil authorization does not transfer underlying resource authority and cannot compensate for an executor that lacks action or resource permission.
-- Signing secrets are prohibited from authorization envelopes and shared security records.
-- The in-memory HMAC, replay ledger, and Protect idempotency store are reference/conformance mechanisms only; production runtime acceptance still requires approved key management, authenticated transport, durable shared replay/idempotency state, executor authentication, audit persistence, rotation/revocation, and runtime failure/replay testing.
-- `Protected by Wardveil` remains evidence-scoped and is not authorized by the existence of a runtime-authorization envelope alone.
+- Signing secrets are prohibited from authorization envelopes, durable execution-state records, and shared security records.
+- Reusing one executor/idempotency identity under a different durable claim fails closed.
+- A durable claim without a finalized receipt is `execution_reconciliation_required`; Wardveil prohibits automatic blind re-execution because the external side effect may already have occurred.
+- A finalized exact retry returns the original receipt without invoking the reference handler again.
+- Durable Wardveil replay state does not make a non-idempotent external system exactly-once; production executors require target-system idempotency or authoritative reconciliation.
+- The in-memory HMAC and execution-state references are conformance mechanisms only. The Cloudflare Durable Object extension is deployable source only. Production runtime acceptance still requires approved key management, authenticated transport and executor identity, deployed durable state, authorized high-impact executors, audit/Security Center integration, reconciliation procedures, rotation/revocation, and runtime failure/recovery evidence.
+- `Protected by Wardveil` remains evidence-scoped and is not authorized by the existence of a runtime-authorization envelope or durable execution-state claim alone.
 
 ## 0.8.0 — 2026-08-26
 
