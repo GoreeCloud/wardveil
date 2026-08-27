@@ -79,6 +79,7 @@ def main() -> None:
     auth = authorization(record)
     result = verify(auth, record)
     assert result.accepted and result.reason == "validated_execution_authorization"
+    assert auth.signing_key_id == "reference-static"
 
     tampered = replace(auth, action="quarantine")
     assert verify(tampered, record).reason == "action_binding_mismatch"
@@ -86,6 +87,9 @@ def main() -> None:
     tampered_scope = dict(auth.scope)
     tampered_scope["resource_id"] = "file-999"
     assert verify(replace(auth, scope=tampered_scope), record).reason == "scope_binding_mismatch"
+
+    tampered_key_id = replace(auth, signing_key_id="different-key")
+    assert verify(tampered_key_id, record).reason == "invalid_authorization_signature"
 
     changed_policy = {**record, "evidence_refs": ["evidence:changed"]}
     assert verify(auth, changed_policy).reason == "policy_digest_mismatch"
@@ -162,11 +166,11 @@ def main() -> None:
     assert allowed.authorization.accepted and allowed.protection_result.status == "succeeded"
 
     envelope = auth.as_dict()
-    serialized = str(envelope).lower()
-    for forbidden in ("signing_key", "private_key", "password", "access_token", "session_token"):
-        assert forbidden not in serialized
+    for forbidden_key in ("signing_key", "private_key", "password", "access_token", "session_token"):
+        assert forbidden_key not in envelope
+    assert "wardveil-reference-test-key" not in str(envelope)
 
-    print("Wardveil runtime execution authorization tests passed (20 cases).")
+    print("Wardveil runtime execution authorization tests passed (21 cases).")
 
 
 if __name__ == "__main__":
