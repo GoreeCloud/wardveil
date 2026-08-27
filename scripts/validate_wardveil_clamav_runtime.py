@@ -80,8 +80,10 @@ def main() -> None:
     require(not leaked, f"health schema contains forbidden secret-bearing fields: {', '.join(leaked)}")
 
     for token in (
-        'if finding.result != "clean" or health.clean_verdicts_eligible:',
+        "health_current = health.observed_at <= observed_at < health.valid_until",
+        'if finding.result != "clean" or (health.clean_verdicts_eligible and health_current):',
         '"scanner_health_not_acceptable_for_clean_verdict"',
+        '"scanner_health_evidence_expired"',
         '"signature_database_stale"',
         '"scan_error_rate_high"',
         '"protection_claim_authority": False',
