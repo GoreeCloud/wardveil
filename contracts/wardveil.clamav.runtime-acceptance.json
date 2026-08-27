@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "component": "Wardveil ClamAV malware scanning runtime",
+  "engine_role": "replaceable-signature-scanner",
+  "preferred_container_image": "clamav/clamav:1.4_base",
+  "transport_baseline": "loopback-tcp-or-local-unix-socket",
+  "public_clamd_surface_allowed": false,
+  "max_signature_age_hours": 48,
+  "health_validity_minutes": 5,
+  "clean_verdict_requires_acceptable_runtime_health": true,
+  "malicious_match_remains_actionable_when_health_degraded": true,
+  "health_alone_authorizes_protected_by_wardveil": false,
+  "required_acceptance_evidence": [
+    "daemon_reachable",
+    "engine_version",
+    "signature_database_version",
+    "signature_database_timestamp",
+    "signature_freshness",
+    "successful_eicar_test",
+    "clean_control_test",
+    "error_fail_closed_test",
+    "application_consumer_integration",
+    "quarantine_execution_evidence"
+  ],
+  "production_runtime_status": "unaccepted"
+}
