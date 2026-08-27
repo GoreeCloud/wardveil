@@ -1,6 +1,6 @@
 # Wardveil Security ClamAV Integration
 
-Wardveil Security owns the GoreeCloud malware-protection product boundary. ClamAV is the initial replaceable malware-scanning engine beneath Wardveil Scan; it is not a separate GoreeCloud antivirus product and does not become authoritative for Wardveil policy, quarantine, response, or security-center state.
+Wardveil Security owns the GoreeCloud malware-protection product boundary. ClamAV is the initial replaceable malware-scanning engine beneath Wardveil Scan; it is not a separate GoreeCloud antivirus product and does not become authoritative for Wardveil policy, quarantine, response, or Security Center state.
 
 ## Architecture decision
 
@@ -10,65 +10,96 @@ Use ClamAV for signature-based malware inspection while keeping the surrounding 
 
 This preserves engine replaceability. A future scanner, sandbox, reputation service, behavioral engine, or platform-native endpoint sensor can be added without changing the Wardveil product identity or evidence contracts.
 
-## Initial implementation
+## Scan adapter
 
 `reference/wardveil_clamav.py` provides a dependency-free adapter that:
 
 - connects to `clamd` over exactly one configured Unix socket or TCP endpoint;
-- uses the documented `INSTREAM` protocol so the daemon does not need direct access to application file paths;
+- uses `INSTREAM` so the daemon does not need direct access to application file paths;
 - computes a SHA-256 resource digest for evidence correlation;
-- maps `OK` to a completed clean Wardveil Scan input;
 - maps `FOUND` to a completed malicious Wardveil Scan input and preserves the ClamAV signature name;
 - maps daemon errors, timeouts, malformed replies, and unavailable scanner state to incomplete/unknown rather than clean;
 - enforces a Wardveil-side maximum stream size before submission;
 - performs no deletion, quarantine, repair, or remediation itself.
 
-The adapter can also expose `PING` and `VERSION` for runtime health and evidence collection.
+The adapter also exposes `PING` and `VERSION` for runtime health evidence.
+
+## Runtime health and clean-verdict gate
+
+`reference/wardveil_clamav_runtime.py` turns the scanner's operational state into data-minimized Wardveil component evidence. It collects or derives:
+
+- daemon reachability;
+- ClamAV engine version;
+- loaded signature database version;
+- loaded signature database update timestamp;
+- signature freshness against a configurable maximum age;
+- last successful scan timestamp when runtime metrics are supplied;
+- scanner error rate when runtime metrics are supplied;
+- configured Wardveil stream-size limit;
+- transport class without exposing the actual endpoint or socket path.
+
+The default signature-freshness limit is 48 hours and health evidence is valid for five minutes. Both values are configurable for a deployment, but weakening them does not create production acceptance.
+
+A ClamAV `OK` reply becomes a reusable Wardveil `clean` finding only when the associated health evidence is healthy, current, unexpired, daemon-reachable, and based on current signature evidence. Stale, unavailable, future-dated, expired, or otherwise unverified health evidence downgrades a would-be clean finding to `unknown`.
+
+Positive threat evidence is handled differently: a completed ClamAV malware signature match remains `malicious` even when scanner health is degraded. Degraded health must not erase a positive detection; it prevents false reassurance from negative results.
+
+The separate component-health contract is defined by:
+
+- `contracts/wardveil.clamav.health.schema.json`;
+- `contracts/wardveil.clamav.runtime-acceptance.json`.
+
+These contracts do not add a new Wardveil runtime security-record type and do not expand the authority of the canonical Scan, Policy, Protect, Quarantine, Response, or Audit contracts.
 
 ## Security boundary
 
-The `clamd` protocol does not provide the security properties of an authenticated public API. Prefer a local Unix socket for same-host integrations. If TCP is required, keep it on loopback or a private, authenticated, encrypted service boundary; do not expose an unauthenticated `clamd` listener directly to the public Internet.
+The `clamd` protocol is not an authenticated public API. Prefer a local Unix socket for same-host integrations. If TCP is required, keep it on loopback or behind a separately authenticated and encrypted private service boundary; do not expose an unauthenticated `clamd` listener directly to the public Internet.
 
-Wardveil applications should submit bytes to Wardveil Scan rather than reaching `clamd` directly. This prevents every application from acquiring scanner-specific configuration and keeps policy, evidence, and error semantics consistent.
+Wardveil applications should submit content through Wardveil Scan rather than reaching `clamd` directly. This prevents every application from acquiring scanner-specific configuration and keeps policy, evidence, freshness, and error semantics consistent.
 
 ## Malware handling
 
-A ClamAV match is authoritative evidence from the configured scanner for the represented scan, but the engine does not own the response decision. Wardveil Policy decides the allowed next action. Wardveil Protect and Wardveil Quarantine execute containment or remediation only when explicitly authorized.
+A ClamAV match is authoritative scanner evidence for the represented scan, but the engine does not own the response decision. Wardveil Policy decides the allowed next action. Wardveil Protect and Wardveil Quarantine execute containment or remediation only when explicitly authorized.
 
 Recommended default flow for a confirmed malware match:
 
 1. Emit a Wardveil `scan_finding` with `scan_result=malicious`.
 2. Correlate the finding with resource identity and current policy.
-3. Block opening, execution, synchronization, delivery, or download where the integrating product supports enforcement.
-4. Quarantine the resource through the Wardveil Quarantine boundary rather than deleting it inside the scanner adapter.
+3. Block opening, execution, synchronization, delivery, or download where the integrating product has explicit enforcement authority.
+4. Quarantine through Wardveil Quarantine rather than deleting inside the scanner adapter.
 5. Record the decision and action in Wardveil Audit.
 6. Surface the evidence-backed state in Wardveil Security Center.
 
 ## Signature updates
 
-Use ClamAV `freshclam` or an equivalent controlled update mechanism for signature databases. Signature freshness is part of runtime acceptance evidence. A running daemon with stale or unknown databases must not be represented as fully healthy malware protection.
+Use ClamAV's controlled signature-update mechanism and persistent database storage. Wardveil evaluates the timestamp of the database actually loaded by `clamd`; merely observing an updater process is not sufficient evidence that the scanner is using current signatures.
 
-Wardveil runtime health should eventually collect at least:
+A running daemon with stale or unknown signatures is degraded or unknown, never fully healthy. A previously healthy health record also expires and cannot indefinitely authorize later clean results.
 
-- ClamAV engine version;
-- signature database version and update timestamp;
-- daemon reachability;
-- last successful scan timestamp;
-- scan error rate;
-- configured scan-size limits;
-- quarantine execution health where applicable.
+## Deployment baseline
+
+`deployment/clamav/` provides the source-controlled runtime baseline:
+
+- official ClamAV 1.4 LTS feature image baseline;
+- persistent `/var/lib/clamav` signature database volume;
+- loopback-only TCP publication by default;
+- environment-driven Wardveil transport, limit, freshness, and error-rate settings;
+- `scripts/collect_wardveil_clamav_health.py` for JSON evidence collection;
+- `scripts/validate_wardveil_clamav_runtime.py` for source-controlled deployment invariants.
+
+The supplied Compose file is a baseline, not a claim that any GoreeCloud VPS is already running it.
 
 ## Real-time protection
 
-Do not equate ClamAV installation with complete endpoint antivirus. ClamAV provides scanning primitives and, on supported Linux systems, can participate in on-access scanning. Wardveil should own a separate endpoint-protection/agent layer for real-time filesystem event capture, policy enforcement, process protection, remediation, and cross-platform behavior.
+Do not equate ClamAV installation with complete endpoint antivirus. ClamAV supplies scanning primitives and may participate in platform-specific on-access scanning, but Wardveil should own a separate endpoint-protection/agent layer for filesystem event capture, process and execution controls, policy enforcement, remediation, and cross-platform behavior.
 
-The preferred product direction is therefore **Wardveil Malware Protection** inside Wardveil Security Center, backed initially by ClamAV for malware signatures and expanded over time with first-party and replaceable engines.
+The product direction remains **Wardveil Malware Protection** inside Wardveil Security Center, backed initially by ClamAV for malware signatures and expanded over time with first-party and replaceable engines.
 
 ## Integration targets
 
 Priority GoreeCloud consumers are:
 
-- GoreeCloud Mail attachments before delivery/opening;
+- GoreeCloud Mail attachments before delivery or opening;
 - GoreeCloud Drive uploads, downloads, shares, and restored content;
 - GoreeCloud Browser downloads;
 - GoreeCloud AI uploaded files and model/tool artifacts;
@@ -76,22 +107,12 @@ Priority GoreeCloud consumers are:
 - GoreeCloud Messenger attachments;
 - Everkeep restore verification before recovered data is released to applications.
 
-Each consumer must preserve the Wardveil fail-closed rule: unsupported, incomplete, unavailable, or invalid scan evidence is not a clean verdict.
+Each consumer must preserve the Wardveil fail-closed rule: unsupported, incomplete, unavailable, stale, expired, or invalid scan evidence is not a clean verdict.
 
-## Runtime deployment baseline
+## Production acceptance
 
-A production deployment should separate the Wardveil application/service process from the scanner daemon while keeping communication local or private. Recommended baseline:
+`contracts/wardveil.clamav.runtime-acceptance.json` intentionally records `production_runtime_status` as `unaccepted`. Source-level adapter tests, health tests, a healthy container, or a passing CI run cannot change that field by themselves.
 
-- `clamd` as a long-running supervised service;
-- `freshclam` as the controlled signature updater;
-- Unix socket access where services share a host;
-- dedicated non-root service identities and least-privilege socket permissions;
-- explicit maximum file, archive, recursion, and stream limits;
-- resource quotas and timeouts to limit decompression bombs and scanner exhaustion;
-- Wardveil-side queueing/backpressure for high-volume products;
-- health checks that distinguish unavailable, degraded, stale-signature, and healthy scanner states;
-- no direct public exposure of the `clamd` socket.
+Production acceptance requires evidence from the deployed environment, including current daemon/signature state, a controlled EICAR positive test, a clean control test, fail-closed error behavior, at least one real application consumer, and evidence that authorized quarantine execution works where that product claims quarantine protection.
 
-## Acceptance boundary
-
-The reference adapter and CI tests establish protocol and mapping behavior only. They do not establish production malware-detection efficacy, signature freshness, endpoint protection, quarantine success, or product-specific runtime acceptance. Those claims require deployed ClamAV infrastructure and collected Wardveil runtime evidence.
+Health alone is not a broad Wardveil protection claim. The normalized health status can describe only the narrow `wardveil-clamav-runtime` control scope, and its `claim.protected_by_wardveil` remains false. Application- or service-level protection claims require their own authoritative scan, policy, execution, freshness, and scope evidence.
