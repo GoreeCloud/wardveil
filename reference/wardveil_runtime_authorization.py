@@ -17,7 +17,7 @@ import json
 from typing import Callable
 from uuid import uuid4
 
-from wardveil_protect import ExecutorAuthority, ProtectEngine, ProtectionResult
+from reference.wardveil_protect import ExecutorAuthority, ProtectEngine, ProtectionResult
 
 AUTHORIZATION_VERSION = "0.1.0"
 SIGNATURE_ALGORITHM = "HMAC-SHA256-reference-only"
