@@ -64,6 +64,7 @@ All notable source-controlled changes to the Wardveil Security foundation are re
 
 ### Changed
 
+- Advanced the Wardveil Security foundation to 0.8.0.
 - Advanced Wardveil from a primarily status/presentation description to a scoped first-party security system and shared security plane while preserving external producer authority boundaries.
 - Approved Wardveil Security Center as a substantive first-party capability rather than a reserved concept.
 - Reworked the README around the first-party security lifecycle, technical authority boundaries, fail-closed mutation, least privilege, auditability, and application integration.
