@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from validate_drive_consumer_source_evidence import main as validate_drive_consumer_source_evidence
 from validate_mail_consumer_source_evidence import main as validate_mail_consumer_source_evidence
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -115,6 +116,7 @@ def main() -> None:
         require(phrase in docs.lower(), f"documentation missing required boundary: {phrase}")
 
     validate_mail_consumer_source_evidence()
+    validate_drive_consumer_source_evidence()
     print("Wardveil ClamAV runtime health and deployment validation passed.")
 
 
