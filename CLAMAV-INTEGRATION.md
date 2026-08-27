@@ -131,6 +131,18 @@ Cross-project source evidence is recorded in `contracts/wardveil.drive.consumer-
 
 Therefore the ClamAV `application_consumer_integration` production acceptance requirement remains unresolved by source milestones alone. Runtime acceptance remains separately evidence-backed.
 
+## GoreeCloud Browser source-consumer milestone
+
+GoreeCloud Browser now has an executable source-level Wardveil Scan download-release consumer at accepted revision `07d5ca0e9229c69388754eaacb14ff06c342d53c`. The merged revision has source tree `c9138b0c29e97b17c33b9b168941c803225632f7`, identical to the source tree tested by Browser Core CI run 196 at PR revision `877eda043a44d748c9b63e1f83b6bf9c187b6184`.
+
+The Browser consumer keeps completed transfer bytes in its private `.goreecloud-part-*` staging file, binds Wardveil evidence to `browser:download:<download_id>` and the exact SHA-256 digest, requires current authoritative clean evidence with references, then re-hashes staging before the existing atomic final rename. Suspicious content is held; malicious, unknown, unsupported, stale, mismatched, non-authoritative, future-dated, or unavailable verification remains blocked and cannot be opened through the download controller. Private Browsing still requires Wardveil verification while private download queue state remains non-persistent. Browser does not connect directly to ClamAV.
+
+A malicious finding can produce a non-destructive Wardveil Quarantine handoff that still requires explicit executor authority. A blocked Browser staging file is not canonical Wardveil Quarantine by itself. Source tests also preserve a positive exact-digest malicious result as blocking after ordinary evidence expiry and distinguish `verifying`, `held`, `blocked`, and `completed` user-facing download states.
+
+Cross-project source evidence is recorded in `contracts/wardveil.browser.consumer-source-evidence.json`. It does not prove deployed authenticated Browser-to-Wardveil transport, deployed ClamAV/signature health, controlled EICAR runtime behavior, concurrency-safe staging publication, authorized quarantine execution/recovery, Glaze UI acceptance, or Privacy Shield runtime acceptance.
+
+Therefore the ClamAV `application_consumer_integration` production acceptance requirement remains unresolved by Browser source evidence alone. Runtime acceptance remains separately evidence-backed.
+
 ## Production acceptance
 
 `contracts/wardveil.clamav.runtime-acceptance.json` intentionally records `production_runtime_status` as `unaccepted`. Source-level adapter tests, health tests, a healthy container, or a passing CI run cannot change that field by themselves.
