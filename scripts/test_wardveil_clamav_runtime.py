@@ -92,6 +92,20 @@ def test_unreachable_is_unknown_status():
     assert status["evidence"]["status"] == "unavailable"
 
 
+def test_expired_healthy_evidence_downgrades_clean():
+    health = collect_clamav_health(FakeClient(), now=NOW)
+    verdict = ClamAVVerdict(True, False, digest_sha256="expired")
+    later = NOW + timedelta(minutes=6)
+    finding = gate_clamav_verdict(
+        verdict,
+        health,
+        resource_id="file-expired",
+        now=later,
+    )
+    assert finding.result == "unknown"
+    assert "scanner_health:scanner_health_evidence_expired" in finding.reason_codes
+
+
 def test_high_error_rate_degrades():
     metrics = ClamAVRuntimeMetrics(
         total_scans=20,
