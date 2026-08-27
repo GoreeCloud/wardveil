@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:goreecloud:wardveil:clamav-health:0.1.0",
+  "title": "Wardveil ClamAV Runtime Health Evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "component",
+    "observed_at",
+    "valid_until",
+    "runtime_state",
+    "daemon_reachable",
+    "engine_version",
+    "database_version",
+    "database_updated_at",
+    "signature_freshness",
+    "signature_age_seconds",
+    "last_successful_scan_at",
+    "scan_error_rate",
+    "scan_sample_size",
+    "configured_max_stream_bytes",
+    "transport",
+    "degraded_reasons",
+    "clean_verdicts_eligible",
+    "protection_claim_authority"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "component": {"const": "Wardveil ClamAV malware scanning runtime"},
+    "observed_at": {"type": "string", "format": "date-time"},
+    "valid_until": {"type": "string", "format": "date-time"},
+    "runtime_state": {"enum": ["healthy", "degraded", "unavailable", "unknown"]},
+    "daemon_reachable": {"type": "boolean"},
+    "engine_version": {"type": ["string", "null"], "maxLength": 128},
+    "database_version": {"type": ["string", "null"], "maxLength": 128},
+    "database_updated_at": {"type": ["string", "null"], "format": "date-time"},
+    "signature_freshness": {"enum": ["current", "stale", "unknown"]},
+    "signature_age_seconds": {"type": ["number", "null"], "minimum": 0},
+    "last_successful_scan_at": {"type": ["string", "null"], "format": "date-time"},
+    "scan_error_rate": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+    "scan_sample_size": {"type": "integer", "minimum": 0},
+    "configured_max_stream_bytes": {"type": "integer", "minimum": 1},
+    "transport": {"enum": ["unix", "tcp"]},
+    "degraded_reasons": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1, "maxLength": 128}
+    },
+    "clean_verdicts_eligible": {"type": "boolean"},
+    "protection_claim_authority": {"const": false}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"clean_verdicts_eligible": {"const": true}}, "required": ["clean_verdicts_eligible"]},
+      "then": {
+        "properties": {
+          "runtime_state": {"const": "healthy"},
+          "daemon_reachable": {"const": true},
+          "signature_freshness": {"const": "current"},
+          "degraded_reasons": {"maxItems": 0}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"runtime_state": {"const": "unavailable"}}, "required": ["runtime_state"]},
+      "then": {
+        "properties": {
+          "daemon_reachable": {"const": false},
+          "clean_verdicts_eligible": {"const": false}
+        }
+      }
+    }
+  ]
+}
