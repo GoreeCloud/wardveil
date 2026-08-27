@@ -15,19 +15,21 @@ AGGREGATION_CONTRACT_VERSION = "0.1.0"
 PRIVACY_SHIELD_PRESENTATION_CONTRACT_VERSION = "0.1.0"
 CAPABILITIES_CONTRACT_VERSION = "0.1.0"
 RUNTIME_AUTHORIZATION_CONTRACT_VERSION = "0.1.0"
+EXECUTION_STATE_CONTRACT_VERSION = "0.1.0"
 STATUS_SCHEMA_ID = "urn:goreecloud:wardveil:status:0.1.0"
 LEGAL_STATUS = "original-goreecloud-identity-no-known-conflict-formal-clearance-optional-future-due-diligence"
 
 REQUIRED_FILES = (
     ".gitignore", "CHANGELOG.md", "README.md", "ARCHITECTURE.md", "IDENTITY.md", "ICON.md",
     "INTEGRATION.md", "STATUS.md", "CONFORMANCE.md", "COMPATIBILITY.md", "SECURITY.md",
-    "THREAT-MODEL.md", "ADOPTION.md", "AGGREGATION.md", "PRIVACY-SHIELD.md", "RUNTIME-AUTHORIZATION.md", "VERSION",
+    "THREAT-MODEL.md", "ADOPTION.md", "AGGREGATION.md", "PRIVACY-SHIELD.md", "RUNTIME-AUTHORIZATION.md",
+    "EXECUTION-STATE.md", "VERSION",
     "contracts/wardveil.identity.json", "contracts/wardveil.capabilities.json",
-    "contracts/wardveil.runtime-authorization.json",
+    "contracts/wardveil.runtime-authorization.json", "contracts/wardveil.execution-state.json",
     "contracts/wardveil.status.schema.json", "contracts/wardveil.aggregation.vectors.json",
     "contracts/wardveil.privacy-shield.vectors.json", "examples/wardveil.status.example.json",
     "examples/wardveil.status.unknown.example.json", "scripts/validate_wardveil_capabilities.py",
-    "scripts/validate_wardveil_runtime_authorization.py",
+    "scripts/validate_wardveil_runtime_authorization.py", "scripts/validate_wardveil_execution_state.py",
     "scripts/validate_wardveil_aggregation.py", "scripts/validate_wardveil_privacy_shield.py",
 )
 STATUS_EXAMPLES = ("examples/wardveil.status.example.json", "examples/wardveil.status.unknown.example.json")
@@ -99,7 +101,7 @@ def main() -> None:
     version = read_text("VERSION").strip()
     if version != FOUNDATION_VERSION: fail(f"unexpected foundation version: {version!r}")
 
-    combined = "\n".join(read_text(path) for path in ("README.md", "ARCHITECTURE.md", "IDENTITY.md", "INTEGRATION.md", "CONFORMANCE.md", "RUNTIME-AUTHORIZATION.md"))
+    combined = "\n".join(read_text(path) for path in ("README.md", "ARCHITECTURE.md", "IDENTITY.md", "INTEGRATION.md", "CONFORMANCE.md", "RUNTIME-AUTHORIZATION.md", "EXECUTION-STATE.md"))
     for name in APPROVED_NAMES:
         if name not in combined: fail(f"approved Wardveil name missing from canonical documentation: {name}")
 
@@ -128,6 +130,16 @@ def main() -> None:
     if runtime_auth.get("underlying_resource_authority_transferred") is not False: fail("runtime authorization must not transfer target authority")
     if runtime_auth.get("production_runtime_status") != "unaccepted": fail("runtime authorization source metadata must not claim production acceptance")
 
+    execution_state = identity.get("execution_state_contract")
+    if not isinstance(execution_state, dict): fail("identity contract execution-state metadata is missing")
+    if execution_state.get("contract_version") != EXECUTION_STATE_CONTRACT_VERSION: fail("identity execution-state contract version is inconsistent")
+    if execution_state.get("durable_claim_before_high_impact_side_effect") is not True: fail("identity must require a durable claim before high-impact side effects")
+    if execution_state.get("pending_claim_requires_reconciliation") is not True: fail("identity must preserve uncertain-outcome reconciliation")
+    if execution_state.get("blind_reexecution_after_uncertain_outcome_allowed") is not False: fail("identity must prohibit blind uncertain-outcome re-execution")
+    if execution_state.get("durable_receipt_required") is not True: fail("identity must require a durable execution receipt")
+    if execution_state.get("persistence_grants_executor_authority") is not False: fail("execution-state persistence must not grant executor authority")
+    if execution_state.get("production_runtime_status") != "unaccepted": fail("execution-state source metadata must not claim production acceptance")
+
     status_metadata = identity.get("status_contract")
     if not isinstance(status_metadata, dict) or status_metadata.get("contract_version") != STATUS_CONTRACT_VERSION: fail("identity contract status-contract version is inconsistent")
     aggregation_metadata = identity.get("aggregation_contract")
@@ -145,8 +157,9 @@ def main() -> None:
     if compatibility_metadata.get("privacy_shield_presentation_contract_version") != PRIVACY_SHIELD_PRESENTATION_CONTRACT_VERSION: fail("identity compatibility metadata advertises the wrong Privacy Shield presentation contract version")
     if compatibility_metadata.get("capabilities_contract_version") != CAPABILITIES_CONTRACT_VERSION: fail("identity compatibility metadata advertises the wrong capability contract version")
     if compatibility_metadata.get("runtime_authorization_contract_version") != RUNTIME_AUTHORIZATION_CONTRACT_VERSION: fail("identity compatibility metadata advertises the wrong runtime authorization version")
+    if compatibility_metadata.get("execution_state_contract_version") != EXECUTION_STATE_CONTRACT_VERSION: fail("identity compatibility metadata advertises the wrong execution-state version")
 
-    threat_model, adoption, aggregation, compatibility, privacy_shield, architecture_doc, runtime_doc = (read_text(p) for p in ("THREAT-MODEL.md", "ADOPTION.md", "AGGREGATION.md", "COMPATIBILITY.md", "PRIVACY-SHIELD.md", "ARCHITECTURE.md", "RUNTIME-AUTHORIZATION.md"))
+    threat_model, adoption, aggregation, compatibility, privacy_shield, architecture_doc, runtime_doc, execution_doc = (read_text(p) for p in ("THREAT-MODEL.md", "ADOPTION.md", "AGGREGATION.md", "COMPATIBILITY.md", "PRIVACY-SHIELD.md", "ARCHITECTURE.md", "RUNTIME-AUTHORIZATION.md", "EXECUTION-STATE.md"))
     for phrase in ("authoritative producer", "fail closed", "Aggregation rule", "read-only"):
         if phrase.lower() not in threat_model.lower(): fail(f"threat model missing required security concept: {phrase}")
     for phrase in ("authoritative producer", "stale or missing evidence", "accessible", "exact-revision"):
@@ -159,13 +172,21 @@ def main() -> None:
         if phrase.lower() not in privacy_shield.lower(): fail(f"Privacy Shield consumer contract missing required boundary: {phrase}")
     for phrase in ("Wardveil Trust", "Wardveil Policy", "Wardveil Protect", "Wardveil Detect", "Wardveil Scan", "Wardveil Quarantine", "Wardveil Response", "Wardveil Audit", "Wardveil Security Center", "Evidence before reassurance", "runtime execution authorization"):
         if phrase.lower() not in architecture_doc.lower(): fail(f"architecture missing required capability or invariant: {phrase}")
-    for phrase in ("policy decision is not", "idempotency", "replay", "production acceptance"):
+    for phrase in ("policy decision is not", "idempotency", "replay", "production acceptance", "durable execution"):
         if phrase.lower() not in runtime_doc.lower(): fail(f"runtime authorization documentation missing required concept: {phrase}")
+    for phrase in ("durable claim", "execution_reconciliation_required", "blind re-execution", "execution receipts", "production acceptance"):
+        if phrase.lower() not in execution_doc.lower(): fail(f"execution-state documentation missing required concept: {phrase}")
 
     runtime_contract = read_json("contracts/wardveil.runtime-authorization.json")
     if runtime_contract.get("contract_version") != RUNTIME_AUTHORIZATION_CONTRACT_VERSION: fail("runtime authorization contract version is inconsistent")
     if runtime_contract.get("foundation_version") != FOUNDATION_VERSION: fail("runtime authorization contract foundation version is inconsistent")
     if (runtime_contract.get("production_acceptance") or {}).get("status") != "unaccepted": fail("runtime authorization contract must preserve unaccepted production state")
+
+    execution_contract = read_json("contracts/wardveil.execution-state.json")
+    if execution_contract.get("contract_version") != EXECUTION_STATE_CONTRACT_VERSION: fail("execution-state contract version is inconsistent")
+    if execution_contract.get("foundation_version") != FOUNDATION_VERSION: fail("execution-state contract foundation version is inconsistent")
+    if execution_contract.get("production_runtime_status") != "unaccepted": fail("execution-state contract must preserve unaccepted production state")
+    if (execution_contract.get("claim") or {}).get("blind_reexecution_after_uncertain_outcome_allowed") is not False: fail("execution-state contract must prohibit blind uncertain-outcome re-execution")
 
     schema = read_json("contracts/wardveil.status.schema.json")
     if schema.get("$id") != STATUS_SCHEMA_ID: fail("unexpected Wardveil status schema id")
