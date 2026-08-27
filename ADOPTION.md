@@ -2,6 +2,8 @@
 
 Wardveil integration is complete only when a GoreeCloud application or service satisfies the requirements below. Branding alone is not adoption.
 
+A conforming consumer must identify every authoritative producer, treat stale or missing evidence as non-passing, keep state communication accessible, and preserve exact-revision acceptance evidence for security-sensitive changes.
+
 ## Required integration contract
 
 A consumer must:
