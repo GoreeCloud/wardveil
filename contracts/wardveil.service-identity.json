@@ -1,0 +1,85 @@
+{
+  "contract_version": "0.1.0",
+  "foundation_version": "0.9.0",
+  "component": "Wardveil Service Identity and Signing Key Lifecycle",
+  "purpose": "authenticate first-party Wardveil authorization issuers and protection executors while keeping signing key material separate from identity metadata, security records, durable execution state, and application source",
+  "service_identity": {
+    "statuses": ["active", "suspended", "revoked"],
+    "required_fields": ["service_id", "status", "capabilities", "created_at", "not_before"],
+    "issuer_capability": "issue_execution_authorization",
+    "executor_capability": "execute_protection_action",
+    "active_identity_required_for_signing": true,
+    "active_identity_required_for_execution_verification": true,
+    "suspended_identity_fails_closed": true,
+    "revoked_identity_fails_closed": true,
+    "capability_binding_required": true
+  },
+  "signing_key_lifecycle": {
+    "statuses": ["active", "retired", "revoked"],
+    "authorization_envelope_key_binding": "signing_key_id",
+    "key_id_is_signed_material": true,
+    "key_material_is_metadata": false,
+    "key_material_allowed_in_authorization_envelope": false,
+    "key_material_allowed_in_durable_execution_state": false,
+    "key_material_allowed_in_shared_security_records": false,
+    "key_material_allowed_in_application_source": false,
+    "active_key_may_sign": true,
+    "retired_key_may_sign": false,
+    "retired_key_may_verify_during_bounded_overlap": true,
+    "revoked_key_may_verify": false,
+    "revocation_takes_precedence_over_overlap": true,
+    "maximum_reference_rotation_overlap_seconds": 86400,
+    "unknown_key_fails_closed": true,
+    "issuer_key_mismatch_fails_closed": true,
+    "algorithm_mismatch_fails_closed": true
+  },
+  "reference_cryptography": {
+    "algorithm": "HMAC-SHA256-reference-only",
+    "production_algorithm_prescribed": false,
+    "reference_keyring_is_production_key_management": false
+  },
+  "cloudflare_candidate": {
+    "secret_storage": "Cloudflare Secrets Store or Worker secret binding",
+    "preferred_account_reusable_secret_option": "Cloudflare Secrets Store",
+    "binding_scope_required": "workers",
+    "secret_value_in_wrangler_configuration_allowed": false,
+    "secret_value_in_git_allowed": false,
+    "secret_value_in_ci_logs_allowed": false,
+    "service_binding_or_equivalent_authenticated_channel_required_for_internal_authorization_operations": true,
+    "deployment_time_provider_capability_and_permission_verification_required": true
+  },
+  "privacy": {
+    "data_minimization_required": true,
+    "raw_resource_content_required": false,
+    "credentials_in_identity_metadata_allowed": false,
+    "secret_values_in_audit_evidence_allowed": false,
+    "revocation_reason_must_be_bounded_nonsecret_metadata": true
+  },
+  "authority_boundaries": {
+    "service_identity_grants_target_resource_authority": false,
+    "signing_key_grants_target_resource_authority": false,
+    "persistence_grants_executor_authority": false,
+    "goreecloud_mesh_transport_grants_execution_authority": false,
+    "wardveil_policy_and_target_executor_authority_remain_distinct": true,
+    "privacy_shield_authority_transferred": false,
+    "everkeep_recovery_authority_transferred": false
+  },
+  "production_acceptance": {
+    "status": "unaccepted",
+    "required_evidence": [
+      "approved_production_signature_algorithm_and_key_management",
+      "production_service_identity_issuance_and_authentication",
+      "least_privilege_issuer_and_executor_capability_assignment",
+      "deployed_secret_or_key_binding_without_source_exposure",
+      "rotation_overlap_runtime_test",
+      "immediate_revocation_runtime_test",
+      "suspended_and_revoked_service_identity_runtime_test",
+      "unknown_key_and_algorithm_mismatch_runtime_test",
+      "authenticated_authorization_transport",
+      "deployed_durable_execution_state",
+      "authorized_high_impact_executor_integration",
+      "audit_and_security_center_key_identity_evidence",
+      "key_recovery_and_emergency_revocation_procedure"
+    ]
+  }
+}
