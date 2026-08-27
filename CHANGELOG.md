@@ -2,6 +2,33 @@
 
 All notable source-controlled changes to the Wardveil Security foundation are recorded here.
 
+## 0.9.0 — 2026-08-27
+
+### Added
+
+- Added `RUNTIME-AUTHORIZATION.md` and `contracts/wardveil.runtime-authorization.json` as the canonical cross-service execution-authorization contract between Wardveil Policy and Wardveil Protect.
+- Added `reference/wardveil_runtime_authorization.py` with exact policy-digest, action, scope, executor, correlation, expiry, nonce, and idempotency binding.
+- Added constant-time HMAC verification in the dependency-free reference path, explicitly labeled `HMAC-SHA256-reference-only` so source conformance cannot be mistaken for production key-management acceptance.
+- Added replay-ledger semantics that permit only exact idempotent retries and reject conflicting nonce reuse.
+- Added `AuthorizedProtectEngine` so a valid execution authorization is checked before the existing Protect executor receives a cross-service request.
+- Added focused runtime-authorization tests and a contract validator, with exact-revision CI coverage.
+
+### Changed
+
+- Advanced the Wardveil Security foundation to 0.9.0.
+- Strengthened the capability contract so high-impact cross-service Protect execution requires bound runtime authorization and a Wardveil Policy decision is explicitly not execution authority by itself.
+- Strengthened architecture, compatibility, integration, threat-model, and adoption guidance around executor identity, target authority, replay resistance, idempotency, expiry, and production key-management boundaries.
+- Extended machine-readable identity metadata with the runtime-authorization contract and an explicit `unaccepted` production-runtime status.
+
+### Security invariants
+
+- High-impact cross-service actions fail closed when authorization is absent, expired, future-dated beyond the accepted skew, tampered, bound to a different policy/action/scope/executor, or reused with conflicting replay identity.
+- Authorization cannot outlive the authoritative policy decision that produced it.
+- A valid Wardveil authorization does not transfer underlying resource authority and cannot compensate for an executor that lacks action or resource permission.
+- Signing secrets are prohibited from authorization envelopes and shared security records.
+- The in-memory HMAC, replay ledger, and Protect idempotency store are reference/conformance mechanisms only; production runtime acceptance still requires approved key management, authenticated transport, durable shared replay/idempotency state, executor authentication, audit persistence, rotation/revocation, and runtime failure/replay testing.
+- `Protected by Wardveil` remains evidence-scoped and is not authorized by the existence of a runtime-authorization envelope alone.
+
 ## 0.8.0 — 2026-08-26
 
 ### Added
