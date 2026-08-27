@@ -1,0 +1,18 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "goreecloud-wardveil-authorization-issuer",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-27",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "WARDVEIL_AUTH_ISSUER_ID": "wardveil-policy-runtime",
+    "WARDVEIL_AUTH_SIGNING_KEY_ID": "wardveil-auth-current"
+  },
+  "secrets": {
+    "required": ["WARDVEIL_AUTH_SIGNING_KEY"]
+  },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1.0
+  }
+}
