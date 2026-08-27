@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">Wardveil Security icon</title>
+  <desc id="desc">Two sculpted protective veil panels curve inward around a compact protected core, creating a restrained W-shaped central opening without using a conventional shield.</desc>
+  <g fill="currentColor">
+    <path d="M34 46 C62 58 84 74 101 94 C112 107 118 119 122 132 C108 123 96 114 84 104 C73 95 62 88 50 82 C54 119 63 151 79 177 C91 197 107 213 128 226 C103 220 82 210 66 195 C43 173 31 143 27 105 C24 79 27 59 34 46 Z"/>
+    <path d="M222 46 C194 58 172 74 155 94 C144 107 138 119 134 132 C148 123 160 114 172 104 C183 95 194 88 206 82 C202 119 193 151 177 177 C165 197 149 213 128 226 C153 220 174 210 190 195 C213 173 225 143 229 105 C232 79 229 59 222 46 Z"/>
+    <path d="M128 108 C139 121 147 133 151 145 C154 155 153 165 148 175 C143 185 136 193 128 200 C120 193 113 185 108 175 C103 165 102 155 105 145 C109 133 117 121 128 108 Z" opacity="0.88"/>
+  </g>
+</svg>
