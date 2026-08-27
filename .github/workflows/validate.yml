@@ -113,7 +113,7 @@ jobs:
           trap 'rm -rf "$tmp" cloudflare/node_modules' EXIT
           cd "$tmp"
           npm init -y >/dev/null 2>&1
-          npm install --ignore-scripts --no-save --package-lock=false typescript@5.9.2 @cloudflare/workers-types@4.20260820.0 >/dev/null
+          npm install --ignore-scripts --no-save --package-lock=false typescript@5.9.2 @cloudflare/workers-types@5.20260827.1 >/dev/null
           cd "$GITHUB_WORKSPACE"
           ln -s "$tmp/node_modules" cloudflare/node_modules
           "$tmp/node_modules/.bin/tsc" --noEmit -p cloudflare/tsconfig.json
