@@ -1,0 +1,13 @@
+services:
+  clamav:
+    image: ${WARDVEIL_CLAMAV_IMAGE:-clamav/clamav:1.4_base}
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${WARDVEIL_CLAMAV_PORT:-3310}:3310"
+    volumes:
+      - clamav_database:/var/lib/clamav
+    tmpfs:
+      - /tmp
+
+volumes:
+  clamav_database:
