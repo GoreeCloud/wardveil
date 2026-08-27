@@ -68,6 +68,19 @@
     "policy_decision_alone_is_execution_authority": false,
     "underlying_resource_authority_transferred": false,
     "reference_signature_algorithm": "HMAC-SHA256-reference-only",
+    "signing_key_id_required": true,
+    "production_runtime_status": "unaccepted"
+  },
+  "service_identity_contract": {
+    "document": "SERVICE-IDENTITY.md",
+    "contract": "contracts/wardveil.service-identity.json",
+    "contract_version": "0.1.0",
+    "issuer_and_executor_identity_separated": true,
+    "capability_binding_required": true,
+    "signing_key_material_separate_from_metadata": true,
+    "rotation_and_revocation_required": true,
+    "revoked_key_fails_closed": true,
+    "service_identity_grants_target_resource_authority": false,
     "production_runtime_status": "unaccepted"
   },
   "execution_state_contract": {
@@ -84,7 +97,7 @@
   "status_contract": {"document":"STATUS.md","schema":"contracts/wardveil.status.schema.json","contract_version":"0.1.0","normalized_states":["protected","attention","degraded","unknown","not_applicable"],"missing_evidence_fails_closed":true,"protected_claim_requires_current_authoritative_evidence":true},
   "aggregation_contract": {"document":"AGGREGATION.md","vectors":"contracts/wardveil.aggregation.vectors.json","contract_version":"0.1.0","deterministic":true,"empty_required_set_fails_closed":true},
   "privacy_shield_presentation_contract": {"document":"PRIVACY-SHIELD.md","vectors":"contracts/wardveil.privacy-shield.vectors.json","contract_version":"0.1.0","read_only":true,"raw_private_activity_allowed":false,"privacy_authority_transferred":false,"included_in_primary_required_control_aggregation_by_default":false},
-  "compatibility": {"document":"COMPATIBILITY.md","foundation_version_must_match_version_file":true,"status_contract_version":"0.1.0","aggregation_contract_version":"0.1.0","privacy_shield_presentation_contract_version":"0.1.0","capabilities_contract_version":"0.1.0","runtime_authorization_contract_version":"0.1.0","execution_state_contract_version":"0.1.0"},
+  "compatibility": {"document":"COMPATIBILITY.md","foundation_version_must_match_version_file":true,"status_contract_version":"0.1.0","aggregation_contract_version":"0.1.0","privacy_shield_presentation_contract_version":"0.1.0","capabilities_contract_version":"0.1.0","runtime_authorization_contract_version":"0.1.0","service_identity_contract_version":"0.1.0","execution_state_contract_version":"0.1.0"},
   "visual_identity": {
     "description_document": "ICON.md",
     "canonical_asset_path": "branding/wardveil-security-icon.svg",

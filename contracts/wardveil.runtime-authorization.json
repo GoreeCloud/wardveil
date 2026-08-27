@@ -20,7 +20,8 @@
     "nonce",
     "issued_at",
     "expires_at",
-    "policy_digest_sha256"
+    "policy_digest_sha256",
+    "signing_key_id"
   ],
   "security_invariants": {
     "authoritative_policy_record_required": true,
@@ -28,6 +29,7 @@
     "exact_action_binding_required": true,
     "exact_scope_binding_required": true,
     "exact_executor_binding_required": true,
+    "exact_signing_key_id_binding_required": true,
     "authorization_must_not_outlive_policy": true,
     "maximum_authorization_ttl_seconds": 300,
     "future_dated_authorization_fails_closed": true,
@@ -38,24 +40,30 @@
     "nonce_reuse_with_different_authorization_fails_closed": true,
     "high_impact_execution_requires_authorized_handler": true,
     "policy_decision_alone_is_execution_authority": false,
-    "authorization_transfers_underlying_resource_authority": false
+    "authorization_transfers_underlying_resource_authority": false,
+    "production_issuer_service_identity_required": true,
+    "production_executor_service_identity_required": true,
+    "production_revoked_signing_key_fails_closed": true
   },
   "privacy": {
     "data_minimization_required": true,
     "raw_resource_content_required": false,
     "reusable_credentials_allowed": false,
-    "signing_secrets_allowed_in_authorization_envelope": false
+    "signing_secrets_allowed_in_authorization_envelope": false,
+    "signing_key_id_is_secret": false
   },
   "reference_cryptography": {
     "algorithm": "HMAC-SHA256-reference-only",
     "production_algorithm_prescribed": false,
     "production_key_management_prescribed": false,
-    "reference_algorithm_is_production_acceptance": false
+    "reference_algorithm_is_production_acceptance": false,
+    "service_identity_contract": "contracts/wardveil.service-identity.json"
   },
   "production_acceptance": {
     "status": "unaccepted",
     "required_evidence": [
       "approved_production_key_management",
+      "production_service_identity_issuance_and_authentication",
       "authenticated_authorization_transport",
       "durable_shared_replay_and_idempotency_ledger",
       "executor_identity_authentication",

@@ -17,6 +17,12 @@ All notable source-controlled changes to the Wardveil Security foundation are re
 - Added 14 focused execution-state tests plus a fail-closed contract validator.
 - Extended the Cloudflare Durable Object persistence source with internal RPC-only execution-authorization claims, finalized execution receipts, bounded retention, receipt integrity digests, and an explicit `execution_reconciliation_required` state.
 - Added CI TypeScript checking for the Cloudflare persistence adapter using exact TypeScript and Workers type-package versions in an isolated temporary dependency directory.
+- Added `SERVICE-IDENTITY.md`, `contracts/wardveil.service-identity.json`, and `reference/wardveil_service_identity.py` for explicit first-party issuer/executor identities, capability bindings, and signing-key lifecycle.
+- Added signed `signing_key_id` binding to Foundation 0.9 execution authorizations so verification can select the intended current key without exposing key material.
+- Added active, suspended, and revoked service-identity states plus active, retired, and revoked signing-key states with bounded rotation overlap and immediate revocation semantics.
+- Added focused service-identity/key-lifecycle tests covering rotation, retirement, revocation, unknown keys, algorithm mismatch, capability denial, identity suspension/revocation, and key/authorization expiry precedence.
+- Added a separate `cloudflare/authorization-issuer/` Worker source candidate with a required encrypted signing-secret binding, fixed issuer/executor/key identities, exact policy/digest/scope/action/TTL revalidation, Worker-RPC signing, and health-only public HTTP.
+- Added exact-revision CI validation and TypeScript compilation for both Cloudflare Wardveil Workers.
 
 ### Changed
 
@@ -26,19 +32,26 @@ All notable source-controlled changes to the Wardveil Security foundation are re
 - Extended machine-readable identity metadata with the runtime-authorization contract and an explicit `unaccepted` production-runtime status.
 - Strengthened the Foundation 0.9 runtime flow so a durable claim precedes an external high-impact side effect and a durable authoritative Protect receipt follows it.
 - Extended the existing Cloudflare persistence boundary without adding a public mutation API; execution-state operations remain service-binding/RPC-only.
+- Strengthened runtime authorization so signing-key identity is part of the signed authorization material and unknown, revoked, issuer-mismatched, or algorithm-mismatched keys fail closed in the identity-aware path.
+- Separated the Cloudflare authorization-issuer source candidate from the persistence Durable Object so persistence does not become a key-management or signing authority.
+- Extended compatibility metadata to treat service identity/key lifecycle as a separately versioned interoperability domain.
 
 ### Security invariants
 
 - High-impact cross-service actions fail closed when authorization is absent, expired, future-dated beyond the accepted skew, tampered, bound to a different policy/action/scope/executor, or reused with conflicting replay identity.
 - Authorization cannot outlive the authoritative policy decision that produced it.
 - A valid Wardveil authorization does not transfer underlying resource authority and cannot compensate for an executor that lacks action or resource permission.
-- Signing secrets are prohibited from authorization envelopes, durable execution-state records, and shared security records.
+- Signing secrets are prohibited from authorization envelopes, durable execution-state records, shared security records, source-controlled configuration, and CI logs.
 - Reusing one executor/idempotency identity under a different durable claim fails closed.
 - A durable claim without a finalized receipt is `execution_reconciliation_required`; Wardveil prohibits automatic blind re-execution because the external side effect may already have occurred.
 - A finalized exact retry returns the original receipt without invoking the reference handler again.
 - Durable Wardveil replay state does not make a non-idempotent external system exactly-once; production executors require target-system idempotency or authoritative reconciliation.
-- The in-memory HMAC and execution-state references are conformance mechanisms only. The Cloudflare Durable Object extension is deployable source only. Production runtime acceptance still requires approved key management, authenticated transport and executor identity, deployed durable state, authorized high-impact executors, audit/Security Center integration, reconciliation procedures, rotation/revocation, and runtime failure/recovery evidence.
-- `Protected by Wardveil` remains evidence-scoped and is not authorized by the existence of a runtime-authorization envelope or durable execution-state claim alone.
+- Active issuer and executor service identities require their explicit Wardveil capabilities; suspended, revoked, expired, unknown, or capability-mismatched identities fail closed.
+- Retired signing keys cannot create new authorizations, may verify only during a bounded overlap, and become unusable immediately if revoked.
+- `signing_key_id` is nonsecret provenance metadata; the corresponding key material remains separate and must never be copied into Wardveil Audit or Security Center evidence.
+- The Cloudflare authorization-issuer candidate exposes no public signing route. Signing is designed for authenticated internal Worker RPC/service-binding use, while `/healthz` remains the only public HTTP function.
+- The in-memory HMAC, service-identity/keyring, and execution-state references are conformance mechanisms only. Cloudflare Worker source is deployable source only. Production runtime acceptance still requires approved cryptography/key management, authenticated production service identities and transport, least-privilege bindings, deployed durable state, authorized high-impact executors, Audit/Security Center integration, reconciliation procedures, rotation/revocation evidence, and runtime failure/recovery evidence.
+- `Protected by Wardveil` remains evidence-scoped and is not authorized by the existence of a runtime-authorization envelope, service identity, signing key, or durable execution-state claim alone.
 
 ## 0.8.0 — 2026-08-26
 
@@ -52,7 +65,7 @@ All notable source-controlled changes to the Wardveil Security foundation are re
 ### Changed
 
 - Advanced the Wardveil Security foundation to 0.8.0.
-- Upgraded Wardveil from a primarily status/presentation description to a scoped first-party security system and shared security plane while preserving external producer authority boundaries.
+- Advanced Wardveil from a primarily status/presentation description to a scoped first-party security system and shared security plane while preserving external producer authority boundaries.
 - Approved Wardveil Security Center as a substantive first-party capability rather than a reserved concept.
 - Reworked the README around the first-party security lifecycle, technical authority boundaries, fail-closed mutation, least privilege, auditability, and application integration.
 - Updated the main foundation validator to require the new architecture, capability contract, platform relationships, and synchronized 0.8 metadata.

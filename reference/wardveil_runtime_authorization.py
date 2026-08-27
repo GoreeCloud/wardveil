@@ -21,6 +21,7 @@ from reference.wardveil_protect import ExecutorAuthority, ProtectEngine, Protect
 
 AUTHORIZATION_VERSION = "0.1.0"
 SIGNATURE_ALGORITHM = "HMAC-SHA256-reference-only"
+DEFAULT_REFERENCE_SIGNING_KEY_ID = "reference-static"
 MAX_AUTHORIZATION_TTL = timedelta(minutes=5)
 POLICY_ACTIONS = {
     "allow", "allow_and_log", "warn", "step_up", "restrict",
@@ -82,6 +83,7 @@ class ExecutionAuthorization:
     issued_at: str
     expires_at: str
     policy_digest_sha256: str
+    signing_key_id: str
     signature_algorithm: str
     signature: str
 
@@ -100,6 +102,7 @@ class ExecutionAuthorization:
             "issued_at": self.issued_at,
             "expires_at": self.expires_at,
             "policy_digest_sha256": self.policy_digest_sha256,
+            "signing_key_id": self.signing_key_id,
         }
 
     def as_dict(self) -> dict:
@@ -150,6 +153,7 @@ def create_execution_authorization(
     policy_record: dict,
     *,
     signing_key: bytes,
+    signing_key_id: str = DEFAULT_REFERENCE_SIGNING_KEY_ID,
     executor_id: str,
     idempotency_key: str,
     nonce: str,
@@ -162,6 +166,8 @@ def create_execution_authorization(
         raise ValueError(error)
     if not signing_key:
         raise ValueError("signing_key_required")
+    if not isinstance(signing_key_id, str) or not signing_key_id.strip() or len(signing_key_id.strip()) > 128:
+        raise ValueError("signing_key_id_required")
     if not isinstance(executor_id, str) or not executor_id.strip():
         raise ValueError("executor_id_required")
     if not isinstance(idempotency_key, str) or not idempotency_key.strip():
@@ -194,6 +200,7 @@ def create_execution_authorization(
         "issued_at": observed.isoformat(),
         "expires_at": expires.isoformat(),
         "policy_digest_sha256": policy_digest,
+        "signing_key_id": signing_key_id.strip(),
     }
     signature = hmac.new(signing_key, _canonical(material), sha256).hexdigest()
     return ExecutionAuthorization(
@@ -209,6 +216,7 @@ def create_execution_authorization(
         issued_at=material["issued_at"],
         expires_at=material["expires_at"],
         policy_digest_sha256=policy_digest,
+        signing_key_id=material["signing_key_id"],
         signature_algorithm=SIGNATURE_ALGORITHM,
         signature=signature,
     )
@@ -229,6 +237,8 @@ def verify_execution_authorization(
         return AuthorizationVerification(False, "signing_key_required")
     if authorization.signature_algorithm != SIGNATURE_ALGORITHM:
         return AuthorizationVerification(False, "unsupported_signature_algorithm")
+    if not authorization.signing_key_id:
+        return AuthorizationVerification(False, "signing_key_id_required")
     if not expected_executor_id or authorization.executor_id != expected_executor_id:
         return AuthorizationVerification(False, "executor_binding_mismatch")
     if not authorization.idempotency_key or not authorization.nonce:
