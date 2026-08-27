@@ -81,6 +81,10 @@ The original direct HMAC helper remains available as a dependency-free compatibi
 
 For the Cloudflare-hosted Wardveil candidate runtime, secret material must be supplied through an encrypted secret binding rather than committed configuration.
 
+The repository now contains a separate internal authorization-issuer Worker candidate at `cloudflare/authorization-issuer/`. Its public HTTP surface is health-only. Signing is exposed only as a Worker RPC method intended for an authenticated service binding; there is no public `/sign` or `/authorize` endpoint.
+
+The candidate binds one configured issuer identity, one configured executor identity, and one configured signing-key ID. It revalidates the policy record, exact policy digest, action, scope, correlation identity, authorization TTL, and policy validity before producing a signature. This source boundary reduces accidental misuse but does not replace production service authentication, least-privilege binding, or target-executor authorization.
+
 Cloudflare Secrets Store is the preferred reusable account-level option when it satisfies production availability, permission, operational, and support requirements at deployment time. A per-Worker secret binding remains an alternative implementation mechanism.
 
 The repository must contain only binding names or deployment metadata. It must not contain the secret value.
