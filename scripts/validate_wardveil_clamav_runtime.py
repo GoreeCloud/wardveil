@@ -19,6 +19,8 @@ DEPLOYMENT = ROOT / "deployment" / "clamav" / "compose.yaml"
 ENV_EXAMPLE = ROOT / "deployment" / "clamav" / ".env.example"
 DEPLOYMENT_DOC = ROOT / "deployment" / "clamav" / "README.md"
 INTEGRATION_DOC = ROOT / "CLAMAV-INTEGRATION.md"
+ACCEPTANCE_COLLECTOR = ROOT / "scripts" / "collect_wardveil_clamav_acceptance.py"
+DEPLOYMENT_WORKFLOW = ROOT / ".github" / "workflows" / "deploy-clamav-production.yml"
 
 FORBIDDEN_KEYS = {
     "password", "passphrase", "private_key", "api_key", "access_token",
@@ -55,7 +57,17 @@ def walk_keys(value):
 
 
 def main() -> None:
-    for path in (ACCEPTANCE, HEALTH_SCHEMA, RUNTIME, DEPLOYMENT, ENV_EXAMPLE, DEPLOYMENT_DOC, INTEGRATION_DOC):
+    for path in (
+        ACCEPTANCE,
+        HEALTH_SCHEMA,
+        RUNTIME,
+        DEPLOYMENT,
+        ENV_EXAMPLE,
+        DEPLOYMENT_DOC,
+        INTEGRATION_DOC,
+        ACCEPTANCE_COLLECTOR,
+        DEPLOYMENT_WORKFLOW,
+    ):
         require(path.is_file(), f"missing required file: {path.relative_to(ROOT)}")
 
     acceptance = json.loads(ACCEPTANCE.read_text(encoding="utf-8"))
@@ -64,6 +76,8 @@ def main() -> None:
     compose = DEPLOYMENT.read_text(encoding="utf-8")
     env_example = ENV_EXAMPLE.read_text(encoding="utf-8")
     docs = DEPLOYMENT_DOC.read_text(encoding="utf-8") + "\n" + INTEGRATION_DOC.read_text(encoding="utf-8")
+    acceptance_collector = ACCEPTANCE_COLLECTOR.read_text(encoding="utf-8")
+    deployment_workflow = DEPLOYMENT_WORKFLOW.read_text(encoding="utf-8")
 
     require(acceptance.get("component") == "Wardveil ClamAV malware scanning runtime", "unexpected component identity")
     require(acceptance.get("engine_role") == "replaceable-signature-scanner", "ClamAV must remain replaceable infrastructure")
@@ -114,8 +128,50 @@ def main() -> None:
         "stale, unavailable, future-dated, or otherwise unverified signature evidence downgrades a would-be clean result to `unknown`",
         "production acceptance remains `unaccepted`",
         "do not expose an unauthenticated `clamd` listener directly to the public internet",
+        "guarded production deployment workflow",
     ):
         require(phrase in docs.lower(), f"documentation missing required boundary: {phrase}")
+
+    compile(acceptance_collector, str(ACCEPTANCE_COLLECTOR), "exec")
+    for token in (
+        "EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*",
+        '"runtime_evidence_status": "passed" if runtime_passed else "failed"',
+        '"production_runtime_acceptance": "unaccepted"',
+        '"application_consumer_integration"',
+        '"quarantine_execution_evidence"',
+        'error_finding.result == "unknown"',
+        'clean_finding.result == "clean"',
+        'eicar_finding.result == "malicious"',
+        '"protection_claim_authority": False',
+    ):
+        require(token in acceptance_collector, f"acceptance collector missing invariant: {token}")
+
+    for token in (
+        "workflow_dispatch:",
+        "expected_sha:",
+        "environment: wardveil-production",
+        "WARDVEIL_VPS_HOST: ${{ secrets.WARDVEIL_VPS_HOST }}",
+        "WARDVEIL_VPS_USER: ${{ secrets.WARDVEIL_VPS_USER }}",
+        "WARDVEIL_VPS_SSH_PRIVATE_KEY: ${{ secrets.WARDVEIL_VPS_SSH_PRIVATE_KEY }}",
+        "WARDVEIL_VPS_SSH_HOST_KEY: ${{ secrets.WARDVEIL_VPS_SSH_HOST_KEY }}",
+        "StrictHostKeyChecking=yes",
+        "ssh-keygen -F",
+        "persist-credentials: false",
+        "/opt/goreecloud/wardveil/clamav",
+        "collect_wardveil_clamav_acceptance.py",
+        "production_runtime_acceptance",
+        "sudo docker compose",
+        "ln -sfn",
+    ):
+        require(token in deployment_workflow, f"production deployment workflow missing invariant: {token}")
+    for forbidden in (
+        "StrictHostKeyChecking=no",
+        "ssh-keyscan",
+        "appleboy/ssh-action",
+        "0.0.0.0:3310",
+        "network_mode: host",
+    ):
+        require(forbidden not in deployment_workflow, f"production deployment workflow contains unsafe pattern: {forbidden}")
 
     validate_mail_consumer_source_evidence()
     validate_drive_consumer_source_evidence()
