@@ -4,7 +4,7 @@
 
 This threat model defines the security boundary for Wardveil Security itself. Wardveil must never become a source of false assurance, a secret store, or an authority that silently overrides the systems that actually enforce security.
 
-Foundation 0.9 adds a bounded runtime execution-authorization path. That path is intentionally separate from presentation, policy decision, transport delivery, and the target executor's own resource authority.
+Foundation 0.9 adds a bounded runtime execution-authorization path. That path is intentionally separate from presentation, policy decision, transport delivery, and the target executor's own resource authority. Presentation-only integrations remain read-only with respect to underlying controls unless they separately implement the authorized execution contract.
 
 ## Protected assets
 
