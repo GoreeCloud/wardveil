@@ -2,7 +2,7 @@
 
 Wardveil Security is GoreeCloud's platform-wide first-party security system and shared security plane. It coordinates evidence-backed trust, policy, protection, detection, scanning, quarantine, incident response, audit, and security-center experiences across GoreeCloud.
 
-> **Current status:** Foundation 0.8 active. Wardveil now has a canonical first-party capability architecture, a comprehensive feature specification, and machine-readable capability contract while preserving the existing fail-closed evidence, conservative aggregation, Privacy Shield separation, and product-specific acceptance boundaries.
+> **Current status:** Foundation 0.9 active. Wardveil now adds a canonical replay-resistant runtime execution-authorization boundary between Policy and Protect while preserving fail-closed evidence, conservative aggregation, Privacy Shield separation, target-system authority, and product-specific production acceptance gates.
 
 ## First-party security capabilities
 
@@ -34,21 +34,38 @@ Wardveil follows evidence before reassurance. Protected state requires current a
 
 Wardveil applies least privilege, data minimization, explicit authority, conservative aggregation, and auditable decision/execution separation. Shared evidence must not become a secret store or unrestricted telemetry lake. Unknown inspection results are not clean results, and anomaly alone is not proof of malicious behavior.
 
-High-impact technical actions require an explicit authorized executor, scoped target, validity window, replay resistance where relevant, and audit evidence.
+High-impact cross-service technical actions require an explicit authorized executor plus a short-lived authorization bound to the exact policy record, action, scope, executor identity, idempotency key, replay nonce, and validity window.
 
 ## Authority model
 
-Wardveil 0.8 has scoped first-party technical authority for Wardveil-native trust states, policy decisions, protection/enforcement results, detection findings, scan findings, quarantine state, incident workflow state, audit records, and Wardveil security presentation semantics.
+Wardveil 0.9 has scoped first-party technical authority for Wardveil-native trust states, policy decisions, protection/enforcement results, detection findings, scan findings, quarantine state, incident workflow state, audit records, and Wardveil security presentation semantics.
 
 This does **not** mean Wardveil automatically becomes authoritative for every underlying control. Applications, infrastructure systems, authentication services, firewalls, scanners, and other producers remain authoritative for their own state until integrated through an explicit Wardveil contract.
 
+A Wardveil Policy decision is also not automatically execution authority. Target systems and approved executors retain their own action/resource authorization requirements.
+
 Branding alone is never evidence of protection or integration.
+
+## Runtime execution authorization
+
+Foundation 0.9 introduces `contracts/wardveil.runtime-authorization.json`, `RUNTIME-AUTHORIZATION.md`, and `reference/wardveil_runtime_authorization.py`.
+
+The reference flow is:
+
+`authoritative evidence -> Trust/Policy -> policy decision -> runtime authorization -> authorized Protect executor -> protection result -> Audit`
+
+The authorization is bound to the exact policy digest, policy record ID, correlation ID, action, target scope, executor ID, idempotency key, nonce, issue time, and expiry. It cannot outlive its policy decision. Invalid signatures, expired or excessive validity windows, future-dated authorization, policy mutation, action/scope/executor mismatch, and conflicting nonce reuse fail closed.
+
+Exact retries of the same authorization/nonce/idempotency identity are treated as idempotent retries and the Protect executor's idempotency ledger prevents the reference mutation from running twice.
+
+The source reference uses `HMAC-SHA256-reference-only` solely for dependency-free contract testing. Production cryptography, key management, rotation/revocation, authenticated transport, durable replay/idempotency storage, and runtime executor evidence remain **unaccepted** until deployed and validated.
 
 ## Shared contracts and specifications
 
 - `ARCHITECTURE.md` — canonical first-party security architecture and responsibility boundaries.
 - `FEATURES.md` — canonical detailed feature specification across Wardveil services, applications, infrastructure, Security Center, evidence, and platform integrations.
 - `contracts/wardveil.capabilities.json` — machine-readable capability and lifecycle contract.
+- `RUNTIME-AUTHORIZATION.md` and `contracts/wardveil.runtime-authorization.json` — cross-service execution authorization, exact binding, replay, idempotency, and production-acceptance boundary.
 - `STATUS.md` and `contracts/wardveil.status.schema.json` — evidence-backed Wardveil status semantics.
 - `AGGREGATION.md` and `contracts/wardveil.aggregation.vectors.json` — conservative multi-record aggregation.
 - `PRIVACY-SHIELD.md` and `contracts/wardveil.privacy-shield.vectors.json` — privacy-safe read-only Privacy Shield presentation boundary.
@@ -66,14 +83,14 @@ The normalized status states remain `protected`, `attention`, `degraded`, `unkno
 
 - **Privacy Shield** owns privacy-control contracts, tracking resistance, data minimization expectations, and privacy-specific runtime behavior. Wardveil may present sanitized Privacy Shield status but does not inherit Privacy Shield authority.
 - **Everkeep** owns resilience, backup, recovery, preservation, portability, succession, and digital-legacy capabilities. Wardveil can coordinate compromise containment and post-recovery verification without taking over Everkeep's recovery authority.
-- **GoreeCloud Mesh** is the coordination and governance plane connecting first-party applications and services. Wardveil can use Mesh for authenticated security-signal and decision transport while retaining Wardveil security semantics.
+- **GoreeCloud Mesh** is the coordination and governance plane connecting first-party applications and services. Wardveil can use Mesh for authenticated security-signal, decision, and runtime-authorization transport while retaining Wardveil security semantics.
 - **Glaze UI** defines the visual and interaction model used by Wardveil Security Center and embedded Wardveil surfaces.
 
 ## Application integration
 
 GoreeCloud applications should consume Wardveil first-party security services rather than independently recreating malware scanning, session-risk evaluation, policy decisions, quarantine semantics, incident response, or security audit behavior.
 
-An integration should map authoritative producers, request or consume Wardveil decisions, honor supported enforcement actions, respect quarantine state, emit security-relevant audit events, exclude prohibited sensitive material, and expose only evidence-backed Wardveil status.
+An integration should map authoritative producers, request or consume Wardveil decisions, require bound runtime authorization for supported high-impact cross-service actions, preserve local executor authority, respect quarantine state, emit security-relevant audit events, exclude prohibited sensitive material, and expose only evidence-backed Wardveil status.
 
 Detailed application scopes for Browser, Mail, Drive, Vault, AI, Messenger, Identity, Search, Gateway, Network, infrastructure, and other authorized services are maintained in `FEATURES.md`.
 
@@ -83,13 +100,13 @@ Wardveil Scan uses ClamAV as its initial replaceable signature-based malware eng
 
 `reference/wardveil_clamav_runtime.py` adds runtime-health evidence and a clean-verdict gate. A ClamAV `OK` result remains `clean` only while associated health evidence is healthy, unexpired, daemon-reachable, and backed by current loaded signature data. Stale, unavailable, expired, future-dated, or unverified health downgrades a would-be clean result to `unknown`; positive malware matches remain malicious even when health is degraded.
 
-`deployment/clamav/` provides a loopback-only container baseline, persistent signature database storage, environment-driven limits and freshness policy, and a health collector. `contracts/wardveil.clamav.runtime-acceptance.json` deliberately remains `unaccepted` until deployed runtime tests, an application consumer, and authorized quarantine evidence exist.
+`deployment/clamav/` provides a loopback-only container baseline, persistent signature database storage, environment-driven limits and freshness policy, and a health collector. `contracts/wardveil.clamav.runtime-acceptance.json` deliberately remains `unaccepted` until deployed runtime tests, application consumers, and authorized quarantine evidence exist.
 
 The product direction is **Wardveil Malware Protection** within Wardveil Security Center, with ClamAV supplying the first signature-based scanning engine and additional first-party or replaceable detection engines added over time. A healthy ClamAV runtime alone does not authorize a broad `Protected by Wardveil` claim.
 
 ## Protected by Wardveil
 
-`Protected by Wardveil` may be asserted only for an explicit scope backed by current authoritative evidence showing that a Wardveil control or Wardveil-authorized producer actually enforced or verified the represented protection. A Wardveil icon, a Security Center screen, a ClamAV installation, ClamAV health evidence, or a Privacy Shield status record does not independently authorize that claim.
+`Protected by Wardveil` may be asserted only for an explicit scope backed by current authoritative evidence showing that a Wardveil control or Wardveil-authorized producer actually enforced or verified the represented protection. A Wardveil icon, a Security Center screen, a ClamAV installation, ClamAV health evidence, a runtime-authorization envelope, or a Privacy Shield status record does not independently authorize that claim.
 
 ## Validation
 
@@ -98,6 +115,8 @@ Run:
 ```bash
 python3 scripts/validate_wardveil.py
 python3 scripts/validate_wardveil_capabilities.py
+python3 scripts/test_wardveil_runtime_authorization.py
+python3 scripts/validate_wardveil_runtime_authorization.py
 python3 scripts/test_wardveil_detect_scan_reference.py
 python3 scripts/test_wardveil_clamav.py
 python3 scripts/test_wardveil_clamav_runtime.py
@@ -106,8 +125,8 @@ python3 scripts/validate_wardveil_aggregation.py
 python3 scripts/validate_wardveil_privacy_shield.py
 ```
 
-CI validates the canonical capability set, lifecycle, version alignment, evidence boundaries, ClamAV protocol/mapping behavior, ClamAV health/freshness/clean-verdict gating, deployment invariants, aggregation behavior, Privacy Shield separation, repository governance, icon state, and public-site tooling against the exact source revision.
+CI validates the canonical capability set, lifecycle, version alignment, runtime authorization bindings/replay/idempotency behavior, evidence boundaries, ClamAV protocol/mapping behavior, ClamAV health/freshness/clean-verdict gating, deployment invariants, aggregation behavior, Privacy Shield separation, repository governance, icon state, and public-site tooling against the exact source revision.
 
 ## Release discipline
 
-Foundation releases keep `VERSION`, `contracts/wardveil.identity.json`, `contracts/wardveil.capabilities.json`, `CHANGELOG.md`, compatibility metadata, validator expectations, and the README current-status declaration synchronized. Product-specific runtime acceptance remains separate from Wardveil foundation acceptance.
+Foundation releases keep `VERSION`, `contracts/wardveil.identity.json`, `contracts/wardveil.capabilities.json`, runtime-authorization metadata, `CHANGELOG.md`, compatibility metadata, validator expectations, and the README current-status declaration synchronized. Product-specific and runtime-specific production acceptance remains separate from Wardveil foundation acceptance.
