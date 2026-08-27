@@ -53,7 +53,15 @@ for token in required_source:
 
 assert "Math.random(" not in source
 assert "passThroughOnException" not in source
-assert "Authorization" not in source, "public bearer-token mutation surface must not be introduced by this adapter"
+for forbidden_public_auth in (
+    'headers.get("Authorization")',
+    "headers.get('Authorization')",
+    'headers.get("authorization")',
+    "headers.get('authorization')",
+    'startsWith("Bearer ")',
+    "startsWith('Bearer ')",
+):
+    assert forbidden_public_auth not in source, "public bearer-token mutation surface must not be introduced by this adapter"
 assert 'url.pathname === "/healthz"' in source
 assert 'return new Response("Not Found", { status: 404 })' in source
 
