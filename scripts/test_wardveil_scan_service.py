@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import socket
 import sys
 import threading
 import urllib.error
@@ -183,10 +184,16 @@ def http_request(
         return exc.code, payload
 
 
+def available_loopback_port() -> int:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+        probe.bind(("127.0.0.1", 0))
+        return int(probe.getsockname()[1])
+
+
 def test_http_auth_and_binding() -> None:
     token = "t" * 64
     scan_service, _ = service("clean")
-    server = build_http_server(scan_service, token, port=0)
+    server = build_http_server(scan_service, token, port=available_loopback_port())
     assert server.server_address[0] == "127.0.0.1"
     port = server.server_address[1]
     thread = threading.Thread(target=server.serve_forever, daemon=True)
