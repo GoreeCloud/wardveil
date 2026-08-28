@@ -1,0 +1,11 @@
+[
+  {
+    "caller_id": "goreecloud-drive",
+    "key_id": "scan-current",
+    "secret": "REPLACE_WITH_PRODUCTION_SECRET",
+    "resource_types": [
+      "drive_file"
+    ],
+    "active": true
+  }
+]
