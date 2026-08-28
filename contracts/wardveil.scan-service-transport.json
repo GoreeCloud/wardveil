@@ -1,0 +1,94 @@
+{
+  "contract": "goreecloud.wardveil.scan-service-transport",
+  "contract_version": "0.1.0",
+  "foundation_version": "0.9.0",
+  "purpose": "Provide an authenticated first-party Wardveil Scan transport in front of replaceable malware engines without exposing clamd or transferring application resource authority.",
+  "endpoint": {
+    "method": "POST",
+    "path": "/v1/scan",
+    "content_type": "application/octet-stream",
+    "public_anonymous_access_allowed": false,
+    "direct_clamav_access_allowed": false,
+    "default_bind": "127.0.0.1:8788",
+    "health_path": "/healthz"
+  },
+  "request_authentication": {
+    "scheme": "HMAC-SHA256-reference-transport",
+    "production_signature_scheme_accepted": false,
+    "required_fields": [
+      "caller_id",
+      "key_id",
+      "timestamp",
+      "nonce",
+      "action",
+      "resource_type",
+      "resource_id",
+      "content_length",
+      "content_sha256",
+      "signature"
+    ],
+    "signature_binds_all_required_fields_except_signature": true,
+    "signature_binds_body_digest": true,
+    "constant_time_verification_required": true,
+    "maximum_clock_skew_seconds": 60,
+    "caller_resource_type_allowlist_required": true,
+    "unknown_caller_fails_closed": true,
+    "unknown_key_fails_closed": true,
+    "digest_mismatch_fails_closed": true,
+    "expired_or_future_request_fails_closed": true,
+    "conflicting_nonce_reuse_fails_closed": true,
+    "exact_nonce_replay_may_return_cached_identical_result": true
+  },
+  "initial_resource_types": [
+    "mail_attachment",
+    "drive_file",
+    "browser_download",
+    "ai_artifact"
+  ],
+  "response": {
+    "shape": "consumer_scan_envelope",
+    "resource_id_echo_required": true,
+    "resource_digest_sha256_required": true,
+    "scan_record_contract_version": "0.1.0",
+    "scan_record_type": "scan_finding",
+    "authoritative_producer_required": true,
+    "exact_resource_scope_required": true,
+    "result_field": "result",
+    "allowed_results": ["clean", "suspicious", "malicious", "unknown", "unsupported"],
+    "evidence_refs_required_for_clean": true
+  },
+  "scanner_health": {
+    "clean_requires_current_acceptable_health": true,
+    "clean_includes_scanner_health_evidence_ref": true,
+    "malicious_exact_digest_remains_actionable_when_health_degraded": true,
+    "scanner_unavailable_returns_authoritative_unknown_not_clean": true
+  },
+  "privacy": {
+    "raw_content_in_shared_security_record_allowed": false,
+    "credentials_in_response_allowed": false,
+    "authentication_secret_in_logs_allowed": false,
+    "user_facing_filename_required": false,
+    "raw_url_required": false,
+    "data_minimization_required": true
+  },
+  "authority_boundaries": {
+    "wardveil_scan_owns_security_verdict": true,
+    "application_owns_underlying_resource": true,
+    "scan_result_authorizes_quarantine_by_itself": false,
+    "privacy_shield_authority_transferred": false,
+    "everkeep_recovery_authority_transferred": false
+  },
+  "production_runtime_status": "unaccepted",
+  "remaining_acceptance_requirements": [
+    "approved production service authentication and key management",
+    "deployed Wardveil Scan service bound to the accepted live scanner runtime",
+    "at least one deployed application consumer using authenticated Wardveil Scan transport",
+    "controlled consumer clean and EICAR end-to-end tests",
+    "scanner unavailable and stale-health end-to-end fail-closed tests",
+    "runtime key rotation and revocation evidence",
+    "rate limiting and abuse-resistance acceptance",
+    "Audit and Security Center transport provenance",
+    "Privacy Shield runtime data-minimization acceptance",
+    "authorized quarantine execution evidence"
+  ]
+}
