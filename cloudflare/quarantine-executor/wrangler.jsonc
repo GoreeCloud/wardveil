@@ -18,6 +18,10 @@
     {
       "binding": "WARDVEIL_PERSISTENCE_SERVICE",
       "service": "goreecloud-wardveil-persistence"
+    },
+    {
+      "binding": "WARDVEIL_QUARANTINE_TARGET",
+      "service": "REPLACE_AT_DEPLOYMENT"
     }
   ],
   "secrets": {
