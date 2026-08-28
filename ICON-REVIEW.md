@@ -1,39 +1,21 @@
-# Wardveil Security Candidate Icon Review
+# Wardveil Security Legacy Candidate Review Record
 
-This document defines the review protocol for `branding/candidates/wardveil-security-icon.svg` before any canonical promotion occurs.
+Wardveil no longer has an active repository-local icon candidate.
 
-## Approval boundary
+The prior files under `branding/candidates/` were historical review artifacts from before branding authority was centralized. They have been removed from the current tree because new Wardveil branding work must originate in `GoreeCloud/goreecloud-branding-assets` rather than in the Wardveil consumer repository.
 
-The candidate is not the canonical Wardveil identity. Presence of this file, successful CI, or successful SVG safety validation does not constitute visual approval. The canonical path must remain absent and machine-readable showcase state must remain blocked until explicit approval is recorded.
+## Current approved identity
 
-## Required review matrix
+- Identity: **Sentinel Fold**
+- Branding authority: `GoreeCloud/goreecloud-branding-assets`
+- Canonical source: `systems/wardveil-security/wardveil-security-icon.svg`
+- Canonical Git blob: `fb3d643cca5477c3f8d4e03ce10a3458fd12f407`
+- Local synchronized derivative: `branding/wardveil-security-icon.svg`
 
-Review the same underlying mark at 16, 24, 32, 48, 64, 128, 256, and 512 CSS pixels. The mark should retain a recognizable two-panel enclosure, central core, and restrained W-shaped negative-space relationship without collapsing into a shield, padlock, eye, or standalone W.
+The local derivative exists only for packaging, validation, Security Center rendering, and repository-local integration. It must remain synchronized with the canonical source and must not become an independent branding authority.
 
-Review a monochrome presentation using `currentColor` with no dependence on gradients, blur, external assets, fonts, or raster content. The candidate must remain intelligible when opacity differences are reduced by constrained rendering or accessibility conditions.
+## Future review workflow
 
-Review the mark on representative Glaze UI light and dark surfaces. The shape must remain legible without requiring a background-specific geometry change. Contrast and layering should remain calm and clear rather than neon, aggressive, or threat-oriented.
+Future Wardveil logo, icon, artwork, lockup, or visual-identity revisions must be created and reviewed in the unified branding repository first. After the exact source is approved and catalog-pinned there, required consumer derivatives may be synchronized into this repository.
 
-Review identity distinction against the GoreeCloud platform logo, Privacy Shield, GoreeCloud Identity, GoreeCloud Monitor, and application-specific icons. Similarity in the overall GoreeCloud visual family is acceptable; confusing silhouette, enclosure, central symbol, or negative-space construction is not.
-
-## Technical acceptance
-
-Run:
-
-`python3 scripts/validate_wardveil_icon_candidate.py`
-
-This validates the candidate with the same static SVG security and portability parser used for the eventual canonical asset while additionally requiring that the canonical path remain absent during candidate-only review.
-
-## Promotion criteria
-
-Promotion is permitted only after all of the following are explicitly recorded:
-
-- candidate SVG technical validation passes;
-- small-size review passes;
-- monochrome review passes;
-- Glaze UI light review passes;
-- Glaze UI dark review passes;
-- identity-distinction review passes;
-- the icon is explicitly approved as the Wardveil Security visual identity.
-
-Only then may the candidate be copied unchanged to `branding/wardveil-security-icon.svg`, machine-readable visual/showcase states be changed to approved, and the canonical repository validator be allowed to pass the approved-icon path.
+Technical SVG validation or successful CI does not by itself establish security capability, runtime acceptance, malware protection, ClamAV acceptance, or `Protected by Wardveil` evidence. Those claims remain governed by Wardveil's technical contracts and current authoritative evidence.
