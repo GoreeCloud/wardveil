@@ -1,0 +1,33 @@
+[Unit]
+Description=GoreeCloud Wardveil Scan authenticated transport
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=wardveil-scan
+Group=wardveil-scan
+EnvironmentFile=/etc/goreecloud/wardveil/clamav.env
+EnvironmentFile=/etc/goreecloud/wardveil/scan-service.env
+WorkingDirectory=/opt/goreecloud/wardveil/scan-service/current
+ExecStart=/usr/bin/python3 /opt/goreecloud/wardveil/scan-service/current/deployment/scan-service/server.py
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+LockPersonality=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+RestrictAddressFamilies=AF_INET AF_INET6
+CapabilityBoundingSet=
+AmbientCapabilities=
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target
