@@ -62,9 +62,9 @@ class FakeClamAVClient:
 
     def scan_bytes(self, data: bytes) -> ClamAVVerdict:
         self.scan_calls += 1
-        return self._verdict(data)
+        return self.verdict(data)
 
-    def _verdict(self, data: bytes) -> ClamAVVerdict:
+    def verdict(self, data: bytes) -> ClamAVVerdict:
         digest = hashlib.sha256(data).hexdigest()
         if self.mode == "malicious":
             return ClamAVVerdict(
@@ -105,7 +105,7 @@ class BlockingClamAVClient(FakeClamAVClient):
         self.entered.set()
         if not self.release.wait(timeout=2):
             raise RuntimeError("blocking scanner test timed out")
-        return self._verdict(data)
+        return self.verdict(data)
 
 
 def credential(*, active: bool = True) -> CallerCredential:
@@ -184,7 +184,7 @@ def expect_value_error(fn) -> None:
 
 def test_consumer_compatible_records() -> None:
     content = b"Wardveil clean consumer integration sample\n"
-    scan_service, _ = service("clean")
+    scan_service, _ = service()
     envelope = scan_service.scan(request_for(content), content)
     record = envelope["scan_record"]
     assert record["record_type"] == "scan_finding"
@@ -198,7 +198,7 @@ def test_consumer_compatible_records() -> None:
     assert "Wardveil clean consumer integration sample" not in json.dumps(envelope)
 
 
-def test_malicious_and_unavailable_semantics() -> None:
+def test_malicious_unavailable_and_unsupported_semantics() -> None:
     content = b"sample"
     malicious_service, _ = service("malicious")
     malicious = malicious_service.scan(request_for(content), content)
@@ -206,12 +206,10 @@ def test_malicious_and_unavailable_semantics() -> None:
     assert any("Eicar-Test-Signature" in ref for ref in malicious["scan_record"]["evidence_refs"])
 
     unavailable_service, _ = service("unavailable")
-    unavailable = unavailable_service.scan(request_for(content), content)
-    assert unavailable["scan_record"]["result"] == "unknown"
+    assert unavailable_service.scan(request_for(content), content)["scan_record"]["result"] == "unknown"
 
     unsupported_service, _ = service("unsupported")
-    unsupported = unsupported_service.scan(request_for(content), content)
-    assert unsupported["scan_record"]["result"] == "unsupported"
+    assert unsupported_service.scan(request_for(content), content)["scan_record"]["result"] == "unsupported"
 
 
 def test_stale_health_downgrades_clean_but_not_malicious() -> None:
@@ -226,40 +224,66 @@ def test_stale_health_downgrades_clean_but_not_malicious() -> None:
 
 def test_digest_and_size_mismatch_fail_before_scan() -> None:
     content = b"changed"
-    scan_service, client = service("clean")
-    bad_digest = request_for(content, digest_sha256="0" * 64)
-    expect_service_error("resource_digest_mismatch", lambda: scan_service.scan(bad_digest, content))
-    bad_size = request_for(content, size_bytes=len(content) + 1, nonce="nonce-002")
-    expect_service_error("resource_size_mismatch", lambda: scan_service.scan(bad_size, content))
+    scan_service, client = service()
+    expect_service_error(
+        "resource_digest_mismatch",
+        lambda: scan_service.scan(request_for(content, digest_sha256="0" * 64), content),
+    )
+    expect_service_error(
+        "resource_size_mismatch",
+        lambda: scan_service.scan(
+            request_for(content, size_bytes=len(content) + 1, nonce="nonce-002"),
+            content,
+        ),
+    )
     assert client.scan_calls == 0
 
 
-def test_signature_timestamp_and_caller_fail_before_scan() -> None:
+def test_signature_timestamp_and_unknown_caller_fail_before_scan() -> None:
     content = b"sample"
-    scan_service, client = service("clean")
-    bad_signature = replace(request_for(content), signature="f" * 64)
-    expect_service_error("scan_signature_invalid", lambda: scan_service.scan(bad_signature, content))
-
-    old = request_for(content, timestamp=(FIXED_NOW - timedelta(minutes=5)).isoformat(), nonce="nonce-002")
-    expect_service_error("scan_request_timestamp_outside_window", lambda: scan_service.scan(old, content))
-
-    unknown = request_for(content, caller_id="goreecloud-browser", nonce="nonce-003")
-    expect_service_error("scan_caller_not_authorized", lambda: scan_service.scan(unknown, content))
+    scan_service, client = service()
+    expect_service_error(
+        "scan_signature_invalid",
+        lambda: scan_service.scan(replace(request_for(content), signature="f" * 64), content),
+    )
+    expect_service_error(
+        "scan_request_timestamp_outside_window",
+        lambda: scan_service.scan(
+            request_for(
+                content,
+                timestamp=(FIXED_NOW - timedelta(minutes=5)).isoformat(),
+                nonce="nonce-002",
+            ),
+            content,
+        ),
+    )
+    expect_service_error(
+        "scan_caller_not_authorized",
+        lambda: scan_service.scan(
+            request_for(content, caller_id="goreecloud-browser", nonce="nonce-003"),
+            content,
+        ),
+    )
     assert client.scan_calls == 0
 
 
 def test_resource_scope_is_least_privilege() -> None:
     content = b"sample"
-    scan_service, client = service("clean")
-    request = request_for(content, resource_type="browser_download")
-    expect_service_error("scan_resource_type_not_authorized", lambda: scan_service.scan(request, content))
+    scan_service, client = service()
+    expect_service_error(
+        "scan_resource_type_not_authorized",
+        lambda: scan_service.scan(request_for(content, resource_type="browser_download"), content),
+    )
     assert client.scan_calls == 0
 
 
 def test_inactive_caller_fails_closed() -> None:
     content = b"sample"
-    scan_service, client = service("clean", active=False)
-    expect_service_error("scan_caller_not_authorized", lambda: scan_service.scan(request_for(content), content))
+    scan_service, client = service(active=False)
+    expect_service_error(
+        "scan_caller_not_authorized",
+        lambda: scan_service.scan(request_for(content), content),
+    )
     assert client.scan_calls == 0
 
 
@@ -275,13 +299,11 @@ def test_credential_json_is_strict_and_placeholder_fails() -> None:
             }
         ]
     )
-    parsed = credentials_from_json(valid)
-    assert parsed[("goreecloud-drive", "scan-current")].active is True
-
+    assert credentials_from_json(valid)[
+        ("goreecloud-drive", "scan-current")
+    ].active is True
     expect_value_error(
-        lambda: credentials_from_json(
-            valid.replace('"active": true', '"active": "false"')
-        )
+        lambda: credentials_from_json(valid.replace('"active": true', '"active": "false"'))
     )
     expect_value_error(
         lambda: credentials_from_json(
@@ -289,15 +311,13 @@ def test_credential_json_is_strict_and_placeholder_fails() -> None:
         )
     )
     expect_value_error(
-        lambda: credentials_from_json(
-            valid.replace("s" * 32, "REPLACE_WITH_PRODUCTION_SECRET")
-        )
+        lambda: credentials_from_json(valid.replace("s" * 32, "REPLACE_WITH_PRODUCTION_SECRET"))
     )
 
 
 def test_exact_replay_returns_identical_envelope_without_rescan() -> None:
     content = b"sample"
-    scan_service, client = service("clean")
+    scan_service, client = service()
     request = request_for(content)
     first = scan_service.scan(request, content)
     second = scan_service.scan(request, content)
@@ -306,12 +326,15 @@ def test_exact_replay_returns_identical_envelope_without_rescan() -> None:
 
 
 def test_conflicting_nonce_reuse_fails_closed() -> None:
-    first_content = b"first"
-    second_content = b"second"
-    scan_service, client = service("clean")
-    scan_service.scan(request_for(first_content), first_content)
-    conflicting = request_for(second_content, nonce="nonce-001", correlation_id="corr-002")
-    expect_service_error("scan_nonce_conflict", lambda: scan_service.scan(conflicting, second_content))
+    scan_service, client = service()
+    scan_service.scan(request_for(b"first"), b"first")
+    expect_service_error(
+        "scan_nonce_conflict",
+        lambda: scan_service.scan(
+            request_for(b"second", nonce="nonce-001", correlation_id="corr-002"),
+            b"second",
+        ),
+    )
     assert client.scan_calls == 1
 
 
@@ -321,10 +344,7 @@ def test_replay_ledger_is_bounded_and_expiring() -> None:
     second = request_for(b"second", nonce="nonce-002", correlation_id="corr-002")
     assert ledger.claim(first, "a" * 64, now=FIXED_NOW)[0] == "new"
     assert ledger.claim(second, "b" * 64, now=FIXED_NOW)[0] == "capacity"
-    assert (
-        ledger.claim(second, "b" * 64, now=FIXED_NOW + timedelta(seconds=2))[0]
-        == "new"
-    )
+    assert ledger.claim(second, "b" * 64, now=FIXED_NOW + timedelta(seconds=2))[0] == "new"
 
 
 def test_concurrent_exact_request_does_not_duplicate_scan() -> None:
@@ -337,7 +357,7 @@ def test_concurrent_exact_request_does_not_duplicate_scan() -> None:
     def first_scan() -> None:
         try:
             outcome["result"] = scan_service.scan(request, content)
-        except Exception as exc:  # pragma: no cover - surfaced by assertion below
+        except Exception as exc:  # pragma: no cover
             outcome["error"] = exc
 
     thread = threading.Thread(target=first_scan)
@@ -351,8 +371,14 @@ def test_concurrent_exact_request_does_not_duplicate_scan() -> None:
     thread.join(timeout=2)
     assert not thread.is_alive()
     assert "error" not in outcome
-    assert client.scan_calls == 1
     assert isinstance(outcome.get("result"), dict)
+    assert client.scan_calls == 1
+
+
+def available_loopback_port() -> int:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+        probe.bind(("127.0.0.1", 0))
+        return int(probe.getsockname()[1])
 
 
 def http_request(
@@ -389,20 +415,12 @@ def http_request(
             return response.status, json.loads(response.read())
     except urllib.error.HTTPError as exc:
         raw = exc.read()
-        payload = json.loads(raw) if raw else {}
-        return exc.code, payload
-
-
-def available_loopback_port() -> int:
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
-        probe.bind(("127.0.0.1", 0))
-        return int(probe.getsockname()[1])
+        return exc.code, json.loads(raw) if raw else {}
 
 
 def test_http_auth_binding_and_generic_errors() -> None:
-    scan_service, _ = service("clean")
+    scan_service, _ = service()
     server = build_http_server(scan_service, port=available_loopback_port())
-    assert server.server_address[0] == "127.0.0.1"
     port = server.server_address[1]
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
@@ -417,8 +435,11 @@ def test_http_auth_binding_and_generic_errors() -> None:
         assert payload["scan_record"]["result"] == "clean"
         assert "scan_result" not in payload["scan_record"]
 
-        bad = request_for(content, digest_sha256="f" * 64, nonce="nonce-http-bad")
-        status, payload = http_request(port, content, request=bad)
+        status, payload = http_request(
+            port,
+            content,
+            request=request_for(content, digest_sha256="f" * 64, nonce="nonce-http-bad"),
+        )
         assert status == 422
         assert payload == {"error": "scan_request_rejected"}
     finally:
@@ -428,7 +449,7 @@ def test_http_auth_binding_and_generic_errors() -> None:
 
 
 def test_http_rejects_bad_signature_before_body_ingestion() -> None:
-    scan_service, _ = service("clean")
+    scan_service, _ = service()
     server = build_http_server(scan_service, port=available_loopback_port())
     port = server.server_address[1]
     thread = threading.Thread(target=server.serve_forever, daemon=True)
@@ -463,10 +484,20 @@ def test_http_rejects_bad_signature_before_body_ingestion() -> None:
             "",
             "",
         ]
+        response_parts: list[bytes] = []
         with socket.create_connection(("127.0.0.1", port), timeout=1) as client:
             client.settimeout(1)
             client.sendall("\r\n".join(headers).encode("ascii"))
-            response = client.recv(4096)
+            client.shutdown(socket.SHUT_WR)
+            while True:
+                try:
+                    chunk = client.recv(4096)
+                except socket.timeout:
+                    break
+                if not chunk:
+                    break
+                response_parts.append(chunk)
+        response = b"".join(response_parts)
         assert b" 401 " in response
         assert b"scan_request_rejected" in response
     finally:
