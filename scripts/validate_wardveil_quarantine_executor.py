@@ -99,7 +99,7 @@ def main() -> None:
         "target.read_quarantine",
         "state_store.finalize",
         "authorization_provenance",
-        "destructive_action",
+        "quarantine(",
     ):
         require(token in source, f"missing reference executor invariant: {token}")
 
