@@ -101,6 +101,10 @@
   "visual_identity": {
     "description_document": "ICON.md",
     "canonical_asset_path": "branding/wardveil-security-icon.svg",
+    "canonical_asset_scope": "repository-synchronized-derivative",
+    "branding_authority_repository": "GoreeCloud/goreecloud-branding-assets",
+    "branding_authority_asset": "systems/wardveil-security/wardveil-security-icon.svg",
+    "local_derivative_asset": "branding/wardveil-security-icon.svg",
     "canonical_visual_identity_status": "approved",
     "showcase_status": "approved",
     "concept": "two softly curved layered veil panels folding inward around a small protected central core with a restrained W-shaped negative space",
