@@ -30,15 +30,34 @@ if identity.get("foundation_version") != foundation_version:
 visual = identity["visual_identity"]
 if visual["canonical_visual_identity_status"] != "approved" or visual["showcase_status"] != "approved":
     raise SystemExit("Wardveil public visual showcase is not approved")
+if visual.get("identity_name") != "Sentinel Fold":
+    raise SystemExit("Wardveil public visual identity must be Sentinel Fold")
 
 if ICON.read_bytes() != (DIST / "assets" / "wardveil-security-icon.svg").read_bytes():
     raise SystemExit("public Wardveil icon is not byte-identical to canonical identity source")
 
 html = (DIST / "index.html").read_text(encoding="utf-8")
 headers = (DIST / "_headers").read_text(encoding="utf-8")
-for needle in ("Wardveil Security by GoreeCloud", "Security state without false reassurance", "Missing evidence fails closed", "Protected by Wardveil", "security@goreecloud.com"):
+major_minor = ".".join(foundation_version.split(".")[:2])
+for needle in (
+    "Wardveil Security by GoreeCloud",
+    f"Wardveil Security {major_minor}",
+    f"Foundation {major_minor}",
+    "Sentinel Fold is the primary Wardveil mark",
+    "standalone Sentinel Fold emblem is the owner-approved primary visual mark",
+    "Missing evidence fails closed",
+    "Wardveil Protect",
+    "runtime authorization",
+    "ClamAV is an engine beneath Wardveil Scan",
+    "production runtime remains unaccepted",
+    "Protected by Wardveil",
+    "security@goreecloud.com",
+):
     if needle not in html:
         raise SystemExit(f"required public content missing: {needle}")
+for stale in ("Wardveil Security 0.7", "Foundation 0.7", "Read-only by default"):
+    if stale in html:
+        raise SystemExit(f"stale Wardveil public content remains: {stale}")
 for needle in ("Content-Security-Policy:", "frame-ancestors 'none'", "Permissions-Policy:", "X-Content-Type-Options: nosniff"):
     if needle not in headers:
         raise SystemExit(f"required security header missing: {needle}")
@@ -46,4 +65,4 @@ for prohibited in ("google-analytics", "googletagmanager", "segment.com", "fonts
     if prohibited in html.lower():
         raise SystemExit(f"prohibited public dependency detected: {prohibited}")
 
-print(f"Wardveil Security public website validation passed for foundation {foundation_version}")
+print(f"Wardveil Security public website validation passed for foundation {foundation_version} and Sentinel Fold primary identity")
