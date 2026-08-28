@@ -8,18 +8,43 @@ import os
 import signal
 import sys
 import threading
+from datetime import timedelta
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from reference.wardveil_scan_service import (  # noqa: E402
+    DEFAULT_MAX_CONCURRENT_SCANS,
+    DEFAULT_REPLAY_MAX_ENTRIES,
+    DEFAULT_REPLAY_TTL_SECONDS,
     DEFAULT_SCAN_SERVICE_PORT,
     LOOPBACK_HOST,
+    InMemoryReplayLedger,
     WardveilScanService,
     build_http_server,
     credentials_from_json,
 )
+
+
+def positive_int(name: str, default: int) -> int:
+    value = int(os.environ.get(name, str(default)))
+    if value < 1:
+        raise ValueError(f"{name} must be positive")
+    return value
+
+
+def credential_file() -> Path:
+    configured = os.environ.get("WARDVEIL_SCAN_CALLERS_FILE", "").strip()
+    if configured:
+        return Path(configured)
+    credential_dir = os.environ.get("CREDENTIALS_DIRECTORY", "").strip()
+    if credential_dir:
+        return Path(credential_dir) / "wardveil-scan-callers.json"
+    raise ValueError(
+        "Wardveil Scan caller credentials require WARDVEIL_SCAN_CALLERS_FILE "
+        "or systemd LoadCredential"
+    )
 
 
 def main() -> int:
@@ -34,12 +59,32 @@ def main() -> int:
     args = parser.parse_args()
 
     try:
-        credentials = credentials_from_json(
-            os.environ.get("WARDVEIL_SCAN_CALLERS_JSON", "")
+        callers_path = credential_file()
+        raw_credentials = callers_path.read_text(encoding="utf-8")
+        credentials = credentials_from_json(raw_credentials)
+        replay_ledger = InMemoryReplayLedger(
+            max_entries=positive_int(
+                "WARDVEIL_SCAN_REPLAY_MAX_ENTRIES", DEFAULT_REPLAY_MAX_ENTRIES
+            ),
+            ttl=timedelta(
+                seconds=positive_int(
+                    "WARDVEIL_SCAN_REPLAY_TTL_SECONDS", DEFAULT_REPLAY_TTL_SECONDS
+                )
+            ),
         )
-        service = WardveilScanService(credentials=credentials)
-        server = build_http_server(service, port=args.port)
-    except (TypeError, ValueError) as exc:
+        max_concurrent_scans = positive_int(
+            "WARDVEIL_SCAN_MAX_CONCURRENT_SCANS", DEFAULT_MAX_CONCURRENT_SCANS
+        )
+        service = WardveilScanService(
+            credentials=credentials,
+            replay_ledger=replay_ledger,
+        )
+        server = build_http_server(
+            service,
+            port=args.port,
+            max_concurrent_scans=max_concurrent_scans,
+        )
+    except (OSError, TypeError, ValueError) as exc:
         print(f"Wardveil Scan service configuration rejected: {exc}", file=sys.stderr)
         return 2
 
