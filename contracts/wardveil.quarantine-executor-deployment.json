@@ -1,0 +1,83 @@
+{
+  "contract_version": "0.1.0",
+  "foundation_version": "0.9.0",
+  "component": "Wardveil Quarantine Executor Cloudflare Deployment Gate",
+  "purpose": "deploy the bounded quarantine executor only after explicit target selection and least-privilege runtime preconditions are verified, while preserving unaccepted production status until real mutation, cryptography, identity, failure, privacy, and recovery evidence exists",
+  "deployment": {
+    "manual_dispatch_only": true,
+    "main_branch_only": true,
+    "exact_approved_revision_required": true,
+    "environment": "wardveil-production",
+    "pinned_wrangler_version": "4.37.0",
+    "generated_production_config_is_ephemeral": true,
+    "source_placeholder_may_be_deployed": false,
+    "production_runtime_status_after_workflow": "unaccepted"
+  },
+  "target_authority": {
+    "target_worker_name_required_at_dispatch": true,
+    "target_worker_must_preexist": true,
+    "target_worker_must_not_be_wardveil_control_plane": true,
+    "target_service_binding_required": true,
+    "service_binding_is_target_authority": false,
+    "target_system_remains_resource_authority": true,
+    "target_side_idempotency_required_for_acceptance": true,
+    "exact_quarantine_readback_required_for_acceptance": true,
+    "target_interface_runtime_acceptance_required": true
+  },
+  "least_privilege": {
+    "explicit_resource_type_subset_required": true,
+    "allowed_resource_types": [
+      "mail_attachment",
+      "drive_file",
+      "browser_download",
+      "ai_artifact"
+    ],
+    "empty_subset_allowed": false,
+    "unknown_resource_type_allowed": false,
+    "duplicate_resource_type_allowed": false,
+    "all_source_resource_types_implicitly_authorized": false
+  },
+  "transport": {
+    "cloudflare_service_binding_required": true,
+    "target_worker_deployed_before_executor_required": true,
+    "persistence_worker_deployed_before_executor_required": true,
+    "workers_dev_allowed": false,
+    "preview_urls_allowed": false,
+    "generic_public_execution_route_allowed": false,
+    "post_deploy_internal_rpc_probe_required": true,
+    "transport_probe_may_authorize_quarantine_side_effect": false,
+    "transport_probe_expected_rejection": "invalid_policy_record"
+  },
+  "secrets": {
+    "verification_secret_name": "WARDVEIL_AUTH_VERIFICATION_KEY",
+    "pre_provisioned_encrypted_worker_secret_required": true,
+    "workflow_reads_secret_value": false,
+    "workflow_prints_secret_value": false,
+    "source_control_secret_value_allowed": false,
+    "generated_config_secret_value_allowed": false
+  },
+  "runtime_evidence": {
+    "revision_bound_manifest_required": true,
+    "target_worker_existence_required": true,
+    "persistence_worker_existence_required": true,
+    "executor_post_deploy_existence_required": true,
+    "internal_transport_probe_required": true,
+    "real_quarantine_mutation_and_readback_required_for_acceptance": true,
+    "production_signature_and_key_management_required_for_acceptance": true,
+    "production_service_identity_and_revocation_required_for_acceptance": true,
+    "runtime_failure_and_reconciliation_exercises_required_for_acceptance": true,
+    "privacy_shield_acceptance_required": true,
+    "everkeep_acceptance_required_when_applicable": true,
+    "workflow_can_set_acceptance_status_accepted": false,
+    "workflow_can_authorize_protected_by_wardveil_claim": false
+  },
+  "privacy": {
+    "raw_resource_content_required": false,
+    "credentials_in_evidence_allowed": false,
+    "secret_values_in_evidence_allowed": false,
+    "raw_url_required": false,
+    "user_facing_filename_required": false,
+    "data_minimization_required": true
+  },
+  "production_runtime_status": "unaccepted"
+}

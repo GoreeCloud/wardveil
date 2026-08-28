@@ -49,6 +49,20 @@ The candidate uses the existing `goreecloud-wardveil-persistence` service bindin
 
 The current HMAC verification secret exists only to preserve conformance compatibility with the Foundation 0.9 reference authorization scheme. It is not approved production cryptography or production key management.
 
+## Cloudflare deployment gate
+
+`.github/workflows/deploy-cloudflare-quarantine-executor.yml` and `contracts/wardveil.quarantine-executor-deployment.json` define the controlled deployment gate for the source candidate. This workflow is manual, main-branch-only, exact-revision-bound, and attached to the `wardveil-production` GitHub environment. It does not make deployment equivalent to production acceptance.
+
+A dispatch must provide a real existing target Worker and an explicit least-privilege subset of `mail_attachment`, `drive_file`, `browser_download`, and `ai_artifact`. The workflow rejects `REPLACE_AT_DEPLOYMENT`, rejects Wardveil control-plane Workers as target resource authorities, rejects empty/duplicate/unknown resource types, and verifies both the selected target Worker and `goreecloud-wardveil-persistence` already exist before the executor is deployed. This follows the Cloudflare service-binding requirement that a downstream Worker exist before a Worker that binds to it is deployed.
+
+The generated production Wrangler configuration is ephemeral. It replaces only the deployment target and the explicitly approved resource-type subset while preserving `workers_dev=false`, `preview_urls=false`, and `WARDVEIL_PRODUCTION_RUNTIME_STATUS=unaccepted`. It is deleted after the workflow. The tracked source configuration keeps its placeholder so a target identity is never silently promoted into repository truth.
+
+`WARDVEIL_AUTH_VERIFICATION_KEY` must be pre-provisioned as an encrypted Worker secret. The deployment workflow checks only the secret name through Wrangler and never reads, prints, writes to source, or copies the secret value into the generated configuration. The workflow deliberately does not run `wrangler secret put`, because secret bootstrap/rotation is a separate controlled key-management operation.
+
+After deployment, `cloudflare/quarantine-executor-acceptance-runner/` starts only on loopback and calls the deployed executor through a remote Cloudflare service binding. Its probe is intentionally non-mutating: it submits a deliberately invalid policy and requires the exact `invalid_policy_record` rejection. Because the executor checks its deployment target before policy parsing, this proves that internal RPC reaches a deployed executor whose source placeholder has been replaced, without creating a valid execution authorization or invoking the target quarantine adapter.
+
+The deployment evidence manifest stays `unaccepted`. A successful deployment and non-mutating transport probe still do not prove the selected target implements the required idempotency/readback interface, that a quarantine side effect succeeded, that production cryptography/key lifecycle is accepted, or that Privacy Shield/Everkeep requirements are satisfied.
+
 ## Privacy Shield and Everkeep boundaries
 
 The executor requires only minimized scope, authorization metadata, policy evidence references, target-state references, and bounded quarantine reason metadata. Raw file bodies, attachment contents, URLs, user-facing filenames, credentials, tokens, and signing secrets are not required by the shared execution record. Privacy Shield remains the privacy and minimization authority.
@@ -57,6 +71,6 @@ Everkeep remains GoreeCloud's resilience, recovery, backup, and restore-verifica
 
 ## Production acceptance
 
-Production runtime status remains `unaccepted`. Source tests and TypeScript compilation do not prove deployed quarantine enforcement.
+Production runtime status remains `unaccepted`. Source tests, TypeScript compilation, a successful gated Worker deployment, and a non-mutating internal transport probe do not prove deployed quarantine enforcement.
 
-Acceptance still requires approved production signature verification and key management, production service identity, least-privilege inbound service bindings, a real authorized quarantine target binding, deployed durable claim/receipt storage, target-side idempotency and readback evidence, recovery-safe persistence of Quarantine and Audit evidence, key rotation/revocation exercises, crash/replay/tamper/timeout/conflict/persistence-failure tests, Security Center runtime provenance, quarantine release/recovery evidence, Privacy Shield acceptance, and applicable Everkeep acceptance.
+Acceptance still requires approved production signature verification and key management, production service identity, least-privilege inbound service bindings, a real authorized quarantine target binding, deployed durable claim/receipt storage, target-side idempotency and readback evidence from an authorized controlled quarantine exercise, recovery-safe persistence of Quarantine and Audit evidence, key rotation/revocation exercises, crash/replay/tamper/timeout/conflict/persistence-failure tests, Security Center runtime provenance, quarantine release/recovery evidence, Privacy Shield acceptance, and applicable Everkeep acceptance.
