@@ -5,14 +5,19 @@ from __future__ import annotations
 
 import hashlib
 import json
+import sys
 import threading
 import urllib.error
 import urllib.request
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
-from reference.wardveil_clamav import ClamAVConfig, ClamAVVerdict
-from reference.wardveil_clamav_runtime import ClamAVRuntimePolicy
-from reference.wardveil_scan_service import (
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from reference.wardveil_clamav import ClamAVConfig, ClamAVVerdict  # noqa: E402
+from reference.wardveil_clamav_runtime import ClamAVRuntimePolicy  # noqa: E402
+from reference.wardveil_scan_service import (  # noqa: E402
     SCAN_PATH,
     ScanServiceRequest,
     ScanServiceRequestError,
