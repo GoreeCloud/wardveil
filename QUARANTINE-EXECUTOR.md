@@ -63,6 +63,18 @@ After deployment, `cloudflare/quarantine-executor-acceptance-runner/` starts onl
 
 The deployment evidence manifest stays `unaccepted`. A successful deployment and non-mutating transport probe still do not prove the selected target implements the required idempotency/readback interface, that a quarantine side effect succeeded, that production cryptography/key lifecycle is accepted, or that Privacy Shield/Everkeep requirements are satisfied.
 
+## GoreeCloud Drive target source milestone
+
+GoreeCloud Drive is the first Wardveil Scan consumer with a source-implemented resource-owner quarantine target for `drive_file`. Drive PR #23 merged as `700e9b3bee4e5428ff8512a149365322b9a2fd1a`; its exact CI-tested head was `a856648a5dc2ffdd7a48f1d7632c579cd31fdafa`. Both revisions resolve to source tree `fef22bef5f3897a786f53a9b3284ef5d8ab34132`, so the merged content is identical to the content that passed Drive CI run #41.
+
+The Drive implementation preserves the authority boundary required by this executor. Drive owns actual file state and isolation. Its storage layer records a durable pending quarantine operation before the side effect, preserves the payload in a private quarantine namespace before removing the active object, permits only exact idempotent replay, rejects conflicting operations, and treats payload/state disagreement as reconciliation-required. Quarantine remains isolation rather than deletion.
+
+Drive also provides `goreecloud-drive-quarantine-target`, an internal-RPC-only Cloudflare Worker source bridge. Workers.dev and preview URLs are disabled. The bridge accepts only canonical `drive_file` scope and forwards minimized requests to Drive's dedicated internal apply/read boundary using deployment-secret service authorization. The Worker is transport only; it cannot make itself authoritative for Drive content.
+
+Drive includes its own exact-revision deployment workflow and a non-mutating remote readback probe. Neither has been executed as production evidence in this Wardveil record. `contracts/wardveil.drive.quarantine-target-source-evidence.json` therefore records the target as source-implemented but explicitly not deployed and not production-accepted.
+
+When production prerequisites are later satisfied, the Wardveil quarantine-executor deployment gate can bind only `drive_file` to `goreecloud-drive-quarantine-target`. That future binding still requires the target Worker to exist first, the Drive backend to be deployed behind its approved security boundary, the Wardveil verification secret to be provisioned separately, and a controlled disposable quarantine mutation plus exact readback to pass. Source evidence does not satisfy those runtime requirements.
+
 ## Privacy Shield and Everkeep boundaries
 
 The executor requires only minimized scope, authorization metadata, policy evidence references, target-state references, and bounded quarantine reason metadata. Raw file bodies, attachment contents, URLs, user-facing filenames, credentials, tokens, and signing secrets are not required by the shared execution record. Privacy Shield remains the privacy and minimization authority.
@@ -71,6 +83,6 @@ Everkeep remains GoreeCloud's resilience, recovery, backup, and restore-verifica
 
 ## Production acceptance
 
-Production runtime status remains `unaccepted`. Source tests, TypeScript compilation, a successful gated Worker deployment, and a non-mutating internal transport probe do not prove deployed quarantine enforcement.
+Production runtime status remains `unaccepted`. Source tests, TypeScript compilation, a successful gated Worker deployment, a source-implemented Drive target, and a non-mutating internal transport probe do not prove deployed quarantine enforcement.
 
-Acceptance still requires approved production signature verification and key management, production service identity, least-privilege inbound service bindings, a real authorized quarantine target binding, deployed durable claim/receipt storage, target-side idempotency and readback evidence from an authorized controlled quarantine exercise, recovery-safe persistence of Quarantine and Audit evidence, key rotation/revocation exercises, crash/replay/tamper/timeout/conflict/persistence-failure tests, Security Center runtime provenance, quarantine release/recovery evidence, Privacy Shield acceptance, and applicable Everkeep acceptance.
+Acceptance still requires approved production signature verification and key management, production service identity, least-privilege inbound service bindings, a deployed authorized quarantine target binding, deployed durable claim/receipt storage, target-side idempotency and readback evidence from an authorized controlled quarantine exercise, recovery-safe persistence of Quarantine and Audit evidence, key rotation/revocation exercises, crash/replay/tamper/timeout/conflict/persistence-failure tests, Security Center runtime provenance, quarantine release/recovery evidence, Privacy Shield acceptance, and applicable Everkeep acceptance.
