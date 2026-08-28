@@ -23,6 +23,13 @@ All notable source-controlled changes to the Wardveil Security foundation are re
 - Added focused service-identity/key-lifecycle tests covering rotation, retirement, revocation, unknown keys, algorithm mismatch, capability denial, identity suspension/revocation, and key/authorization expiry precedence.
 - Added a separate `cloudflare/authorization-issuer/` Worker source candidate with a required encrypted signing-secret binding, fixed issuer/executor/key identities, exact policy/digest/scope/action/TTL revalidation, Worker-RPC signing, and health-only public HTTP.
 - Added exact-revision CI validation and TypeScript compilation for both Cloudflare Wardveil Workers.
+- Added `QUARANTINE-EXECUTOR.md`, `contracts/wardveil.quarantine-executor.json`, and `reference/wardveil_quarantine_executor.py` for the first bounded high-impact Wardveil Protect executor dedicated to `quarantine`.
+- Added exact target-state readback, target-side idempotency, durable pre-side-effect claim handling, fail-closed uncertain-outcome reconciliation, non-destructive pending quarantine records, and nonsecret authorization provenance for Audit and Security Center.
+- Added `cloudflare/quarantine-executor/` as a non-public Worker source candidate with persistence and target service bindings, a checked-in `REPLACE_AT_DEPLOYMENT` target placeholder, and explicit `unaccepted` runtime status.
+- Added focused quarantine executor tests covering successful execution, target timeout/readback failure, identity/key denial, exact idempotent replay, and receipt-persistence failure after a possible side effect.
+- Added `.github/workflows/deploy-cloudflare-quarantine-executor.yml` and `contracts/wardveil.quarantine-executor-deployment.json` as the exact-revision, manual, least-privilege Cloudflare deployment gate for the quarantine executor.
+- Added `cloudflare/quarantine-executor-acceptance-runner/`, a local-only remote-service-binding probe that verifies deployed executor reachability and runtime placeholder replacement without creating a valid policy/authorization or authorizing a quarantine side effect.
+- Added deployment validation that requires a pre-existing target Worker and persistence Worker, an explicit resource-type subset, a pre-provisioned encrypted verification secret, disabled Workers.dev/preview URLs, ephemeral generated configuration, revision-bound evidence, and continued `unaccepted` runtime status.
 
 ### Changed
 
@@ -35,6 +42,9 @@ All notable source-controlled changes to the Wardveil Security foundation are re
 - Strengthened runtime authorization so signing-key identity is part of the signed authorization material and unknown, revoked, issuer-mismatched, or algorithm-mismatched keys fail closed in the identity-aware path.
 - Separated the Cloudflare authorization-issuer source candidate from the persistence Durable Object so persistence does not become a key-management or signing authority.
 - Extended compatibility metadata to treat service identity/key lifecycle as a separately versioned interoperability domain.
+- Extended Wardveil Protect from a generic high-impact execution reference to a concrete quarantine-only source path while preserving the target system as resource authority and Quarantine as distinct from deletion.
+- Extended Cloudflare deployment discipline so a production-candidate quarantine executor dispatch cannot silently inherit the broad source resource list or the source target placeholder; both target identity and the authorized resource-type subset must be supplied and validated at dispatch.
+- Extended exact-revision CI to validate the quarantine execution contract, the Cloudflare deployment gate, the local-only remote-binding acceptance runner, and all associated TypeScript source.
 
 ### Security invariants
 
@@ -50,8 +60,15 @@ All notable source-controlled changes to the Wardveil Security foundation are re
 - Retired signing keys cannot create new authorizations, may verify only during a bounded overlap, and become unusable immediately if revoked.
 - `signing_key_id` is nonsecret provenance metadata; the corresponding key material remains separate and must never be copied into Wardveil Audit or Security Center evidence.
 - The Cloudflare authorization-issuer candidate exposes no public signing route. Signing is designed for authenticated internal Worker RPC/service-binding use, while `/healthz` remains the only public HTTP function.
-- The in-memory HMAC, service-identity/keyring, and execution-state references are conformance mechanisms only. Cloudflare Worker source is deployable source only. Production runtime acceptance still requires approved cryptography/key management, authenticated production service identities and transport, least-privilege bindings, deployed durable state, authorized high-impact executors, Audit/Security Center integration, reconciliation procedures, rotation/revocation evidence, and runtime failure/recovery evidence.
-- `Protected by Wardveil` remains evidence-scoped and is not authorized by the existence of a runtime-authorization envelope, service identity, signing key, or durable execution-state claim alone.
+- A quarantine target call is not a successful quarantine result without exact authoritative target-state readback bound to the same operation identity.
+- Quarantine remains non-destructive pending review. Release and removal require separate explicit authority, and a quarantine transport binding does not become resource authority.
+- Target timeout, ambiguous outcome, failed readback, or post-side-effect receipt persistence loss remains reconciliation-required and never authorizes blind re-execution.
+- The tracked Cloudflare quarantine executor configuration retains `REPLACE_AT_DEPLOYMENT`; a deployment target is selected only through the controlled deployment gate and is not silently committed as production truth.
+- A quarantine deployment must explicitly narrow the resource-type allow-list. The source list is not implicit production authorization.
+- The verification secret must be pre-provisioned as an encrypted Worker secret; the deployment workflow reads only secret names and does not bootstrap, print, or persist secret material.
+- The deployment acceptance runner is deliberately non-mutating. A passing internal service-binding probe does not establish target idempotency/readback behavior or successful quarantine enforcement.
+- The in-memory HMAC, service-identity/keyring, execution-state, and quarantine-executor references are conformance mechanisms only. Cloudflare Worker source and deployment workflows are deployable source only. Production runtime acceptance still requires approved cryptography/key management, authenticated production service identities and transport, deployed durable state, authorized target-side quarantine integration, controlled real mutation/readback evidence, Audit/Security Center integration, reconciliation procedures, rotation/revocation evidence, Privacy Shield acceptance, applicable Everkeep evidence, and runtime failure/recovery exercises.
+- `Protected by Wardveil` remains evidence-scoped and is not authorized by the existence of a runtime-authorization envelope, service identity, signing key, durable execution-state claim, quarantine-executor deployment, or non-mutating transport probe alone.
 
 ## 0.8.0 — 2026-08-26
 
@@ -89,7 +106,7 @@ All notable source-controlled changes to the Wardveil Security foundation are re
 
 ### Changed
 
-- Advanced the Wardveil Security foundation to 0.7.0.
+- Advanced the foundation version to 0.7.0.
 - Updated the canonical relationship metadata from the older Browser-specific Privacy Shield label to the platform-wide `GoreeCloud Privacy Shield` identity.
 - Updated the repository status to reflect the approved canonical icon, implemented public Wardveil site, and versioned Privacy Shield interoperability contract.
 - Clarified that Wardveil 0.7 remains read-only by default and that application-owned remediation remains outside the shared foundation.
