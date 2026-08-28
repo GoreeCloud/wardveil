@@ -94,11 +94,14 @@ def main() -> None:
     require(evidence.get("source_evidence_is_deployment_claim") is False, "source evidence must not claim deployment")
     require(evidence.get("source_evidence_is_production_protection_claim") is False, "source evidence must not claim protection")
 
-    executor_resource_types = set(executor.get("resource_types") or [])
+    executor_resource_types = set(executor.get("initial_resource_types") or [])
     require("drive_file" in executor_resource_types, "Wardveil executor must retain drive_file integration scope")
     require(executor.get("production_runtime_status") == "unaccepted", "Wardveil executor must remain runtime-unaccepted")
+    require((executor.get("target_adapter") or {}).get("deployment_target_is_source_placeholder") is True, "Wardveil executor source target must remain a placeholder")
     require(deployment.get("production_runtime_status") == "unaccepted", "Wardveil executor deployment gate must remain runtime-unaccepted")
-    require(deployment.get("source_candidate_is_deployed") is False, "Wardveil deployment contract must not claim deployed executor")
+    require((deployment.get("deployment") or {}).get("source_placeholder_may_be_deployed") is False, "Wardveil deployment gate must reject source placeholder")
+    require((deployment.get("runtime_evidence") or {}).get("workflow_can_set_acceptance_status_accepted") is False, "deployment workflow must not self-accept runtime")
+    require((deployment.get("runtime_evidence") or {}).get("workflow_can_authorize_protected_by_wardveil_claim") is False, "deployment workflow must not authorize protection claim")
 
     print("Drive quarantine target source evidence validation passed")
 
