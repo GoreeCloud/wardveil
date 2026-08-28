@@ -44,7 +44,7 @@ def main() -> int:
         "X-Wardveil-Resource-ID",
         "X-Wardveil-Digest-SHA256",
         "resource_digest_mismatch",
-        "scan_result",
+        "as_runtime_record",
     ):
         require(service, token, "scan service")
     forbid(service, "0.0.0.0", "scan service")
