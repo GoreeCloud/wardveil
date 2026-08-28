@@ -18,6 +18,7 @@ from reference.wardveil_scan_service import (  # noqa: E402
     LOOPBACK_HOST,
     WardveilScanService,
     build_http_server,
+    credentials_from_json,
 )
 
 
@@ -32,10 +33,12 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    token = os.environ.get("WARDVEIL_SCAN_SERVICE_TOKEN", "")
     try:
-        service = WardveilScanService()
-        server = build_http_server(service, token, port=args.port)
+        credentials = credentials_from_json(
+            os.environ.get("WARDVEIL_SCAN_CALLERS_JSON", "")
+        )
+        service = WardveilScanService(credentials=credentials)
+        server = build_http_server(service, port=args.port)
     except (TypeError, ValueError) as exc:
         print(f"Wardveil Scan service configuration rejected: {exc}", file=sys.stderr)
         return 2
