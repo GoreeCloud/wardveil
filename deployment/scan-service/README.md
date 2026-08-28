@@ -25,7 +25,7 @@ The checked-in `.env.example` contains non-secret runtime tuning only. Caller se
 
 `/etc/goreecloud/wardveil/scan-callers.json`
 
-The systemd unit delivers this file to the DynamicUser process with `LoadCredential`. The source example `scan-callers.example.json` intentionally contains an unusable placeholder; copying it unchanged must fail credential validation.
+The systemd `LoadCredential` directive delivers this file to the DynamicUser process without placing caller secrets in the service environment. The source example `scan-callers.example.json` intentionally contains an unusable placeholder; copying it unchanged must fail credential validation.
 
 A production credential entry has this shape, but the secret value must be generated and stored outside source control and ordinary documentation:
 
