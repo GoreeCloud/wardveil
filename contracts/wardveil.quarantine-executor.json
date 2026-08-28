@@ -1,0 +1,116 @@
+{
+  "contract": "goreecloud.wardveil.quarantine-executor",
+  "contract_version": "0.1.0",
+  "foundation_version": "0.9.0",
+  "purpose": "Define the first bounded high-impact Wardveil Protect executor for quarantine with identity-bound authorization, durable execution state, target-side idempotency and readback, non-destructive quarantine state, and audit provenance.",
+  "action": "quarantine",
+  "executor_identity": "wardveil-quarantine-executor-runtime",
+  "authorization": {
+    "signed_execution_authorization_required": true,
+    "service_identity_required": true,
+    "active_executor_identity_required": true,
+    "active_or_bounded_retired_verification_key_required": true,
+    "revoked_key_fails_closed": true,
+    "suspended_or_revoked_executor_fails_closed": true,
+    "exact_policy_digest_binding_required": true,
+    "exact_action_scope_executor_and_correlation_binding_required": true,
+    "maximum_authorization_ttl_seconds": 300,
+    "authenticated_internal_transport_required": true,
+    "generic_public_execution_api_allowed": false
+  },
+  "durable_execution": {
+    "pre_execution_claim_required": true,
+    "claim_precedes_target_side_effect": true,
+    "exact_finalized_retry_returns_original_receipt": true,
+    "pending_claim_retry_disposition": "execution_reconciliation_required",
+    "blind_reexecution_after_uncertain_outcome_allowed": false,
+    "receipt_persistence_failure_after_possible_side_effect_requires_reconciliation": true
+  },
+  "target_adapter": {
+    "explicit_target_binding_required": true,
+    "target_side_idempotency_required": true,
+    "operation_id_bound_to_authorization_digest": true,
+    "successful_apply_without_state_readback_is_sufficient": false,
+    "exact_quarantine_state_readback_required_for_success": true,
+    "ambiguous_or_timeout_outcome": "execution_reconciliation_required",
+    "conflicting_existing_target_state_fails_closed": true,
+    "deployment_target_is_source_placeholder": true
+  },
+  "initial_resource_types": [
+    "mail_attachment",
+    "drive_file",
+    "browser_download",
+    "ai_artifact"
+  ],
+  "quarantine_semantics": {
+    "quarantine_is_deletion": false,
+    "new_quarantine_review_state": "pending",
+    "release_requires_separate_explicit_authority": true,
+    "removal_requires_separate_explicit_destructive_authority": true,
+    "target_state_reference_required_for_success": true
+  },
+  "audit_and_security_center": {
+    "authoritative_execution_receipt_required": true,
+    "audit_event_required": true,
+    "authorization_provenance_fields": [
+      "authorization_id",
+      "issuer_id",
+      "executor_id",
+      "signing_key_id",
+      "signature_algorithm"
+    ],
+    "authorization_provenance_is_hash_bound_in_reference_audit_chain": true,
+    "signing_key_material_allowed": false,
+    "credentials_or_tokens_allowed": false,
+    "security_center_may_surface_nonsecret_provenance": true,
+    "provenance_alone_creates_protected_state": false
+  },
+  "privacy": {
+    "raw_resource_content_required": false,
+    "user_facing_filename_required": false,
+    "raw_url_required": false,
+    "credentials_allowed": false,
+    "tokens_allowed": false,
+    "signing_key_material_allowed": false,
+    "data_minimization_required": true
+  },
+  "cloudflare_source_candidate": {
+    "worker": "goreecloud-wardveil-quarantine-executor",
+    "rpc_method": "executeQuarantine",
+    "workers_dev_enabled": false,
+    "preview_urls_enabled": false,
+    "public_fetch_behavior": "404",
+    "persistence_service_binding": "WARDVEIL_PERSISTENCE_SERVICE",
+    "target_service_binding": "WARDVEIL_QUARANTINE_TARGET",
+    "target_service_binding_value": "REPLACE_AT_DEPLOYMENT",
+    "reference_verification_secret_binding": "WARDVEIL_AUTH_VERIFICATION_KEY",
+    "reference_signature_algorithm": "HMAC-SHA256-reference-only",
+    "production_signature_algorithm_accepted": false
+  },
+  "authority_boundaries": {
+    "wardveil_policy_decision_is_execution_proof": false,
+    "signed_authorization_grants_target_resource_authority": false,
+    "service_binding_grants_target_resource_authority": false,
+    "durable_claim_proves_target_side_effect": false,
+    "target_adapter_remains_authoritative_for_target_state": true,
+    "privacy_shield_authority_transferred": false,
+    "everkeep_recovery_authority_transferred": false,
+    "goreecloud_mesh_execution_authority_transferred": false
+  },
+  "production_runtime_status": "unaccepted",
+  "remaining_acceptance_requirements": [
+    "approved production signature verification architecture and key management",
+    "production service identity issuance and authentication",
+    "least-privilege inbound executor service binding",
+    "authorized real quarantine target service binding replacing the source placeholder",
+    "deployed durable execution claim and receipt storage",
+    "target-side idempotency and exact quarantine-state readback in a real resource owner",
+    "atomic or recovery-safe persistence of quarantine and audit evidence after execution",
+    "runtime key rotation and immediate revocation evidence",
+    "runtime timeout, crash, replay, tamper, target-conflict, and persistence-failure exercises",
+    "Security Center runtime provenance visibility",
+    "authorized quarantine release and recovery evidence",
+    "Privacy Shield runtime data-minimization acceptance",
+    "applicable Everkeep recovery acceptance"
+  ]
+}

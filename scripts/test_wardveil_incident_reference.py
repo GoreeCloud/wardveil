@@ -83,6 +83,29 @@ def test_audit_chain_detects_tampering():
     assert not verify_audit_chain((first, tampered))
 
 
+def test_audit_authorization_provenance_is_hash_bound():
+    provenance = {
+        "authorization_id": "authz-1",
+        "issuer_id": "wardveil-policy-runtime",
+        "executor_id": "wardveil-quarantine-executor-runtime",
+        "signing_key_id": "wardveil-auth-current",
+        "signature_algorithm": "HMAC-SHA256-reference-only",
+    }
+    event = append_audit_event(
+        record_id="a-provenance", correlation_id="c-provenance", producer_id="wardveil-audit-runtime",
+        scope=SCOPE, event_type="quarantine.execution", outcome="success",
+        actor_id="wardveil-quarantine-executor-runtime", evidence_refs=("exec-receipt:1",),
+        authorization_provenance=provenance, now=NOW,
+    )
+    assert verify_audit_chain((event,))
+    runtime = event.as_runtime_record()
+    assert runtime["authorization_provenance"] == provenance
+    tampered_provenance = dict(provenance)
+    tampered_provenance["signing_key_id"] = "different-key"
+    tampered = event.__class__(**{**event.__dict__, "authorization_provenance": tampered_provenance})
+    assert not verify_audit_chain((tampered,))
+
+
 def test_incident_transitions_are_ordered_and_authorized():
     incident = create_incident(
         record_id="i-1", correlation_id="c-5", producer_id="wardveil-response-reference",
