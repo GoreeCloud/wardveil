@@ -22,10 +22,12 @@ from reference.wardveil_clamav_runtime import ClamAVRuntimePolicy  # noqa: E402
 from reference.wardveil_scan_service import (  # noqa: E402
     SCAN_PATH,
     CallerCredential,
+    InMemoryReplayLedger,
     ScanServiceRequest,
     ScanServiceRequestError,
     WardveilScanService,
     build_http_server,
+    credentials_from_json,
     sign_scan_request,
 )
 
@@ -60,6 +62,9 @@ class FakeClamAVClient:
 
     def scan_bytes(self, data: bytes) -> ClamAVVerdict:
         self.scan_calls += 1
+        return self._verdict(data)
+
+    def _verdict(self, data: bytes) -> ClamAVVerdict:
         digest = hashlib.sha256(data).hexdigest()
         if self.mode == "malicious":
             return ClamAVVerdict(
@@ -89,6 +94,20 @@ class FakeClamAVClient:
         )
 
 
+class BlockingClamAVClient(FakeClamAVClient):
+    def __init__(self):
+        super().__init__("clean")
+        self.entered = threading.Event()
+        self.release = threading.Event()
+
+    def scan_bytes(self, data: bytes) -> ClamAVVerdict:
+        self.scan_calls += 1
+        self.entered.set()
+        if not self.release.wait(timeout=2):
+            raise RuntimeError("blocking scanner test timed out")
+        return self._verdict(data)
+
+
 def credential(*, active: bool = True) -> CallerCredential:
     return CallerCredential(
         caller_id="goreecloud-drive",
@@ -99,21 +118,33 @@ def credential(*, active: bool = True) -> CallerCredential:
     )
 
 
-def service(mode: str = "clean", *, active: bool = True) -> tuple[WardveilScanService, FakeClamAVClient]:
-    client = FakeClamAVClient(mode)
+def build_service(
+    client: FakeClamAVClient,
+    *,
+    active: bool = True,
+    replay_ledger: InMemoryReplayLedger | None = None,
+) -> WardveilScanService:
     cred = credential(active=active)
-    return (
-        WardveilScanService(
-            credentials={(cred.caller_id, cred.key_id): cred},
-            client=client,
-            policy=ClamAVRuntimePolicy(
-                max_signature_age=timedelta(hours=48),
-                health_validity=timedelta(minutes=5),
-            ),
-            now=lambda: FIXED_NOW,
+    return WardveilScanService(
+        credentials={(cred.caller_id, cred.key_id): cred},
+        client=client,
+        policy=ClamAVRuntimePolicy(
+            max_signature_age=timedelta(hours=48),
+            health_validity=timedelta(minutes=5),
         ),
-        client,
+        replay_ledger=replay_ledger,
+        now=lambda: FIXED_NOW,
     )
+
+
+def service(
+    mode: str = "clean",
+    *,
+    active: bool = True,
+    replay_ledger: InMemoryReplayLedger | None = None,
+) -> tuple[WardveilScanService, FakeClamAVClient]:
+    client = FakeClamAVClient(mode)
+    return build_service(client, active=active, replay_ledger=replay_ledger), client
 
 
 def request_for(content: bytes, **changes: object) -> ScanServiceRequest:
@@ -141,6 +172,14 @@ def expect_service_error(code: str, fn) -> None:
         assert exc.code == code, (exc.code, code)
     else:
         raise AssertionError(f"expected {code}")
+
+
+def expect_value_error(fn) -> None:
+    try:
+        fn()
+    except ValueError:
+        return
+    raise AssertionError("expected ValueError")
 
 
 def test_consumer_compatible_records() -> None:
@@ -224,6 +263,38 @@ def test_inactive_caller_fails_closed() -> None:
     assert client.scan_calls == 0
 
 
+def test_credential_json_is_strict_and_placeholder_fails() -> None:
+    valid = json.dumps(
+        [
+            {
+                "caller_id": "goreecloud-drive",
+                "key_id": "scan-current",
+                "secret": "s" * 32,
+                "resource_types": ["drive_file"],
+                "active": True,
+            }
+        ]
+    )
+    parsed = credentials_from_json(valid)
+    assert parsed[("goreecloud-drive", "scan-current")].active is True
+
+    expect_value_error(
+        lambda: credentials_from_json(
+            valid.replace('"active": true', '"active": "false"')
+        )
+    )
+    expect_value_error(
+        lambda: credentials_from_json(
+            valid.replace('"resource_types": ["drive_file"]', '"resource_types": "drive_file"')
+        )
+    )
+    expect_value_error(
+        lambda: credentials_from_json(
+            valid.replace("s" * 32, "REPLACE_WITH_PRODUCTION_SECRET")
+        )
+    )
+
+
 def test_exact_replay_returns_identical_envelope_without_rescan() -> None:
     content = b"sample"
     scan_service, client = service("clean")
@@ -242,6 +313,46 @@ def test_conflicting_nonce_reuse_fails_closed() -> None:
     conflicting = request_for(second_content, nonce="nonce-001", correlation_id="corr-002")
     expect_service_error("scan_nonce_conflict", lambda: scan_service.scan(conflicting, second_content))
     assert client.scan_calls == 1
+
+
+def test_replay_ledger_is_bounded_and_expiring() -> None:
+    ledger = InMemoryReplayLedger(max_entries=1, ttl=timedelta(seconds=1))
+    first = request_for(b"first")
+    second = request_for(b"second", nonce="nonce-002", correlation_id="corr-002")
+    assert ledger.claim(first, "a" * 64, now=FIXED_NOW)[0] == "new"
+    assert ledger.claim(second, "b" * 64, now=FIXED_NOW)[0] == "capacity"
+    assert (
+        ledger.claim(second, "b" * 64, now=FIXED_NOW + timedelta(seconds=2))[0]
+        == "new"
+    )
+
+
+def test_concurrent_exact_request_does_not_duplicate_scan() -> None:
+    content = b"concurrent"
+    client = BlockingClamAVClient()
+    scan_service = build_service(client)
+    request = request_for(content)
+    outcome: dict[str, object] = {}
+
+    def first_scan() -> None:
+        try:
+            outcome["result"] = scan_service.scan(request, content)
+        except Exception as exc:  # pragma: no cover - surfaced by assertion below
+            outcome["error"] = exc
+
+    thread = threading.Thread(target=first_scan)
+    thread.start()
+    assert client.entered.wait(timeout=1)
+    expect_service_error(
+        "scan_request_already_in_progress",
+        lambda: scan_service.scan(request, content),
+    )
+    client.release.set()
+    thread.join(timeout=2)
+    assert not thread.is_alive()
+    assert "error" not in outcome
+    assert client.scan_calls == 1
+    assert isinstance(outcome.get("result"), dict)
 
 
 def http_request(
@@ -316,8 +427,60 @@ def test_http_auth_binding_and_generic_errors() -> None:
         thread.join(timeout=2)
 
 
+def test_http_rejects_bad_signature_before_body_ingestion() -> None:
+    scan_service, _ = service("clean")
+    server = build_http_server(scan_service, port=available_loopback_port())
+    port = server.server_address[1]
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        declared_size = 100_000
+        request = replace(
+            request_for(b""),
+            nonce="nonce-preauth",
+            correlation_id="corr-preauth",
+            digest_sha256="a" * 64,
+            size_bytes=declared_size,
+            signature="f" * 64,
+        )
+        headers = [
+            "POST /v1/scan HTTP/1.1",
+            f"Host: 127.0.0.1:{port}",
+            "Content-Type: application/octet-stream",
+            f"Content-Length: {declared_size}",
+            f"X-Wardveil-Caller-ID: {request.caller_id}",
+            f"X-Wardveil-Key-ID: {request.key_id}",
+            f"X-Wardveil-Timestamp: {request.timestamp}",
+            f"X-Wardveil-Nonce: {request.nonce}",
+            f"X-Wardveil-Resource-Type: {request.resource_type}",
+            f"X-Wardveil-Resource-ID: {request.resource_id}",
+            f"X-Wardveil-Digest-SHA256: {request.digest_sha256}",
+            f"X-Wardveil-Size-Bytes: {request.size_bytes}",
+            f"X-Wardveil-Action: {request.action}",
+            f"X-Wardveil-Correlation-ID: {request.correlation_id}",
+            f"X-Wardveil-Signature: {request.signature}",
+            "Connection: close",
+            "",
+            "",
+        ]
+        with socket.create_connection(("127.0.0.1", port), timeout=1) as client:
+            client.settimeout(1)
+            client.sendall("\r\n".join(headers).encode("ascii"))
+            response = client.recv(4096)
+        assert b" 401 " in response
+        assert b"scan_request_rejected" in response
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=2)
+
+
 def main() -> int:
-    tests = [value for name, value in sorted(globals().items()) if name.startswith("test_") and callable(value)]
+    tests = [
+        value
+        for name, value in sorted(globals().items())
+        if name.startswith("test_") and callable(value)
+    ]
     for test in tests:
         test()
     print(f"Wardveil authenticated Scan service tests passed ({len(tests)} cases).")
