@@ -1,0 +1,19 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "goreecloud-wardveil-quarantine-executor-acceptance-runner",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-28",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "preview_urls": false,
+  "vars": {
+    "EXPECTED_REVISION": "REPLACE_AT_RUNTIME"
+  },
+  "services": [
+    {
+      "binding": "WARDVEIL_QUARANTINE_EXECUTOR",
+      "service": "goreecloud-wardveil-quarantine-executor",
+      "remote": true
+    }
+  ]
+}
