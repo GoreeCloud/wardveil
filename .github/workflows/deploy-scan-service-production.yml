@@ -1,0 +1,262 @@
+name: Deploy Wardveil Scan authenticated transport
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected_sha:
+        description: Exact main commit SHA approved for Wardveil Scan transport deployment
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wardveil-scan-service-production
+  cancel-in-progress: false
+
+jobs:
+  deploy-and-probe:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: wardveil-production
+    env:
+      WARDVEIL_VPS_HOST: ${{ secrets.WARDVEIL_VPS_HOST }}
+      WARDVEIL_VPS_USER: ${{ secrets.WARDVEIL_VPS_USER }}
+      WARDVEIL_VPS_SSH_PRIVATE_KEY: ${{ secrets.WARDVEIL_VPS_SSH_PRIVATE_KEY }}
+      WARDVEIL_VPS_SSH_HOST_KEY: ${{ secrets.WARDVEIL_VPS_SSH_HOST_KEY }}
+
+    steps:
+      - name: Check out exact source revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
+
+      - name: Verify approved main revision
+        env:
+          EXPECTED_SHA: ${{ inputs.expected_sha }}
+        run: |
+          set -euo pipefail
+          test -n "$EXPECTED_SHA"
+          test "$GITHUB_SHA" = "$EXPECTED_SHA"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+          test "$GITHUB_REF" = "refs/heads/main"
+
+      - name: Verify required VPS deployment secrets
+        run: |
+          set -euo pipefail
+          test -n "$WARDVEIL_VPS_HOST"
+          test -n "$WARDVEIL_VPS_USER"
+          test -n "$WARDVEIL_VPS_SSH_PRIVATE_KEY"
+          test -n "$WARDVEIL_VPS_SSH_HOST_KEY"
+
+      - name: Establish pinned SSH host trust
+        run: |
+          set -euo pipefail
+          install -d -m 0700 "$HOME/.ssh"
+          printf '%s\n' "$WARDVEIL_VPS_SSH_PRIVATE_KEY" > "$HOME/.ssh/wardveil_vps"
+          chmod 0600 "$HOME/.ssh/wardveil_vps"
+          printf '%s\n' "$WARDVEIL_VPS_SSH_HOST_KEY" > "$HOME/.ssh/known_hosts"
+          chmod 0600 "$HOME/.ssh/known_hosts"
+          ssh-keygen -F "$WARDVEIL_VPS_HOST" -f "$HOME/.ssh/known_hosts" >/dev/null
+          ssh \
+            -i "$HOME/.ssh/wardveil_vps" \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
+            "$WARDVEIL_VPS_USER@$WARDVEIL_VPS_HOST" \
+            'hostname >/dev/null'
+
+      - name: Build exact-revision deployment bundle
+        run: |
+          set -euo pipefail
+          archive="/tmp/wardveil-scan-${GITHUB_SHA}.tgz"
+          tar -czf "$archive" \
+            contracts/wardveil.scan-service-transport.json \
+            deployment/scan-service \
+            reference/wardveil_scan_service.py \
+            reference/wardveil_clamav.py \
+            reference/wardveil_clamav_runtime.py \
+            reference/wardveil_detect_scan.py \
+            scripts/serve_wardveil_scan.py \
+            scripts/probe_wardveil_scan_service.py
+          sha256sum "$archive" > "$archive.sha256"
+
+      - name: Transfer deployment bundle
+        run: |
+          set -euo pipefail
+          archive="/tmp/wardveil-scan-${GITHUB_SHA}.tgz"
+          scp \
+            -i "$HOME/.ssh/wardveil_vps" \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
+            "$archive" "$archive.sha256" \
+            "$WARDVEIL_VPS_USER@$WARDVEIL_VPS_HOST:/tmp/"
+
+      - name: Deploy service and run authenticated clean/EICAR probe
+        run: |
+          set -euo pipefail
+          ssh \
+            -i "$HOME/.ssh/wardveil_vps" \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
+            "$WARDVEIL_VPS_USER@$WARDVEIL_VPS_HOST" \
+            "bash -s -- '$GITHUB_SHA'" <<'REMOTE'
+          set -euo pipefail
+          revision="$1"
+          base=/opt/goreecloud/wardveil/scan-service
+          release="$base/releases/$revision"
+          evidence="$base/evidence/$revision.json"
+          archive="/tmp/wardveil-scan-$revision.tgz"
+          checksum="$archive.sha256"
+          callers=/etc/goreecloud/wardveil/scan-callers.json
+          previous=""
+
+          sudo -n true
+          command -v python3 >/dev/null
+          command -v curl >/dev/null
+          command -v sha256sum >/dev/null
+          command -v systemctl >/dev/null
+          command -v ss >/dev/null
+          test -f /etc/goreecloud/wardveil/clamav.env
+          sudo test -f "$callers"
+          test "$(sudo stat -c '%U:%G' "$callers")" = "root:root"
+          callers_mode="$(sudo stat -c '%a' "$callers")"
+          case "$callers_mode" in
+            400|600) ;;
+            *) echo "Wardveil Scan caller credential file must be mode 0400 or 0600" >&2; exit 1 ;;
+          esac
+
+          cd /tmp
+          sha256sum --check "$checksum"
+
+          if [ -L "$base/current" ]; then
+            previous="$(readlink -f "$base/current" || true)"
+          fi
+
+          sudo install -d -m 0755 "$base/releases" "$base/evidence"
+          sudo rm -rf "$release"
+          sudo install -d -m 0755 "$release"
+          sudo tar -xzf "$archive" -C "$release"
+          sudo chown -R root:root "$release"
+          sudo chmod -R go-w "$release"
+
+          sudo env PYTHONPATH="$release" python3 - "$callers" <<'PY'
+          import sys
+          from pathlib import Path
+          from reference.wardveil_scan_service import credentials_from_json
+
+          path = Path(sys.argv[1])
+          credentials = credentials_from_json(path.read_text(encoding="utf-8"))
+          active = [item for item in credentials.values() if item.active]
+          if not active:
+              raise SystemExit("at least one active Wardveil Scan caller is required")
+          PY
+
+          rollback() {
+            set +e
+            if [ -n "$previous" ] && [ -d "$previous" ]; then
+              sudo ln -sfn "$previous" "$base/current"
+              sudo systemctl daemon-reload
+              sudo systemctl restart wardveil-scan.service
+            else
+              sudo systemctl stop wardveil-scan.service
+            fi
+          }
+          trap 'rollback' ERR
+
+          sudo ln -sfn "$release" "$base/current"
+          sudo install -m 0644 \
+            "$release/deployment/scan-service/wardveil-scan.service" \
+            /etc/systemd/system/wardveil-scan.service
+          sudo systemctl daemon-reload
+          sudo systemctl enable wardveil-scan.service >/dev/null
+          sudo systemctl restart wardveil-scan.service
+
+          ready=false
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent --show-error http://127.0.0.1:8791/healthz >/dev/null; then
+              ready=true
+              break
+            fi
+            sleep 1
+          done
+          if [ "$ready" != true ]; then
+            sudo journalctl -u wardveil-scan.service --no-pager -n 100 || true
+            false
+          fi
+
+          listener="$(sudo ss -ltnH 'sport = :8791')"
+          test -n "$listener"
+          printf '%s\n' "$listener" | grep -Eq '127\.0\.0\.1:8791|\[::ffff:127\.0\.0\.1\]:8791'
+          if printf '%s\n' "$listener" | grep -Eq '0\.0\.0\.0:8791|\[::\]:8791'; then
+            echo "Wardveil Scan listener is not loopback-only" >&2
+            false
+          fi
+
+          sudo env \
+            PYTHONPATH="$release" \
+            WARDVEIL_SCAN_PROBE_URL=http://127.0.0.1:8791 \
+            python3 "$release/scripts/probe_wardveil_scan_service.py" \
+              --callers-file "$callers" \
+              > "/tmp/wardveil-scan-evidence-$revision.json"
+          sudo install -m 0644 \
+            "/tmp/wardveil-scan-evidence-$revision.json" \
+            "$evidence"
+          sudo rm -f "/tmp/wardveil-scan-evidence-$revision.json"
+          trap - ERR
+          sudo rm -f "$archive" "$checksum"
+          REMOTE
+
+      - name: Retrieve sanitized transport evidence
+        run: |
+          set -euo pipefail
+          scp \
+            -i "$HOME/.ssh/wardveil_vps" \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
+            "$WARDVEIL_VPS_USER@$WARDVEIL_VPS_HOST:/opt/goreecloud/wardveil/scan-service/evidence/${GITHUB_SHA}.json" \
+            /tmp/wardveil-scan-production-evidence.json
+          python3 -m json.tool /tmp/wardveil-scan-production-evidence.json >/dev/null
+          grep -q '"authenticated_transport": "passed"' /tmp/wardveil-scan-production-evidence.json
+          grep -q '"consumer_envelope_compatibility": "passed"' /tmp/wardveil-scan-production-evidence.json
+          grep -q '"clean_control": "passed"' /tmp/wardveil-scan-production-evidence.json
+          grep -q '"eicar_detection": "passed"' /tmp/wardveil-scan-production-evidence.json
+          grep -q '"application_consumer_integration": "not_proven_by_probe"' /tmp/wardveil-scan-production-evidence.json
+          grep -q '"production_service_identity": "not_proven_by_probe"' /tmp/wardveil-scan-production-evidence.json
+          grep -q '"quarantine_execution": "not_proven_by_probe"' /tmp/wardveil-scan-production-evidence.json
+          grep -q '"production_runtime_acceptance": "unaccepted"' /tmp/wardveil-scan-production-evidence.json
+
+      - name: Record deployment evidence summary
+        run: |
+          set -euo pipefail
+          {
+            echo '## Wardveil Scan authenticated transport deployment'
+            echo
+            echo "- Exact deployed source revision: \`$GITHUB_SHA\`"
+            echo '- Bind: loopback-only HTTP transport'
+            echo '- Caller credentials: protected file delivered with systemd LoadCredential'
+            echo '- Authenticated transport probe: passed'
+            echo '- Consumer-envelope compatibility: passed'
+            echo '- Clean control through Wardveil Scan: passed'
+            echo '- EICAR detection through Wardveil Scan: passed'
+            echo '- Direct ClamAV application access: prohibited'
+            echo '- Application consumer integration: **not proven by this probe**'
+            echo '- Production service identity/key management: **not proven by this probe**'
+            echo '- Authorized quarantine execution: **not proven by this probe**'
+            echo '- Production runtime acceptance: **unaccepted**'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Remove local SSH material
+        if: always()
+        run: |
+          rm -f "$HOME/.ssh/wardveil_vps" "$HOME/.ssh/known_hosts"

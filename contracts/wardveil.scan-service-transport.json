@@ -1,0 +1,113 @@
+{
+  "contract": "goreecloud.wardveil.scan-service-transport",
+  "contract_version": "0.1.0",
+  "foundation_version": "0.9.0",
+  "purpose": "Authenticate first-party Wardveil Scan consumers and bind every scan request to exact resource metadata and content digest while keeping ClamAV private and replaceable.",
+  "endpoint": {
+    "method": "POST",
+    "path": "/v1/scan",
+    "content_type": "application/octet-stream",
+    "bind": "127.0.0.1:8791",
+    "public_anonymous_access_allowed": false,
+    "direct_clamav_access_allowed": false,
+    "authenticate_headers_before_body_ingestion": true,
+    "request_body_timeout_seconds": 30,
+    "default_max_concurrent_scans": 8
+  },
+  "request_authentication": {
+    "scheme": "HMAC-SHA256-reference-transport",
+    "production_signature_scheme_accepted": false,
+    "required_fields": [
+      "caller_id",
+      "key_id",
+      "timestamp",
+      "nonce",
+      "action",
+      "resource_type",
+      "resource_id",
+      "correlation_id",
+      "size_bytes",
+      "digest_sha256",
+      "signature"
+    ],
+    "signature_binds_all_required_fields_except_signature": true,
+    "signature_binds_body_digest": true,
+    "constant_time_verification_required": true,
+    "maximum_clock_skew_seconds": 60,
+    "caller_resource_type_allowlist_required": true,
+    "unknown_or_inactive_caller_fails_closed": true,
+    "unknown_key_fails_closed": true,
+    "digest_or_size_mismatch_fails_closed": true,
+    "conflicting_nonce_reuse_fails_closed": true,
+    "exact_nonce_replay_returns_identical_cached_envelope": true
+  },
+  "credential_handling": {
+    "source_example_contains_usable_secret": false,
+    "inline_secret_environment_variable_allowed": false,
+    "production_secret_file": "/etc/goreecloud/wardveil/scan-callers.json",
+    "systemd_load_credential_required": true,
+    "runtime_credential_directory_supported": true,
+    "caller_key_rotation_and_revocation_production_accepted": false
+  },
+  "replay_protection": {
+    "source_implementation": "bounded-thread-safe-expiring-in-memory-ledger",
+    "thread_safe": true,
+    "default_max_entries": 4096,
+    "default_ttl_seconds": 180,
+    "capacity_exhaustion_fails_closed": true,
+    "conflicting_nonce_reuse_fails_closed": true,
+    "exact_replay_returns_cached_envelope": true,
+    "multi_instance_durable_replay_protection_accepted": false
+  },
+  "initial_resource_types": [
+    "mail_attachment",
+    "drive_file",
+    "browser_download",
+    "ai_artifact"
+  ],
+  "response": {
+    "shape": "consumer_scan_envelope",
+    "resource_digest_sha256_required": true,
+    "scan_record_type": "scan_finding",
+    "scan_record_result_field": "result",
+    "generic_scan_result_field_allowed_in_consumer_envelope": false,
+    "authoritative_producer_required": true,
+    "exact_resource_scope_required": true,
+    "evidence_refs_required_for_clean": true
+  },
+  "scanner_health": {
+    "clean_requires_current_acceptable_health": true,
+    "scanner_health_evidence_ref_required": true,
+    "malicious_match_remains_actionable_when_health_degraded": true,
+    "scanner_unavailable_cannot_return_clean": true
+  },
+  "privacy": {
+    "raw_resource_content_in_response_allowed": false,
+    "authentication_secret_in_logs_allowed": false,
+    "user_facing_filename_required": false,
+    "raw_url_required": false,
+    "credentials_in_shared_evidence_allowed": false,
+    "default_http_access_log_enabled": false,
+    "data_minimization_required": true
+  },
+  "authority_boundaries": {
+    "wardveil_scan_owns_represented_security_verdict": true,
+    "application_remains_resource_authority": true,
+    "scan_result_authorizes_quarantine_by_itself": false,
+    "privacy_shield_authority_transferred": false,
+    "everkeep_recovery_authority_transferred": false
+  },
+  "production_runtime_status": "unaccepted",
+  "remaining_acceptance_requirements": [
+    "approved production service authentication and key management",
+    "deployed Wardveil Scan transport bound to accepted scanner runtime",
+    "at least one deployed application consumer using the authenticated transport",
+    "consumer-level clean EICAR unavailable stale-health and replay tests",
+    "durable multi-instance or deployment-appropriate replay protection",
+    "runtime key rotation and revocation evidence",
+    "rate limiting and abuse-resistance acceptance",
+    "Audit and Security Center transport provenance",
+    "Privacy Shield runtime data-minimization acceptance",
+    "authorized quarantine execution evidence"
+  ]
+}

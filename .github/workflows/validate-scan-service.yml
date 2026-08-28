@@ -27,18 +27,33 @@ jobs:
       - name: Verify exact source revision
         env:
           EXPECTED_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
-        run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
 
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.13"
 
+      - name: Validate JSON contracts and sanitized examples
+        run: |
+          set -euo pipefail
+          python3 -m json.tool contracts/wardveil.scan-service-transport.json >/dev/null
+          python3 -m json.tool deployment/scan-service/scan-callers.example.json >/dev/null
+
       - name: Compile authenticated Scan transport
-        run: python3 -m py_compile reference/wardveil_scan_service.py scripts/serve_wardveil_scan.py scripts/test_wardveil_scan_service.py scripts/validate_wardveil_scan_service.py
+        run: |
+          set -euo pipefail
+          python3 -m py_compile \
+            reference/wardveil_scan_service.py \
+            scripts/serve_wardveil_scan.py \
+            scripts/probe_wardveil_scan_service.py \
+            scripts/test_wardveil_scan_service.py \
+            scripts/validate_wardveil_scan_service.py
 
       - name: Test authenticated Scan transport
         run: python3 scripts/test_wardveil_scan_service.py
 
-      - name: Validate deployment boundary
+      - name: Validate deployment and acceptance boundaries
         run: python3 scripts/validate_wardveil_scan_service.py
