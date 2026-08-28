@@ -11,6 +11,7 @@ SERVER = ROOT / "deployment" / "scan-service" / "server.py"
 UNIT = ROOT / "deployment" / "scan-service" / "wardveil-scan.service"
 ENV_EXAMPLE = ROOT / "deployment" / "scan-service" / ".env.example"
 PROBE = ROOT / "scripts" / "probe_wardveil_scan_service.py"
+WORKFLOW = ROOT / ".github" / "workflows" / "deploy-scan-service-production.yml"
 
 
 def require(condition: bool, message: str) -> None:
@@ -19,7 +20,7 @@ def require(condition: bool, message: str) -> None:
 
 
 def main() -> None:
-    for path in (CONTRACT, REFERENCE, SERVER, UNIT, ENV_EXAMPLE, PROBE):
+    for path in (CONTRACT, REFERENCE, SERVER, UNIT, ENV_EXAMPLE, PROBE, WORKFLOW):
         require(path.is_file(), f"missing Wardveil Scan transport file: {path.relative_to(ROOT)}")
 
     contract = json.loads(CONTRACT.read_text())
@@ -28,6 +29,7 @@ def main() -> None:
     unit = UNIT.read_text()
     env_example = ENV_EXAMPLE.read_text()
     probe = PROBE.read_text()
+    workflow = WORKFLOW.read_text()
 
     require(contract.get("contract_version") == "0.1.0", "unexpected scan transport contract version")
     require(contract.get("foundation_version") == "0.9.0", "scan transport foundation version mismatch")
@@ -84,7 +86,7 @@ def main() -> None:
     ):
         require(token in reference, f"missing scan transport implementation invariant: {token}")
 
-    require('WARDVEIL_SCAN_CALLERS_JSON' in server, "scan server must require caller credentials")
+    require("WARDVEIL_SCAN_CALLERS_JSON" in server, "scan server must require caller credentials")
     require('WARDVEIL_SCAN_BIND", "127.0.0.1:8788"' in server, "scan server must default to loopback")
     require("non-loopback scan bind requires" in server, "scan server must fail closed on non-loopback bind")
     require("log_message" in server and "return" in server, "scan server must suppress metadata-bearing default logs")
@@ -97,12 +99,31 @@ def main() -> None:
     require("ProtectSystem=strict" in unit, "scan systemd unit must protect system filesystem")
 
     require("WARDVEIL_SCAN_CALLERS_JSON=[]" in env_example, "example must not contain caller secret material")
-    serialized = (reference + server + unit + env_example + probe).lower()
+    serialized = (reference + server + unit + env_example + probe + workflow).lower()
     for forbidden in ("access_token=", "password=", "private_key", "authorization: bearer"):
         require(forbidden not in serialized, f"potential secret material found in scan transport source: {forbidden}")
 
     require("EICAR" in probe and "clean_control" in probe, "runtime probe must cover clean and EICAR")
     require('"application_consumer_integration": "not_proven_by_probe"' in probe, "probe must not overclaim app integration")
+
+    for token in (
+        "name: Deploy Wardveil Scan authenticated transport",
+        "workflow_dispatch:",
+        "expected_sha:",
+        "environment: wardveil-production",
+        "WARDVEIL_VPS_SSH_HOST_KEY",
+        "/etc/goreecloud/wardveil/scan-service.env",
+        "probe_wardveil_scan_service.py",
+        'application_consumer_integration',
+        'not_proven_by_probe',
+        "previous=",
+    ):
+        require(token in workflow, f"missing Wardveil Scan deployment invariant: {token}")
+    require("${{ secrets.WARDVEIL_SCAN_CALLERS_JSON }}" not in workflow, "deployment workflow must not bootstrap caller secrets from GitHub Actions")
+    require("WARDVEIL_SCAN_CALLERS_JSON=[]" not in workflow, "deployment workflow must not install empty source credentials")
+    require("systemctl restart wardveil-scan.service" in workflow, "deployment workflow must restart the scan service")
+    require("curl --fail --silent --show-error http://127.0.0.1:8788/healthz" in workflow, "deployment workflow must verify loopback service health")
+    require("Production runtime acceptance: **unaccepted**" in workflow, "deployment workflow must preserve unaccepted runtime status")
 
     print("Wardveil Scan authenticated transport validation passed")
 
