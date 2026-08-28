@@ -9,12 +9,17 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from hashlib import sha256
+import json
 from typing import Iterable
 
 
 REVIEW_STATES = {"pending", "under_review", "released", "removed", "retained"}
 INCIDENT_STATES = {"open", "contained", "remediating", "recovering", "verified", "closed"}
 SEVERITIES = {"informational", "low", "medium", "high", "critical"}
+
+
+def _canonical(value: object) -> str:
+    return json.dumps(value, sort_keys=True, separators=(",", ":"))
 
 
 @dataclass(frozen=True)
@@ -85,6 +90,7 @@ class AuditEvent:
     evidence_refs: tuple[str, ...]
     previous_event_hash: str | None = None
     event_hash: str | None = None
+    authorization_provenance: dict | None = None
 
     def material(self) -> str:
         return "|".join([
@@ -99,6 +105,7 @@ class AuditEvent:
             self.actor_id,
             ",".join(self.evidence_refs),
             self.previous_event_hash or "",
+            _canonical(self.authorization_provenance or {}),
         ])
 
     def with_hash(self) -> "AuditEvent":
@@ -123,6 +130,8 @@ class AuditEvent:
             data["previous_event_hash"] = self.previous_event_hash
         if self.event_hash:
             data["event_hash"] = self.event_hash
+        if self.authorization_provenance:
+            data["authorization_provenance"] = dict(self.authorization_provenance)
         return data
 
 
@@ -193,14 +202,27 @@ def transition_quarantine(record: QuarantineRecord, new_state: str, authority: A
 def append_audit_event(
     *, record_id: str, correlation_id: str, producer_id: str, scope: Scope,
     event_type: str, outcome: str, actor_id: str, evidence_refs: Iterable[str],
-    previous: AuditEvent | None = None, now: datetime | None = None,
+    previous: AuditEvent | None = None, authorization_provenance: dict | None = None,
+    now: datetime | None = None,
 ) -> AuditEvent:
     refs = tuple(evidence_refs)
     if not refs:
         raise ValueError("audit event requires evidence references")
+    provenance = dict(authorization_provenance) if authorization_provenance else None
+    if provenance is not None:
+        allowed = {"authorization_id", "issuer_id", "executor_id", "signing_key_id", "signature_algorithm"}
+        if set(provenance) - allowed:
+            raise ValueError("unsupported_authorization_provenance_field")
+        required = {"authorization_id", "issuer_id", "executor_id", "signing_key_id"}
+        if not required.issubset(provenance) or any(not provenance[key] for key in required):
+            raise ValueError("incomplete_authorization_provenance")
+        forbidden_tokens = {"secret", "private_key", "signing_key", "credential", "token"}
+        if any(token in key.lower() for key in provenance for token in forbidden_tokens if key != "signing_key_id"):
+            raise ValueError("secret_material_not_allowed_in_audit_provenance")
     event = AuditEvent(
         record_id, correlation_id, producer_id, scope, now or datetime.now(timezone.utc),
         event_type, outcome, actor_id, refs, previous.event_hash if previous else None,
+        None, provenance,
     )
     return event.with_hash()
 
