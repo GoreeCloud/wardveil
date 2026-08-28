@@ -2,7 +2,7 @@
 
 Wardveil Security is GoreeCloud's platform-wide first-party security system and shared security plane. It coordinates evidence-backed trust, policy, protection, detection, scanning, quarantine, incident response, audit, and security-center experiences across GoreeCloud.
 
-> **Current status:** Foundation 0.9 active. Wardveil adds replay-resistant runtime execution authorization, durable execution-state/reconciliation, service identity and signing-key lifecycle, and a bounded source-level Quarantine executor that requires target-side idempotency plus exact state readback. Production runtime acceptance remains separate and fail closed.
+> **Current status:** Foundation 0.9 active. Wardveil adds replay-resistant runtime execution authorization, durable execution-state/reconciliation, service identity and signing-key lifecycle, a bounded source-level Quarantine executor, and an exact-revision Cloudflare deployment gate that preserves explicit target authority and least privilege. Production runtime acceptance remains separate and fail closed.
 
 ## First-party security capabilities
 
@@ -96,6 +96,8 @@ Audit can hash-bind nonsecret `authorization_id`, `issuer_id`, `executor_id`, `s
 
 `cloudflare/quarantine-executor/` is internal-RPC-only source with public fetch fixed to `404`, Workers.dev and preview URLs disabled, a durable persistence service binding, and an explicit `REPLACE_AT_DEPLOYMENT` target-service placeholder. The Worker refuses execution until an authorized target is configured. No production quarantine service is claimed by source alone.
 
+The Cloudflare deployment gate is defined by `.github/workflows/deploy-cloudflare-quarantine-executor.yml` and `contracts/wardveil.quarantine-executor-deployment.json`. A manual production dispatch must identify an already deployed target Worker and an explicit least-privilege resource-type subset. The workflow verifies target and persistence Worker existence, requires the verification secret to be pre-provisioned without reading its value, generates an ephemeral configuration, keeps Workers.dev and preview URLs disabled, deploys the executor, and runs a local-only non-mutating remote service-binding probe. The probe can prove internal executor reachability and that the deployment placeholder was replaced; it cannot prove a quarantine mutation or authorize production acceptance.
+
 ## Shared contracts and specifications
 
 - `ARCHITECTURE.md` — canonical first-party security architecture and responsibility boundaries.
@@ -104,7 +106,7 @@ Audit can hash-bind nonsecret `authorization_id`, `issuer_id`, `executor_id`, `s
 - `RUNTIME-AUTHORIZATION.md` and `contracts/wardveil.runtime-authorization.json` — cross-service execution authorization, exact binding, replay, idempotency, and production-acceptance boundary.
 - `EXECUTION-STATE.md` and `contracts/wardveil.execution-state.json` — durable authorization claims, uncertain-outcome handling, idempotency state, execution receipts, and deployment boundary.
 - `SERVICE-IDENTITY.md` and `contracts/wardveil.service-identity.json` — service identities, capability binding, signing-key identity, rotation, revocation, and production key-management boundary.
-- `QUARANTINE-EXECUTOR.md` and `contracts/wardveil.quarantine-executor.json` — bounded high-impact quarantine execution, target idempotency/readback, reconciliation, Audit provenance, and Cloudflare source-candidate boundary.
+- `QUARANTINE-EXECUTOR.md`, `contracts/wardveil.quarantine-executor.json`, and `contracts/wardveil.quarantine-executor-deployment.json` — bounded high-impact quarantine execution, target idempotency/readback, deployment gating, reconciliation, Audit provenance, and Cloudflare acceptance boundaries.
 - `STATUS.md` and `contracts/wardveil.status.schema.json` — evidence-backed Wardveil status semantics.
 - `AGGREGATION.md` and `contracts/wardveil.aggregation.vectors.json` — conservative multi-record aggregation.
 - `PRIVACY-SHIELD.md` and `contracts/wardveil.privacy-shield.vectors.json` — privacy-safe read-only Privacy Shield presentation boundary.
@@ -145,7 +147,7 @@ The product direction is **Wardveil Malware Protection** within Wardveil Securit
 
 ## Protected by Wardveil
 
-`Protected by Wardveil` may be asserted only for an explicit scope backed by current authoritative evidence showing that a Wardveil control or Wardveil-authorized producer actually enforced or verified the represented protection. A Wardveil icon, a Security Center screen, a ClamAV installation, ClamAV health evidence, a runtime-authorization envelope, a service identity, a signing key, a durable execution-state claim, a quarantine-executor source candidate, or a Privacy Shield status record does not independently authorize that claim.
+`Protected by Wardveil` may be asserted only for an explicit scope backed by current authoritative evidence showing that a Wardveil control or Wardveil-authorized producer actually enforced or verified the represented protection. A Wardveil icon, a Security Center screen, a ClamAV installation, ClamAV health evidence, a runtime-authorization envelope, a service identity, a signing key, a durable execution-state claim, a quarantine-executor source/deployment candidate, or a Privacy Shield status record does not independently authorize that claim.
 
 ## Validation
 
@@ -163,6 +165,7 @@ python3 scripts/validate_wardveil_execution_state.py
 python3 scripts/test_wardveil_quarantine_executor.py
 python3 scripts/validate_wardveil_quarantine_executor.py
 python3 scripts/validate_cloudflare_quarantine_executor.py
+python3 scripts/validate_cloudflare_quarantine_executor_deployment.py
 python3 scripts/test_wardveil_detect_scan_reference.py
 python3 scripts/test_wardveil_clamav.py
 python3 scripts/test_wardveil_clamav_runtime.py
@@ -172,8 +175,8 @@ python3 scripts/validate_wardveil_aggregation.py
 python3 scripts/validate_wardveil_privacy_shield.py
 ```
 
-CI validates the canonical capability set, lifecycle, version alignment, runtime authorization, service identity/key lifecycle, durable execution claims/receipts, bounded quarantine execution and target-readback semantics, Audit/Security Center provenance, evidence boundaries, all Wardveil Cloudflare Worker source candidates, ClamAV protocol/runtime-health/deployment invariants, aggregation, Privacy Shield separation, repository governance, icon state, and public-site tooling against the exact source revision.
+CI validates the canonical capability set, lifecycle, version alignment, runtime authorization, service identity/key lifecycle, durable execution claims/receipts, bounded quarantine execution and target-readback semantics, the quarantine deployment gate and non-mutating service-binding probe, Audit/Security Center provenance, evidence boundaries, all Wardveil Cloudflare Worker source candidates, ClamAV protocol/runtime-health/deployment invariants, aggregation, Privacy Shield separation, repository governance, icon state, and public-site tooling against the exact source revision.
 
 ## Release discipline
 
-Foundation releases keep `VERSION`, `contracts/wardveil.identity.json`, `contracts/wardveil.capabilities.json`, runtime-authorization, service-identity, execution-state, and quarantine-executor metadata, `CHANGELOG.md`, compatibility metadata, validator expectations, and the README current-status declaration synchronized. Product-specific and runtime-specific production acceptance remains separate from Wardveil foundation acceptance.
+Foundation releases keep `VERSION`, `contracts/wardveil.identity.json`, `contracts/wardveil.capabilities.json`, runtime-authorization, service-identity, execution-state, quarantine-executor/deployment metadata, `CHANGELOG.md`, compatibility metadata, validator expectations, and the README current-status declaration synchronized. Product-specific and runtime-specific production acceptance remains separate from Wardveil foundation acceptance.
