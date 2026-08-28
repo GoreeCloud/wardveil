@@ -9,7 +9,10 @@
     "content_type": "application/octet-stream",
     "bind": "127.0.0.1:8791",
     "public_anonymous_access_allowed": false,
-    "direct_clamav_access_allowed": false
+    "direct_clamav_access_allowed": false,
+    "authenticate_headers_before_body_ingestion": true,
+    "request_body_timeout_seconds": 30,
+    "default_max_concurrent_scans": 8
   },
   "request_authentication": {
     "scheme": "HMAC-SHA256-reference-transport",
@@ -27,6 +30,7 @@
       "digest_sha256",
       "signature"
     ],
+    "signature_binds_all_required_fields_except_signature": true,
     "signature_binds_body_digest": true,
     "constant_time_verification_required": true,
     "maximum_clock_skew_seconds": 60,
@@ -36,6 +40,24 @@
     "digest_or_size_mismatch_fails_closed": true,
     "conflicting_nonce_reuse_fails_closed": true,
     "exact_nonce_replay_returns_identical_cached_envelope": true
+  },
+  "credential_handling": {
+    "source_example_contains_usable_secret": false,
+    "inline_secret_environment_variable_allowed": false,
+    "production_secret_file": "/etc/goreecloud/wardveil/scan-callers.json",
+    "systemd_load_credential_required": true,
+    "runtime_credential_directory_supported": true,
+    "caller_key_rotation_and_revocation_production_accepted": false
+  },
+  "replay_protection": {
+    "source_implementation": "bounded-thread-safe-expiring-in-memory-ledger",
+    "thread_safe": true,
+    "default_max_entries": 4096,
+    "default_ttl_seconds": 180,
+    "capacity_exhaustion_fails_closed": true,
+    "conflicting_nonce_reuse_fails_closed": true,
+    "exact_replay_returns_cached_envelope": true,
+    "multi_instance_durable_replay_protection_accepted": false
   },
   "initial_resource_types": [
     "mail_attachment",
@@ -65,6 +87,7 @@
     "user_facing_filename_required": false,
     "raw_url_required": false,
     "credentials_in_shared_evidence_allowed": false,
+    "default_http_access_log_enabled": false,
     "data_minimization_required": true
   },
   "authority_boundaries": {
@@ -80,7 +103,7 @@
     "deployed Wardveil Scan transport bound to accepted scanner runtime",
     "at least one deployed application consumer using the authenticated transport",
     "consumer-level clean EICAR unavailable stale-health and replay tests",
-    "durable or deployment-appropriate replay protection",
+    "durable multi-instance or deployment-appropriate replay protection",
     "runtime key rotation and revocation evidence",
     "rate limiting and abuse-resistance acceptance",
     "Audit and Security Center transport provenance",
