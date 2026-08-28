@@ -1,0 +1,319 @@
+name: Deploy Wardveil quarantine executor
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected_sha:
+        description: Exact main commit SHA approved for deployment
+        required: true
+        type: string
+      quarantine_target_service:
+        description: Existing authorized Cloudflare Worker that owns target quarantine state
+        required: true
+        type: string
+      authorized_resource_types:
+        description: Comma-separated least-privilege subset of mail_attachment,drive_file,browser_download,ai_artifact
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wardveil-quarantine-executor-production
+  cancel-in-progress: false
+
+jobs:
+  deploy-and-probe:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: wardveil-production
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      QUARANTINE_TARGET_SERVICE: ${{ inputs.quarantine_target_service }}
+      QUARANTINE_RESOURCE_TYPES: ${{ inputs.authorized_resource_types }}
+      GENERATED_CONFIG: quarantine-executor/wrangler.production.generated.jsonc
+    steps:
+      - name: Check out exact source revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
+
+      - name: Verify approved main revision
+        env:
+          EXPECTED_SHA: ${{ inputs.expected_sha }}
+        run: |
+          set -euo pipefail
+          test -n "$EXPECTED_SHA"
+          test "$GITHUB_SHA" = "$EXPECTED_SHA"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+          test "$GITHUB_REF" = "refs/heads/main"
+
+      - name: Validate deployment scope
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os
+          import re
+
+          target = os.environ['QUARANTINE_TARGET_SERVICE'].strip()
+          if target == 'REPLACE_AT_DEPLOYMENT':
+              raise SystemExit('source placeholder is not a deployable quarantine target')
+          if not re.fullmatch(r'[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?', target):
+              raise SystemExit('quarantine target service must be a bounded lowercase Worker name')
+          forbidden = {
+              'goreecloud-wardveil-quarantine-executor',
+              'goreecloud-wardveil-persistence',
+              'goreecloud-wardveil-authorization-issuer',
+              'goreecloud-wardveil-acceptance-probe',
+          }
+          if target in forbidden:
+              raise SystemExit('Wardveil control-plane Worker cannot be used as target resource authority')
+
+          allowed = {'mail_attachment', 'drive_file', 'browser_download', 'ai_artifact'}
+          requested = [item.strip() for item in os.environ['QUARANTINE_RESOURCE_TYPES'].split(',') if item.strip()]
+          if not requested:
+              raise SystemExit('at least one authorized quarantine resource type is required')
+          if len(requested) != len(set(requested)):
+              raise SystemExit('duplicate authorized quarantine resource type')
+          unknown = sorted(set(requested) - allowed)
+          if unknown:
+              raise SystemExit('unsupported authorized quarantine resource type: ' + ','.join(unknown))
+          print('deployment scope validated for ' + ','.join(sorted(requested)))
+          PY
+
+      - name: Verify required Cloudflare credentials are present
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+
+      - name: Verify target and persistence Workers already exist
+        run: |
+          set -euo pipefail
+          curl --fail-with-body --silent --show-error \
+            --header "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts" \
+            > /tmp/wardveil-workers.json
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          payload = json.loads(Path('/tmp/wardveil-workers.json').read_text())
+          if payload.get('success') is not True:
+              raise SystemExit('Cloudflare Worker inventory request failed')
+          names = {str(item.get('id')) for item in payload.get('result', []) if item.get('id')}
+          required = {'goreecloud-wardveil-persistence', os.environ['QUARANTINE_TARGET_SERVICE'].strip()}
+          missing = sorted(required - names)
+          if missing:
+              raise SystemExit('required Worker does not exist before executor deployment: ' + ','.join(missing))
+          print('required downstream Workers exist')
+          PY
+
+      - name: Generate bounded production configuration
+        working-directory: cloudflare
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          source = Path('quarantine-executor/wrangler.jsonc')
+          output = Path(os.environ['GENERATED_CONFIG'])
+          config = json.loads(source.read_text())
+          target = os.environ['QUARANTINE_TARGET_SERVICE'].strip()
+          resource_types = ','.join(
+              item.strip() for item in os.environ['QUARANTINE_RESOURCE_TYPES'].split(',') if item.strip()
+          )
+          if config.get('workers_dev') is not False or config.get('preview_urls') is not False:
+              raise SystemExit('quarantine executor public routes must remain disabled')
+          config['vars']['WARDVEIL_QUARANTINE_TARGET_SERVICE'] = target
+          config['vars']['WARDVEIL_QUARANTINE_RESOURCE_TYPES'] = resource_types
+          config['vars']['WARDVEIL_PRODUCTION_RUNTIME_STATUS'] = 'unaccepted'
+          found = False
+          for binding in config.get('services', []):
+              if binding.get('binding') == 'WARDVEIL_QUARANTINE_TARGET':
+                  binding['service'] = target
+                  found = True
+          if not found:
+              raise SystemExit('missing WARDVEIL_QUARANTINE_TARGET service binding')
+          output.write_text(json.dumps(config, indent=2) + '\n')
+          print('generated deployment configuration without secret material')
+          PY
+
+      - name: Install exact Wrangler release
+        working-directory: cloudflare
+        run: npm install --no-save --ignore-scripts wrangler@4.37.0
+
+      - name: Require pre-provisioned verification secret
+        working-directory: cloudflare
+        run: |
+          set -euo pipefail
+          npx wrangler secret list --config "$GENERATED_CONFIG" --format json > /tmp/wardveil-quarantine-secrets.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          secrets = json.loads(Path('/tmp/wardveil-quarantine-secrets.json').read_text())
+          names = {item.get('name') for item in secrets}
+          if 'WARDVEIL_AUTH_VERIFICATION_KEY' not in names:
+              raise SystemExit('WARDVEIL_AUTH_VERIFICATION_KEY must be pre-provisioned as an encrypted Worker secret')
+          print('required secret name is provisioned; secret value was not read')
+          PY
+
+      - name: Deploy quarantine executor with internal bindings only
+        working-directory: cloudflare
+        run: npx wrangler deploy --config "$GENERATED_CONFIG"
+
+      - name: Verify executor Worker exists after deployment
+        run: |
+          set -euo pipefail
+          curl --fail-with-body --silent --show-error \
+            --header "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts" \
+            > /tmp/wardveil-workers-after.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          payload = json.loads(Path('/tmp/wardveil-workers-after.json').read_text())
+          names = {str(item.get('id')) for item in payload.get('result', []) if item.get('id')}
+          if 'goreecloud-wardveil-quarantine-executor' not in names:
+              raise SystemExit('deployed quarantine executor was not found in Worker inventory')
+          print('executor Worker exists after deployment')
+          PY
+
+      - name: Start local-only remote-binding acceptance runner
+        working-directory: cloudflare
+        run: |
+          set -euo pipefail
+          cp quarantine-executor-acceptance-runner/wrangler.jsonc /tmp/wardveil-runner.jsonc
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          source = Path('quarantine-executor-acceptance-runner/wrangler.jsonc')
+          config = json.loads(source.read_text())
+          config['main'] = str((source.parent / 'src/index.ts').resolve())
+          config['vars']['EXPECTED_REVISION'] = os.environ['GITHUB_SHA']
+          Path('/tmp/wardveil-runner.jsonc').write_text(json.dumps(config, indent=2) + '\n')
+          PY
+          npx wrangler dev --config /tmp/wardveil-runner.jsonc --ip 127.0.0.1 --port 8791 > /tmp/wardveil-quarantine-runner.log 2>&1 &
+          echo $! > /tmp/wardveil-quarantine-runner.pid
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:8791/healthz > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/wardveil-quarantine-runner.log >&2
+          exit 1
+
+      - name: Verify internal executor transport without target mutation
+        run: |
+          set -euo pipefail
+          code="$(curl --silent --show-error --output /tmp/wardveil-quarantine-transport.json --write-out '%{http_code}' \
+            --request POST \
+            --header 'content-type: application/json' \
+            --data "{\"revision\":\"$GITHUB_SHA\"}" \
+            http://127.0.0.1:8791/probe)"
+          cat /tmp/wardveil-quarantine-transport.json
+          test "$code" = "200"
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          result = json.loads(Path('/tmp/wardveil-quarantine-transport.json').read_text())
+          if result.get('passed') is not True:
+              raise SystemExit('quarantine executor internal transport probe failed')
+          if result.get('observed_rejection') != 'invalid_policy_record':
+              raise SystemExit('unexpected executor probe rejection')
+          if result.get('quarantine_side_effect_authorized') is not False:
+              raise SystemExit('transport probe must remain non-mutating')
+          if result.get('production_runtime_status') != 'unaccepted':
+              raise SystemExit('transport probe must not mark production accepted')
+          PY
+
+      - name: Build revision-bound deployment evidence
+        env:
+          EVIDENCE_SOURCE: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import datetime
+          import json
+          import os
+          from pathlib import Path
+
+          now = datetime.datetime.now(datetime.timezone.utc).isoformat().replace('+00:00', 'Z')
+          transport = json.loads(Path('/tmp/wardveil-quarantine-transport.json').read_text())
+          manifest = {
+              'schema_version': 1,
+              'component': 'Wardveil quarantine executor deployment',
+              'environment': 'production-candidate',
+              'deployed_revision': os.environ['GITHUB_SHA'],
+              'collected_at': now,
+              'source': os.environ['EVIDENCE_SOURCE'],
+              'quarantine_target_service': os.environ['QUARANTINE_TARGET_SERVICE'],
+              'authorized_resource_types': [
+                  item.strip() for item in os.environ['QUARANTINE_RESOURCE_TYPES'].split(',') if item.strip()
+              ],
+              'checks': {
+                  'exact_revision': 'passed',
+                  'target_worker_exists': 'passed',
+                  'persistence_worker_exists': 'passed',
+                  'verification_secret_name_present': 'passed',
+                  'workers_dev_disabled': 'passed',
+                  'preview_urls_disabled': 'passed',
+                  'executor_deployed': 'passed',
+                  'internal_service_binding_transport': 'passed' if transport.get('passed') else 'failed',
+                  'real_quarantine_mutation_and_readback': 'pending',
+                  'production_signature_and_key_management': 'pending',
+                  'production_service_identity_and_revocation': 'pending',
+                  'runtime_failure_and_reconciliation_exercises': 'pending',
+                  'privacy_shield_acceptance': 'pending',
+                  'everkeep_acceptance_if_applicable': 'pending',
+              },
+              'transport_probe_authorized_quarantine_side_effect': False,
+              'acceptance_status': 'unaccepted',
+              'protected_by_wardveil_claim_authorized': False,
+          }
+          Path('/tmp/wardveil-quarantine-deployment-evidence.json').write_text(json.dumps(manifest, indent=2) + '\n')
+          print(json.dumps(manifest, indent=2))
+          PY
+
+      - name: Record deployment evidence summary
+        run: |
+          set -euo pipefail
+          {
+            echo '## Wardveil quarantine executor deployment evidence'
+            echo
+            echo "- Exact deployed revision: \`$GITHUB_SHA\`"
+            echo "- Target Worker: \`$QUARANTINE_TARGET_SERVICE\`"
+            echo "- Authorized resource types: \`$QUARANTINE_RESOURCE_TYPES\`"
+            echo '- Downstream target and persistence Workers existed before deployment'
+            echo '- Verification secret name was pre-provisioned; secret material was not read or printed'
+            echo '- workers.dev and preview URLs remained disabled'
+            echo '- Executor deployment completed'
+            echo '- Internal service-binding transport probe passed without authorizing a quarantine side effect'
+            echo '- Real quarantine mutation/readback evidence: pending'
+            echo '- Production runtime acceptance: **unaccepted**'
+            echo
+            echo '<details><summary>Machine-readable evidence manifest</summary>'
+            echo
+            echo '```json'
+            cat /tmp/wardveil-quarantine-deployment-evidence.json
+            echo '```'
+            echo '</details>'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Clean generated configuration and local runner
+        if: always()
+        working-directory: cloudflare
+        run: |
+          if [ -f /tmp/wardveil-quarantine-runner.pid ]; then
+            kill "$(cat /tmp/wardveil-quarantine-runner.pid)" || true
+          fi
+          rm -f "$GENERATED_CONFIG" /tmp/wardveil-runner.jsonc
