@@ -8,8 +8,12 @@ import os
 import signal
 import sys
 import threading
+from pathlib import Path
 
-from reference.wardveil_scan_service import (
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from reference.wardveil_scan_service import (  # noqa: E402
     DEFAULT_SCAN_SERVICE_PORT,
     LOOPBACK_HOST,
     WardveilScanService,
