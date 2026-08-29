@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.1.0",
+  "schema_version": "1.1.1",
   "system": "wardveil-security",
   "producer_repository": "GoreeCloud/goreecloud-wardveil-security",
   "authority_domains": ["security"],
@@ -16,7 +16,7 @@
   },
   "presentation_consumer": {
     "system": "glaze-ui",
-    "repository": "GoreeCloud/glaze-ui",
+    "repository": "GoreeCloud/goreecloud-glaze-ui",
     "path": "contracts/glaze.evidence-presentation.schema.json",
     "may_upgrade_security_truth": false
   },
@@ -57,6 +57,7 @@
   },
   "authority_rules": [
     "Wardveil remains authoritative for Wardveil-native security assertions.",
+    "GoreeCloud Identity remains authoritative for the actor or service identity used to authenticate delivery; authenticated identity does not establish a positive security outcome.",
     "Mesh validates transport/provenance and must not upgrade, broaden, or reinterpret Wardveil security authority.",
     "Privacy Shield privacy state and Everkeep recovery state may be consumed by Wardveil only through their own producer-authoritative contracts.",
     "Glaze UI may present Wardveil evidence but cannot create, upgrade, or merge Wardveil security truth.",
