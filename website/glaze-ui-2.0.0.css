@@ -51,20 +51,16 @@
   }
 }
 
-:root[data-glaze-clarity="clear"] {
-  --glaze-material-soft-opacity: .62;
-}
-
+:root[data-glaze-clarity="clear"] { --glaze-material-soft-opacity: .62; }
 :root[data-glaze-clarity="solid"] {
   --glaze-material-soft-opacity: .98;
   --glaze-material-soft-blur: 0px;
 }
 
-.glaze-canvas {
-  color: var(--glaze-text-primary);
-}
+.glaze-canvas { color: var(--glaze-text-primary); }
 
-.glaze-material-soft {
+.glaze-material-soft,
+.glass-card {
   color: var(--glaze-text-primary);
   background: color-mix(in srgb, var(--glaze-surface) calc(var(--glaze-material-soft-opacity) * 100%), transparent);
   border: 1px solid var(--glaze-border);
@@ -82,7 +78,6 @@
   border-radius: var(--glaze-shape-control);
   transition: transform calc(var(--glaze-motion-fast) * var(--glaze-motion-scale)) ease-out;
 }
-
 .glaze-button:active { transform: scale(.97); }
 
 .glaze-button:focus-visible,
@@ -98,7 +93,6 @@
   gap: var(--glaze-space-xs);
   min-block-size: var(--glaze-touch-min);
 }
-
 .glaze-navigation-capsule a {
   min-block-size: var(--glaze-touch-min);
   display: inline-flex;
@@ -124,6 +118,7 @@
 
 @media (forced-colors: active) {
   .glaze-material-soft,
+  .glass-card,
   .glaze-button {
     background: Canvas;
     color: CanvasText;
