@@ -9,9 +9,9 @@ ROOT = Path(__file__).resolve().parents[1]
 EVIDENCE = ROOT / "contracts" / "wardveil.mail.consumer-source-evidence.json"
 CLAMAV_ACCEPTANCE = ROOT / "contracts" / "wardveil.clamav.runtime-acceptance.json"
 
-EXPECTED_MAIL_REVISION = "87f506bad7f704473e413b22f98dd56073db54ec"
-EXPECTED_MAIL_CI_REVISION = "3cdd6596f38135f78542f9bcc2c525cb83f48f7c"
-EXPECTED_MAIL_SOURCE_TREE = "90ae4b8dbfad54b1230e065bf8445ec886103490"
+EXPECTED_MAIL_REVISION = "64e1f3840ea284241444b18e448b218cec5e799e"
+EXPECTED_MAIL_CI_REVISION = "53dbf21634272768b60a93fbcb44cf8a6a9d2eda"
+EXPECTED_MAIL_SOURCE_TREE = "617ef468e0f7e67134296fcba12f6f12b7b9a058"
 EXPECTED_WARDVEIL_TRANSPORT_REVISION = "842d792c128906e70d41028e3153ea527c1d1899"
 EXPECTED_SIGNATURE_FIELDS = {
     "caller_id",
@@ -42,7 +42,7 @@ def main() -> None:
     evidence = json.loads(EVIDENCE.read_text(encoding="utf-8"))
     acceptance = json.loads(CLAMAV_ACCEPTANCE.read_text(encoding="utf-8"))
 
-    require(evidence.get("schema_version") == 4, "unexpected Mail consumer evidence schema")
+    require(evidence.get("schema_version") == 5, "unexpected Mail consumer evidence schema")
     require(evidence.get("consumer") == "GoreeCloud Mail", "unexpected consumer identity")
     require(evidence.get("consumer_repository") == "GoreeCloud/goreecloud-mail", "unexpected consumer repository")
     for field in ("consumer_revision", "consumer_ci_tested_revision", "consumer_source_tree", "source_compatible_wardveil_revision"):
@@ -53,7 +53,11 @@ def main() -> None:
     require(evidence.get("source_compatible_wardveil_revision") == EXPECTED_WARDVEIL_TRANSPORT_REVISION, "Wardveil transport compatibility revision drifted")
     require(evidence.get("mail_integration_contract_version") == "0.4.0", "unexpected Mail Wardveil integration contract version")
     require(evidence.get("wardveil_scan_transport_contract_version") == "0.1.0", "unexpected Wardveil Scan transport contract version")
-    require(evidence.get("source_integration_status") == "source_validated_application_enforcement_with_durable_provenance", "Mail source integration must record durable provenance enforcement")
+    require(
+        evidence.get("source_integration_status")
+        == "source_validated_bidirectional_attachment_enforcement_with_durable_incoming_provenance",
+        "Mail source integration must record incoming and outgoing enforcement boundaries",
+    )
     require(evidence.get("runtime_acceptance_status") == "unaccepted", "source evidence must not claim runtime acceptance")
     require(evidence.get("source_evidence_is_production_protection_claim") is False, "source evidence must not authorize a production protection claim")
 
@@ -67,14 +71,17 @@ def main() -> None:
         "attachment_delivery_tests",
         "attachment_scan_provenance_store",
         "attachment_scan_provenance_tests",
+        "outgoing_attachment_security_service",
+        "outgoing_attachment_security_tests",
+        "outgoing_attachment_security_document",
         "consumer_validation_workflow",
         "consumer_ci_workflow",
     ):
         require(isinstance(details.get(path_key), str) and details.get(path_key), f"missing source path evidence: {path_key}")
-    require(details.get("consumer_ci_run_number") == 280, "unexpected Mail CI run number")
-    require(details.get("consumer_ci_workflow_run_id") == 33250839472, "unexpected Mail CI workflow run ID")
-    require(details.get("consumer_validation_run_number") == 18, "unexpected Mail Wardveil validation run number")
-    require(details.get("consumer_validation_workflow_run_id") == 33250839490, "unexpected Mail Wardveil validation workflow run ID")
+    require(details.get("consumer_ci_run_number") == 486, "unexpected Mail CI run number")
+    require(details.get("consumer_ci_workflow_run_id") == 33274051970, "unexpected Mail CI workflow run ID")
+    require(details.get("consumer_validation_run_number") == 94, "unexpected Mail Wardveil validation run number")
+    require(details.get("consumer_validation_workflow_run_id") == 33274052003, "unexpected Mail Wardveil validation workflow run ID")
 
     for key in (
         "exact_revision_ci_passed",
@@ -109,6 +116,16 @@ def main() -> None:
         "missing_corrupt_or_tampered_provenance_fails_closed",
         "evidence_expiry_enforced_after_restart",
         "provenance_cleanup_coordinated_with_attachment",
+        "outgoing_gmail_attachment_enforcement_source_implemented",
+        "outgoing_requires_wardveil_gate_when_attachments_present",
+        "outgoing_non_attachment_writes_unchanged",
+        "outgoing_scan_before_gmail_client_creation",
+        "outgoing_only_current_clean_may_reach_provider_write",
+        "outgoing_exact_authorized_bytes_serialized_to_mime",
+        "outgoing_malicious_suspicious_unknown_unsupported_block_before_provider",
+        "outgoing_scanner_unavailable_blocks_before_provider",
+        "outgoing_resource_ids_content_bound_and_opaque",
+        "outgoing_resource_ids_exclude_raw_names_content_and_user_identifiers",
         "quarantine_handoff_requires_explicit_executor_authority",
     ):
         require(details.get(key) is True, f"missing required source evidence: {key}")
@@ -132,6 +149,9 @@ def main() -> None:
     require(details.get("provenance_is_wardveil_audit_ledger") is False, "application sidecar must not be represented as Wardveil Audit")
     require(details.get("production_authenticated_provenance_store_accepted") is False, "source evidence must not claim production provenance-store acceptance")
     require(details.get("automatic_rescan_after_restart_implemented") is False, "source evidence must accurately record automatic restart rescan state")
+    require(set(details.get("outgoing_scan_actions") or []) == {"send", "draft"}, "outgoing Mail scan actions must remain send and draft")
+    require(details.get("outgoing_durable_scan_provenance_persisted") is False, "outgoing durable scan provenance must remain accurately unimplemented")
+    require(details.get("outgoing_wardveil_audit_record_persisted") is False, "outgoing Wardveil Audit persistence must remain accurately unimplemented")
     require(details.get("production_service_identity_accepted") is False, "source evidence must not claim production service identity acceptance")
     require(details.get("distributed_replay_protection_accepted") is False, "source evidence must not claim distributed replay protection")
     require(details.get("quarantine_is_deletion") is False, "quarantine must not equal deletion")
@@ -140,7 +160,9 @@ def main() -> None:
     required_remaining = {
         "deploy_hardened_wardveil_scan_service_revision",
         "deployed_mail_delivery_execution_against_hardened_wardveil_scan",
+        "deployed_mail_outgoing_gmail_attachment_execution_against_hardened_wardveil_scan",
         "production_provenance_storage_permissions_lifecycle_corruption_and_recovery_acceptance",
+        "durable_outgoing_scan_provenance_or_authoritative_audit_acceptance",
         "production_goreecloud_identity_service_identity_and_key_lifecycle",
         "deployment_appropriate_durable_replay_protection",
         "current_deployed_clamav_daemon_and_signature_health_evidence",
@@ -152,6 +174,7 @@ def main() -> None:
         "replay_and_capacity_exhaustion_runtime_tests",
         "credential_rotation_and_revocation_runtime_tests",
         "provider_attachment_byte_binding_evidence",
+        "real_gmail_provider_attachment_acceptance",
         "application_result_and_persistence_failure_runtime_tests",
         "authorized_quarantine_execution_evidence",
         "audit_and_security_center_provenance_acceptance",
@@ -163,7 +186,7 @@ def main() -> None:
     require(acceptance.get("production_runtime_status") == "unaccepted", "ClamAV production runtime must remain unaccepted")
     require("application_consumer_integration" in set(acceptance.get("required_acceptance_evidence") or []), "ClamAV acceptance must retain application consumer evidence requirement")
 
-    print("Wardveil GoreeCloud Mail durable Scan provenance source evidence validation passed.")
+    print("Wardveil GoreeCloud Mail bidirectional attachment enforcement source evidence validation passed.")
 
 
 if __name__ == "__main__":
