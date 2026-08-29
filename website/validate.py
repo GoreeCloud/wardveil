@@ -10,14 +10,17 @@ DIST = SITE / "dist"
 IDENTITY = ROOT / "contracts" / "wardveil.identity.json"
 VERSION = ROOT / "VERSION"
 ICON = ROOT / "branding" / "wardveil-security-icon.svg"
+GLAZE_VERSION = "2.0.0"
+GLAZE_REVISION = "ff3fff4306bd53ea9c0715a7c0d64265bb038617"
+GLAZE_ASSET = f"glaze-ui-{GLAZE_VERSION}.css"
 
-for name in ("index.html", "404.html", "site.css", "site.js", "_headers", "build.py"):
+for name in ("index.html", "404.html", "site.css", "site.js", GLAZE_ASSET, "_headers", "build.py"):
     if not (SITE / name).is_file():
         raise SystemExit(f"missing website source: {name}")
 
 subprocess.run([sys.executable, str(SITE / "build.py")], cwd=ROOT, check=True)
 
-for name in ("index.html", "404.html", "_headers", "assets/site.css", "assets/site.js", "assets/wardveil-security-icon.svg"):
+for name in ("index.html", "404.html", "_headers", "assets/site.css", "assets/site.js", f"assets/{GLAZE_ASSET}", "assets/wardveil-security-icon.svg"):
     if not (DIST / name).is_file():
         raise SystemExit(f"missing build artifact: {name}")
 
@@ -38,6 +41,7 @@ if ICON.read_bytes() != (DIST / "assets" / "wardveil-security-icon.svg").read_by
 
 html = (DIST / "index.html").read_text(encoding="utf-8")
 headers = (DIST / "_headers").read_text(encoding="utf-8")
+glaze_css = (DIST / "assets" / GLAZE_ASSET).read_text(encoding="utf-8")
 major_minor = ".".join(foundation_version.split(".")[:2])
 for needle in (
     "Wardveil Security by GoreeCloud",
@@ -52,10 +56,12 @@ for needle in (
     "production runtime remains unaccepted",
     "Protected by Wardveil",
     "security@goreecloud.com",
+    'name="goreecloud-glaze-ui" content="2.0.0"',
+    'data-glaze-ui="2.0.0"',
 ):
     if needle not in html:
         raise SystemExit(f"required public content missing: {needle}")
-for stale in ("Wardveil Security 0.7", "Foundation 0.7", "Read-only by default"):
+for stale in ("Wardveil Security 0.7", "Foundation 0.7", "Read-only by default", "Glaze UI 1.5", "glaze-ui-1.5.0.css"):
     if stale in html:
         raise SystemExit(f"stale Wardveil public content remains: {stale}")
 for needle in ("Content-Security-Policy:", "frame-ancestors 'none'", "Permissions-Policy:", "X-Content-Type-Options: nosniff"):
@@ -64,5 +70,8 @@ for needle in ("Content-Security-Policy:", "frame-ancestors 'none'", "Permission
 for prohibited in ("google-analytics", "googletagmanager", "segment.com", "fonts.googleapis.com"):
     if prohibited in html.lower():
         raise SystemExit(f"prohibited public dependency detected: {prohibited}")
+for needle in (GLAZE_REVISION, "--glaze-touch-min: 48px", ".glaze-material-soft", "prefers-reduced-transparency"):
+    if needle not in glaze_css:
+        raise SystemExit(f"Glaze UI 2.0 Stable subset missing contract marker: {needle}")
 
-print(f"Wardveil Security public website validation passed for foundation {foundation_version} and Sentinel Fold primary identity")
+print(f"Wardveil Security public website validation passed for foundation {foundation_version}, Sentinel Fold primary identity, and Glaze UI {GLAZE_VERSION} Stable")
