@@ -1,0 +1,133 @@
+/* Glaze UI 2.0.0 Stable web subset
+ * Pinned to GoreeCloud/goreecloud-glaze-ui promotion revision
+ * ff3fff4306bd53ea9c0715a7c0d64265bb038617.
+ * This subset contains only contracts exercised by Security Center.
+ */
+:root {
+  --glaze-space-xs: 4px;
+  --glaze-space-sm: 8px;
+  --glaze-space-md: 16px;
+  --glaze-space-lg: 24px;
+  --glaze-shape-standard: 12px;
+  --glaze-shape-medium: 16px;
+  --glaze-shape-card: 24px;
+  --glaze-shape-control: 999px;
+  --glaze-touch-min: 48px;
+  --glaze-motion-fast: 140ms;
+  --glaze-motion-standard: 280ms;
+  --glaze-motion-scale: 1;
+  --glaze-surface: #ffffff;
+  --glaze-text-primary: #162033;
+  --glaze-border: color-mix(in srgb, #334155 16%, transparent);
+  --glaze-accent: #366cf6;
+  --glaze-material-soft-opacity: .76;
+  --glaze-material-soft-blur: 18px;
+  --glaze-material-saturation: 135%;
+}
+
+:root[data-glaze-appearance="dark"] {
+  --glaze-surface: #171d28;
+  --glaze-text-primary: #f4f7fb;
+  --glaze-border: color-mix(in srgb, #dbe5f7 14%, transparent);
+  --glaze-accent: #82a8ff;
+  --glaze-material-soft-opacity: .82;
+}
+
+:root[data-glaze-appearance="deep-dark"] {
+  --glaze-surface: #11151d;
+  --glaze-text-primary: #f4f7fb;
+  --glaze-border: color-mix(in srgb, #dbe5f7 14%, transparent);
+  --glaze-accent: #82a8ff;
+  --glaze-material-soft-opacity: .88;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-glaze-appearance]) {
+    --glaze-surface: #171d28;
+    --glaze-text-primary: #f4f7fb;
+    --glaze-border: color-mix(in srgb, #dbe5f7 14%, transparent);
+    --glaze-accent: #82a8ff;
+    --glaze-material-soft-opacity: .82;
+  }
+}
+
+:root[data-glaze-clarity="clear"] {
+  --glaze-material-soft-opacity: .62;
+}
+
+:root[data-glaze-clarity="solid"] {
+  --glaze-material-soft-opacity: .98;
+  --glaze-material-soft-blur: 0px;
+}
+
+.glaze-canvas {
+  color: var(--glaze-text-primary);
+}
+
+.glaze-material-soft {
+  color: var(--glaze-text-primary);
+  background: color-mix(in srgb, var(--glaze-surface) calc(var(--glaze-material-soft-opacity) * 100%), transparent);
+  border: 1px solid var(--glaze-border);
+  border-radius: var(--glaze-shape-card);
+  backdrop-filter: blur(var(--glaze-material-soft-blur)) saturate(var(--glaze-material-saturation));
+}
+
+.glaze-button,
+[data-glaze-interactive="true"] {
+  min-block-size: var(--glaze-touch-min);
+  min-inline-size: var(--glaze-touch-min);
+}
+
+.glaze-button {
+  border-radius: var(--glaze-shape-control);
+  transition: transform calc(var(--glaze-motion-fast) * var(--glaze-motion-scale)) ease-out;
+}
+
+.glaze-button:active { transform: scale(.97); }
+
+.glaze-button:focus-visible,
+[data-glaze-interactive="true"]:focus-visible,
+.glaze-navigation-capsule a:focus-visible {
+  outline: 3px solid var(--glaze-accent);
+  outline-offset: 3px;
+}
+
+.glaze-navigation-capsule {
+  display: flex;
+  align-items: center;
+  gap: var(--glaze-space-xs);
+  min-block-size: var(--glaze-touch-min);
+}
+
+.glaze-navigation-capsule a {
+  min-block-size: var(--glaze-touch-min);
+  display: inline-flex;
+  align-items: center;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --glaze-material-soft-opacity: .98;
+    --glaze-material-soft-blur: 0px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --glaze-motion-scale: .35; }
+  .glaze-button { transition: none; }
+  .glaze-button:active { transform: none; }
+}
+
+@media (prefers-contrast: more) {
+  :root { --glaze-border: color-mix(in srgb, currentColor 42%, transparent); }
+}
+
+@media (forced-colors: active) {
+  .glaze-material-soft,
+  .glaze-button {
+    background: Canvas;
+    color: CanvasText;
+    border: 1px solid CanvasText;
+    backdrop-filter: none;
+  }
+}
