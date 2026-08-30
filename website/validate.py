@@ -70,7 +70,7 @@ for needle in ("Content-Security-Policy:", "frame-ancestors 'none'", "Permission
 for prohibited in ("google-analytics", "googletagmanager", "segment.com", "fonts.googleapis.com"):
     if prohibited in html.lower():
         raise SystemExit(f"prohibited public dependency detected: {prohibited}")
-for needle in (GLAZE_REVISION, "--glaze-touch-min: 48px", ".glaze-material-soft", "prefers-reduced-transparency"):
+for needle in (GLAZE_REVISION, "--glaze-touch-min:48px", ".glaze-material-soft", "prefers-reduced-transparency"):
     if needle not in glaze_css:
         raise SystemExit(f"Glaze UI 2.0 Stable subset missing contract marker: {needle}")
 
