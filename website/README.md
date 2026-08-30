@@ -1,6 +1,10 @@
 # Wardveil Security Public Website
 
-This directory contains the source for the public Wardveil Security website at `https://security.goreecloud.com`.
+This directory contains the source for the public Wardveil Security Center at `https://security.goreecloud.com`.
+
+## Current presentation boundary
+
+The Security Center targets **Glaze UI 2.0.0 Stable** for its public presentation layer. The current modernization strengthens responsive navigation, 48px interaction targets, safe-area handling, reduced-motion and reduced-transparency behavior, increased-contrast and forced-colors fallbacks, no-backdrop resilience, and print behavior. These presentation changes do not create, upgrade, or infer Wardveil protection, verification, response, runtime, scanner, production, or acceptance state.
 
 ## Cloudflare Pages contract
 
@@ -29,10 +33,10 @@ Run:
 python3 website/validate.py
 ```
 
-The validator checks the current machine-readable identity contract and `VERSION`, requires approved visual/showcase state, verifies byte-identical canonical icon publication, requires current Foundation and Sentinel Fold public identity language, enforces evidence-backed security wording, and checks the hardened Cloudflare Pages header contract.
+The validator checks the current machine-readable identity contract and `VERSION`, requires approved visual/showcase state, verifies byte-identical canonical icon publication, requires current Foundation and Sentinel Fold public identity language, enforces evidence-backed security wording, checks the Glaze UI 2.0 presentation contract, and validates the hardened Cloudflare Pages header contract.
 
-## Public-information boundary
+## Public-information and acceptance boundary
 
 The website may present identity, public-safe first-party security architecture, normalized state semantics, evidence and authority boundaries, bounded platform relationships, malware-engine role, and private reporting guidance. It must not expose internal topology, private hostnames or addresses, credentials, tokens, signing material, unrestricted diagnostics, sensitive monitoring evidence, private vulnerability details, or other operational information unnecessary for public understanding.
 
-Only `website/dist` is intended for Pages publication. Source acceptance, Cloudflare deployment, runtime acceptance, and product-specific protection acceptance remain separate evidence gates.
+Only `website/dist` is intended for Pages publication. A successful source validation, build, or preview does not independently authorize a protection claim. The exact candidate revision must pass the applicable branch-preview/deployment verification before merge, and the resulting `main` revision must be verified on `security.goreecloud.com` after deployment. Source acceptance, deployed website acceptance, runtime acceptance, scanner acceptance, and product-specific protection acceptance remain separate evidence gates.
