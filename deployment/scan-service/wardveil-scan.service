@@ -9,7 +9,10 @@ DynamicUser=yes
 WorkingDirectory=/opt/goreecloud/wardveil/scan-service/current
 EnvironmentFile=/etc/goreecloud/wardveil/clamav.env
 EnvironmentFile=-/etc/goreecloud/wardveil/scan-service.env
+Environment=WARDVEIL_SCAN_REPLAY_DB=/var/lib/wardveil-scan/replay.sqlite3
 LoadCredential=wardveil-scan-callers.json:/etc/goreecloud/wardveil/scan-callers.json
+StateDirectory=wardveil-scan
+StateDirectoryMode=0700
 ExecStart=/usr/bin/python3 /opt/goreecloud/wardveil/scan-service/current/scripts/serve_wardveil_scan.py
 Restart=on-failure
 RestartSec=3
