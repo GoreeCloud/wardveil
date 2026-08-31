@@ -28,9 +28,9 @@ html{scroll-behavior:smooth;scroll-padding-top:96px;text-size-adjust:100%;-webki
 body{overflow-wrap:break-word}img,svg,video{max-inline-size:100%;block-size:auto}h1,h2,h3,h4{text-wrap:balance}p,li{text-wrap:pretty}main :where(section,[id]){scroll-margin-top:96px}
 /* 2.1 Canvas/Surface rule: content does not depend on translucency. */
 .glaze-canvas{color:var(--glaze-text-primary);min-inline-size:320px;line-height:1.6}
-.glaze-surface,[data-glaze-material-level=surface]{color:var(--glaze-text-primary);background:var(--glaze-surface);border:1px solid var(--glaze-border)}
-/* Administration recipe: soft-glaze only for bounded persistent chrome here. */
-.glaze-material-soft,.glass-card,.site-header,[data-glaze-material-level=soft-glaze]{
+.glaze-surface,.glass-card,[data-glaze-material-level=surface]{color:var(--glaze-text-primary);background:var(--glaze-surface);border:1px solid var(--glaze-border)}
+/* Administration recipe: Soft Glaze is limited to bounded persistent chrome. */
+.glaze-material-soft,.site-header,[data-glaze-material-level=soft-glaze]{
   color:var(--glaze-text-primary);background:color-mix(in srgb,var(--glaze-surface-elevated) calc(var(--glaze-effective-opacity)*100%),transparent);
   border:1px solid var(--glaze-border);border-radius:var(--glaze-shape-card);backdrop-filter:blur(var(--glaze-effective-blur)) saturate(var(--glaze-soft-saturation));
   -webkit-backdrop-filter:blur(var(--glaze-effective-blur)) saturate(var(--glaze-soft-saturation));box-shadow:var(--glaze-shadow-soft)
@@ -47,9 +47,9 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 @media(max-width:900px){.glaze-navigation-capsule{overflow-x:auto;overscroll-behavior-inline:contain;scrollbar-width:none;-webkit-overflow-scrolling:touch}.glaze-navigation-capsule::-webkit-scrollbar{display:none}}
 @media(max-width:640px){html{scroll-padding-top:80px}main :where(section,[id]){scroll-margin-top:80px}.shell,.container,.wrap{padding-inline:max(16px,env(safe-area-inset-left)) max(16px,env(safe-area-inset-right))}}
 /* Accessibility Resolution Matrix effects consumed by this web surface. */
-@media(prefers-reduced-transparency:reduce){:root{--glaze-effective-opacity:1;--glaze-effective-blur:0px;--glaze-soft-saturation:100%}.glaze-material-soft,.glass-card,.site-header,[data-glaze-material-level=soft-glaze]{background:var(--glaze-surface-elevated)}}
+@media(prefers-reduced-transparency:reduce){:root{--glaze-effective-opacity:1;--glaze-effective-blur:0px;--glaze-soft-saturation:100%}.glaze-material-soft,.site-header,[data-glaze-material-level=soft-glaze]{background:var(--glaze-surface-elevated)}}
 @media(prefers-reduced-motion:reduce){:root{--glaze-motion-scale:0}html{scroll-behavior:auto}.glaze-button,.button,a.action-link{transition:none!important;transform:none!important}}
-@media(prefers-contrast:more){:root{--glaze-border:color-mix(in srgb,currentColor 46%,transparent)}.glaze-material-soft,.glass-card,.site-header,[data-glaze-material-level=soft-glaze]{border-width:2px}a{text-decoration-thickness:.12em;text-underline-offset:.18em}}
-@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.glaze-material-soft,.glass-card,.site-header,[data-glaze-material-level=soft-glaze]{background:var(--glaze-surface-elevated);backdrop-filter:none;-webkit-backdrop-filter:none}}
+@media(prefers-contrast:more){:root{--glaze-border:color-mix(in srgb,currentColor 46%,transparent)}.glaze-material-soft,.site-header,[data-glaze-material-level=soft-glaze]{border-width:2px}a{text-decoration-thickness:.12em;text-underline-offset:.18em}}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.glaze-material-soft,.site-header,[data-glaze-material-level=soft-glaze]{background:var(--glaze-surface-elevated);backdrop-filter:none;-webkit-backdrop-filter:none}}
 @media(forced-colors:active){.glaze-material-soft,.glass-card,.site-header,.glaze-surface,[data-glaze-material-level]{background:Canvas!important;color:CanvasText!important;border:2px solid CanvasText!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;box-shadow:none!important}.glaze-button,.button,a.action-link{forced-color-adjust:auto}}
-@media print{.site-header{position:static;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;box-shadow:none!important}.glaze-material-soft,.glass-card,.glaze-surface,[data-glaze-material-level]{background:#fff!important;color:#000!important;box-shadow:none!important;break-inside:avoid}}
+@media print{.site-header{position:static;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;box-shadow:none!important}.glass-card,.glaze-surface,[data-glaze-material-level=surface]{background:#fff!important;color:#000!important;box-shadow:none!important;break-inside:avoid}}
