@@ -13,9 +13,9 @@ This deployment surface exposes Wardveil Scan to same-host first-party GoreeClou
 - Response: the consumer envelope contains `resource_id`, `resource_digest_sha256`, and an authoritative `scan_record` whose result field is `result`. The application-facing envelope does not use `scan_result`.
 - Clean semantics: a clean result requires current acceptable scanner-health evidence and evidence references.
 - Positive evidence: a malicious exact-content finding remains actionable when scanner health is degraded.
-- Replay handling: a bounded, thread-safe, expiring in-memory nonce ledger rejects conflicting reuse, returns the identical cached envelope for an exact retry, and fails closed when capacity is exhausted.
+- Replay handling: development/reference execution may use the bounded in-memory ledger. The source-controlled production systemd unit sets a private SQLite replay database so nonce claims and finalized cached envelopes survive same-host process restart.
 - Resource controls: the default service permits at most eight concurrent scans and uses a 30-second body-read timeout.
-- Claims: source installation or a synthetic clean/EICAR probe does not by itself satisfy deployed application-consumer integration, production service-identity acceptance, quarantine execution, or a broad `Protected by Wardveil` claim.
+- Claims: source installation or a synthetic clean/EICAR probe does not by itself satisfy deployed application-consumer integration, production service-identity acceptance, quarantine execution, durable replay runtime acceptance, or a broad `Protected by Wardveil` claim.
 
 Do not proxy, firewall-publish, Tunnel-publish, or otherwise expose this listener outside loopback. A future cross-host transport requires an independently accepted authenticated and encrypted private service boundary.
 
@@ -79,13 +79,23 @@ The required caller credential file is:
 
 `/etc/goreecloud/wardveil/scan-callers.json`
 
+The production unit uses `StateDirectory=wardveil-scan` with mode `0700` and sets:
+
+`WARDVEIL_SCAN_REPLAY_DB=/var/lib/wardveil-scan/replay.sqlite3`
+
+The SQLite database is created as an owner-only regular file (`0600`). It stores only caller/key/nonce identifiers, an authentication-bound request digest, expiry, and the sanitized cached response envelope. Raw scanned content and caller secrets are not persisted in replay state.
+
 Keep the credential file root-owned and inaccessible to group/other users. Do not print or copy live caller secrets into CI logs, changelogs, documentation, or source files.
 
 Install the source-controlled systemd unit only from an exact accepted release and validate the loopback listener and health endpoint after restart. The exact-revision production deployment workflow in `.github/workflows/deploy-scan-service-production.yml` performs source checksum validation, protected credential validation, service restart/rollback, loopback health validation, and a sanitized authenticated clean/EICAR probe.
 
 ## Replay and scaling boundary
 
-The source implementation's replay ledger is appropriate only for a single process instance: it is bounded, synchronized, expiring, and fail closed, but it is not a durable distributed replay store. Multi-instance or horizontally scaled production requires a deployment-appropriate shared replay/idempotency mechanism and acceptance evidence before that topology can be considered production-accepted.
+`InMemoryReplayLedger` remains available for isolated development/reference execution and is appropriate only for a single process instance. It is bounded, synchronized, expiring, and fail closed, but process restart loses its state.
+
+The production systemd unit instead selects `SQLiteReplayLedger`. Its claim and finalize operations use transactional SQLite writes, prune expired entries, preserve pending claims across restart until TTL expiry, return the cached envelope for exact replay, reject conflicting nonce reuse, and fail closed when the configured capacity or replay store is unavailable. SQLite provides shared serialization for processes on the same host that use the same database file.
+
+This source change does **not** by itself prove target-environment restart durability. That requires an exact deployed-revision acceptance test that creates/finalizes a signed request, restarts `wardveil-scan.service`, then proves exact replay returns the cached envelope and conflicting reuse still fails. Multi-host or horizontally scaled production requires a deployment-appropriate shared replay/idempotency mechanism; a node-local SQLite database is not evidence for that topology.
 
 ## Acceptance boundary
 
