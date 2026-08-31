@@ -19,6 +19,7 @@ import urllib.request
 from dataclasses import asdict, replace
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import NoReturn
 from uuid import uuid4
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -42,7 +43,7 @@ HEALTH_TIMEOUT_SECONDS = 20.0
 MAX_HTTP_RESPONSE_BYTES = 1 << 20
 
 
-def fail(message: str) -> "NoReturn":
+def fail(message: str) -> NoReturn:
     raise SystemExit(message)
 
 
@@ -66,6 +67,8 @@ def load_caller(
     key_id: str,
     resource_type: str,
 ) -> CallerCredential:
+    if not path.is_absolute():
+        fail("Wardveil Scan caller credential path must be absolute")
     if path.is_symlink() or not path.is_file():
         fail("Wardveil Scan caller credential path must be a regular non-symlink file")
     if stat.S_IMODE(path.stat().st_mode) & 0o077:
@@ -79,15 +82,20 @@ def load_caller(
     return caller
 
 
-def signed_request(caller: CallerCredential, body: bytes) -> ScanServiceRequest:
+def signed_request(
+    caller: CallerCredential,
+    body: bytes,
+    *,
+    resource_type: str,
+) -> ScanServiceRequest:
     request = ScanServiceRequest(
         caller_id=caller.caller_id,
         key_id=caller.key_id,
         timestamp=datetime.now(timezone.utc).isoformat(),
         nonce=f"restart-acceptance-{uuid4()}",
         action="runtime_acceptance_probe",
-        resource_type="drive_file",
-        resource_id=f"wardveil-replay-restart:drive_file:{uuid4()}",
+        resource_type=resource_type,
+        resource_id=f"wardveil-replay-restart:{resource_type}:{uuid4()}",
         digest_sha256=hashlib.sha256(body).hexdigest(),
         size_bytes=len(body),
         correlation_id=f"restart-acceptance-{uuid4()}",
@@ -138,6 +146,8 @@ def post_scan(url: str, request: ScanServiceRequest, body: bytes) -> tuple[int, 
             return response.status, read_http_json(response)
     except urllib.error.HTTPError as exc:
         return exc.code, read_http_json(exc)
+    except urllib.error.URLError as exc:
+        raise SystemExit(f"Wardveil Scan request transport failed: {exc.reason}") from exc
 
 
 def validate_clean_envelope(
@@ -193,10 +203,13 @@ def service_active() -> bool:
 
 
 def health(url: str) -> dict:
-    with urllib.request.urlopen(url.rstrip("/") + "/healthz", timeout=3) as response:
-        if response.status != 200:
-            fail(f"Wardveil Scan health returned HTTP {response.status}")
-        payload = read_http_json(response)
+    try:
+        with urllib.request.urlopen(url.rstrip("/") + "/healthz", timeout=3) as response:
+            if response.status != 200:
+                fail(f"Wardveil Scan health returned HTTP {response.status}")
+            payload = read_http_json(response)
+    except urllib.error.URLError as exc:
+        raise RuntimeError(f"Wardveil Scan health transport failed: {exc.reason}") from exc
     if payload.get("status") != "ok":
         fail("Wardveil Scan health did not return ok")
     if payload.get("component") != "Wardveil Scan authenticated transport":
@@ -253,9 +266,9 @@ def private_state_file() -> tuple[int, Path]:
     return fd, Path(name)
 
 
-def write_state(fd: int, path: Path, payload: dict, *, secret: str) -> None:
+def write_state(fd: int, path: Path, payload: dict, *, secret: bytes) -> None:
     raw = json.dumps(payload, sort_keys=True, indent=2).encode("utf-8") + b"\n"
-    if secret.encode("utf-8") in raw:
+    if secret in raw:
         fail("caller secret would leak into replay acceptance state")
     if CONTROL_BODY in raw or CONFLICT_BODY in raw:
         fail("raw test content would leak into replay acceptance state")
@@ -285,6 +298,8 @@ def request_from_state(payload: dict) -> ScanServiceRequest:
 
 
 def validate_replay_database(path: Path, request: ScanServiceRequest, expected: dict) -> None:
+    if not path.is_absolute():
+        fail("Wardveil Scan replay database path must be absolute")
     if path.is_symlink() or not path.is_file():
         fail("Wardveil Scan replay database must be a regular non-symlink file")
     if stat.S_IMODE(path.stat().st_mode) != 0o600:
@@ -315,10 +330,12 @@ def validate_replay_database(path: Path, request: ScanServiceRequest, expected: 
         fail("durable replay database cached envelope differs from first response")
 
 
-def write_evidence(path: Path, evidence: dict, *, secret: str) -> None:
+def write_evidence(path: Path, evidence: dict, *, secret: bytes) -> None:
+    if not path.is_absolute():
+        fail("restart acceptance evidence path must be absolute")
     path.parent.mkdir(parents=True, exist_ok=True)
     raw = json.dumps(evidence, sort_keys=True, indent=2).encode("utf-8") + b"\n"
-    if secret.encode("utf-8") in raw:
+    if secret in raw:
         fail("caller secret would leak into restart acceptance evidence")
     if CONTROL_BODY in raw or CONFLICT_BODY in raw:
         fail("raw test content would leak into restart acceptance evidence")
@@ -360,7 +377,11 @@ def main() -> int:
         fail("restart replay acceptance accepts only the loopback Wardveil Scan URL")
     if args.service != SERVICE_NAME:
         fail("restart replay acceptance accepts only wardveil-scan.service")
-    if not args.source_revision or any(ch not in "0123456789abcdef" for ch in args.source_revision) or len(args.source_revision) != 40:
+    if (
+        not args.source_revision
+        or any(ch not in "0123456789abcdef" for ch in args.source_revision)
+        or len(args.source_revision) != 40
+    ):
         fail("--source-revision must be an exact lowercase 40-character Git SHA")
 
     caller = load_caller(
@@ -371,7 +392,11 @@ def main() -> int:
     )
     replay_db = Path(args.replay_db)
     output = Path(args.output)
-    request = signed_request(caller, CONTROL_BODY)
+    request = signed_request(
+        caller,
+        CONTROL_BODY,
+        resource_type=args.resource_type,
+    )
 
     state_fd, state_path = private_state_file()
     state_removed = False
@@ -393,7 +418,9 @@ def main() -> int:
         write_state(state_fd, state_path, state, secret=caller.secret)
         state_fd = -1
 
-        before_invocation, after_invocation, before_pid, after_pid = restart_service_and_wait(args.url)
+        before_invocation, after_invocation, before_pid, after_pid = restart_service_and_wait(
+            args.url
+        )
 
         persisted = read_state(state_path)
         if persisted.get("source_revision") != args.source_revision:
@@ -403,9 +430,13 @@ def main() -> int:
         if not hmac.compare_digest(expected_signature, replay_request.signature):
             fail("replay acceptance request signature no longer matches the active caller credential")
         signed_at = datetime.fromisoformat(replay_request.timestamp)
-        age = (datetime.now(timezone.utc) - signed_at.astimezone(timezone.utc)).total_seconds()
+        age = (
+            datetime.now(timezone.utc) - signed_at.astimezone(timezone.utc)
+        ).total_seconds()
         if age < -2 or age > MAX_REPLAY_AGE_SECONDS:
-            fail(f"restart acceptance exceeded authenticated replay timing window: {age:.3f}s")
+            fail(
+                f"restart acceptance exceeded authenticated replay timing window: {age:.3f}s"
+            )
 
         second_status, second = post_scan(args.url, replay_request, CONTROL_BODY)
         if second_status != 200:
@@ -430,9 +461,15 @@ def main() -> int:
         )
         conflict_status, conflict_payload = post_scan(args.url, conflict, CONFLICT_BODY)
         if conflict_status != 409:
-            fail(f"conflicting same-nonce request after restart returned HTTP {conflict_status}")
+            fail(
+                f"conflicting same-nonce request after restart returned HTTP {conflict_status}"
+            )
         if conflict_payload.get("error") != "scan_request_rejected":
             fail("conflicting replay rejection returned unexpected response shape")
+
+        if not service_active():
+            fail("Wardveil Scan service is not active after conflicting replay rejection")
+        health(args.url)
 
         state_path.unlink()
         state_removed = True
@@ -447,11 +484,12 @@ def main() -> int:
             "resource_type": replay_request.resource_type,
             "initial_authenticated_clean_request": "passed",
             "service_restart": "passed",
-            "systemd_invocation_changed": True,
+            "systemd_invocation_changed": before_invocation != after_invocation,
             "main_pid_changed": before_pid != after_pid,
             "exact_replay_after_restart": "passed",
             "cached_envelope_identical": True,
             "conflicting_replay_after_restart": "passed",
+            "post_acceptance_health": "passed",
             "replay_database": str(replay_db),
             "replay_database_mode": "0600",
             "replay_state_directory_mode": "0700",
