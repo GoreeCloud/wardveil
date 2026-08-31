@@ -5,13 +5,16 @@ from __future__ import annotations
 
 import hashlib
 import importlib.util
+import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from reference.wardveil_clamav import ClamAVConfig, ClamAVVerdict
-from reference.wardveil_clamav_runtime import ClamAVRuntimePolicy
-
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from reference.wardveil_clamav import ClamAVConfig, ClamAVVerdict  # noqa: E402
+from reference.wardveil_clamav_runtime import ClamAVRuntimePolicy  # noqa: E402
+
 SCRIPT = ROOT / "scripts" / "accept_wardveil_scan_stale_signature.py"
 SPEC = importlib.util.spec_from_file_location("stale_signature_acceptance", SCRIPT)
 assert SPEC and SPEC.loader
