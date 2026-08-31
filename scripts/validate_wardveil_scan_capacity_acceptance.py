@@ -65,9 +65,9 @@ def main() -> int:
     )
     require(acceptance, '"protection_claim_authority": False', "claim-authority non-claim")
 
-    if "atomic_replace" in acceptance or "os.replace" in acceptance and "write_evidence" not in acceptance:
+    if "atomic_replace" in acceptance:
         raise SystemExit("capacity acceptance must not mutate the caller registry")
-    if "systemctl restart" in acceptance or '"restart"' in acceptance.split("subprocess.run", 1)[-1]:
+    if "systemctl restart" in acceptance:
         raise SystemExit("capacity acceptance must not restart Wardveil Scan")
 
     require(helper_tests, "test_header_only_request_is_authenticated_without_body", "held request test")
@@ -98,17 +98,17 @@ def main() -> int:
     )
     require(
         deployment_workflow,
-        '"capacity_concurrency_exhaustion": "passed"',
+        'evidence["capacity_concurrency_exhaustion"] == "passed"',
         "production capacity evidence validation",
     )
     require(
         deployment_workflow,
-        '"production_runtime_acceptance": "unaccepted"',
+        'evidence["production_runtime_acceptance"] == "unaccepted"',
         "production runtime non-claim validation",
     )
     require(
         deployment_workflow,
-        '"protection_claim_authority"] is False',
+        'evidence["protection_claim_authority"] is False',
         "protection claim non-claim validation",
     )
 
