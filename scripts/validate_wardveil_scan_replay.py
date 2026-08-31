@@ -48,7 +48,7 @@ def main() -> int:
             "PRAGMA synchronous = FULL",
             "PRAGMA journal_mode = DELETE",
             "0o600",
-            "raw scanned bytes and caller secrets are never persisted",
+            "scanned bytes and caller secrets are never persisted",
         ),
         "durable replay ledger",
     )
