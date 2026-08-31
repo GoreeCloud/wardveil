@@ -177,6 +177,9 @@ jobs:
             if [ -n "$previous" ] && [ -d "$previous" ]; then
               sudo ln -sfn "$previous" "$base/current"
               sudo systemctl daemon-reload
+              # Rollback must remain recoverable even if acceptance consumed
+              # the inherited systemd start-rate allowance.
+              sudo systemctl reset-failed wardveil-scan.service || true
               sudo systemctl restart wardveil-scan.service
             else
               sudo systemctl stop wardveil-scan.service
@@ -190,6 +193,8 @@ jobs:
             /etc/systemd/system/wardveil-scan.service
           sudo systemctl daemon-reload
           sudo systemctl enable wardveil-scan.service >/dev/null
+          # This restart is deliberate deployment orchestration, not a crash loop.
+          sudo systemctl reset-failed wardveil-scan.service
           sudo systemctl restart wardveil-scan.service
 
           ready=false
@@ -366,6 +371,9 @@ jobs:
           assert evidence["wardveil_revision"] == expected_revision
           assert evidence["wardveil_endpoint"] == "http://127.0.0.1:8791/v1/scan"
           assert evidence["service"] == "wardveil-scan.service"
+          assert evidence[
+              "systemd_start_rate_reset_before_intentional_restarts"
+          ] is True
           assert evidence["initial_temporary_credential"] == "passed"
           assert evidence["service_restart_after_initial_credential"] == "passed"
           assert evidence["old_credential_after_rotation"] == "rejected"
