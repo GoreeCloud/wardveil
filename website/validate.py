@@ -10,8 +10,8 @@ DIST = SITE / "dist"
 IDENTITY = ROOT / "contracts" / "wardveil.identity.json"
 VERSION = ROOT / "VERSION"
 ICON = ROOT / "branding" / "wardveil-security-icon.svg"
-GLAZE_VERSION = "2.0.0"
-GLAZE_REVISION = "ff3fff4306bd53ea9c0715a7c0d64265bb038617"
+GLAZE_VERSION = "2.1.0"
+GLAZE_REVISION = "c49113eb8b93c267613fdf1bbca1f814495acad7"
 GLAZE_ASSET = f"glaze-ui-{GLAZE_VERSION}.css"
 
 for name in ("index.html", "404.html", "site.css", "site.js", GLAZE_ASSET, "_headers", "build.py"):
@@ -53,15 +53,16 @@ for needle in (
     "Wardveil Protect",
     "runtime authorization",
     "ClamAV is an engine beneath Wardveil Scan",
-    "production runtime remains unaccepted",
+    "deployed ClamAV scanner path has production acceptance evidence",
+    "End-to-end production acceptance remains evidence-gated",
     "Protected by Wardveil",
     "security@goreecloud.com",
-    'name="goreecloud-glaze-ui" content="2.0.0"',
-    'data-glaze-ui="2.0.0"',
+    'name="goreecloud-glaze-ui" content="2.1.0"',
+    'data-glaze-ui="2.1.0"',
 ):
     if needle not in html:
         raise SystemExit(f"required public content missing: {needle}")
-for stale in ("Wardveil Security 0.7", "Foundation 0.7", "Read-only by default", "Glaze UI 1.5", "glaze-ui-1.5.0.css"):
+for stale in ("Wardveil Security 0.7", "Foundation 0.7", "Read-only by default", "Glaze UI 1.5", "glaze-ui-1.5.0.css", "Glaze UI 2.0", "glaze-ui-2.0.0.css", "production runtime remains unaccepted"):
     if stale in html:
         raise SystemExit(f"stale Wardveil public content remains: {stale}")
 for needle in ("Content-Security-Policy:", "frame-ancestors 'none'", "Permissions-Policy:", "X-Content-Type-Options: nosniff"):
@@ -70,8 +71,18 @@ for needle in ("Content-Security-Policy:", "frame-ancestors 'none'", "Permission
 for prohibited in ("google-analytics", "googletagmanager", "segment.com", "fonts.googleapis.com"):
     if prohibited in html.lower():
         raise SystemExit(f"prohibited public dependency detected: {prohibited}")
-for needle in (GLAZE_REVISION, "--glaze-touch-min:48px", ".glaze-material-soft", "prefers-reduced-transparency"):
+for needle in (
+    GLAZE_REVISION,
+    "Content is solid. Interaction is glazed.",
+    "--glaze-touch-min:48px",
+    "--glaze-touch-assisted:56px",
+    "data-glaze-density=compact",
+    "data-glaze-performance=reduced",
+    "data-glaze-large-text=true",
+    "prefers-reduced-transparency",
+    "forced-colors:active",
+):
     if needle not in glaze_css:
-        raise SystemExit(f"Glaze UI 2.0 Stable subset missing contract marker: {needle}")
+        raise SystemExit(f"Glaze UI 2.1 Stable subset missing contract marker: {needle}")
 
 print(f"Wardveil Security public website validation passed for foundation {foundation_version}, Sentinel Fold primary identity, and Glaze UI {GLAZE_VERSION} Stable")
