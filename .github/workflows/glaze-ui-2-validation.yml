@@ -1,4 +1,4 @@
-name: Validate Security Center Glaze UI 2.0 Stable
+name: Validate Security Center Glaze UI 2.1 Stable
 
 on:
   pull_request:
