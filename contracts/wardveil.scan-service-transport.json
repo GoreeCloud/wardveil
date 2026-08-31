@@ -47,6 +47,11 @@
     "production_secret_file": "/etc/goreecloud/wardveil/scan-callers.json",
     "systemd_load_credential_required": true,
     "runtime_credential_directory_supported": true,
+    "caller_key_rotation_and_revocation_acceptance_harness_source_validated": true,
+    "credential_lifecycle_acceptance_uses_temporary_acceptance_only_caller": true,
+    "credential_lifecycle_acceptance_preserves_existing_caller_entries": true,
+    "credential_lifecycle_acceptance_restores_original_registry": true,
+    "credential_lifecycle_acceptance_requires_real_service_restarts": true,
     "caller_key_rotation_and_revocation_production_accepted": false
   },
   "replay_protection": {
@@ -115,7 +120,7 @@
     "consumer-level clean EICAR unavailable stale-health and replay tests",
     "target-environment restart durability acceptance for the persistent replay ledger",
     "multi-host shared replay protection before any horizontally scaled topology",
-    "runtime key rotation and revocation evidence",
+    "runtime key rotation and revocation evidence from the exact deployed main revision",
     "rate limiting and abuse-resistance acceptance",
     "Audit and Security Center transport provenance",
     "Privacy Shield runtime data-minimization acceptance",
