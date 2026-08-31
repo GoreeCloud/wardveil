@@ -51,12 +51,15 @@ jobs:
             scripts/serve_wardveil_scan.py \
             scripts/probe_wardveil_scan_service.py \
             scripts/accept_wardveil_scan_replay_restart.py \
+            scripts/accept_wardveil_scan_credential_revocation.py \
             scripts/test_wardveil_scan_service.py \
             scripts/test_wardveil_scan_replay.py \
             scripts/test_wardveil_scan_replay_restart_acceptance.py \
+            scripts/test_wardveil_scan_credential_revocation_acceptance.py \
             scripts/validate_wardveil_scan_service.py \
             scripts/validate_wardveil_scan_replay.py \
-            scripts/validate_wardveil_scan_replay_restart_acceptance.py
+            scripts/validate_wardveil_scan_replay_restart_acceptance.py \
+            scripts/validate_wardveil_scan_credential_revocation_acceptance.py
 
       - name: Test authenticated Scan transport
         run: python3 scripts/test_wardveil_scan_service.py
@@ -67,9 +70,15 @@ jobs:
       - name: Test replay restart acceptance helpers
         run: python3 scripts/test_wardveil_scan_replay_restart_acceptance.py
 
+      - name: Test credential revocation acceptance helpers
+        run: python3 scripts/test_wardveil_scan_credential_revocation_acceptance.py
+
       - name: Validate deployment and acceptance boundaries
         run: |
           set -euo pipefail
           python3 scripts/validate_wardveil_scan_service.py
           python3 scripts/validate_wardveil_scan_replay.py
           python3 scripts/validate_wardveil_scan_replay_restart_acceptance.py
+
+      - name: Validate credential revocation acceptance wiring
+        run: python3 scripts/validate_wardveil_scan_credential_revocation_acceptance.py

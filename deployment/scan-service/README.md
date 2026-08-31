@@ -15,7 +15,7 @@ This deployment surface exposes Wardveil Scan to same-host first-party GoreeClou
 - Positive evidence: a malicious exact-content finding remains actionable when scanner health is degraded.
 - Replay handling: development/reference execution may use the bounded in-memory ledger. The source-controlled production systemd unit sets a private SQLite replay database so nonce claims and finalized cached envelopes survive same-host process restart.
 - Resource controls: the default service permits at most eight concurrent scans and uses a 30-second body-read timeout.
-- Claims: source installation or a synthetic clean/EICAR probe does not by itself satisfy deployed application-consumer integration, production service-identity acceptance, quarantine execution, durable replay runtime acceptance, or a broad `Protected by Wardveil` claim.
+- Claims: source installation or a synthetic clean/EICAR probe does not by itself satisfy deployed application-consumer integration, production service-identity acceptance, quarantine execution, durable replay runtime acceptance, credential-lifecycle runtime acceptance, or a broad `Protected by Wardveil` claim.
 
 Do not proxy, firewall-publish, Tunnel-publish, or otherwise expose this listener outside loopback. A future cross-host transport requires an independently accepted authenticated and encrypted private service boundary.
 
@@ -41,7 +41,7 @@ A production credential entry has this shape, but the secret value must be gener
 ]
 ```
 
-The Foundation 0.9 HMAC mechanism is a dependency-free source and deployment candidate. It is **not** accepted production service identity, key lifecycle, rotation, or revocation evidence.
+The Foundation 0.9 HMAC mechanism is a dependency-free source and deployment candidate. The repository now contains a source-validated rotation/revocation acceptance harness, but source validation is **not** production service-identity, key-management, rotation, or revocation acceptance. Runtime lifecycle acceptance requires the exact-main deployment workflow to execute the harness against the deployed `wardveil-scan.service` and protected caller registry.
 
 ## Request contract
 
@@ -59,7 +59,7 @@ A `POST /v1/scan` request uses `Content-Type: application/octet-stream` plus the
 - `X-Wardveil-Size-Bytes`
 - `X-Wardveil-Signature`
 
-The signature binds all request metadata above except the signature itself. The timestamp must be timezone-aware and within the configured acceptance window. Missing, malformed, expired/future, unauthorized, out-of-scope, or incorrectly signed requests fail closed. Body length or digest mismatch also fails closed.
+The signature binds all request metadata above except the signature itself. The timestamp must be timezone-aware and within the configured acceptance window. Missing, malformed, expired/future, unauthorized, out-of-scope, inactive, unknown-key, or incorrectly signed requests fail closed. Body length or digest mismatch also fails closed. Authentication failures exposed over HTTP use the generic `{"error":"scan_request_rejected"}` envelope so callers cannot distinguish key existence or signature-validation details from the response body.
 
 ## Installation layout
 
@@ -87,7 +87,7 @@ The SQLite database is created as an owner-only regular file (`0600`). It stores
 
 Keep the credential file root-owned and inaccessible to group/other users. Do not print or copy live caller secrets into CI logs, changelogs, documentation, or source files.
 
-Install the source-controlled systemd unit only from an exact accepted release and validate the loopback listener and health endpoint after restart. The exact-revision production deployment workflow in `.github/workflows/deploy-scan-service-production.yml` performs source checksum validation, protected credential validation, service restart/rollback, loopback health validation, a sanitized authenticated clean/EICAR probe, and the same-host replay restart acceptance described below.
+Install the source-controlled systemd unit only from an exact accepted release and validate the loopback listener and health endpoint after restart. The exact-revision production deployment workflow in `.github/workflows/deploy-scan-service-production.yml` performs source checksum validation, protected credential validation, service restart/rollback, loopback health validation, the authenticated clean/EICAR and fail-closed negative probe, same-host replay restart acceptance, and the credential rotation/revocation acceptance described below.
 
 ## Replay and scaling boundary
 
@@ -112,20 +112,38 @@ The source-controlled command `scripts/accept_wardveil_scan_replay_restart.py` i
 
 The resulting evidence may mark `single_host_restart_durability=passed` only when all of those conditions succeed. It must keep `multi_host_replay_durability=not_proven`, `production_runtime_acceptance=unaccepted`, and `protection_claim_authority=false`. Passing this command establishes same-host restart durability for the exact deployed revision and environment only; it does not prove shared replay across independent hosts or a horizontally scaled topology.
 
+## Credential rotation and revocation acceptance
+
+The source-controlled command `scripts/accept_wardveil_scan_credential_revocation.py` is the runtime gate for the caller-key lifecycle. It is deliberately designed not to rotate an existing application credential. It runs as root against the exact deployed loopback service and protected caller registry, then:
+
+1. reads and validates the original root-owned registry and records its bytes, ownership, mode, and hash without emitting any secret;
+2. appends one randomly named, acceptance-only caller while preserving every existing registry entry unchanged;
+3. restarts `wardveil-scan.service` and proves the temporary initial credential can complete a clean authenticated control request;
+4. replaces only the temporary acceptance caller with a new key, restarts the real service, and proves the old signed credential now receives HTTP 401 with the generic rejection envelope;
+5. proves the replacement temporary credential succeeds after rotation;
+6. marks that replacement temporary credential inactive, restarts the real service, and proves it now receives HTTP 401 with the same generic rejection envelope;
+7. restores the original registry in a `finally` path, restarts the service, and requires byte-for-byte registry restoration plus the original ownership and permission mode;
+8. verifies post-acceptance health and writes only sanitized mode-0600 evidence. Temporary secrets and raw control content are prohibited from evidence.
+
+Only a successful deployed run may record `revoked_credential_lifecycle=passed`. The source harness and CI tests alone cannot make that claim. The evidence must continue to record application-consumer integration and production service identity as not proven by this acceptance, `production_runtime_acceptance=unaccepted`, and `protection_claim_authority=false`.
+
 ## Acceptance boundary
 
-The runtime probe can prove only the deployed Wardveil Scan service-to-scanner path for its synthetic resources. It deliberately records:
+The transport probe can prove only the deployed Wardveil Scan service-to-scanner path for its synthetic resources. It deliberately records:
 
 - authenticated transport: passed when verified;
 - consumer-envelope compatibility: passed when verified;
 - clean control: passed when verified;
 - EICAR detection: passed when verified;
+- stale correctly signed request rejection: passed when verified;
+- invalid signature rejection: passed when verified;
+- unknown/removed key rejection: passed when verified;
 - direct ClamAV application access: false;
 - deployed application-consumer integration: not proven by the probe;
 - production service identity/key management: not proven by the probe;
 - authorized quarantine execution: not proven by the probe;
 - production runtime acceptance: `unaccepted`.
 
-The restart acceptance command proves only the durable same-host replay property for its exact deployed revision and environment. It does not promote production service identity/key management, runtime revocation, multi-host replay, quarantine execution, Audit/Security Center provenance, Privacy Shield, Everkeep, or overall Wardveil production acceptance.
+The restart acceptance command proves only the durable same-host replay property for its exact deployed revision and environment. The credential-lifecycle acceptance command can prove the temporary-caller rotation/revocation property only for its exact deployed revision and environment. Neither promotes production service identity/key management, multi-host replay, deployed application integration, quarantine execution, Audit/Security Center provenance, Privacy Shield, Everkeep, or overall Wardveil production acceptance.
 
 A real application acceptance milestone must exercise that application's own Wardveil integration code against the deployed transport with the exact resource identity/digest and all of its local release/enforcement semantics. Direct `clamd` access is never a substitute.

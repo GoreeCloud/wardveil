@@ -84,7 +84,8 @@ jobs:
             reference/wardveil_detect_scan.py \
             scripts/serve_wardveil_scan.py \
             scripts/probe_wardveil_scan_service.py \
-            scripts/accept_wardveil_scan_replay_restart.py
+            scripts/accept_wardveil_scan_replay_restart.py \
+            scripts/accept_wardveil_scan_credential_revocation.py
           sha256sum "$archive" > "$archive.sha256"
 
       - name: Transfer deployment bundle
@@ -117,6 +118,7 @@ jobs:
           release="$base/releases/$revision"
           evidence="$base/evidence/$revision.json"
           replay_evidence="$base/evidence/$revision-replay-restart.json"
+          revocation_evidence="$base/evidence/$revision-credential-revocation.json"
           archive="/tmp/wardveil-scan-$revision.tgz"
           checksum="$archive.sha256"
           callers=/etc/goreecloud/wardveil/scan-callers.json
@@ -153,6 +155,7 @@ jobs:
 
           sudo test -f "$release/reference/wardveil_scan_replay.py"
           sudo test -f "$release/scripts/accept_wardveil_scan_replay_restart.py"
+          sudo test -f "$release/scripts/accept_wardveil_scan_credential_revocation.py"
 
           sudo env PYTHONPATH="$release" python3 - "$callers" <<'PY'
           import sys
@@ -227,7 +230,14 @@ jobs:
               --source-revision "$revision" \
               --output "$replay_evidence"
 
+          sudo env PYTHONPATH="$release" \
+            python3 "$release/scripts/accept_wardveil_scan_credential_revocation.py" \
+              --callers-file "$callers" \
+              --source-revision "$revision" \
+              --output "$revocation_evidence"
+
           test "$(sudo stat -c '%a' "$replay_evidence")" = "600"
+          test "$(sudo stat -c '%a' "$revocation_evidence")" = "600"
           test "$(sudo readlink -f "$base/current")" = "$release"
           test "$(sudo systemctl is-active wardveil-scan.service)" = "active"
 
@@ -251,6 +261,9 @@ jobs:
           grep -q '"consumer_envelope_compatibility": "passed"' /tmp/wardveil-scan-production-evidence.json
           grep -q '"clean_control": "passed"' /tmp/wardveil-scan-production-evidence.json
           grep -q '"eicar_detection": "passed"' /tmp/wardveil-scan-production-evidence.json
+          grep -q '"stale_signed_request_rejection": "passed"' /tmp/wardveil-scan-production-evidence.json
+          grep -q '"invalid_signature_rejection": "passed"' /tmp/wardveil-scan-production-evidence.json
+          grep -q '"unknown_or_removed_key_rejection": "passed"' /tmp/wardveil-scan-production-evidence.json
           grep -q '"application_consumer_integration": "not_proven_by_probe"' /tmp/wardveil-scan-production-evidence.json
           grep -q '"production_service_identity": "not_proven_by_probe"' /tmp/wardveil-scan-production-evidence.json
           grep -q '"quarantine_execution": "not_proven_by_probe"' /tmp/wardveil-scan-production-evidence.json
@@ -310,6 +323,62 @@ jobs:
           print("production_runtime_acceptance=unaccepted")
           PY
 
+      - name: Retrieve and validate credential revocation evidence
+        run: |
+          set -euo pipefail
+          ssh \
+            -i "$HOME/.ssh/wardveil_vps" \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
+            "$WARDVEIL_VPS_USER@$WARDVEIL_VPS_HOST" \
+            "sudo cat /opt/goreecloud/wardveil/scan-service/evidence/${GITHUB_SHA}-credential-revocation.json" \
+            > /tmp/wardveil-scan-credential-revocation-evidence.json
+
+          python3 - "$GITHUB_SHA" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          expected_revision = sys.argv[1]
+          evidence = json.loads(
+              Path("/tmp/wardveil-scan-credential-revocation-evidence.json").read_text(
+                  encoding="utf-8"
+              )
+          )
+
+          assert evidence["component"] == \
+              "Wardveil Scan credential rotation and revocation acceptance"
+          assert evidence["wardveil_revision"] == expected_revision
+          assert evidence["wardveil_endpoint"] == "http://127.0.0.1:8791/v1/scan"
+          assert evidence["service"] == "wardveil-scan.service"
+          assert evidence["initial_temporary_credential"] == "passed"
+          assert evidence["service_restart_after_initial_credential"] == "passed"
+          assert evidence["old_credential_after_rotation"] == "rejected"
+          assert evidence["replacement_credential_after_rotation"] == "passed"
+          assert evidence["service_restart_after_rotation"] == "passed"
+          assert evidence["replacement_credential_after_explicit_revocation"] == "rejected"
+          assert evidence["service_restart_after_explicit_revocation"] == "passed"
+          assert evidence["generic_rejection_envelope"] == "passed"
+          assert evidence["existing_production_caller_entries_preserved"] is True
+          assert evidence["original_credential_registry_restored"] is True
+          assert evidence["original_credential_registry_hash_restored"] is True
+          assert evidence["original_credential_registry_mode_restored"] is True
+          assert evidence["original_credential_registry_owner_restored"] is True
+          assert evidence["temporary_acceptance_credential_removed"] is True
+          assert evidence["post_acceptance_health"] == "passed"
+          assert evidence["revoked_credential_lifecycle"] == "passed"
+          assert evidence["raw_resource_content_in_evidence"] is False
+          assert evidence["caller_secret_in_evidence"] is False
+          assert evidence["application_consumer_integration"] == "not_proven_by_acceptance"
+          assert evidence["production_service_identity"] == "not_proven_by_acceptance"
+          assert evidence["production_runtime_acceptance"] == "unaccepted"
+          assert evidence["protection_claim_authority"] is False
+          print("revoked_credential_lifecycle=passed")
+          print("production_runtime_acceptance=unaccepted")
+          PY
+
       - name: Record deployment evidence summary
         run: |
           set -euo pipefail
@@ -323,8 +392,13 @@ jobs:
             echo '- Consumer-envelope compatibility: passed'
             echo '- Clean control through Wardveil Scan: passed'
             echo '- EICAR detection through Wardveil Scan: passed'
+            echo '- Stale signed request rejection: passed'
+            echo '- Invalid signature rejection: passed'
+            echo '- Unknown/removed key rejection: passed'
             echo '- Single-host replay restart durability: passed'
             echo '- Conflicting same-nonce replay after restart: rejected'
+            echo '- Temporary acceptance credential rotation/revocation lifecycle: passed'
+            echo '- Existing production caller entries preserved and original registry restored: passed'
             echo '- Replay database/state permissions: private'
             echo '- Direct ClamAV application access: prohibited'
             echo '- Multi-host replay durability: **not proven**'

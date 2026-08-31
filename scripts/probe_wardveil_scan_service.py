@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Probe a deployed Wardveil Scan transport without claiming app integration."""
+"""Probe deployed Wardveil Scan transport without claiming app integration."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ import sys
 import urllib.error
 import urllib.request
 from dataclasses import replace
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from uuid import uuid4
 
@@ -36,12 +36,18 @@ def load_caller(path: Path) -> CallerCredential:
     raise SystemExit("no active Wardveil Scan caller credential is available for the probe")
 
 
-def signed_request(caller: CallerCredential, body: bytes, *, label: str) -> ScanServiceRequest:
+def signed_request(
+    caller: CallerCredential,
+    body: bytes,
+    *,
+    label: str,
+    timestamp: datetime | None = None,
+) -> ScanServiceRequest:
     resource_type = sorted(caller.resource_types)[0]
     request = ScanServiceRequest(
         caller_id=caller.caller_id,
         key_id=caller.key_id,
-        timestamp=datetime.now(timezone.utc).isoformat(),
+        timestamp=(timestamp or datetime.now(timezone.utc)).isoformat(),
         nonce=f"probe-{uuid4()}",
         action="runtime_acceptance_probe",
         resource_type=resource_type,
@@ -57,9 +63,8 @@ def signed_request(caller: CallerCredential, body: bytes, *, label: str) -> Scan
     )
 
 
-def scan(base_url: str, caller: CallerCredential, body: bytes, *, label: str) -> str:
-    request = signed_request(caller, body, label=label)
-    headers = {
+def request_headers(request: ScanServiceRequest) -> dict[str, str]:
+    return {
         "Content-Type": "application/octet-stream",
         "X-Wardveil-Caller-ID": request.caller_id,
         "X-Wardveil-Key-ID": request.key_id,
@@ -73,14 +78,21 @@ def scan(base_url: str, caller: CallerCredential, body: bytes, *, label: str) ->
         "X-Wardveil-Size-Bytes": str(request.size_bytes),
         "X-Wardveil-Signature": request.signature,
     }
-    http_request = urllib.request.Request(
+
+
+def http_request(base_url: str, request: ScanServiceRequest, body: bytes) -> urllib.request.Request:
+    return urllib.request.Request(
         base_url.rstrip("/") + "/v1/scan",
         data=body,
-        headers=headers,
+        headers=request_headers(request),
         method="POST",
     )
+
+
+def scan(base_url: str, caller: CallerCredential, body: bytes, *, label: str) -> str:
+    request = signed_request(caller, body, label=label)
     try:
-        with urllib.request.urlopen(http_request, timeout=20) as response:
+        with urllib.request.urlopen(http_request(base_url, request, body), timeout=20) as response:
             if response.status != 200:
                 raise SystemExit(f"{label} scan returned unexpected HTTP {response.status}")
             payload = json.loads(response.read())
@@ -113,6 +125,74 @@ def scan(base_url: str, caller: CallerCredential, body: bytes, *, label: str) ->
     return str(record.get("result", ""))
 
 
+def require_rejected(
+    base_url: str,
+    request: ScanServiceRequest,
+    body: bytes,
+    *,
+    label: str,
+    expected_status: int = 401,
+) -> None:
+    try:
+        with urllib.request.urlopen(http_request(base_url, request, body), timeout=20) as response:
+            raise SystemExit(
+                f"{label} unexpectedly succeeded with HTTP {response.status}"
+            )
+    except urllib.error.HTTPError as exc:
+        if exc.code != expected_status:
+            raise SystemExit(
+                f"{label} expected HTTP {expected_status}, got HTTP {exc.code}"
+            ) from exc
+        try:
+            payload = json.loads(exc.read())
+        except (json.JSONDecodeError, UnicodeDecodeError) as decode_error:
+            raise SystemExit(f"{label} rejection did not return JSON") from decode_error
+        if payload != {"error": "scan_request_rejected"}:
+            raise SystemExit(f"{label} rejection returned unexpected error envelope")
+        encoded = json.dumps(payload, sort_keys=True)
+        if request.resource_id in encoded or request.signature in encoded:
+            raise SystemExit(f"{label} rejection leaked authentication-bound metadata")
+
+
+def negative_authentication_controls(base_url: str, caller: CallerCredential) -> dict[str, str]:
+    body = b"Wardveil rejected authentication control\n"
+
+    stale = signed_request(
+        caller,
+        body,
+        label="stale-signed-request",
+        timestamp=datetime.now(timezone.utc) - timedelta(minutes=5),
+    )
+    require_rejected(base_url, stale, body, label="stale signed request")
+
+    invalid_signature = signed_request(caller, body, label="invalid-signature")
+    invalid_signature = replace(
+        invalid_signature,
+        signature=("0" if invalid_signature.signature[0] != "0" else "1")
+        + invalid_signature.signature[1:],
+    )
+    require_rejected(base_url, invalid_signature, body, label="invalid signature")
+
+    removed_key = signed_request(caller, body, label="removed-key")
+    removed_key = replace(
+        removed_key,
+        key_id=f"removed-{uuid4().hex[:16]}",
+        signature="0" * 64,
+    )
+    removed_key = replace(
+        removed_key,
+        signature=sign_scan_request(removed_key, caller.secret),
+    )
+    require_rejected(base_url, removed_key, body, label="unknown or removed key")
+
+    return {
+        "stale_signed_request_rejection": "passed",
+        "invalid_signature_rejection": "passed",
+        "unknown_or_removed_key_rejection": "passed",
+        "revoked_credential_lifecycle": "not_proven_by_probe",
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -138,6 +218,7 @@ def main() -> int:
     if malicious != "malicious":
         raise SystemExit(f"EICAR control expected malicious, got {malicious}")
 
+    negative_controls = negative_authentication_controls(args.url, caller)
     json.dump(
         {
             "component": "Wardveil Scan authenticated transport",
@@ -145,6 +226,7 @@ def main() -> int:
             "consumer_envelope_compatibility": "passed",
             "clean_control": "passed",
             "eicar_detection": "passed",
+            **negative_controls,
             "direct_clamav_access": False,
             "application_consumer_integration": "not_proven_by_probe",
             "production_service_identity": "not_proven_by_probe",
