@@ -53,16 +53,19 @@ jobs:
             scripts/accept_wardveil_scan_replay_restart.py \
             scripts/accept_wardveil_scan_credential_revocation.py \
             scripts/accept_wardveil_scan_capacity.py \
+            scripts/accept_wardveil_scan_stale_signature.py \
             scripts/test_wardveil_scan_service.py \
             scripts/test_wardveil_scan_replay.py \
             scripts/test_wardveil_scan_replay_restart_acceptance.py \
             scripts/test_wardveil_scan_credential_revocation_acceptance.py \
             scripts/test_wardveil_scan_capacity_acceptance.py \
+            scripts/test_wardveil_scan_stale_signature_acceptance.py \
             scripts/validate_wardveil_scan_service.py \
             scripts/validate_wardveil_scan_replay.py \
             scripts/validate_wardveil_scan_replay_restart_acceptance.py \
             scripts/validate_wardveil_scan_credential_revocation_acceptance.py \
-            scripts/validate_wardveil_scan_capacity_acceptance.py
+            scripts/validate_wardveil_scan_capacity_acceptance.py \
+            scripts/validate_wardveil_scan_stale_signature_acceptance.py
 
       - name: Test authenticated Scan transport
         run: python3 scripts/test_wardveil_scan_service.py
@@ -79,6 +82,9 @@ jobs:
       - name: Test capacity acceptance helpers
         run: python3 scripts/test_wardveil_scan_capacity_acceptance.py
 
+      - name: Test stale scanner signature acceptance helpers
+        run: python3 scripts/test_wardveil_scan_stale_signature_acceptance.py
+
       - name: Validate deployment and acceptance boundaries
         run: |
           set -euo pipefail
@@ -91,3 +97,6 @@ jobs:
 
       - name: Validate capacity acceptance wiring
         run: python3 scripts/validate_wardveil_scan_capacity_acceptance.py
+
+      - name: Validate stale scanner signature acceptance wiring
+        run: python3 scripts/validate_wardveil_scan_stale_signature_acceptance.py
