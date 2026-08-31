@@ -52,7 +52,8 @@ jobs:
             scripts/probe_wardveil_scan_service.py \
             scripts/test_wardveil_scan_service.py \
             scripts/test_wardveil_scan_replay.py \
-            scripts/validate_wardveil_scan_service.py
+            scripts/validate_wardveil_scan_service.py \
+            scripts/validate_wardveil_scan_replay.py
 
       - name: Test authenticated Scan transport
         run: python3 scripts/test_wardveil_scan_service.py
@@ -61,4 +62,7 @@ jobs:
         run: python3 scripts/test_wardveil_scan_replay.py
 
       - name: Validate deployment and acceptance boundaries
-        run: python3 scripts/validate_wardveil_scan_service.py
+        run: |
+          set -euo pipefail
+          python3 scripts/validate_wardveil_scan_service.py
+          python3 scripts/validate_wardveil_scan_replay.py
