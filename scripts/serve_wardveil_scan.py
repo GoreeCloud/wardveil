@@ -14,6 +14,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from reference.wardveil_scan_replay import SQLiteReplayLedger  # noqa: E402
 from reference.wardveil_scan_service import (  # noqa: E402
     DEFAULT_MAX_CONCURRENT_SCANS,
     DEFAULT_REPLAY_MAX_ENTRIES,
@@ -47,6 +48,30 @@ def credential_file() -> Path:
     )
 
 
+def replay_ledger():
+    max_entries = positive_int(
+        "WARDVEIL_SCAN_REPLAY_MAX_ENTRIES", DEFAULT_REPLAY_MAX_ENTRIES
+    )
+    ttl = timedelta(
+        seconds=positive_int(
+            "WARDVEIL_SCAN_REPLAY_TTL_SECONDS", DEFAULT_REPLAY_TTL_SECONDS
+        )
+    )
+    configured = os.environ.get("WARDVEIL_SCAN_REPLAY_DB", "").strip()
+    if not configured:
+        # Development/reference execution retains the bounded in-memory ledger.
+        # The source-controlled production unit always sets WARDVEIL_SCAN_REPLAY_DB.
+        return InMemoryReplayLedger(max_entries=max_entries, ttl=ttl)
+    database = Path(configured)
+    if not database.is_absolute():
+        raise ValueError("WARDVEIL_SCAN_REPLAY_DB must be an absolute path")
+    return SQLiteReplayLedger(
+        path=database,
+        max_entries=max_entries,
+        ttl=ttl,
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -62,22 +87,12 @@ def main() -> int:
         callers_path = credential_file()
         raw_credentials = callers_path.read_text(encoding="utf-8")
         credentials = credentials_from_json(raw_credentials)
-        replay_ledger = InMemoryReplayLedger(
-            max_entries=positive_int(
-                "WARDVEIL_SCAN_REPLAY_MAX_ENTRIES", DEFAULT_REPLAY_MAX_ENTRIES
-            ),
-            ttl=timedelta(
-                seconds=positive_int(
-                    "WARDVEIL_SCAN_REPLAY_TTL_SECONDS", DEFAULT_REPLAY_TTL_SECONDS
-                )
-            ),
-        )
         max_concurrent_scans = positive_int(
             "WARDVEIL_SCAN_MAX_CONCURRENT_SCANS", DEFAULT_MAX_CONCURRENT_SCANS
         )
         service = WardveilScanService(
             credentials=credentials,
-            replay_ledger=replay_ledger,
+            replay_ledger=replay_ledger(),
         )
         server = build_http_server(
             service,
