@@ -19,7 +19,7 @@ jobs:
   deploy-and-probe:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 20
     environment: wardveil-production
     env:
       WARDVEIL_VPS_HOST: ${{ secrets.WARDVEIL_VPS_HOST }}
@@ -78,11 +78,13 @@ jobs:
             contracts/wardveil.scan-service-transport.json \
             deployment/scan-service \
             reference/wardveil_scan_service.py \
+            reference/wardveil_scan_replay.py \
             reference/wardveil_clamav.py \
             reference/wardveil_clamav_runtime.py \
             reference/wardveil_detect_scan.py \
             scripts/serve_wardveil_scan.py \
-            scripts/probe_wardveil_scan_service.py
+            scripts/probe_wardveil_scan_service.py \
+            scripts/accept_wardveil_scan_replay_restart.py
           sha256sum "$archive" > "$archive.sha256"
 
       - name: Transfer deployment bundle
@@ -98,7 +100,7 @@ jobs:
             "$archive" "$archive.sha256" \
             "$WARDVEIL_VPS_USER@$WARDVEIL_VPS_HOST:/tmp/"
 
-      - name: Deploy service and run authenticated clean/EICAR probe
+      - name: Deploy service and run authenticated runtime acceptance
         run: |
           set -euo pipefail
           ssh \
@@ -114,6 +116,7 @@ jobs:
           base=/opt/goreecloud/wardveil/scan-service
           release="$base/releases/$revision"
           evidence="$base/evidence/$revision.json"
+          replay_evidence="$base/evidence/$revision-replay-restart.json"
           archive="/tmp/wardveil-scan-$revision.tgz"
           checksum="$archive.sha256"
           callers=/etc/goreecloud/wardveil/scan-callers.json
@@ -147,6 +150,9 @@ jobs:
           sudo tar -xzf "$archive" -C "$release"
           sudo chown -R root:root "$release"
           sudo chmod -R go-w "$release"
+
+          sudo test -f "$release/reference/wardveil_scan_replay.py"
+          sudo test -f "$release/scripts/accept_wardveil_scan_replay_restart.py"
 
           sudo env PYTHONPATH="$release" python3 - "$callers" <<'PY'
           import sys
@@ -211,6 +217,20 @@ jobs:
             "/tmp/wardveil-scan-evidence-$revision.json" \
             "$evidence"
           sudo rm -f "/tmp/wardveil-scan-evidence-$revision.json"
+
+          sudo env PYTHONPATH="$release" \
+            python3 "$release/scripts/accept_wardveil_scan_replay_restart.py" \
+              --callers-file "$callers" \
+              --caller-id goreecloud-drive \
+              --key-id scan-current \
+              --resource-type drive_file \
+              --source-revision "$revision" \
+              --output "$replay_evidence"
+
+          test "$(sudo stat -c '%a' "$replay_evidence")" = "600"
+          test "$(sudo readlink -f "$base/current")" = "$release"
+          test "$(sudo systemctl is-active wardveil-scan.service)" = "active"
+
           trap - ERR
           sudo rm -f "$archive" "$checksum"
           REMOTE
@@ -236,6 +256,60 @@ jobs:
           grep -q '"quarantine_execution": "not_proven_by_probe"' /tmp/wardveil-scan-production-evidence.json
           grep -q '"production_runtime_acceptance": "unaccepted"' /tmp/wardveil-scan-production-evidence.json
 
+      - name: Retrieve and validate replay restart evidence
+        run: |
+          set -euo pipefail
+          ssh \
+            -i "$HOME/.ssh/wardveil_vps" \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
+            "$WARDVEIL_VPS_USER@$WARDVEIL_VPS_HOST" \
+            "sudo cat /opt/goreecloud/wardveil/scan-service/evidence/${GITHUB_SHA}-replay-restart.json" \
+            > /tmp/wardveil-scan-replay-restart-evidence.json
+
+          python3 - "$GITHUB_SHA" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          expected_revision = sys.argv[1]
+          evidence = json.loads(
+              Path("/tmp/wardveil-scan-replay-restart-evidence.json").read_text(
+                  encoding="utf-8"
+              )
+          )
+
+          assert evidence["component"] == \
+              "Wardveil Scan durable same-host replay restart acceptance"
+          assert evidence["wardveil_revision"] == expected_revision
+          assert evidence["wardveil_endpoint"] == "http://127.0.0.1:8791/v1/scan"
+          assert evidence["service"] == "wardveil-scan.service"
+          assert evidence["initial_authenticated_clean_request"] == "passed"
+          assert evidence["service_restart"] == "passed"
+          assert evidence["systemd_invocation_changed"] is True
+          assert evidence["exact_replay_after_restart"] == "passed"
+          assert evidence["cached_envelope_identical"] is True
+          assert evidence["conflicting_replay_after_restart"] == "passed"
+          assert evidence["post_acceptance_health"] == "passed"
+          assert evidence["replay_database"] == "/var/lib/wardveil-scan/replay.sqlite3"
+          assert evidence["replay_database_mode"] == "0600"
+          assert evidence["replay_state_directory_mode"] == "0700"
+          assert evidence["transient_request_state_private"] is True
+          assert evidence["transient_request_state_removed"] is True
+          assert evidence["raw_resource_content_in_evidence"] is False
+          assert evidence["caller_secret_in_evidence"] is False
+          assert evidence["single_host_restart_durability"] == "passed"
+          assert evidence["multi_host_replay_durability"] == "not_proven"
+          assert evidence["production_service_identity"] == "not_proven_by_acceptance"
+          assert evidence["production_runtime_acceptance"] == "unaccepted"
+          assert evidence["protection_claim_authority"] is False
+          print("single_host_restart_durability=passed")
+          print("multi_host_replay_durability=not_proven")
+          print("production_runtime_acceptance=unaccepted")
+          PY
+
       - name: Record deployment evidence summary
         run: |
           set -euo pipefail
@@ -249,10 +323,14 @@ jobs:
             echo '- Consumer-envelope compatibility: passed'
             echo '- Clean control through Wardveil Scan: passed'
             echo '- EICAR detection through Wardveil Scan: passed'
+            echo '- Single-host replay restart durability: passed'
+            echo '- Conflicting same-nonce replay after restart: rejected'
+            echo '- Replay database/state permissions: private'
             echo '- Direct ClamAV application access: prohibited'
-            echo '- Application consumer integration: **not proven by this probe**'
-            echo '- Production service identity/key management: **not proven by this probe**'
-            echo '- Authorized quarantine execution: **not proven by this probe**'
+            echo '- Multi-host replay durability: **not proven**'
+            echo '- Application consumer integration: **not proven by this deployment probe**'
+            echo '- Production service identity/key management: **not proven by this deployment probe**'
+            echo '- Authorized quarantine execution: **not proven by this deployment probe**'
             echo '- Production runtime acceptance: **unaccepted**'
           } >> "$GITHUB_STEP_SUMMARY"
 
