@@ -1,10 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
-  <title id="title">Wardveil Security icon</title>
-  <desc id="desc">Two sculpted protective veil panels curve inward around a compact protected core, creating a restrained W-shaped central opening without using a conventional shield.</desc>
-  <g fill="currentColor">
-    <path d="M34 46 C62 58 84 74 101 94 C112 107 118 119 122 132 C108 123 96 114 84 104 C73 95 62 88 50 82 C54 119 63 151 79 177 C91 197 107 213 128 226 C103 220 82 210 66 195 C43 173 31 143 27 105 C24 79 27 59 34 46 Z"/>
-    <path d="M222 46 C194 58 172 74 155 94 C144 107 138 119 134 132 C148 123 160 114 172 104 C183 95 194 88 206 82 C202 119 193 151 177 177 C165 197 149 213 128 226 C153 220 174 210 190 195 C213 173 225 143 229 105 C232 79 229 59 222 46 Z"/>
-    <path d="M128 108 C139 121 147 133 151 145 C154 155 153 165 148 175 C143 185 136 193 128 200 C120 193 113 185 108 175 C103 165 102 155 105 145 C109 133 117 121 128 108 Z" opacity="0.88"/>
-  </g>
+  <title id="title">Wardveil Security — Sentinel Fold</title>
+  <desc id="desc">Layered protective veil planes fold around a compact guarded core, forming a restrained W-shaped negative space without using a conventional shield.</desc>
+  <defs>
+    <linearGradient id="leftVeil" x1="26" y1="42" x2="130" y2="210" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#22D3EE"/>
+      <stop offset="0.52" stop-color="#2563EB"/>
+      <stop offset="1" stop-color="#4F46E5"/>
+    </linearGradient>
+    <linearGradient id="rightVeil" x1="230" y1="42" x2="126" y2="210" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#60A5FA"/>
+      <stop offset="0.52" stop-color="#4F46E5"/>
+      <stop offset="1" stop-color="#7C3AED"/>
+    </linearGradient>
+    <linearGradient id="foldHighlight" x1="68" y1="70" x2="188" y2="184" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#E0F7FF" stop-opacity="0.96"/>
+      <stop offset="0.5" stop-color="#BFDBFE" stop-opacity="0.82"/>
+      <stop offset="1" stop-color="#DDD6FE" stop-opacity="0.88"/>
+    </linearGradient>
+    <linearGradient id="coreRing" x1="96" y1="98" x2="161" y2="163" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#67E8F9"/>
+      <stop offset="0.5" stop-color="#60A5FA"/>
+      <stop offset="1" stop-color="#A78BFA"/>
+    </linearGradient>
+  </defs>
+
+  <path d="M34 42C63 49 87 62 107 83L128 106L108 130C91 150 80 176 77 208C54 197 38 180 29 157C18 129 17 97 22 72C25 58 29 48 34 42Z" fill="url(#leftVeil)"/>
+  <path d="M222 42C193 49 169 62 149 83L128 106L148 130C165 150 176 176 179 208C202 197 218 180 227 157C238 129 239 97 234 72C231 58 227 48 222 42Z" fill="url(#rightVeil)"/>
+
+  <path d="M58 67C78 73 95 84 111 100L128 118L112 137C100 151 92 168 88 187C78 178 70 166 65 152C58 133 56 110 58 91C59 82 60 74 58 67Z" fill="url(#foldHighlight)" opacity="0.58"/>
+  <path d="M198 67C178 73 161 84 145 100L128 118L144 137C156 151 164 168 168 187C178 178 186 166 191 152C198 133 200 110 198 91C197 82 196 74 198 67Z" fill="url(#foldHighlight)" opacity="0.48"/>
+
+  <path d="M128 91L160 119L151 158L128 178L105 158L96 119L128 91Z" fill="#0F172A" fill-opacity="0.92" stroke="url(#coreRing)" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M128 108L143 122L139 145L128 155L117 145L113 122L128 108Z" fill="url(#foldHighlight)"/>
+
+  <path d="M82 88C97 94 110 104 121 116" fill="none" stroke="#FFFFFF" stroke-opacity="0.28" stroke-width="6" stroke-linecap="round"/>
+  <path d="M174 88C159 94 146 104 135 116" fill="none" stroke="#FFFFFF" stroke-opacity="0.24" stroke-width="6" stroke-linecap="round"/>
 </svg>
