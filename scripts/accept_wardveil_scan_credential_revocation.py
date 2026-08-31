@@ -42,6 +42,7 @@ LOOPBACK_URL = "http://127.0.0.1:8791"
 SERVICE_NAME = "wardveil-scan.service"
 RESOURCE_TYPE = "drive_file"
 CONTROL_BODY = b"Wardveil credential revocation acceptance control\n"
+CONTROL_EVIDENCE_MARKER = CONTROL_BODY.rstrip()
 HTTP_TIMEOUT_SECONDS = 10
 HEALTH_TIMEOUT_SECONDS = 20.0
 MAX_HTTP_RESPONSE_BYTES = 1 << 20
@@ -288,7 +289,7 @@ def write_evidence(path: Path, evidence: dict, *, forbidden_secrets: tuple[bytes
         fail("credential lifecycle evidence path must be absolute")
     path.parent.mkdir(parents=True, exist_ok=True)
     raw = json.dumps(evidence, sort_keys=True, indent=2).encode("utf-8") + b"\n"
-    if CONTROL_BODY in raw:
+    if CONTROL_EVIDENCE_MARKER in raw:
         fail("raw control content would leak into credential lifecycle evidence")
     for secret in forbidden_secrets:
         if secret and secret in raw:
