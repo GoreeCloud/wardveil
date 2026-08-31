@@ -25,6 +25,9 @@ def main() -> int:
         "temporary acceptance-only caller",
         "ALLOWED_REGISTRY_MODES = {0o400, 0o600}",
         "atomic_replace(",
+        "def reset_start_rate_and_restart(service: str) -> None:",
+        '["systemctl", "reset-failed", service]',
+        '"systemd_start_rate_reset_before_intentional_restarts": True',
         "original_raw",
         "finally:",
         '"old_credential_after_rotation": "rejected"',
@@ -40,6 +43,8 @@ def main() -> int:
 
     for marker in (
         "scripts/accept_wardveil_scan_credential_revocation.py",
+        "sudo systemctl reset-failed wardveil-scan.service",
+        '"systemd_start_rate_reset_before_intentional_restarts"',
         'revocation_evidence="$base/evidence/$revision-credential-revocation.json"',
         'python3 "$release/scripts/accept_wardveil_scan_credential_revocation.py"',
         '--callers-file "$callers"',

@@ -175,11 +175,23 @@ def service_active(service: str) -> bool:
     return result.returncode == 0
 
 
+def reset_start_rate_and_restart(service: str) -> None:
+    """Reset accumulated systemd start-rate accounting before an intentional restart."""
+    subprocess.run(
+        ["systemctl", "reset-failed", service],
+        check=True,
+    )
+    subprocess.run(
+        ["systemctl", "restart", service],
+        check=True,
+    )
+
+
 def restart_service_and_wait(service: str, url: str) -> tuple[str, str]:
     before = systemctl_value(service, "InvocationID")
     if not before or not service_active(service):
         fail("Wardveil Scan service is not active before credential lifecycle restart")
-    subprocess.run(["systemctl", "restart", service], check=True)
+    reset_start_rate_and_restart(service)
 
     deadline = time.monotonic() + HEALTH_TIMEOUT_SECONDS
     last_error: Exception | None = None
@@ -448,6 +460,7 @@ def main() -> int:
         "wardveil_revision": args.source_revision,
         "wardveil_endpoint": args.url.rstrip("/") + "/v1/scan",
         "service": args.service,
+        "systemd_start_rate_reset_before_intentional_restarts": True,
         "temporary_acceptance_caller": "ephemeral",
         "temporary_scope": RESOURCE_TYPE,
         "initial_temporary_credential": "passed",

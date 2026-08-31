@@ -28,7 +28,52 @@ def expect_system_exit(callable_, message: str) -> None:
     raise AssertionError(message)
 
 
+def test_reset_start_rate_and_restart_orders_systemd_calls() -> None:
+    calls = []
+    original_run = module.subprocess.run
+
+    def fake_run(command, *, check=False, **kwargs):
+        calls.append((list(command), check))
+        return None
+
+    module.subprocess.run = fake_run
+
+    try:
+        module.reset_start_rate_and_restart(
+            "wardveil-scan.service"
+        )
+    finally:
+        module.subprocess.run = original_run
+
+    expected = [
+        (
+            [
+                "systemctl",
+                "reset-failed",
+                "wardveil-scan.service",
+            ],
+            True,
+        ),
+        (
+            [
+                "systemctl",
+                "restart",
+                "wardveil-scan.service",
+            ],
+            True,
+        ),
+    ]
+
+    if calls != expected:
+        raise AssertionError(
+            "intentional restart must reset start-rate "
+            f"accounting immediately before restart: {calls!r}"
+        )
+
+
 def main() -> int:
+    test_reset_start_rate_and_restart_orders_systemd_calls()
+
     original_entries = [
         {
             "caller_id": "goreecloud-drive",
