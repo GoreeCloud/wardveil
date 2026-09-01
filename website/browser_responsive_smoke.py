@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Exercise Security Center geometry at screenshot-relevant viewport widths."""
+"""Exercise the built Security Center at screenshot-relevant viewport widths."""
 from __future__ import annotations
 import json
 from pathlib import Path
 import shutil, subprocess, tempfile, time
 from typing import Any
 from urllib.request import Request, urlopen
-ROOT=Path(__file__).resolve().parent; WEB_PORT=8765; DRIVER_PORT=9518
+ROOT=Path(__file__).resolve().parent; SITE=ROOT/"dist"; WEB_PORT=8765; DRIVER_PORT=9518
 BASE=f"http://127.0.0.1:{DRIVER_PORT}"; TARGET=f"http://127.0.0.1:{WEB_PORT}/"
 VIEWPORTS=((1180,900),(768,900),(390,844),(320,844))
 class BrowserError(RuntimeError): pass
@@ -39,8 +39,8 @@ def driver_bin()->str:
 def main()->int:
     server=driver=None; session=None; log_path=None
     try:
-        require((ROOT/"index.html").is_file(),"Security Center index.html missing")
-        server=subprocess.Popen(["python3","-m","http.server",str(WEB_PORT),"--bind","127.0.0.1","--directory",str(ROOT)],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL); wait(TARGET)
+        require((SITE/"index.html").is_file(),"built Security Center missing; run website/validate.py first")
+        server=subprocess.Popen(["python3","-m","http.server",str(WEB_PORT),"--bind","127.0.0.1","--directory",str(SITE)],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL); wait(TARGET)
         with tempfile.NamedTemporaryFile(prefix="security-chromedriver-",suffix=".log",delete=False) as log:
             log_path=log.name; driver=subprocess.Popen([driver_bin(),f"--port={DRIVER_PORT}","--allowed-ips=127.0.0.1"],stdout=log,stderr=subprocess.STDOUT)
         wait(BASE+"/status",True)
@@ -54,7 +54,7 @@ def main()->int:
             require(state.get("ready")=="complete",f"page incomplete at {w}px: {state}"); require(int(state.get("sw",w+2))<=w+1,f"horizontal overflow at {w}px: {state}")
             require(state.get("pos") not in {"sticky","fixed"},f"header overlays content at {w}px: {state}"); require(float(state.get("mt",0))+1>=float(state.get("hb",0)),f"main overlaps header at {w}px: {state}")
             require(float(state.get("minNav",0))>=47.5,f"navigation target below 48px at {w}px: {state}")
-        print("Security Center responsive Chrome geometry passed at 1180, 768, 390, and 320px."); return 0
+        print("Security Center responsive Chrome geometry passed at 1180, 768, 390, and 320px against the built artifact."); return 0
     except Exception as exc:
         print(f"Security Center responsive Chrome geometry failed: {exc}")
         if log_path:
