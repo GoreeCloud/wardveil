@@ -18,7 +18,7 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    timeout-minutes: 8
     steps:
       - name: Check out exact source revision
         uses: actions/checkout@v4
@@ -37,3 +37,9 @@ jobs:
 
       - name: Build and validate Security Center 2.1 adoption
         run: python3 website/validate.py
+
+      - name: Validate responsive public-document layout
+        run: python3 website/validate_responsive.py
+
+      - name: Exercise responsive public-document geometry in Chrome
+        run: python3 website/browser_responsive_smoke.py
