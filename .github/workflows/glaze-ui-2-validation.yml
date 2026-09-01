@@ -37,3 +37,6 @@ jobs:
 
       - name: Build and validate Security Center 2.1 adoption
         run: python3 website/validate.py
+
+      - name: Validate responsive public-document layout
+        run: python3 website/validate_responsive.py
