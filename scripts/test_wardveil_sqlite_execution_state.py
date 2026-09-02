@@ -141,6 +141,28 @@ def main() -> None:
         ):
             assert forbidden not in serialized
 
+        if os.name == "posix":
+            permissive = Path(temp_dir) / "permissive.sqlite3"
+            permissive.touch(mode=0o640)
+            permissive.chmod(0o640)
+            expect_raises(
+                "execution_state_database_owner_only_required",
+                lambda: SQLiteExecutionStateStore(permissive),
+            )
+
+        real_database = Path(temp_dir) / "real.sqlite3"
+        SQLiteExecutionStateStore(real_database)
+        symlink_database = Path(temp_dir) / "linked.sqlite3"
+        try:
+            symlink_database.symlink_to(real_database)
+        except (OSError, NotImplementedError):
+            pass
+        else:
+            expect_raises(
+                "execution_state_database_symlink_forbidden",
+                lambda: SQLiteExecutionStateStore(symlink_database),
+            )
+
     print("Wardveil SQLite execution-state restart tests passed.")
 
 
