@@ -12,6 +12,7 @@ import copy
 import json
 import os
 import sqlite3
+import stat
 from contextlib import contextmanager
 from hashlib import sha256
 from pathlib import Path
@@ -43,7 +44,32 @@ class SQLiteExecutionStateStore:
             raise ValueError("invalid_execution_state_busy_timeout")
         self.busy_timeout_ms = int(busy_timeout_ms)
         self.path.parent.mkdir(parents=True, exist_ok=True)
+        self._prepare_database_file()
         self._initialize()
+
+    def _prepare_database_file(self) -> None:
+        """Require a regular owner-only database path and never follow symlinks."""
+
+        if self.path.is_symlink():
+            raise ValueError("execution_state_database_symlink_forbidden")
+        if self.path.exists():
+            metadata = self.path.stat()
+            if not stat.S_ISREG(metadata.st_mode):
+                raise ValueError("execution_state_database_regular_file_required")
+            if os.name == "posix" and stat.S_IMODE(metadata.st_mode) & 0o077:
+                raise ValueError("execution_state_database_owner_only_required")
+            return
+
+        flags = os.O_CREAT | os.O_EXCL | os.O_WRONLY
+        nofollow = getattr(os, "O_NOFOLLOW", 0)
+        if nofollow:
+            flags |= nofollow
+        try:
+            descriptor = os.open(self.path, flags, 0o600)
+        except OSError as exc:
+            raise ValueError("execution_state_database_secure_create_failed") from exc
+        else:
+            os.close(descriptor)
 
     def _connect(self) -> sqlite3.Connection:
         connection = sqlite3.connect(
@@ -58,7 +84,6 @@ class SQLiteExecutionStateStore:
         return connection
 
     def _initialize(self) -> None:
-        created = not self.path.exists()
         connection = self._connect()
         try:
             connection.execute("PRAGMA journal_mode=DELETE")
@@ -89,8 +114,6 @@ class SQLiteExecutionStateStore:
             )
         finally:
             connection.close()
-        if os.name == "posix" and (created or self.path.exists()):
-            self.path.chmod(0o600)
 
     @contextmanager
     def _transaction(self) -> Iterator[sqlite3.Connection]:
