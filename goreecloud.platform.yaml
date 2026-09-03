@@ -1,0 +1,151 @@
+schema_version: '0.2'
+
+component:
+  type: service
+  id: goreecloud-wardveil-security
+  product_name: Wardveil Security
+  repository: GoreeCloud/goreecloud-wardveil-security
+
+lifecycle: development
+version: '0.9'
+
+supported_platforms:
+  - linux
+  - web
+
+api:
+  versions: []
+  endpoints: []
+
+platform_systems:
+  manager:
+    result: applicable-blocked
+    version: null
+    evidence:
+      - README.md
+    notes: GoreeCloud Manager integration for Wardveil inventory, lifecycle, coverage, health, evidence, and bounded administrative state is required but no accepted current Manager integration is established.
+  privacy_shield:
+    result: applicable-migration-required
+    version: null
+    evidence:
+      - README.md
+      - contracts/wardveil.mesh-evidence-profile.json
+    notes: Wardveil source architecture preserves Privacy Shield as the separate privacy and data-use authority, but live Privacy Shield integration and production acceptance remain open.
+  wardveil_security:
+    result: not-applicable-justified
+    version: '0.9'
+    evidence:
+      - README.md
+      - contracts/wardveil.capabilities.json
+    notes: This repository implements the Wardveil Security authority itself; a separate Wardveil-to-Wardveil platform integration is not applicable.
+  everkeep:
+    result: applicable-migration-required
+    version: null
+    evidence:
+      - README.md
+      - contracts/wardveil.mesh-evidence-profile.json
+    notes: Wardveil defines recovery coordination and authority boundaries with Everkeep, but live Everkeep recovery-provider integration and production acceptance remain incomplete.
+  glaze_ui:
+    result: applicable-migration-required
+    version: '2.1.0'
+    evidence:
+      - website/GLAZE-UI-2.1-ADOPTION.md
+      - website/glaze-ui-2.1.0.css
+    notes: Security Center has source-level Glaze UI 2.1.0 adoption evidence, while the current Platform Contract consumer baseline is 1.1.0; current-contract reconciliation, human/rendered acceptance, and production consumer acceptance remain separate.
+  mesh:
+    result: applicable-migration-required
+    version: null
+    evidence:
+      - contracts/wardveil.mesh-evidence-profile.json
+      - reference/wardveil_mesh_delivery.py
+    notes: Wardveil defines a minimized Mesh evidence profile and source delivery client, while runtime delivery production acceptance remains false and live producer identity, routing, delivery, and end-to-end acceptance remain required.
+    capabilities:
+      - security-evidence-producer
+      - trust-evaluation
+      - policy-decision
+      - scan-finding
+      - protection-result
+    dependencies:
+      - goreecloud-identity
+      - goreecloud-mesh
+    published_events: []
+    consumed_events: []
+  identity:
+    result: applicable-migration-required
+    version: null
+    evidence:
+      - README.md
+      - contracts/wardveil.mesh-evidence-profile.json
+    notes: GoreeCloud Identity remains authoritative for production service identity and scoped credentials used by Wardveil services and executors, but production Identity service identity, signing-key lifecycle, and approved cryptography/key management remain unaccepted.
+
+health:
+  health_endpoint: null
+  readiness_endpoint: null
+
+continuity:
+  backup:
+    required: true
+    requirements:
+      - Protect durable Wardveil policy, trust, execution-state, replay, audit, quarantine, incident, service-identity, signing-key metadata, and required security evidence state according to approved retention and privacy boundaries.
+      - Protect configuration and state needed to restore Wardveil services without placing reusable credentials or private key material in ordinary evidence or Git history.
+  restore:
+    required: true
+    requirements:
+      - Validate isolated restoration of Wardveil durable state, replay protection, execution reconciliation, policy behavior, audit provenance, and required Scan service state before broad production dependence.
+      - Require Wardveil verification of restored security-sensitive services while preserving Everkeep as the recovery authority.
+  export:
+    required: true
+    requirements:
+      - Provide documented minimized export or migration paths for Wardveil-owned policy, audit, evidence, incident, quarantine, and configuration state without exporting reusable secrets or raw protected content as ordinary data.
+  portability:
+    required: true
+    requirements:
+      - Keep Wardveil contracts and security-engine boundaries replaceable so the platform is not permanently coupled to ClamAV or another single scanning, persistence, or execution implementation.
+
+external_dependencies:
+  - name: ClamAV
+    purpose: Current replaceable malware-scanning engine beneath Wardveil Scan; it does not define Wardveil security authority or the long-term Scan contract.
+    required: false
+    version_constraint: null
+  - name: SQLite
+    purpose: Durable same-host replay and execution-state persistence used by the current Wardveil Scan runtime path.
+    required: true
+    version_constraint: null
+
+compatibility:
+  platform_contract: '0.2'
+  glaze_ui_required: '1.1.0'
+  requires:
+    - goreecloud-platform-contract==0.2
+    - glaze-ui==1.1.0
+  provides:
+    - wardveil-security-foundation-0.9
+    - wardveil-mesh-evidence-profile-v1
+    - wardveil-scan
+
+evidence:
+  acceptance_tests: []
+  release: []
+
+conformance:
+  status: nonconformant
+  validated_at: null
+  evidence:
+    - README.md
+    - SECURITY.md
+    - RUNTIME-AUTHORIZATION.md
+    - EXECUTION-STATE.md
+    - SERVICE-IDENTITY.md
+    - contracts/wardveil.capabilities.json
+    - contracts/wardveil.mesh-evidence-profile.json
+    - website/GLAZE-UI-2.1-ADOPTION.md
+  blockers:
+    - Wardveil Foundation 0.9 remains in Active Development and overall production runtime acceptance remains unaccepted even though bounded Wardveil Scan runtime and consumer scopes have exact-environment evidence.
+    - GoreeCloud Manager integration and acceptance for Wardveil service state are not established.
+    - Production GoreeCloud Identity service identity, signing-key lifecycle, approved cryptography, and key management remain incomplete.
+    - Privacy Shield integration and production acceptance remain incomplete.
+    - Everkeep recovery-provider integration and production acceptance remain incomplete.
+    - Mesh evidence delivery remains production-unaccepted and requires live producer identity, target routing, delivery, and end-to-end acceptance.
+    - Security Center requires current-contract Glaze UI reconciliation plus final human, rendered, deployment, provenance, and production consumer acceptance.
+    - Authorized Quarantine execution, target readback, idempotency/reconciliation, authoritative Audit/Security Center provenance, and broader protection-claim authority remain unaccepted.
+    - Any required multi-host replay/capacity acceptance and Stable qualification remain open.
