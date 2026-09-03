@@ -1,0 +1,136 @@
+schema_version: "0.2"
+
+component:
+  type: service
+  id: goreecloud-wardveil-security
+  product_name: Wardveil Security by GoreeCloud
+  repository: GoreeCloud/goreecloud-wardveil-security
+
+lifecycle: development
+version: 0.9.0
+
+supported_platforms:
+  - web
+  - cloudflare-workers
+  - linux-server
+
+api:
+  versions: []
+  endpoints: []
+
+platform_systems:
+  manager:
+    result: applicable-blocked
+    version: null
+    evidence:
+      - README.md
+    notes: Manager may present Wardveil security state only from accepted bounded evidence; no accepted live Manager-to-Wardveil runtime integration is established by current main.
+  privacy_shield:
+    result: applicable-blocked
+    version: null
+    evidence:
+      - PRIVACY-SHIELD.md
+      - contracts/wardveil.privacy-shield.vectors.json
+    notes: Wardveil has an accepted privacy-safe read-only Privacy Shield presentation contract, but live runtime evidence and product acceptance remain independent and incomplete.
+  wardveil_security:
+    result: not-applicable-justified
+    version: 0.9.0
+    evidence:
+      - README.md
+      - ARCHITECTURE.md
+      - contracts/wardveil.capabilities.json
+    notes: This repository implements the Wardveil Security authority itself; a separate Wardveil-to-Wardveil integration is not applicable.
+  everkeep:
+    result: applicable-blocked
+    version: null
+    evidence:
+      - README.md
+    notes: Everkeep retains resilience, recovery, preservation, portability, and succession authority. Wardveil recovery coordination does not establish an accepted Everkeep runtime integration.
+  glaze_ui:
+    result: applicable-migration-required
+    version: 2.1.0
+    evidence:
+      - website/index.html
+      - website/glaze-ui-2.1.0.css
+    notes: Wardveil Security Center currently carries an older repository-local Glaze 2.1 baseline. Migration and rendered acceptance against current Stable GLAZE UI V1.1 / 1.1.0 are required.
+  mesh:
+    result: applicable-blocked
+    version: null
+    evidence:
+      - README.md
+      - RUNTIME-AUTHORIZATION.md
+    notes: Wardveil may use Mesh for authenticated security-signal, decision, and runtime-authorization transport, but current main does not establish accepted live Mesh publication or consumption.
+    capabilities: []
+    dependencies: []
+    published_events: []
+    consumed_events: []
+  identity:
+    result: applicable-blocked
+    version: null
+    evidence:
+      - README.md
+      - SERVICE-IDENTITY.md
+      - website/index.html
+    notes: Wardveil defines its own service-identity and signing-key contracts while GoreeCloud Identity remains the platform identity authority. Production GoreeCloud Identity issuance, workload binding, and key lifecycle acceptance remain separate open gates.
+
+health:
+  health_endpoint: null
+  readiness_endpoint: null
+
+continuity:
+  backup:
+    required: true
+    requirements:
+      - Protect non-reproducible Wardveil execution-state claims, receipts, accepted policy state, security evidence, quarantine state, and audit state before production dependence.
+      - Keep signing keys, bearer credentials, and other reusable secrets outside ordinary unapproved backup content while preserving approved recovery references and key-lifecycle procedures.
+  restore:
+    required: true
+    requirements:
+      - Validate clean-environment recovery of Wardveil durable execution state, receipts, policy/evidence integrity, quarantine/reconciliation state, and required security integrations before production acceptance.
+      - Recovery must preserve uncertain-outcome and replay protections rather than silently permitting high-impact action re-execution.
+  export:
+    required: true
+    requirements:
+      - Preserve an independently usable export path for Wardveil-owned durable audit, evidence, policy, incident, quarantine, and execution-reconciliation state where applicable.
+  portability:
+    required: true
+    requirements:
+      - Keep Wardveil contracts, evidence semantics, policy records, and durable execution metadata understandable and recoverable without making a single deployment environment the sole source of recovery knowledge.
+
+external_dependencies: []
+
+compatibility:
+  platform_contract: "0.2"
+  glaze_ui_required: "1.1.0"
+  requires:
+    - goreecloud-platform-contract==0.2
+    - glaze-ui==1.1.0
+  provides: []
+
+evidence:
+  acceptance_tests: []
+  release: []
+
+conformance:
+  status: nonconformant
+  validated_at: null
+  evidence:
+    - README.md
+    - ARCHITECTURE.md
+    - contracts/wardveil.capabilities.json
+    - RUNTIME-AUTHORIZATION.md
+    - EXECUTION-STATE.md
+    - SERVICE-IDENTITY.md
+    - QUARANTINE-EXECUTOR.md
+    - PRIVACY-SHIELD.md
+    - website/index.html
+  blockers:
+    - Wardveil Security remains in Development and production runtime acceptance is explicitly unaccepted.
+    - Current Stable GLAZE UI V1.1 / 1.1.0 migration and rendered Security Center acceptance remain outstanding.
+    - Production service identity, cryptography, signing-key custody, rotation, and revocation runtime evidence remain incomplete.
+    - Distributed durable execution-state, external-target idempotency/readback, and high-impact executor acceptance remain incomplete.
+    - Live GoreeCloud Identity and GoreeCloud Mesh integration acceptance remain outstanding.
+    - Everkeep backup, restore, recovery, export, and portability acceptance remain outstanding.
+    - Full Privacy Shield runtime acceptance remains independent and incomplete.
+    - Target-environment runtime, failure-mode, monitoring, rollback, publication, and production acceptance remain pending.
+    - Required Stable acceptance-test and published release evidence has not been produced.
