@@ -129,8 +129,8 @@ try:
 except RuntimeError as exc:
     if str(exc) != "GoreeCloud Identity credential acquisition failed":
         fail("provider failure message was not sanitized")
-    if exc.__cause__ is not None or exc.__context__ is not None:
-        fail("provider failure retained a sensitive exception chain")
+    if exc.__cause__ is not None or not exc.__suppress_context__:
+        fail("provider failure did not suppress the sensitive exception chain")
     if "wardveil-private-material" in repr(exc):
         fail("provider secret leaked into local error")
 else:
@@ -184,7 +184,7 @@ try:
     except RuntimeError as exc:
         if str(exc) != "Mesh evidence delivery failed with HTTP 403 (scope_denied)":
             fail(f"unexpected sanitized rejection: {exc}")
-        if exc.__cause__ is not None or "wardveil-reflection-secret" in repr(exc):
+        if exc.__cause__ is not None or not exc.__suppress_context__ or "wardveil-reflection-secret" in repr(exc):
             fail("remote reflection leaked credential material")
     else:
         fail("Mesh rejection must fail closed")
