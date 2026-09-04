@@ -1,5 +1,5 @@
 {
-  "schema_version": 3,
+  "schema_version": 4,
   "platform": "wardveil-security",
   "producer_repository": "GoreeCloud/goreecloud-wardveil-security",
   "consumer_repository": "GoreeCloud/goreecloud-mesh",
@@ -18,6 +18,37 @@
     "consumer_override_allowed": false,
     "transport_expiry_separate_from_evidence_validity": true
   },
+  "identity_authenticated_evidence_delivery": {
+    "credential_authority": "goreecloud-identity",
+    "service_id": "wardveil-security",
+    "audience": "goreecloud-mesh",
+    "required_scope": "mesh.evidence.write",
+    "fresh_credential_provider_supported": true,
+    "credential_requested_per_delivery": true,
+    "destination_validated_before_credential_request": true,
+    "credential_persisted_by_wardveil_client": false,
+    "credential_in_evidence_allowed": false,
+    "credential_in_receipt_allowed": false,
+    "arbitrary_remote_error_reflection_allowed": false,
+    "transport_error_chaining_allowed": false,
+    "production_identity_issuance_accepted": false,
+    "live_mesh_delivery_accepted": false
+  },
+  "platform_registry_publication": {
+    "endpoint": "/v1/platform-registry",
+    "record_schema": "goreecloud.mesh.platform-record.v1",
+    "credential_authority": "goreecloud-identity",
+    "service_id": "goreecloud-wardveil-security",
+    "audience": "goreecloud-mesh",
+    "required_scope": "mesh.platform-registry.write",
+    "producer_component_binding_required": true,
+    "producer_repository_binding_required": true,
+    "authority_transfer_required": false,
+    "canonical_conformance_computed_outside_transport": true,
+    "credential_reuse_with_evidence_delivery_required": false,
+    "production_identity_issuance_accepted": false,
+    "live_mesh_publication_accepted": false
+  },
   "event_transport": {
     "contract": "MESH-TRANSPORT.md",
     "reference_implementation": "reference/wardveil_mesh_transport.py",
@@ -31,5 +62,5 @@
     "mesh_may_upgrade_security_state": false,
     "mesh_may_extend_evidence_validity": false
   },
-  "purpose": "Allows GoreeCloud Mesh to route bounded authorized Wardveil Security records while Wardveil remains authoritative for security state, evidence semantics, evidence validity, trust and policy decisions, findings, protection results, quarantine, response, audit, and protection presentation."
+  "purpose": "Allows GoreeCloud Mesh to route bounded authorized Wardveil Security records and accept producer-bound Platform Registry records while Wardveil remains authoritative for security state, evidence semantics, evidence validity, trust and policy decisions, findings, protection results, quarantine, response, audit, and protection presentation."
 }
