@@ -1,0 +1,23 @@
+/* Security Center wide-tablet recomposition.
+ * The V1.1 nav-item padding makes the three-track desktop header exceed the
+ * usable 1180px reference viewport before the prior 960px breakpoint.
+ * Recompose navigation into the second row before overflow rather than
+ * clipping, shrinking targets, or introducing horizontal scrolling.
+ */
+@media (max-width:1240px) and (min-width:961px) {
+  .nav-wrap {
+    grid-template-columns:minmax(0,1fr) auto;
+  }
+  .nav-wrap nav {
+    grid-column:1/-1;
+    grid-row:2;
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    width:100%;
+    gap:8px;
+  }
+  .nav-wrap nav a {
+    width:100%;
+    text-align:center;
+  }
+}
