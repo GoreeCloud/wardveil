@@ -45,7 +45,9 @@ platform_systems:
     version: null
     evidence:
       - README.md
-    notes: Everkeep retains resilience, recovery, preservation, portability, and succession authority. Wardveil recovery coordination does not establish an accepted Everkeep runtime integration.
+      - EVERKEEP-RESTORE-VERIFICATION.md
+      - contracts/wardveil.everkeep.restore-verification.json
+    notes: Everkeep retains resilience, recovery, preservation, portability, and succession authority. Wardveil has a bounded restore-verification consumer contract, but live Everkeep runtime and clean-recovery acceptance remain independently unverified.
   glaze_ui:
     result: applicable-migration-required
     version: 2.1.0
@@ -57,11 +59,22 @@ platform_systems:
     result: applicable-blocked
     version: null
     evidence:
-      - README.md
-      - RUNTIME-AUTHORIZATION.md
-    notes: Wardveil may use Mesh for authenticated security-signal, decision, and runtime-authorization transport, but current main does not establish accepted live Mesh publication or consumption.
-    capabilities: []
-    dependencies: []
+      - MESH-EVIDENCE.md
+      - MESH-TRANSPORT.md
+      - contracts/mesh.integration.json
+      - contracts/wardveil.mesh-evidence-profile.json
+      - contracts/wardveil.platform-evidence.runtime-acceptance.json
+      - reference/wardveil_mesh_delivery.py
+      - reference/wardveil_platform_registry_delivery.py
+      - scripts/test_wardveil_mesh_delivery.py
+      - scripts/test_wardveil_mesh_identity_boundary.py
+      - scripts/test_wardveil_platform_registry_delivery.py
+    notes: Source-level authenticated evidence delivery and producer-bound Platform Registry publication are implemented with separate least-privilege scopes and authority_transfer=false. Live Identity issuance/JWKS trust and Mesh publication/consumption acceptance remain outstanding.
+    capabilities:
+      - security-evidence-delivery
+      - platform-registry-publication
+    dependencies:
+      - goreecloud-identity
     published_events: []
     consumed_events: []
   identity:
@@ -70,8 +83,12 @@ platform_systems:
     evidence:
       - README.md
       - SERVICE-IDENTITY.md
-      - website/index.html
-    notes: Wardveil defines its own service-identity and signing-key contracts while GoreeCloud Identity remains the platform identity authority. Production GoreeCloud Identity issuance, workload binding, and key lifecycle acceptance remain separate open gates.
+      - contracts/mesh.integration.json
+      - reference/wardveil_mesh_delivery.py
+      - reference/wardveil_platform_registry_delivery.py
+      - scripts/test_wardveil_mesh_identity_boundary.py
+      - scripts/test_wardveil_platform_registry_delivery.py
+    notes: Wardveil retains its own scoped service-identity/signing-key contracts for Wardveil-native security operations while GoreeCloud Identity remains platform credential authority. Source clients request fresh, purpose-specific Mesh credentials, but production issuance, workload binding, JWKS trust, key lifecycle, and live acceptance remain separate open gates.
 
 health:
   health_endpoint: null
@@ -123,14 +140,21 @@ conformance:
     - SERVICE-IDENTITY.md
     - QUARANTINE-EXECUTOR.md
     - PRIVACY-SHIELD.md
+    - EVERKEEP-RESTORE-VERIFICATION.md
+    - contracts/mesh.integration.json
+    - reference/wardveil_mesh_delivery.py
+    - reference/wardveil_platform_registry_delivery.py
+    - scripts/test_wardveil_mesh_delivery.py
+    - scripts/test_wardveil_mesh_identity_boundary.py
+    - scripts/test_wardveil_platform_registry_delivery.py
     - website/index.html
   blockers:
     - Wardveil Security remains in Development and production runtime acceptance is explicitly unaccepted.
     - Current Stable GLAZE UI V1.1 / 1.1.0 migration and rendered Security Center acceptance remain outstanding.
     - Production service identity, cryptography, signing-key custody, rotation, and revocation runtime evidence remain incomplete.
     - Distributed durable execution-state, external-target idempotency/readback, and high-impact executor acceptance remain incomplete.
-    - Live GoreeCloud Identity and GoreeCloud Mesh integration acceptance remain outstanding.
-    - Everkeep backup, restore, recovery, export, and portability acceptance remain outstanding.
+    - Source-level Identity-scoped evidence and Platform Registry clients are implemented, but live GoreeCloud Identity issuance/JWKS trust and end-to-end GoreeCloud Mesh acceptance remain outstanding.
+    - Everkeep backup, restore, recovery, export, and portability acceptance remain outstanding; backup success must not be treated as verified restoration.
     - Full Privacy Shield runtime acceptance remains independent and incomplete.
     - Target-environment runtime, failure-mode, monitoring, rollback, publication, and production acceptance remain pending.
     - Required Stable acceptance-test and published release evidence has not been produced.
