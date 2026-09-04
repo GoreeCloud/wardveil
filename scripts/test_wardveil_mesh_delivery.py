@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 from pathlib import Path
+import runpy
 import sys
 from threading import Thread
 
@@ -126,5 +127,10 @@ except ValueError:
     pass
 else:
     fail("cross-producer envelope must be rejected before transport")
+
+# Keep the dedicated Identity-credential and Platform Registry regression suites
+# inside the existing exact-head Wardveil validation path.
+runpy.run_path(str(ROOT / "scripts" / "test_wardveil_mesh_identity_boundary.py"), run_name="__main__")
+runpy.run_path(str(ROOT / "scripts" / "test_wardveil_platform_registry_delivery.py"), run_name="__main__")
 
 print("Wardveil authenticated Mesh evidence delivery: OK")
