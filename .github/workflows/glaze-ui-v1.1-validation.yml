@@ -1,0 +1,48 @@
+name: Validate Security Center GLAZE UI V1.1 Stable
+
+on:
+  pull_request:
+    paths:
+      - "website/**"
+      - "branding/wardveil-security-icon.svg"
+      - ".github/workflows/glaze-ui-v1.1-validation.yml"
+  push:
+    branches: [main]
+    paths:
+      - "website/**"
+      - "branding/wardveil-security-icon.svg"
+      - ".github/workflows/glaze-ui-v1.1-validation.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out exact source revision
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+
+      - name: Verify exact source revision
+        env:
+          EXPECTED_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.13"
+
+      - name: Validate Security Center V1.1 source and immutable Glaze graph
+        run: python3 website/validate.py
+
+      - name: Validate responsive public-document layout
+        run: python3 website/validate_responsive.py
+
+      - name: Exercise responsive public-document geometry in Chrome
+        run: python3 website/browser_responsive_smoke.py
