@@ -38,6 +38,9 @@ jobs:
         with:
           python-version: "3.13"
 
+      - name: Validate locked GLAZE UI import closure
+        run: python3 website/validate_glaze_import_closure.py
+
       - name: Validate Security Center V1.1 source and immutable Glaze graph
         run: python3 website/validate.py
 
