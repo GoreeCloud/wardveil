@@ -32,8 +32,9 @@ if DIST.exists():
 
 for name in ("index.html", "404.html", "_headers"):
     shutil.copy2(SOURCE / name, DIST / name)
-for name in ("site.css", "desktop-fit.css", "site.js"):
-    shutil.copy2(SOURCE / name, DIST / "assets" / name)
+shutil.copy2(SOURCE / "site.js", DIST / "assets" / "site.js")
+product_css = (SOURCE / "site.css").read_bytes() + b"\n" + (SOURCE / "desktop-fit.css").read_bytes()
+(DIST / "assets" / "site.css").write_bytes(product_css)
 shutil.copy2(ICON, DIST / "assets" / "wardveil-security-icon.svg")
 
 for upstream_path, expected_blob in lock["files"].items():
