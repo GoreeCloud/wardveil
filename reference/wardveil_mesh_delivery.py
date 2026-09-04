@@ -101,11 +101,13 @@ def deliver_mesh_evidence(
     if timeout_seconds <= 0:
         raise ValueError("timeout_seconds must be positive")
 
+    # Validate the destination before acquiring any credential so malformed or
+    # untrusted destinations cannot trigger unnecessary Identity issuance.
+    endpoint = _validate_destination(mesh_base_url) + "/v1/evidence/envelopes"
     token = _identity_credential(
         bearer_token=bearer_token,
         credential_provider=credential_provider,
     )
-    endpoint = _validate_destination(mesh_base_url) + "/v1/evidence/envelopes"
     body = json.dumps(envelope, separators=(",", ":")).encode("utf-8")
     req = request.Request(
         endpoint,
