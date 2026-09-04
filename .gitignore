@@ -21,3 +21,6 @@ venv/
 .pytest_cache/
 .DS_Store
 Thumbs.db
+
+# Generated public-site output
+website/dist/
