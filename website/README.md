@@ -1,10 +1,14 @@
 # Wardveil Security Public Website
 
-This directory contains the source for the public Wardveil Security Center at `https://security.goreecloud.com`.
+This directory contains the source for the public Wardveil Security Center at `https://security.goreecloud.com/`.
 
-## Current presentation boundary
+## Current presentation target
 
-The Security Center targets **Glaze UI 2.0.0 Stable** for its public presentation layer. The current modernization strengthens responsive navigation, 48px interaction targets, safe-area handling, reduced-motion and reduced-transparency behavior, increased-contrast and forced-colors fallbacks, no-backdrop resilience, and print behavior. These presentation changes do not create, upgrade, or infer Wardveil protection, verification, response, runtime, scanner, production, or acceptance state.
+The Security Center targets current Stable **GLAZE UI V1.1 / 1.1.0**.
+
+The website activates `data-glaze-version="1.1"`, uses the official `css/glaze-v1.1.0.css` entrypoint, supports the V1.1 Light, Dark, and Deep Dark appearance contract, and keeps transient navigation chrome visually distinct from durable security content. Durable security, evidence, state, and authority content remains on solid surfaces; Glaze presentation never creates or upgrades security state.
+
+`glaze.lock.json` identifies the immutable V1.1 Stable release commit and all 13 Git blob identities in the web import graph. The build retrieves only that exact release source, verifies every Git blob identity, and publishes the verified CSS into the local `/assets/glaze/` output. The published browser artifact has no runtime UI network dependency.
 
 ## Cloudflare Pages contract
 
@@ -15,15 +19,27 @@ The Security Center targets **Glaze UI 2.0.0 Stable** for its public presentatio
 - Build output directory: `website/dist`
 - Custom domain: `security.goreecloud.com`
 
-The build copies the approved Wardveil identity from `branding/wardveil-security-icon.svg` into the isolated public artifact. That local file is a synchronized derivative of the canonical `GoreeCloud/goreecloud-branding-assets` source and must remain byte-identical to the approved canonical asset.
+`website/dist` is generated build output and is not a separate design or branding authority.
 
-The standalone **Sentinel Fold** emblem is the owner-approved primary Wardveil Security mark. `Wardveil Security`, `Security Center`, and `by GoreeCloud` text are supporting identity/context and are not part of the emblem itself. The public site must not redraw or construct an independent Wardveil mark.
+## Visual identity
 
-## Current public scope
+The build copies the approved Wardveil identity from `branding/wardveil-security-icon.svg`. That repository-local file is a synchronized derivative of the canonical `GoreeCloud/goreecloud-branding-assets` source and must remain byte-identical to the approved Sentinel Fold asset.
 
-The public Security Center reflects Wardveil Foundation 0.9 and may describe the accepted source architecture for Wardveil Trust, Policy, Protect, Detect, Scan, Quarantine, Response, Audit, Security Center, runtime authorization, durable execution safety, and bounded platform relationships.
+The standalone **Sentinel Fold** emblem is the approved primary Wardveil Security mark. `Wardveil Security`, `Security Center`, and `by GoreeCloud` are supporting identity/context and are not part of the emblem. The public site must not redraw or independently reinterpret the mark.
 
-ClamAV may be described only as Wardveil Scan's initial replaceable signature-based malware engine. The website must preserve the current fail-closed production boundary: source integration, scanner health, or branding alone does not establish deployed antivirus acceptance or a broad `Protected by Wardveil` claim.
+## Public content boundary
+
+The Security Center reflects Wardveil Foundation 0.9 and may describe Wardveil Trust, Policy, Protect, Detect, Scan, Quarantine, Response, Audit, Security Center, runtime authorization, durable execution safety, normalized state semantics, and bounded platform relationships.
+
+ClamAV may be described only as an initial replaceable signature-based engine beneath supported Wardveil Scan paths. Source integration, scanner health, branding, transport success, a successful build, or website publication does not establish broad `Protected by Wardveil` acceptance.
+
+Fast-changing deployment details belong in authoritative Wardveil evidence and acceptance records rather than static marketing copy. The public website therefore uses conservative language and does not infer current protection from old deployment history.
+
+## Responsive and accessibility requirements
+
+The Security Center intentionally recomposes for desktop, tablet, and phone layouts. Mobile navigation must not depend on horizontal scrolling. General interactive targets follow the 48 px Glaze floor, with the V1.1 56 px Touch Assistance contract available where enabled.
+
+The site preserves visible focus, reduced motion, reduced transparency, increased contrast, forced colors, safe viewport insets, text reflow, and print fallbacks. Browser geometry validation remains a separate release gate from source validation.
 
 ## Validation
 
@@ -31,12 +47,12 @@ Run:
 
 ```bash
 python3 website/validate.py
+python3 website/validate_responsive.py
+python3 website/browser_responsive_smoke.py
 ```
 
-The validator checks the current machine-readable identity contract and `VERSION`, requires approved visual/showcase state, verifies byte-identical canonical icon publication, requires current Foundation and Sentinel Fold public identity language, enforces evidence-backed security wording, checks the Glaze UI 2.0 presentation contract, and validates the hardened Cloudflare Pages header contract.
+The validator verifies the current Wardveil identity and Foundation version, canonical icon publication, the immutable GLAZE UI V1.1 Stable source graph, local browser artifact references, security headers, public-safe content, internal anchors/assets, responsive/accessibility rules, and the absence of superseded active Glaze 1.5/2.x presentation markers.
 
-## Public-information and acceptance boundary
+## Acceptance boundary
 
-The website may present identity, public-safe first-party security architecture, normalized state semantics, evidence and authority boundaries, bounded platform relationships, malware-engine role, and private reporting guidance. It must not expose internal topology, private hostnames or addresses, credentials, tokens, signing material, unrestricted diagnostics, sensitive monitoring evidence, private vulnerability details, or other operational information unnecessary for public understanding.
-
-Only `website/dist` is intended for Pages publication. A successful source validation, build, or preview does not independently authorize a protection claim. The exact candidate revision must pass the applicable branch-preview/deployment verification before merge, and the resulting `main` revision must be verified on `security.goreecloud.com` after deployment. Source acceptance, deployed website acceptance, runtime acceptance, scanner acceptance, and product-specific protection acceptance remain separate evidence gates.
+Only `website/dist` is intended for Pages publication. Passing source validation or creating a preview does not establish production website acceptance, Wardveil runtime acceptance, scanner acceptance, product-specific protection acceptance, or overall Stable qualification. The exact candidate revision must pass applicable source and rendered review, and the deployed revision must be independently verified on `security.goreecloud.com` before publication acceptance is claimed.
