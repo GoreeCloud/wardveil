@@ -29,6 +29,18 @@ The initial source profile permits bounded envelope publication for:
 
 These names describe transport families only. Their valid outcomes, scope, and acceptance rules remain defined by the applicable Wardveil contract.
 
+### Security-status binding
+
+`security-status` is a strict producer-status path. `reference/wardveil_mesh_evidence.py` accepts it only from a closed `contracts/wardveil.status.schema.json` record with Wardveil Security authority, current unexpired producer evidence, the status contract's claim invariants, and its privacy/minimization shape.
+
+The Mesh envelope outcome is derived from the canonical status record's `state`. A caller cannot turn a runtime policy record into `security-status`, override `attention` to `protected`, retain a protected claim on a non-protected state, or emit stale/non-authoritative status as current Mesh evidence. A `protected` envelope therefore requires the producer record itself to satisfy Wardveil's protected/current/authoritative contract before transport.
+
+The envelope observation and validity timestamps are derived from the status record's evidence. Mesh may later regard retained evidence as stale after that producer-declared validity window passes; transport or retention does not renew Wardveil's protection claim.
+
+### Runtime-record binding
+
+Non-status runtime assertion families use `contracts/wardveil.runtime.schema.json` rather than claiming the status contract. The reference adapter validates the runtime identity, producer authority, scope, observation/validity window, evidence references, and record-type-required state used to construct the minimized envelope. Where an assertion directly corresponds to a runtime outcome field, the envelope outcome must match the producer record rather than a caller override.
+
 ## Evidence minimization
 
 Wardveil Mesh envelopes must not contain raw scan payloads, message bodies, file bodies, credentials, keys, tokens, secrets, or raw private user content.
@@ -39,8 +51,8 @@ This preserves Wardveil's existing evidence-first model without turning Mesh int
 
 ## Freshness
 
-Wardveil is responsible for declaring `observed_at` and `valid_until` according to the assertion's own policy and runtime semantics. Mesh must fail closed on future-dated or expired envelopes and must not invent a universal Wardveil freshness window.
+Wardveil is responsible for declaring `observed_at` and `valid_until` according to the assertion's own policy and runtime semantics. The producer adapter fails closed on future-dated or expired evidence and does not invent a universal Wardveil freshness window. Mesh and consumers may preserve expired evidence as historical transport state only where their own contracts permit it; they must not upgrade it back into current Wardveil security truth.
 
 ## Runtime acceptance
 
-This profile is a source-level integration contract. It does not itself establish runtime acceptance, Cloudflare deployment acceptance, Security Center acceptance, or any product-specific production gate.
+This profile is a source-level integration contract. It does not itself establish runtime acceptance, Cloudflare deployment acceptance, Security Center acceptance, Manager acceptance, or any product-specific production gate.
