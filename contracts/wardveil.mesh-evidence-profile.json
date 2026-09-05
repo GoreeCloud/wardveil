@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.1.2",
+  "schema_version": "1.1.3",
   "system": "wardveil-security",
   "producer_repository": "GoreeCloud/goreecloud-wardveil-security",
   "authority_domains": ["security"],
@@ -50,6 +50,106 @@
     "response-state",
     "security-audit-state"
   ],
+  "producer_bindings": {
+    "security-status": {
+      "status": "bound",
+      "contract": "contracts/wardveil.status.schema.json",
+      "record_type": null,
+      "outcome_field": "state",
+      "validity_field": "evidence.valid_until",
+      "mode": "dedicated-status-adapter"
+    },
+    "trust-evaluation": {
+      "status": "bound",
+      "contract": "contracts/wardveil.runtime.schema.json",
+      "record_type": "trust_decision",
+      "outcome_field": "trust_state",
+      "validity_field": "valid_until",
+      "mode": "canonical-runtime-record"
+    },
+    "policy-decision": {
+      "status": "bound",
+      "contract": "contracts/wardveil.runtime.schema.json",
+      "record_type": "policy_decision",
+      "outcome_field": "policy_decision",
+      "validity_field": "valid_until",
+      "mode": "canonical-runtime-record"
+    },
+    "protection-result": {
+      "status": "bound",
+      "contract": "contracts/wardveil.runtime.schema.json",
+      "record_type": "protection_action",
+      "outcome_field": "execution_status",
+      "validity_field": "valid_until",
+      "mode": "canonical-runtime-record"
+    },
+    "detection-finding": {
+      "status": "bound",
+      "contract": "contracts/wardveil.runtime.schema.json",
+      "record_type": "detection_finding",
+      "outcome_field": "detection_disposition",
+      "validity_field": "valid_until",
+      "mode": "canonical-runtime-record"
+    },
+    "scan-finding": {
+      "status": "bound",
+      "contract": "contracts/wardveil.runtime.schema.json",
+      "record_type": "scan_finding",
+      "outcome_field": "scan_result",
+      "validity_field": "valid_until",
+      "mode": "canonical-runtime-record"
+    },
+    "quarantine-state": {
+      "status": "bound",
+      "contract": "contracts/wardveil.runtime.schema.json",
+      "record_type": "quarantine_record",
+      "outcome_field": "review_state",
+      "validity_field": "valid_until",
+      "mode": "canonical-runtime-record"
+    },
+    "incident-state": {
+      "status": "bound",
+      "contract": "contracts/wardveil.runtime.schema.json",
+      "record_type": "incident_record",
+      "outcome_field": "incident_status",
+      "validity_field": "valid_until",
+      "mode": "canonical-runtime-record"
+    },
+    "security-audit-state": {
+      "status": "bound",
+      "contract": "contracts/wardveil.runtime.schema.json",
+      "record_type": "audit_event",
+      "outcome_field": "outcome",
+      "validity_field": "valid_until",
+      "mode": "canonical-runtime-record"
+    },
+    "runtime-acceptance": {
+      "status": "unbound",
+      "contract": null,
+      "record_type": null,
+      "outcome_field": null,
+      "validity_field": null,
+      "mode": "fail-closed",
+      "reason_code": "producer-validity-window-not-established",
+      "related_contracts": [
+        "contracts/wardveil.cloudflare.acceptance-evidence.schema.json",
+        "contracts/wardveil.cloudflare.runtime-acceptance.json",
+        "contracts/wardveil.platform-evidence.runtime-acceptance.json"
+      ],
+      "reason": "The current runtime-acceptance evidence model can report acceptance state and collection time but does not provide a canonical producer-declared valid_until suitable for current Mesh evidence. Wardveil must not invent that validity window locally."
+    },
+    "response-state": {
+      "status": "unbound",
+      "contract": null,
+      "record_type": null,
+      "outcome_field": null,
+      "validity_field": null,
+      "mode": "fail-closed",
+      "reason_code": "canonical-response-producer-record-not-established",
+      "related_contracts": [],
+      "reason": "No canonical Wardveil Response producer record type and outcome/validity binding is established. Mesh refresh-response coordination records are not Wardveil Response service security-state evidence."
+    }
+  },
   "minimization": {
     "allowed_data_classes": ["public", "operational", "derived"],
     "raw_user_content": "prohibited",
@@ -61,7 +161,10 @@
   "authority_rules": [
     "Wardveil remains authoritative for Wardveil-native security assertions.",
     "security-status envelopes must be derived from the canonical Wardveil status contract; callers cannot upgrade or override the producer state.",
-    "Non-status runtime assertions must identify the Wardveil runtime record contract rather than the Wardveil status contract.",
+    "A permitted assertion family is not publishable until its profile producer binding is status=bound and the source adapter enforces that exact binding.",
+    "Non-status runtime assertions must identify the Wardveil runtime record contract and the exact assertion-to-record-type/outcome-field binding.",
+    "Wardveil never invents a missing producer validity window merely to satisfy the Mesh envelope.",
+    "Mesh refresh-response coordination records are not Response service security-state evidence.",
     "GoreeCloud Identity remains authoritative for the actor or service identity used to authenticate delivery; authenticated identity does not establish a positive security outcome.",
     "Mesh validates transport/provenance and must not upgrade, broaden, or reinterpret Wardveil security authority.",
     "Privacy Shield privacy state and Everkeep recovery state may be consumed by Wardveil only through their own producer-authoritative contracts.",
