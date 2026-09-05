@@ -14,12 +14,15 @@
     "deployed_revision_must_match_exactly": true
   },
   "required_provider_evidence": {
+    "schema_version": "1.0",
     "status": "pass",
     "authoritative": true,
     "isolated_verification": true,
     "integrity_verified": true,
     "restored_state_verified": true,
-    "evidence_refs_required": true
+    "evidence_refs_required": true,
+    "security_state_authority_transferred": false,
+    "timezone_qualified_timestamps_required": true
   },
   "satisfies_only": "restore_verification_exercise",
   "pitr_availability_is_restore_verification": false,
