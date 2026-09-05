@@ -60,6 +60,16 @@ _RUNTIME_ASSERTION_OUTCOME_FIELDS = {
     "incident-state": "incident_status",
     "security-audit-state": "outcome",
 }
+_RUNTIME_ASSERTION_RECORD_TYPES = {
+    "trust-evaluation": "trust_decision",
+    "policy-decision": "policy_decision",
+    "protection-result": "protection_action",
+    "detection-finding": "detection_finding",
+    "scan-finding": "scan_finding",
+    "quarantine-state": "quarantine_record",
+    "incident-state": "incident_record",
+    "security-audit-state": "audit_event",
+}
 _PERMITTED_ASSERTIONS = {
     "security-status", "runtime-acceptance", "trust-evaluation", "policy-decision",
     "protection-result", "detection-finding", "scan-finding", "quarantine-state",
@@ -309,6 +319,7 @@ def _validate_runtime_record(record: dict, *, evaluated_at: datetime) -> dict:
         _require_string(record.get("event_type"), "Wardveil audit event_type", maximum=128)
 
     return {
+        "record_type": record_type,
         "record_id": record_id,
         "kind": subject_kind,
         "id": subject_id,
@@ -450,11 +461,18 @@ def create_mesh_evidence_envelope(
     outcome_value = _require_string(outcome, "outcome", maximum=128)
     runtime = _validate_runtime_record(record, evaluated_at=evaluated_at)
 
-    derived_field = _RUNTIME_ASSERTION_OUTCOME_FIELDS.get(assertion_value)
-    if derived_field is not None:
-        producer_outcome = str(record.get(derived_field) or "").strip()
-        if outcome_value != producer_outcome:
-            raise ValueError(f"{assertion_value} outcome must match Wardveil {derived_field}")
+    expected_record_type = _RUNTIME_ASSERTION_RECORD_TYPES.get(assertion_value)
+    if expected_record_type is None:
+        raise ValueError(f"{assertion_value} does not have an approved Wardveil runtime producer binding")
+    if runtime["record_type"] != expected_record_type:
+        raise ValueError(
+            f"{assertion_value} requires Wardveil runtime record_type {expected_record_type}"
+        )
+
+    derived_field = _RUNTIME_ASSERTION_OUTCOME_FIELDS[assertion_value]
+    producer_outcome = str(record.get(derived_field) or "").strip()
+    if outcome_value != producer_outcome:
+        raise ValueError(f"{assertion_value} outcome must match Wardveil {derived_field}")
 
     reason = str(record.get("reason_code") or record.get("decision_reason") or "").strip()
     if len(reason) > 256:
