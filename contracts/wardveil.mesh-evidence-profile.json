@@ -1,16 +1,18 @@
 {
-  "schema_version": "1.1.1",
+  "schema_version": "1.1.2",
   "system": "wardveil-security",
   "producer_repository": "GoreeCloud/goreecloud-wardveil-security",
   "authority_domains": ["security"],
   "mesh_envelope": {
     "version": "goreecloud.evidence-envelope.v1",
     "repository": "GoreeCloud/goreecloud-mesh",
+    "revision": "1002c74a2f014b04719b6809da22b0026546f8f0",
     "path": "contracts/mesh.evidence-envelope.schema.json"
   },
   "platform_evidence_plane": {
     "contract": "goreecloud.platform-evidence-plane.v1",
     "repository": "GoreeCloud/goreecloud-mesh",
+    "revision": "1002c74a2f014b04719b6809da22b0026546f8f0",
     "path": "contracts/mesh.platform-evidence-plane.v1.json",
     "authority_transfer": false
   },
