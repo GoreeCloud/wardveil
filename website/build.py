@@ -6,7 +6,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "website"
 DIST = SOURCE / "dist"
 ICON = ROOT / "branding" / "wardveil-security-icon.svg"
-GLAZE_ASSET = "glaze-ui-2.1.0.css"
+GLAZE_ASSET = "glaze-ui-v1.1.0.css"
 
 if DIST.exists():
     shutil.rmtree(DIST)
@@ -19,5 +19,5 @@ for name in ("site.css", "site.js", GLAZE_ASSET):
 shutil.copy2(ICON, DIST / "assets" / "wardveil-security-icon.svg")
 print(
     f"Built {DIST.relative_to(ROOT)} with canonical Wardveil identity "
-    "and Glaze UI 2.1.0 Stable adoption mapping"
+    "and GLAZE UI V1.1 / 1.1.0 Stable adoption mapping"
 )

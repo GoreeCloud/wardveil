@@ -1,19 +1,23 @@
-name: Validate Security Center Glaze UI 2.1 Stable
+name: Validate Security Center GLAZE UI V1.1 Stable
 
 on:
   pull_request:
     paths:
       - "website/**"
-      - ".github/workflows/glaze-ui-2-validation.yml"
+      - ".github/workflows/glaze-ui-v1-validation.yml"
   push:
     branches: [main]
     paths:
       - "website/**"
-      - ".github/workflows/glaze-ui-2-validation.yml"
+      - ".github/workflows/glaze-ui-v1-validation.yml"
   workflow_dispatch:
 
 permissions:
   contents: read
+
+concurrency:
+  group: security-center-glaze-v1-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   validate:
@@ -21,7 +25,7 @@ jobs:
     timeout-minutes: 8
     steps:
       - name: Check out exact source revision
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
           ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
@@ -31,11 +35,12 @@ jobs:
           EXPECTED_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
         run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
 
-      - uses: actions/setup-python@v5
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.13"
 
-      - name: Build and validate Security Center 2.1 adoption
+      - name: Build and validate Security Center GLAZE UI V1.1 adoption
         run: python3 website/validate.py
 
       - name: Validate responsive public-document layout
