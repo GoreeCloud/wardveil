@@ -4,7 +4,9 @@ This directory contains the source for the public Wardveil Security Center at `h
 
 ## Current presentation boundary
 
-The Security Center targets **Glaze UI 2.0.0 Stable** for its public presentation layer. The current modernization strengthens responsive navigation, 48px interaction targets, safe-area handling, reduced-motion and reduced-transparency behavior, increased-contrast and forced-colors fallbacks, no-backdrop resilience, and print behavior. These presentation changes do not create, upgrade, or infer Wardveil protection, verification, response, runtime, scanner, production, or acceptance state.
+The Security Center targets **GLAZE UI V1.1 / 1.1.0 Stable** for its active public presentation layer. The current adoption preserves bounded Soft Glaze for navigation chrome, solid content and consequential security-reading surfaces, 48 px interaction targets, 56 px Touch Assistance targets, explicit Light/Dark/Deep Dark appearance mapping, safe-area handling, reduced-motion and reduced-transparency behavior, increased-contrast and forced-colors fallbacks, no-backdrop resilience, and print behavior. These presentation changes do not create, upgrade, or infer Wardveil protection, verification, response, runtime, scanner, production, or acceptance state.
+
+GLAZE UI V1.2 Frosted Neutral remains Candidate-only and is not the active production consumer target. Earlier Glaze UI 2.x adoption records and assets are retained only as historical pre-reset evidence and are excluded from the active Pages build.
 
 ## Cloudflare Pages contract
 
@@ -31,9 +33,11 @@ Run:
 
 ```bash
 python3 website/validate.py
+python3 website/validate_responsive.py
+python3 website/browser_responsive_smoke.py
 ```
 
-The validator checks the current machine-readable identity contract and `VERSION`, requires approved visual/showcase state, verifies byte-identical canonical icon publication, requires current Foundation and Sentinel Fold public identity language, enforces evidence-backed security wording, checks the Glaze UI 2.0 presentation contract, and validates the hardened Cloudflare Pages header contract.
+The validator checks the current machine-readable identity contract and `VERSION`, requires approved visual/showcase state, verifies byte-identical canonical icon publication, requires current Foundation and Sentinel Fold public identity language, enforces evidence-backed security wording, checks the exact GLAZE UI V1.1 Stable presentation target and historical-target isolation, and validates the hardened Cloudflare Pages header contract. Responsive source and Chrome geometry gates independently protect 1180, 768, 390, and 320 px-class layouts.
 
 ## Public-information and acceptance boundary
 
