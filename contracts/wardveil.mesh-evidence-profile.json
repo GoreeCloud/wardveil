@@ -32,6 +32,7 @@
   },
   "producer_contracts": [
     "contracts/wardveil.status.schema.json",
+    "contracts/wardveil.runtime.schema.json",
     "contracts/wardveil.capabilities.json"
   ],
   "permitted_assertion_families": [
@@ -57,6 +58,8 @@
   },
   "authority_rules": [
     "Wardveil remains authoritative for Wardveil-native security assertions.",
+    "security-status envelopes must be derived from the canonical Wardveil status contract; callers cannot upgrade or override the producer state.",
+    "Non-status runtime assertions must identify the Wardveil runtime record contract rather than the Wardveil status contract.",
     "GoreeCloud Identity remains authoritative for the actor or service identity used to authenticate delivery; authenticated identity does not establish a positive security outcome.",
     "Mesh validates transport/provenance and must not upgrade, broaden, or reinterpret Wardveil security authority.",
     "Privacy Shield privacy state and Everkeep recovery state may be consumed by Wardveil only through their own producer-authoritative contracts.",
