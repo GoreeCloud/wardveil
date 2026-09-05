@@ -4,6 +4,14 @@ Wardveil Security can publish bounded, producer-authoritative security evidence 
 
 The source profile is `contracts/wardveil.mesh-evidence-profile.json`. The transport envelope is owned by GoreeCloud Mesh at `GoreeCloud/goreecloud-mesh/contracts/mesh.evidence-envelope.schema.json`.
 
+## Pinned Mesh source compatibility
+
+Wardveil's source profile pins both the Mesh evidence-envelope contract and the platform evidence-plane contract to the exact reviewed GoreeCloud Mesh revision `1002c74a2f014b04719b6809da22b0026546f8f0`.
+
+The dedicated `Validate pinned Wardveil Mesh evidence contract source` workflow resolves that immutable revision from the Wardveil profile, checks out that exact Mesh source revision into a separate read-only contract source tree, verifies the checkout identity, and validates the Mesh envelope and platform evidence-plane invariants Wardveil relies on. The validation fails closed on contract, producer-authority, minimization, transport-safety, or acceptance-boundary drift.
+
+The pin is a source-compatibility record, not a claim that the pinned Mesh revision is deployed or production-accepted. Updating the pin creates a new Wardveil source candidate and requires exact-head validation again. Runtime delivery, deployed authorization, persistence, TLS/network behavior, production credentials, and production acceptance remain separate evidence gates.
+
 ## Authority separation
 
 Wardveil remains authoritative for Wardveil-native security truth. Mesh provides coordination, provenance validation, freshness handling, discovery, and transport; it does not become a security authority.
