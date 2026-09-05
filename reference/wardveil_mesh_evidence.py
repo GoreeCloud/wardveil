@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from hashlib import sha256
+from urllib.parse import quote
 import copy
 import json
 import re
@@ -257,7 +258,7 @@ def _validate_runtime_record(record: dict, *, evaluated_at: datetime) -> dict:
         allowed={"id", "authoritative"},
         required={"id", "authoritative"},
     )
-    _require_string(producer.get("id"), "Wardveil runtime producer id", maximum=128)
+    producer_id = _require_string(producer.get("id"), "Wardveil runtime producer id", maximum=128)
     if producer.get("authoritative") is not True:
         raise ValueError("record must be producer-authoritative")
 
@@ -321,6 +322,7 @@ def _validate_runtime_record(record: dict, *, evaluated_at: datetime) -> dict:
     return {
         "record_type": record_type,
         "record_id": record_id,
+        "producer_id": producer_id,
         "kind": subject_kind,
         "id": subject_id,
         "scope": str(scope.get("operation") or "").strip(),
@@ -496,7 +498,10 @@ def create_mesh_evidence_envelope(
         },
         "assertion": assertion_value,
         "outcome": outcome_value,
-        "source": f"wardveil://records/{runtime['record_id']}",
+        "source": (
+            f"wardveil://producers/{quote(runtime['producer_id'], safe='')}"
+            f"/records/{quote(runtime['record_id'], safe='')}"
+        ),
         "observed_at": runtime["observed_at"].isoformat().replace("+00:00", "Z"),
         "valid_until": runtime["valid_until"].isoformat().replace("+00:00", "Z"),
         "data_class": "derived",

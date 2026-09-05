@@ -61,6 +61,10 @@ The currently bound generic runtime families use `contracts/wardveil.runtime.sch
 
 The adapter validates runtime identity, producer authority, scope, observation/validity window, evidence references, and record-type-required state. The envelope outcome must equal the producer record's bound outcome field. An unrelated runtime record cannot be relabeled into another assertion family merely because it carries an additional compatible field.
 
+The validated runtime `producer.id` is preserved through the producer-controlled opaque `source` reference as `wardveil://producers/<percent-encoded-producer-id>/records/<percent-encoded-record-id>`. Reserved URI characters are encoded so producer and record identity cannot escape the reference structure. The complete runtime record, including its producer object, remains covered by the envelope payload digest.
+
+This preservation is provenance, **not authentication**. The Mesh transport producer remains `wardveil-security`; GoreeCloud Identity and the authenticated Mesh delivery path remain authoritative for service/delivery authentication. A source reference containing a producer ID must never be treated as proof that the producer was authenticated.
+
 ### Explicitly unbound families
 
 `runtime-acceptance` remains fail closed. Wardveil has a canonical Cloudflare acceptance-evidence model and an `acceptance_status`, but the current manifest contract does **not** provide a canonical producer-declared `valid_until`. Mesh Evidence Envelope v1 requires `valid_until`, and Wardveil must not invent a validity window merely to make the manifest transportable. If the producer acceptance model later gains a governed validity rule, that change requires separate source review and regression evidence before this binding may become active.

@@ -2,9 +2,11 @@
 """Security regression tests for Wardveil Mesh assertion/producer binding.
 
 Every publishable generic assertion must be bound to its canonical Wardveil
-runtime record type and producer outcome. Profile-permitted but unbound families
-remain fail closed. These tests do not execute security actions or establish
-production acceptance.
+runtime record type and producer outcome. Runtime subproducer identity must be
+preserved through the producer-controlled source reference without being treated
+as delivery authentication. Profile-permitted but unbound families remain fail
+closed. These tests do not execute security actions or establish production
+acceptance.
 """
 from __future__ import annotations
 
@@ -13,6 +15,7 @@ from datetime import datetime, timedelta, timezone
 import json
 from pathlib import Path
 import sys
+from urllib.parse import quote
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -57,6 +60,13 @@ def runtime_record(record_type: str, record_id: str, **fields: object) -> dict:
     return record
 
 
+def expected_runtime_source(record: dict) -> str:
+    return (
+        f"wardveil://producers/{quote(str(record['producer']['id']), safe='')}"
+        f"/records/{quote(str(record['record_id']), safe='')}"
+    )
+
+
 CASES = {
     "trust-evaluation": ("trust_decision", "trust_state", "normal", {}),
     "policy-decision": ("policy_decision", "policy_decision", "allow", {"reason_code": "policy_satisfied"}),
@@ -94,6 +104,34 @@ for assertion, (record_type, outcome_field, outcome, extras) in CASES.items():
     )
     if envelope.get("assertion") != assertion or envelope.get("outcome") != outcome:
         fail(f"canonical {assertion} evidence no longer emits its producer outcome")
+    if envelope.get("producer", {}).get("system") != "wardveil-security":
+        fail(f"{assertion} changed the Mesh transport producer identity")
+    if envelope.get("source") != expected_runtime_source(record):
+        fail(f"{assertion} no longer preserves the validated runtime producer identity")
+
+# Reserved URI characters must be encoded rather than being interpreted as part
+# of the opaque producer-controlled reference structure.
+reserved = runtime_record("scan_finding", "scan/finding?record=1#fragment", scan_result="clean")
+reserved["producer"]["id"] = "wardveil/scan?tenant=example#fragment"
+reserved_envelope = create_mesh_evidence_envelope(
+    reserved,
+    revision=REVISION,
+    assertion="scan-finding",
+    outcome="clean",
+    observed_at=NOW,
+)
+if reserved_envelope.get("source") != expected_runtime_source(reserved):
+    fail("reserved runtime producer/record identity was not preserved with safe URI encoding")
+if "wardveil/scan?tenant=example#fragment" in str(reserved_envelope.get("source")):
+    fail("runtime producer identity escaped opaque-source encoding")
+
+# Producer identity preservation never bypasses the producer-authoritative gate.
+non_authoritative = runtime_record("scan_finding", "scan-nonauthoritative-001", scan_result="clean")
+non_authoritative["producer"]["authoritative"] = False
+expect_value_error(
+    lambda: create_mesh_evidence_envelope(non_authoritative, revision=REVISION, assertion="scan-finding", outcome="clean", observed_at=NOW),
+    "non-authoritative runtime producer emitted Mesh evidence",
+)
 
 # Runtime schema permits additional top-level fields. A record from one family
 # must never become evidence for another assertion because an extra field looks compatible.
@@ -128,4 +166,4 @@ for assertion, reason_code in expected_unbound.items():
         f"unbound assertion {assertion} accepted caller-defined runtime evidence",
     )
 
-print("Wardveil Mesh assertion-to-producer binding regressions: OK")
+print("Wardveil Mesh assertion-to-producer binding and identity-preservation regressions: OK")
