@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import json
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -7,6 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CONTRACT = ROOT / "contracts" / "wardveil.everkeep.restore-verification.json"
 DOC = ROOT / "EVERKEEP-RESTORE-VERIFICATION.md"
 RUNTIME = ROOT / "contracts" / "wardveil.cloudflare.runtime-acceptance.json"
+REVISION_RE = re.compile(r"^[0-9a-f]{40}$")
 
 
 def require(condition: bool, message: str):
@@ -14,12 +16,33 @@ def require(condition: bool, message: str):
         raise SystemExit(message)
 
 
-def accepts(record: dict, deployed_revision: str) -> bool:
+def parse_timestamp(value: object) -> datetime | None:
+    if not isinstance(value, str):
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        return None
+    return parsed.astimezone(timezone.utc)
+
+
+def accepts(record: dict, deployed_revision: str, now: datetime | None = None) -> bool:
     target = record.get("target", {})
     exercise = record.get("exercise", {})
+    if record.get("schemaVersion") != "1.0":
+        return False
     if record.get("environment") != "production":
         return False
     if record.get("status") != "pass" or record.get("authoritative") is not True:
+        return False
+    if record.get("securityStateAuthorityTransferred") is not False:
+        return False
+    if not isinstance(deployed_revision, str) or REVISION_RE.fullmatch(deployed_revision) is None:
+        return False
+    target_revision = target.get("deployedRevision")
+    if not isinstance(target_revision, str) or REVISION_RE.fullmatch(target_revision) is None:
         return False
     if target.get("system") != "Wardveil Security":
         return False
@@ -27,7 +50,7 @@ def accepts(record: dict, deployed_revision: str) -> bool:
         return False
     if target.get("resourceId") != "goreecloud-wardveil-persistence":
         return False
-    if target.get("deployedRevision") != deployed_revision:
+    if target_revision != deployed_revision:
         return False
     if exercise.get("isolatedVerification") is not True:
         return False
@@ -37,13 +60,18 @@ def accepts(record: dict, deployed_revision: str) -> bool:
         return False
     if not record.get("evidenceRefs"):
         return False
-    try:
-        started = datetime.fromisoformat(exercise["startedAt"].replace("Z", "+00:00"))
-        completed = datetime.fromisoformat(exercise["completedAt"].replace("Z", "+00:00"))
-        captured = datetime.fromisoformat(record["capturedAt"].replace("Z", "+00:00"))
-    except (KeyError, ValueError, TypeError):
+
+    started = parse_timestamp(exercise.get("startedAt"))
+    completed = parse_timestamp(exercise.get("completedAt"))
+    captured = parse_timestamp(record.get("capturedAt"))
+    if None in (started, completed, captured):
         return False
-    return started < completed <= captured <= datetime.now(timezone.utc)
+
+    current = now or datetime.now(timezone.utc)
+    if current.tzinfo is None or current.utcoffset() is None:
+        return False
+    current = current.astimezone(timezone.utc)
+    return started < completed <= captured <= current
 
 
 def main():
@@ -80,12 +108,15 @@ def main():
 
     provider = contract.get("required_provider_evidence", {})
     require(provider == {
+        "schema_version": "1.0",
         "status": "pass",
         "authoritative": True,
         "isolated_verification": True,
         "integrity_verified": True,
         "restored_state_verified": True,
         "evidence_refs_required": True,
+        "security_state_authority_transferred": False,
+        "timezone_qualified_timestamps_required": True,
     }, "restore consumer provider evidence requirements drifted")
 
     require("restore_verification_exercise" in runtime.get("required_acceptance_evidence", []), "runtime acceptance must require restore verification")
@@ -93,11 +124,12 @@ def main():
     require(runtime.get("everkeep_recovery_authority_preserved") is True, "Everkeep recovery authority must remain preserved")
 
     revision = "a" * 40
+    fixed_now = datetime(2026, 9, 5, 16, 0, tzinfo=timezone.utc)
     good = {
         "schemaVersion": "1.0",
         "verificationId": "wardveil-restore-test",
         "environment": "production",
-        "capturedAt": "2026-08-26T21:30:00Z",
+        "capturedAt": "2026-09-05T15:30:00Z",
         "everkeepSourceRevision": "33c5c6e85cbe6057225199811891644c4c65cac5",
         "target": {
             "system": "Wardveil Security",
@@ -109,8 +141,8 @@ def main():
         "authoritative": True,
         "exercise": {
             "recoveryPointId": "recovery-point-test",
-            "startedAt": "2026-08-26T21:00:00Z",
-            "completedAt": "2026-08-26T21:20:00Z",
+            "startedAt": "2026-09-05T15:00:00Z",
+            "completedAt": "2026-09-05T15:20:00Z",
             "isolatedVerification": True,
             "integrityVerified": True,
             "restoredStateVerified": True,
@@ -119,23 +151,38 @@ def main():
         "evidenceRefs": ["everkeep:restore:test"],
         "securityStateAuthorityTransferred": False,
     }
-    require(accepts(good, revision), "valid Everkeep restore verification must satisfy Wardveil consumer")
+    require(accepts(good, revision, fixed_now), "valid Everkeep restore verification must satisfy Wardveil consumer")
 
     bad = json.loads(json.dumps(good))
     bad["target"]["deployedRevision"] = "b" * 40
-    require(not accepts(bad, revision), "revision-mismatched recovery evidence must fail closed")
+    require(not accepts(bad, revision, fixed_now), "revision-mismatched recovery evidence must fail closed")
     bad = json.loads(json.dumps(good))
     bad["authoritative"] = False
-    require(not accepts(bad, revision), "non-authoritative recovery evidence must fail closed")
+    require(not accepts(bad, revision, fixed_now), "non-authoritative recovery evidence must fail closed")
     bad = json.loads(json.dumps(good))
     bad["exercise"]["integrityVerified"] = False
-    require(not accepts(bad, revision), "integrity-unverified restore evidence must fail closed")
+    require(not accepts(bad, revision, fixed_now), "integrity-unverified restore evidence must fail closed")
+    bad = json.loads(json.dumps(good))
+    bad["schemaVersion"] = "0.9"
+    require(not accepts(bad, revision, fixed_now), "wrong provider schema version must fail closed")
+    bad = json.loads(json.dumps(good))
+    bad["securityStateAuthorityTransferred"] = True
+    require(not accepts(bad, revision, fixed_now), "security-authority transfer claim must fail closed")
+    bad = json.loads(json.dumps(good))
+    bad["capturedAt"] = "2026-09-05T15:30:00"
+    require(not accepts(bad, revision, fixed_now), "timezone-less restore evidence must fail closed")
+    bad = json.loads(json.dumps(good))
+    bad["target"]["deployedRevision"] = "not-a-revision"
+    require(not accepts(bad, "not-a-revision", fixed_now), "malformed matching revisions must fail closed")
 
     for phrase in [
         "Everkeep is GoreeCloud's resilience and recovery authority",
         "PITR availability is not restore verification",
         "can satisfy only the recovery-verification requirement",
         "cannot create, extend, reinterpret, or upgrade a `Protected by Wardveil` claim",
+        "schemaVersion=1.0",
+        "securityStateAuthorityTransferred=false",
+        "timezone-qualified",
     ]:
         require(phrase in doc, f"Everkeep restore handoff documentation missing: {phrase}")
 
