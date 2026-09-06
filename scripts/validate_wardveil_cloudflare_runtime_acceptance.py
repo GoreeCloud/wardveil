@@ -14,6 +14,7 @@ required = {
     "durable_object_class": "WardveilPersistenceDO",
     "storage_engine": "sqlite-backed durable object",
     "mutation_surface": "authenticated service binding / RPC",
+    "evidence_validity_seconds": 3600,
     "storage_health_is_protection_claim": False,
     "pitr_availability_is_restore_verification": False,
     "cloudflare_authority_transferred_to_security_state": False,
