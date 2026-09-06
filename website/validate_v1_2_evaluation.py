@@ -14,7 +14,10 @@ EVAL = SITE / "dist-v1.2-evaluation"
 SOURCE_HTML = SITE / "index.html"
 EVAL_CSS_PATH = SITE / "glaze-ui-v1.2-frosted-neutral.evaluation.css"
 RECORD = SITE / "GLAZE-UI-V1.2-EVALUATION.md"
+BROWSER_SMOKE = SITE / "browser_v1_2_evaluation_smoke.py"
+WORKFLOW = ROOT / ".github" / "workflows" / "glaze-ui-v1.2-evaluation.yml"
 UPSTREAM_SHA = "94e0db139da2b9a3f7ead7744cbcd0ad9d7627bd"
+UPLOAD_ARTIFACT_SHA = "043fb46d1a93c77aae656e7c1c64a875d1fc6a0a"
 
 
 def require(ok: bool, message: str) -> None:
@@ -33,7 +36,15 @@ def tree_digest(root: Path) -> str:
 
 
 def main() -> int:
-    for path in (SOURCE_HTML, EVAL_CSS_PATH, RECORD, SITE / "build.py", SITE / "build_v1_2_evaluation.py"):
+    for path in (
+        SOURCE_HTML,
+        EVAL_CSS_PATH,
+        RECORD,
+        BROWSER_SMOKE,
+        WORKFLOW,
+        SITE / "build.py",
+        SITE / "build_v1_2_evaluation.py",
+    ):
         require(path.is_file(), f"missing required source: {path.relative_to(ROOT)}")
 
     source_html = SOURCE_HTML.read_text(encoding="utf-8")
@@ -68,6 +79,8 @@ def main() -> int:
     html = (EVAL / "index.html").read_text(encoding="utf-8")
     css = (EVAL / "assets" / EVAL_CSS_PATH.name).read_text(encoding="utf-8")
     record = RECORD.read_text(encoding="utf-8")
+    browser_smoke = BROWSER_SMOKE.read_text(encoding="utf-8")
+    workflow = WORKFLOW.read_text(encoding="utf-8")
 
     for needle in (
         'data-glaze-version="1.1"',
@@ -126,12 +139,40 @@ def main() -> int:
         "human optical approval",
         "production Cloudflare Pages acceptance",
         "Rollback is immediate",
+        "five deterministic review screenshots",
     ):
         require(needle in record, f"evaluation record missing boundary: {needle}")
+
+    for needle in (
+        UPSTREAM_SHA,
+        "WARDVEIL_V12_SCREENSHOT_DIR",
+        'capture("01-light-desktop", 1180, 900, "light")',
+        'capture("02-light-mobile", 390, 844, "light")',
+        'capture("03-dark-desktop", 1180, 900, "dark")',
+        'capture("04-deep-dark-desktop", 1180, 900, "deep-dark")',
+        'capture("05-reduced-transparency-desktop", 1180, 900, "light", True)',
+        '"non_production": True',
+        '"capture_count": len(captures)',
+        "Automated screenshots are review evidence only",
+    ):
+        require(needle in browser_smoke, f"browser optical-evidence harness missing invariant: {needle}")
+
+    for needle in (
+        "Revalidate active V1.1 production source",
+        "Validate isolated V1.2 evaluation contract",
+        "Exercise V1.2 evaluation in Chrome and capture review evidence",
+        "WARDVEIL_V12_SCREENSHOT_DIR: website/evidence/v1.2-evaluation",
+        f"actions/upload-artifact@{UPLOAD_ARTIFACT_SHA}",
+        "name: wardveil-v1.2-frosted-neutral-optical-review",
+        "if-no-files-found: error",
+        "retention-days: 14",
+    ):
+        require(needle in workflow, f"evaluation workflow missing evidence-pipeline invariant: {needle}")
 
     print(
         "Wardveil Security Center GLAZE UI V1.2 evaluation: PASS — "
         "isolated artifact, one Frosted Neutral header region, solid security-reading surfaces, "
+        "governed optical-review evidence pipeline, "
         f"upstream candidate {UPSTREAM_SHA}"
     )
     return 0
