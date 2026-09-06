@@ -127,7 +127,7 @@ def main() -> int:
             state = req(
                 "POST",
                 f"/session/{session}/execute/sync",
-                {"script": """const h=document.querySelector('header'),m=document.querySelector('main');const hr=h?.getBoundingClientRect(),mr=m?.getBoundingClientRect();const links=[...document.querySelectorAll('header nav a')].map(x=>x.getBoundingClientRect()).filter(r=>r.width>0&&r.height>0);return {ready:document.readyState,w:innerWidth,sw:document.documentElement.scrollWidth,pos:h?getComputedStyle(h).position:'',hb:hr?.bottom||0,mt:mr?.top||0,minNav:links.length?Math.min(...links.map(r=>r.height)):0};""", "args": []},
+                {"script": """const h=document.querySelector('header'),m=document.querySelector('main'),nav=document.querySelector('header nav');const hr=h?.getBoundingClientRect(),mr=m?.getBoundingClientRect(),ns=nav?getComputedStyle(nav):null;const links=[...document.querySelectorAll('header nav a')].map(x=>x.getBoundingClientRect()).filter(r=>r.width>0&&r.height>0);return {ready:document.readyState,w:innerWidth,sw:document.documentElement.scrollWidth,pos:h?getComputedStyle(h).position:'',hb:hr?.bottom||0,hh:hr?.height||0,mt:mr?.top||0,minNav:links.length?Math.min(...links.map(r=>r.height)):0,navDisplay:ns?.display||'',navOverflowX:ns?.overflowX||''};""", "args": []},
             )
             require(isinstance(state, dict), f"layout unreadable at {requested}px")
             width = int(state.get("w", requested))
@@ -136,6 +136,10 @@ def main() -> int:
             require(state.get("pos") not in {"sticky", "fixed"}, f"evaluation header overlays content at {width}px: {state}")
             require(float(state.get("mt", 0)) + 1 >= float(state.get("hb", 0)), f"main overlaps header at {width}px: {state}")
             require(float(state.get("minNav", 0)) >= 47.5, f"navigation target below 48px at {width}px: {state}")
+            if width <= 390:
+                require(float(state.get("hh", 999)) <= 190, f"mobile evaluation header consumes excessive viewport height at {width}px: {state}")
+                require(state.get("navDisplay") == "flex", f"mobile candidate navigation must be a compact flex capsule at {width}px: {state}")
+                require(state.get("navOverflowX") in {"auto", "scroll"}, f"mobile candidate navigation must scroll horizontally at {width}px: {state}")
 
         reduced = req(
             "POST",
@@ -159,7 +163,7 @@ def main() -> int:
                 "POST",
                 f"/session/{session}/execute/sync",
                 {
-                    "script": """const r=document.documentElement;const appearance=arguments[0],reduced=arguments[1];if(appearance==='system')delete r.dataset.glzAppearance;else r.dataset.glzAppearance=appearance;if(reduced)r.dataset.glzTransparency='reduced';else delete r.dataset.glzTransparency;window.scrollTo(0,0);const h=document.querySelector('.glz12-evaluation-glaze'),s=getComputedStyle(h);return {appearance:r.dataset.glzAppearance||'system',transparency:r.dataset.glzTransparency||'standard',background:s.backgroundColor,blur:s.backdropFilter||s.webkitBackdropFilter||'none',width:innerWidth,height:innerHeight};""",
+                    "script": """const r=document.documentElement;const appearance=arguments[0],reduced=arguments[1];if(appearance==='system')delete r.dataset.glzAppearance;else r.dataset.glzAppearance=appearance;if(reduced)r.dataset.glzTransparency='reduced';else delete r.dataset.glzTransparency;const button=document.querySelector('[data-theme-toggle]');const label=appearance==='deep-dark'?'Deep Dark':appearance==='system'?'System':appearance.charAt(0).toUpperCase()+appearance.slice(1);if(button){button.textContent=label;button.setAttribute('aria-label',`Appearance: ${label}. Review capture state.`);}window.scrollTo(0,0);const h=document.querySelector('.glz12-evaluation-glaze'),s=getComputedStyle(h);return {appearance:r.dataset.glzAppearance||'system',transparency:r.dataset.glzTransparency||'standard',background:s.backgroundColor,blur:s.backdropFilter||s.webkitBackdropFilter||'none',width:innerWidth,height:innerHeight,label:button?.textContent||''};""",
                     "args": [appearance, reduced_transparency],
                 },
             )
@@ -178,6 +182,7 @@ def main() -> int:
                     "viewport": [width, height],
                     "appearance": state.get("appearance"),
                     "transparency": state.get("transparency"),
+                    "appearance_label": state.get("label"),
                     "header_background": state.get("background"),
                     "header_backdrop_filter": state.get("blur"),
                 }
@@ -204,7 +209,7 @@ def main() -> int:
 
         print(
             "Wardveil GLAZE UI V1.2 evaluation Chrome smoke passed: bounded frosted header, solid security surfaces, "
-            "responsive geometry, Reduced Transparency, Deep Dark"
+            "compact mobile navigation, responsive geometry, Reduced Transparency, Deep Dark"
             + (", five deterministic optical-review screenshots captured." if evidence_dir else ".")
         )
         return 0
