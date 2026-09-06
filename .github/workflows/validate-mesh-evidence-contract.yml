@@ -68,7 +68,12 @@ jobs:
       - name: Enforce runtime assertion producer binding regressions
         run: python3 scripts/test_wardveil_mesh_assertion_binding.py
 
+      - name: Enforce dedicated runtime acceptance producer binding regressions
+        run: python3 scripts/test_wardveil_mesh_runtime_acceptance.py
+
       - name: Compile pinned Mesh source-contract and assertion-binding validators
         run: |
           python3 -m py_compile scripts/validate_wardveil_mesh_contract_source.py
           python3 -m py_compile scripts/test_wardveil_mesh_assertion_binding.py
+          python3 -m py_compile scripts/test_wardveil_mesh_runtime_acceptance.py
+          python3 -m py_compile reference/wardveil_mesh_runtime_acceptance.py
