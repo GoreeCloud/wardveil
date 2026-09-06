@@ -10,6 +10,7 @@
     "environment",
     "deployed_revision",
     "collected_at",
+    "valid_until",
     "acceptance_status",
     "checks",
     "storage_health_is_protection_claim",
@@ -21,6 +22,7 @@
     "environment": { "type": "string", "minLength": 1, "maxLength": 64 },
     "deployed_revision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
     "collected_at": { "type": "string", "format": "date-time" },
+    "valid_until": { "type": "string", "format": "date-time" },
     "acceptance_status": { "enum": ["unaccepted", "degraded", "accepted"] },
     "checks": {
       "type": "object",
