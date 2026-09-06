@@ -36,7 +36,7 @@ The profile vocabulary includes these bounded transport families:
 - response state; and
 - security audit state.
 
-**Permission in the transport vocabulary is not sufficient for publication.** Every family now has an explicit `producer_bindings` entry in the source profile. A family is publishable only when that entry is `status: bound` and the source adapter enforces the named canonical producer contract, record type where applicable, outcome field, and producer-declared validity field.
+**Permission in the transport vocabulary is not sufficient for publication.** Every family has an explicit `producer_bindings` entry in the source profile. A family is publishable only when that entry is `status: bound` and the applicable source adapter enforces the named canonical producer contract, record type where applicable, outcome field, and producer-declared validity field.
 
 ### Security-status binding
 
@@ -45,6 +45,18 @@ The profile vocabulary includes these bounded transport families:
 The Mesh envelope outcome is derived from the canonical status record's `state`. A caller cannot turn a runtime policy record into `security-status`, override `attention` to `protected`, retain a protected claim on a non-protected state, or emit stale/non-authoritative status as current Mesh evidence. A `protected` envelope therefore requires the producer record itself to satisfy Wardveil's protected/current/authoritative contract before transport.
 
 The envelope observation and validity timestamps are derived from the status record's evidence. Mesh may later regard retained evidence as stale after that producer-declared validity window passes; transport or retention does not renew Wardveil's protection claim.
+
+### Runtime-acceptance binding
+
+`runtime-acceptance` is a separate producer path rather than a generic runtime record. `reference/wardveil_mesh_runtime_acceptance.py` accepts only a closed `contracts/wardveil.cloudflare.acceptance-evidence.schema.json` manifest for the Wardveil Cloudflare persistence runtime.
+
+The source policy in `contracts/wardveil.cloudflare.runtime-acceptance.json` defines `evidence_validity_seconds: 3600`. A live manifest must therefore carry `valid_until` exactly one hour after `collected_at`. The dedicated adapter verifies that producer-declared deadline and preserves it unchanged in the Mesh envelope. Missing, future-dated, non-canonical, placeholder-revision, or expired evidence fails closed.
+
+The Mesh outcome is derived exclusively from the manifest's `acceptance_status`. An `accepted` manifest is valid only when every canonical acceptance check is `passed`; a caller cannot substitute an outcome. The adapter emits only minimized state, immutable revision/contract provenance, timestamps, a bounded source reference, and a digest of the complete producer manifest.
+
+This binding does **not** make the generic Wardveil runtime-record adapter accept `runtime-acceptance`. Policy decisions, protection actions, findings, quarantine records, incidents, or audit events cannot be relabeled as infrastructure acceptance evidence.
+
+Runtime acceptance remains infrastructure acceptance only. It is not `Protected by Wardveil`, trust, authorization, malware cleanliness, incident closure, restore verification, or broad Wardveil production acceptance. The source-controlled production template remains expired, placeholder-revision, and `unaccepted`.
 
 ### Runtime-record bindings
 
@@ -65,11 +77,9 @@ The validated runtime `producer.id` is preserved through the producer-controlled
 
 This preservation is provenance, **not authentication**. The Mesh transport producer remains `wardveil-security`; GoreeCloud Identity and the authenticated Mesh delivery path remain authoritative for service/delivery authentication. A source reference containing a producer ID must never be treated as proof that the producer was authenticated.
 
-### Explicitly unbound families
+### Explicitly unbound family
 
-`runtime-acceptance` remains fail closed. Wardveil has a canonical Cloudflare acceptance-evidence model and an `acceptance_status`, but the current manifest contract does **not** provide a canonical producer-declared `valid_until`. Mesh Evidence Envelope v1 requires `valid_until`, and Wardveil must not invent a validity window merely to make the manifest transportable. If the producer acceptance model later gains a governed validity rule, that change requires separate source review and regression evidence before this binding may become active.
-
-`response-state` also remains fail closed because no canonical Wardveil Response service producer record type with bound outcome and validity semantics is established. `reference/wardveil_mesh_refresh_response.py` is Mesh refresh coordination; it is not evidence of Wardveil Response service security state and must never be relabeled as such.
+`response-state` remains fail closed because no canonical Wardveil Response service producer record type with bound outcome and validity semantics is established. `reference/wardveil_mesh_refresh_response.py` is Mesh refresh coordination; it is not evidence of Wardveil Response service security state and must never be relabeled as such.
 
 ## Evidence minimization
 
@@ -81,8 +91,10 @@ This preserves Wardveil's existing evidence-first model without turning Mesh int
 
 ## Freshness
 
-Wardveil is responsible for declaring `observed_at` and `valid_until` according to the assertion's own policy and runtime semantics. The producer adapter fails closed on future-dated or expired evidence and does not invent a universal Wardveil freshness window. Mesh and consumers may preserve expired evidence as historical transport state only where their own contracts permit it; they must not upgrade it back into current Wardveil security truth.
+Wardveil is responsible for declaring `observed_at` and `valid_until` according to each assertion's own policy and runtime semantics. Generic runtime records use their producer-declared validity, status evidence uses its status evidence deadline, and Cloudflare runtime acceptance uses the governed one-hour acceptance window.
 
-## Runtime acceptance
+Adapters fail closed on future-dated or expired evidence. Mesh and consumers may preserve expired evidence as historical transport state only where their own contracts permit it; they must not upgrade it back into current Wardveil security truth or extend producer validity locally.
 
-This profile is a source-level integration contract. It does not itself establish runtime acceptance, Cloudflare deployment acceptance, Security Center acceptance, Manager acceptance, or any product-specific production gate.
+## Runtime acceptance boundary
+
+This profile is a source-level integration contract. Binding the `runtime-acceptance` assertion means only that current producer-authoritative acceptance manifests now have a valid Mesh representation. It does not itself establish Cloudflare deployment acceptance, Security Center acceptance, Manager acceptance, broad Wardveil production acceptance, or any product-specific production gate.
