@@ -26,11 +26,20 @@ def start_server(handler):
 
 now = datetime.now(timezone.utc)
 record = {
+    "contract_version": "0.1.0",
+    "record_type": "policy_decision",
     "record_id": "delivery-001",
     "producer": {"id": "wardveil-policy", "authoritative": True},
-    "scope": {"resource_type": "service", "resource_id": "goreecloud-mail", "component": "attachment-ingress"},
-    "reason_code": "attachment_policy_satisfied",
+    "scope": {
+        "resource_type": "service",
+        "resource_id": "goreecloud-mail",
+        "operation": "attachment-ingress",
+    },
+    "observed_at": now.isoformat(),
     "valid_until": (now + timedelta(hours=1)).isoformat(),
+    "evidence_refs": ["wardveil://evidence/delivery-policy-001"],
+    "policy_decision": "allow",
+    "reason_code": "attachment_policy_satisfied",
     "raw_payload": "must not be delivered",
 }
 envelope = create_mesh_evidence_envelope(record, revision="a" * 40, assertion="policy-decision", outcome="allow", observed_at=now)
