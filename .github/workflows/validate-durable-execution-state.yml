@@ -1,0 +1,54 @@
+name: Wardveil Durable Execution State
+
+on:
+  pull_request:
+    paths:
+      - "reference/wardveil_execution_state.py"
+      - "reference/wardveil_sqlite_execution_state.py"
+      - "contracts/wardveil.execution-state.json"
+      - "EXECUTION-STATE.md"
+      - "scripts/test_wardveil_execution_state.py"
+      - "scripts/test_wardveil_sqlite_execution_state.py"
+      - "scripts/validate_wardveil_execution_state.py"
+      - ".github/workflows/validate-durable-execution-state.yml"
+  push:
+    branches: [main]
+    paths:
+      - "reference/wardveil_execution_state.py"
+      - "reference/wardveil_sqlite_execution_state.py"
+      - "contracts/wardveil.execution-state.json"
+      - "EXECUTION-STATE.md"
+      - "scripts/test_wardveil_execution_state.py"
+      - "scripts/test_wardveil_sqlite_execution_state.py"
+      - "scripts/validate_wardveil_execution_state.py"
+      - ".github/workflows/validate-durable-execution-state.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Check out exact source revision
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Compile execution-state sources
+        run: |
+          python3 -m py_compile reference/wardveil_execution_state.py
+          python3 -m py_compile reference/wardveil_sqlite_execution_state.py
+          python3 -m py_compile scripts/test_wardveil_execution_state.py
+          python3 -m py_compile scripts/test_wardveil_sqlite_execution_state.py
+
+      - name: Validate execution-state contract
+        run: python3 scripts/validate_wardveil_execution_state.py
+
+      - name: Run in-memory semantics regression
+        run: python3 scripts/test_wardveil_execution_state.py
+
+      - name: Run SQLite restart and custody tests
+        run: python3 scripts/test_wardveil_sqlite_execution_state.py

@@ -52,6 +52,19 @@
     "authorization_claim_retention": "bounded",
     "execution_receipt_retention_class": "audit_evidence"
   },
+  "single_host_reference": {
+    "implementation": "reference/wardveil_sqlite_execution_state.py",
+    "backend": "SQLite",
+    "transaction_mode": "BEGIN IMMEDIATE",
+    "synchronous_mode": "FULL",
+    "journal_mode": "DELETE",
+    "restart_persistence_tested": true,
+    "nonce_and_idempotency_claims_transactional": true,
+    "database_symbolic_links_allowed": false,
+    "posix_group_or_other_permissions_allowed": false,
+    "production_deployment_evidence": false,
+    "distributed_exactly_once_claim": false
+  },
   "authority": {
     "persistence_is_security_state_authority": false,
     "persistence_grants_executor_authority": false,
