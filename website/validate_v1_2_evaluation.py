@@ -157,7 +157,11 @@ def main() -> int:
         "mobile evaluation header consumes excessive viewport height",
         "mobile candidate navigation must be a compact flex capsule",
         "mobile candidate navigation must scroll horizontally",
+        "Deep Dark did not activate Wardveil product dark theme",
+        "dark capture contains a light Security Center surface",
+        '"product_theme": state.get("productTheme")',
         '"appearance_label": state.get("label")',
+        '"surface_background": state.get("surfaceBackground")',
         'capture("01-light-desktop", 1180, 900, "light")',
         'capture("02-light-mobile", 390, 844, "light")',
         'capture("03-dark-desktop", 1180, 900, "dark")',
@@ -185,7 +189,8 @@ def main() -> int:
     print(
         "Wardveil Security Center GLAZE UI V1.2 evaluation: PASS — "
         "isolated artifact, one Frosted Neutral header region, solid security-reading surfaces, "
-        "compact mobile navigation, governed exact-head optical-review evidence pipeline, "
+        "compact mobile navigation, synchronized Wardveil/Glaze appearance evidence, "
+        "governed exact-head optical-review evidence pipeline, "
         f"upstream candidate {UPSTREAM_SHA}"
     )
     return 0
