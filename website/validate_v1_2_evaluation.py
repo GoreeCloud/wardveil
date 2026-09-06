@@ -146,6 +146,8 @@ def main() -> int:
     for needle in (
         UPSTREAM_SHA,
         "WARDVEIL_V12_SCREENSHOT_DIR",
+        "WARDVEIL_EVIDENCE_SHA",
+        '"wardveil_source_revision": evidence_sha',
         'capture("01-light-desktop", 1180, 900, "light")',
         'capture("02-light-mobile", 390, 844, "light")',
         'capture("03-dark-desktop", 1180, 900, "dark")',
@@ -162,6 +164,7 @@ def main() -> int:
         "Validate isolated V1.2 evaluation contract",
         "Exercise V1.2 evaluation in Chrome and capture review evidence",
         "WARDVEIL_V12_SCREENSHOT_DIR: website/evidence/v1.2-evaluation",
+        "WARDVEIL_EVIDENCE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}",
         f"actions/upload-artifact@{UPLOAD_ARTIFACT_SHA}",
         "name: wardveil-v1.2-frosted-neutral-optical-review",
         "if-no-files-found: error",
@@ -172,7 +175,7 @@ def main() -> int:
     print(
         "Wardveil Security Center GLAZE UI V1.2 evaluation: PASS — "
         "isolated artifact, one Frosted Neutral header region, solid security-reading surfaces, "
-        "governed optical-review evidence pipeline, "
+        "governed exact-head optical-review evidence pipeline, "
         f"upstream candidate {UPSTREAM_SHA}"
     )
     return 0
