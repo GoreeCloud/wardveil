@@ -52,6 +52,7 @@ jobs:
       - name: Exercise V1.2 evaluation in Chrome and capture review evidence
         env:
           WARDVEIL_V12_SCREENSHOT_DIR: website/evidence/v1.2-evaluation
+          WARDVEIL_EVIDENCE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
         run: python3 website/browser_v1_2_evaluation_smoke.py
 
       - name: Upload V1.2 optical review evidence
