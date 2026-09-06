@@ -4,9 +4,9 @@
 Every publishable generic assertion must be bound to its canonical Wardveil
 runtime record type and producer outcome. Runtime subproducer identity must be
 preserved through the producer-controlled source reference without being treated
-as delivery authentication. Profile-permitted but unbound families remain fail
-closed. These tests do not execute security actions or establish production
-acceptance.
+as delivery authentication. Runtime acceptance uses a dedicated producer adapter;
+response-state remains fail closed. These tests do not execute security actions
+or establish production acceptance.
 """
 from __future__ import annotations
 
@@ -78,14 +78,33 @@ CASES = {
     "security-audit-state": ("audit_event", "outcome", "success", {"event_type": "test"}),
 }
 
-# The profile must describe exactly the same producer bindings the adapter accepts.
+# The profile must describe exactly the same producer bindings the adapters accept.
 bindings = PROFILE.get("producer_bindings") or {}
-if PROFILE.get("schema_version") != "1.1.3":
+if PROFILE.get("schema_version") != "1.1.4":
     fail("producer-binding profile version drifted")
 if set(bindings) != set(PROFILE.get("permitted_assertion_families") or []):
     fail("every permitted assertion family must have an explicit producer-binding status")
 if bindings.get("security-status", {}).get("status") != "bound":
     fail("security-status lost its dedicated bound producer status")
+
+runtime_acceptance = bindings.get("runtime-acceptance") or {}
+if runtime_acceptance.get("status") != "bound":
+    fail("runtime-acceptance lost its dedicated bound producer status")
+if runtime_acceptance.get("contract") != "contracts/wardveil.cloudflare.acceptance-evidence.schema.json":
+    fail("runtime-acceptance contract binding drifted")
+if runtime_acceptance.get("record_type") is not None:
+    fail("runtime-acceptance must not claim a generic runtime record type")
+if runtime_acceptance.get("outcome_field") != "acceptance_status" or runtime_acceptance.get("validity_field") != "valid_until":
+    fail("runtime-acceptance outcome/validity binding drifted")
+if runtime_acceptance.get("mode") != "dedicated-runtime-acceptance-adapter":
+    fail("runtime-acceptance binding no longer requires its dedicated adapter")
+validity_policy = runtime_acceptance.get("validity_policy") or {}
+if validity_policy != {
+    "source": "contracts/wardveil.cloudflare.runtime-acceptance.json",
+    "field": "evidence_validity_seconds",
+    "value": 3600,
+}:
+    fail("runtime-acceptance producer validity policy drifted")
 
 for assertion, (record_type, outcome_field, outcome, extras) in CASES.items():
     binding = bindings.get(assertion) or {}
@@ -148,22 +167,25 @@ expect_value_error(
     "policy_decision was relabeled as scan-finding evidence",
 )
 
-# Profile-permitted does not mean producer-bound. Runtime acceptance currently
-# lacks a canonical producer-declared Mesh validity window; response-state lacks
-# a canonical Response producer record/outcome/validity binding. Both must stay closed.
-expected_unbound = {
-    "runtime-acceptance": "producer-validity-window-not-established",
-    "response-state": "canonical-response-producer-record-not-established",
-}
-for assertion, reason_code in expected_unbound.items():
-    binding = bindings.get(assertion) or {}
-    if binding.get("status") != "unbound" or binding.get("mode") != "fail-closed" or binding.get("reason_code") != reason_code:
-        fail(f"profile no longer records {assertion} as explicitly fail-closed")
-    if binding.get("contract") is not None or binding.get("record_type") is not None or binding.get("outcome_field") is not None or binding.get("validity_field") is not None:
-        fail(f"unbound assertion {assertion} gained partial producer authority")
-    expect_value_error(
-        lambda assertion=assertion: create_mesh_evidence_envelope(policy, revision=REVISION, assertion=assertion, outcome="accepted", observed_at=NOW),
-        f"unbound assertion {assertion} accepted caller-defined runtime evidence",
-    )
+# Runtime acceptance is bound through a dedicated manifest adapter, never through
+# this generic runtime-record path. The separate regression suite proves positive
+# emission from the canonical acceptance manifest.
+expect_value_error(
+    lambda: create_mesh_evidence_envelope(policy, revision=REVISION, assertion="runtime-acceptance", outcome="accepted", observed_at=NOW),
+    "generic runtime record was relabeled as runtime-acceptance evidence",
+)
+
+# Response-state remains profile-permitted but unbound until a canonical Response
+# producer record/outcome/validity contract exists.
+response_binding = bindings.get("response-state") or {}
+if response_binding.get("status") != "unbound" or response_binding.get("mode") != "fail-closed" or response_binding.get("reason_code") != "canonical-response-producer-record-not-established":
+    fail("profile no longer records response-state as explicitly fail-closed")
+for field in ("contract", "record_type", "outcome_field", "validity_field"):
+    if response_binding.get(field) is not None:
+        fail(f"unbound response-state gained partial {field} authority")
+expect_value_error(
+    lambda: create_mesh_evidence_envelope(policy, revision=REVISION, assertion="response-state", outcome="accepted", observed_at=NOW),
+    "unbound response-state accepted caller-defined runtime evidence",
+)
 
 print("Wardveil Mesh assertion-to-producer binding and identity-preservation regressions: OK")
