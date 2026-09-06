@@ -8,6 +8,7 @@ workflow = (ROOT / ".github/workflows/deploy-cloudflare-persistence.yml").read_t
 runner_config_text = (ROOT / "cloudflare" / "acceptance-runner" / "wrangler.jsonc").read_text()
 runner_source = (ROOT / "cloudflare" / "acceptance-runner" / "src" / "index.ts").read_text()
 doc = (ROOT / "CLOUDFLARE-RUNTIME-EVIDENCE-COLLECTION.md").read_text()
+runtime_contract = json.loads((ROOT / "contracts" / "wardveil.cloudflare.runtime-acceptance.json").read_text())
 
 runner_config = json.loads(re.sub(r"//.*", "", runner_config_text))
 assert runner_config["name"] == "goreecloud-wardveil-acceptance-runner"
@@ -19,6 +20,7 @@ assert runner_config["services"] == [{
 }]
 assert "workers_dev" not in runner_config, "local-only runner must not gain a deploy/public configuration"
 assert "routes" not in runner_config, "local-only runner must not gain routes"
+assert runtime_contract.get("evidence_validity_seconds") == 3600, "runtime evidence validity policy drifted"
 
 for token in [
     'url.pathname === "/healthz"',
@@ -54,6 +56,9 @@ for token in [
     "observability_failure_evidence",
     "public_mutation_surface_absent",
     "'acceptance_status': 'unaccepted'",
+    "'valid_until': expiry",
+    "evidence_validity_seconds",
+    "datetime.timedelta(seconds=validity_seconds)",
     "storage_health_is_protection_claim",
     "everkeep_recovery_authority_preserved",
 ]:
@@ -73,6 +78,9 @@ for phrase in [
     "acceptance_status: unaccepted",
     "Everkeep remains the resilience, backup, restore, and recovery-verification authority.",
     "No evidence-collection workflow may manufacture, extend, reinterpret, or upgrade security state",
+    "Producer-declared freshness",
+    "3600 seconds",
+    "must not extend or replace the deadline",
 ]:
     assert phrase in doc, f"missing evidence-collection authority boundary: {phrase}"
 
