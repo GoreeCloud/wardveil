@@ -113,6 +113,12 @@ def main() -> int:
         "--glz12-glass-overlay:rgba(24,24,27,.86)",
         "--glz12-blur-standard:28px",
         'data-glz-transparency="reduced"',
+        "@media(max-width:620px)",
+        ".glz12-evaluation-glaze .nav-wrap nav",
+        "overflow-x:auto",
+        "overscroll-behavior-inline:contain",
+        "min-width:48px",
+        "white-space:nowrap",
         "prefers-reduced-transparency:reduce",
         "prefers-contrast:more",
         "forced-colors:active",
@@ -148,6 +154,10 @@ def main() -> int:
         "WARDVEIL_V12_SCREENSHOT_DIR",
         "WARDVEIL_EVIDENCE_SHA",
         '"wardveil_source_revision": evidence_sha',
+        "mobile evaluation header consumes excessive viewport height",
+        "mobile candidate navigation must be a compact flex capsule",
+        "mobile candidate navigation must scroll horizontally",
+        '"appearance_label": state.get("label")',
         'capture("01-light-desktop", 1180, 900, "light")',
         'capture("02-light-mobile", 390, 844, "light")',
         'capture("03-dark-desktop", 1180, 900, "dark")',
@@ -175,7 +185,7 @@ def main() -> int:
     print(
         "Wardveil Security Center GLAZE UI V1.2 evaluation: PASS — "
         "isolated artifact, one Frosted Neutral header region, solid security-reading surfaces, "
-        "governed exact-head optical-review evidence pipeline, "
+        "compact mobile navigation, governed exact-head optical-review evidence pipeline, "
         f"upstream candidate {UPSTREAM_SHA}"
     )
     return 0
