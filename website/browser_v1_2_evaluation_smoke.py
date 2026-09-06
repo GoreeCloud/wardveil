@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
-"""Exercise Wardveil's isolated V1.2 evaluation in headless Chrome."""
+"""Exercise Wardveil's isolated V1.2 evaluation in headless Chrome and optionally capture review evidence."""
 from __future__ import annotations
 
+import base64
+import hashlib
 import json
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -18,6 +21,7 @@ DRIVER_PORT = 9519
 BASE = f"http://127.0.0.1:{DRIVER_PORT}"
 TARGET = f"http://127.0.0.1:{WEB_PORT}/"
 VIEWPORTS = ((1180, 900), (768, 900), (390, 844), (320, 844))
+UPSTREAM_GLAZE_SHA = "94e0db139da2b9a3f7ead7744cbcd0ad9d7627bd"
 
 
 class BrowserError(RuntimeError):
@@ -71,8 +75,16 @@ def main() -> int:
     server = driver = None
     session: str | None = None
     log_path: str | None = None
+    evidence_dir_raw = os.environ.get("WARDVEIL_V12_SCREENSHOT_DIR", "").strip()
+    evidence_dir = Path(evidence_dir_raw) if evidence_dir_raw else None
+    captures: list[dict[str, Any]] = []
     try:
         require((SITE / "index.html").is_file(), "evaluation build missing; run validate_v1_2_evaluation.py first")
+        if evidence_dir:
+            if evidence_dir.exists():
+                shutil.rmtree(evidence_dir)
+            evidence_dir.mkdir(parents=True)
+
         server = subprocess.Popen(
             ["python3", "-m", "http.server", str(WEB_PORT), "--bind", "127.0.0.1", "--directory", str(SITE)],
             stdout=subprocess.DEVNULL,
@@ -134,7 +146,62 @@ def main() -> int:
         )
         require(isinstance(deep_dark, dict) and deep_dark.get("appearance") == "deep-dark", f"Deep Dark mapping failed: {deep_dark}")
 
-        print("Wardveil GLAZE UI V1.2 evaluation Chrome smoke passed: bounded frosted header, solid security surfaces, responsive geometry, Reduced Transparency, Deep Dark.")
+        def capture(name: str, width: int, height: int, appearance: str, reduced_transparency: bool = False) -> None:
+            if not evidence_dir:
+                return
+            req("POST", f"/session/{session}/window/rect", {"width": width, "height": height, "x": 0, "y": 0})
+            state = req(
+                "POST",
+                f"/session/{session}/execute/sync",
+                {
+                    "script": """const r=document.documentElement;const appearance=arguments[0],reduced=arguments[1];if(appearance==='system')delete r.dataset.glzAppearance;else r.dataset.glzAppearance=appearance;if(reduced)r.dataset.glzTransparency='reduced';else delete r.dataset.glzTransparency;window.scrollTo(0,0);const h=document.querySelector('.glz12-evaluation-glaze'),s=getComputedStyle(h);return {appearance:r.dataset.glzAppearance||'system',transparency:r.dataset.glzTransparency||'standard',background:s.backgroundColor,blur:s.backdropFilter||s.webkitBackdropFilter||'none',width:innerWidth,height:innerHeight};""",
+                    "args": [appearance, reduced_transparency],
+                },
+            )
+            require(isinstance(state, dict), f"capture state unreadable: {name}")
+            encoded = req("GET", f"/session/{session}/screenshot")
+            require(isinstance(encoded, str) and encoded, f"screenshot unavailable: {name}")
+            image = base64.b64decode(encoded)
+            require(image.startswith(b"\x89PNG\r\n\x1a\n"), f"screenshot is not PNG: {name}")
+            path = evidence_dir / f"{name}.png"
+            path.write_bytes(image)
+            captures.append(
+                {
+                    "file": path.name,
+                    "sha256": hashlib.sha256(image).hexdigest(),
+                    "bytes": len(image),
+                    "viewport": [width, height],
+                    "appearance": state.get("appearance"),
+                    "transparency": state.get("transparency"),
+                    "header_background": state.get("background"),
+                    "header_backdrop_filter": state.get("blur"),
+                }
+            )
+
+        capture("01-light-desktop", 1180, 900, "light")
+        capture("02-light-mobile", 390, 844, "light")
+        capture("03-dark-desktop", 1180, 900, "dark")
+        capture("04-deep-dark-desktop", 1180, 900, "deep-dark")
+        capture("05-reduced-transparency-desktop", 1180, 900, "light", True)
+
+        if evidence_dir:
+            require(len(captures) == 5, f"expected five optical-review captures, got {len(captures)}")
+            manifest = {
+                "schema": "goreecloud.wardveil.glaze-v1.2-evaluation-evidence/v1",
+                "non_production": True,
+                "upstream_glaze_candidate_revision": UPSTREAM_GLAZE_SHA,
+                "wardveil_source_revision": os.environ.get("GITHUB_SHA", "local"),
+                "capture_count": len(captures),
+                "captures": captures,
+                "acceptance_boundary": "Automated screenshots are review evidence only; they do not establish human optical approval or production acceptance.",
+            }
+            (evidence_dir / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+
+        print(
+            "Wardveil GLAZE UI V1.2 evaluation Chrome smoke passed: bounded frosted header, solid security surfaces, "
+            "responsive geometry, Reduced Transparency, Deep Dark"
+            + (", five deterministic optical-review screenshots captured." if evidence_dir else ".")
+        )
         return 0
     except Exception as exc:
         print(f"Wardveil GLAZE UI V1.2 evaluation Chrome smoke failed: {exc}")
