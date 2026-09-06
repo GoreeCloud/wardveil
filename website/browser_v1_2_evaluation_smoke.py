@@ -77,10 +77,15 @@ def main() -> int:
     log_path: str | None = None
     evidence_dir_raw = os.environ.get("WARDVEIL_V12_SCREENSHOT_DIR", "").strip()
     evidence_dir = Path(evidence_dir_raw) if evidence_dir_raw else None
+    evidence_sha = os.environ.get("WARDVEIL_EVIDENCE_SHA", "").strip() or "local"
     captures: list[dict[str, Any]] = []
     try:
         require((SITE / "index.html").is_file(), "evaluation build missing; run validate_v1_2_evaluation.py first")
         if evidence_dir:
+            require(
+                evidence_sha == "local" or (len(evidence_sha) == 40 and all(c in "0123456789abcdef" for c in evidence_sha.lower())),
+                f"invalid exact evidence source revision: {evidence_sha}",
+            )
             if evidence_dir.exists():
                 shutil.rmtree(evidence_dir)
             evidence_dir.mkdir(parents=True)
@@ -190,7 +195,7 @@ def main() -> int:
                 "schema": "goreecloud.wardveil.glaze-v1.2-evaluation-evidence/v1",
                 "non_production": True,
                 "upstream_glaze_candidate_revision": UPSTREAM_GLAZE_SHA,
-                "wardveil_source_revision": os.environ.get("GITHUB_SHA", "local"),
+                "wardveil_source_revision": evidence_sha,
                 "capture_count": len(captures),
                 "captures": captures,
                 "acceptance_boundary": "Automated screenshots are review evidence only; they do not establish human optical approval or production acceptance.",
