@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PROFILE = ROOT / "contracts" / "wardveil.mesh-evidence-profile.json"
 MESH_ROOT = ROOT / ".contract-sources" / "goreecloud-mesh"
 
-EXPECTED_PROFILE_VERSION = "1.1.3"
+EXPECTED_PROFILE_VERSION = "1.1.4"
 EXPECTED_MESH_REPOSITORY = "GoreeCloud/goreecloud-mesh"
 EXPECTED_MESH_REVISION = "1002c74a2f014b04719b6809da22b0026546f8f0"
 EXPECTED_WARDVEIL_REPOSITORY = "GoreeCloud/goreecloud-wardveil-security"
@@ -31,7 +31,6 @@ EXPECTED_RUNTIME_BINDINGS = {
     "security-audit-state": ("audit_event", "outcome"),
 }
 EXPECTED_UNBOUND = {
-    "runtime-acceptance": "producer-validity-window-not-established",
     "response-state": "canonical-response-producer-record-not-established",
 }
 
@@ -66,11 +65,41 @@ def validate_producer_bindings(profile: dict) -> None:
     require(isinstance(bindings, dict), "producer_bindings must be an object")
     require(set(bindings) == set(families), "every permitted assertion family must declare one producer-binding status")
 
+    producer_contracts = set(profile.get("producer_contracts") or [])
+    require("contracts/wardveil.status.schema.json" in producer_contracts, "status producer contract is missing")
+    require("contracts/wardveil.runtime.schema.json" in producer_contracts, "runtime producer contract is missing")
+    require("contracts/wardveil.cloudflare.acceptance-evidence.schema.json" in producer_contracts, "runtime-acceptance producer contract is missing")
+
     status = bindings.get("security-status") or {}
     require(status.get("status") == "bound", "security-status must remain producer-bound")
     require(status.get("contract") == "contracts/wardveil.status.schema.json", "security-status contract binding drifted")
     require(status.get("record_type") is None and status.get("outcome_field") == "state", "security-status state binding drifted")
     require(status.get("validity_field") == "evidence.valid_until" and status.get("mode") == "dedicated-status-adapter", "security-status validity/mode drifted")
+
+    runtime_acceptance = bindings.get("runtime-acceptance") or {}
+    require(runtime_acceptance.get("status") == "bound", "runtime-acceptance must remain producer-bound")
+    require(runtime_acceptance.get("contract") == "contracts/wardveil.cloudflare.acceptance-evidence.schema.json", "runtime-acceptance contract binding drifted")
+    require(runtime_acceptance.get("record_type") is None, "runtime-acceptance must not claim a generic runtime record type")
+    require(runtime_acceptance.get("outcome_field") == "acceptance_status", "runtime-acceptance outcome binding drifted")
+    require(runtime_acceptance.get("validity_field") == "valid_until", "runtime-acceptance validity binding drifted")
+    require(runtime_acceptance.get("mode") == "dedicated-runtime-acceptance-adapter", "runtime-acceptance binding mode drifted")
+    require(runtime_acceptance.get("validity_policy") == {
+        "source": "contracts/wardveil.cloudflare.runtime-acceptance.json",
+        "field": "evidence_validity_seconds",
+        "value": 3600,
+    }, "runtime-acceptance validity policy drifted")
+    related = set(runtime_acceptance.get("related_contracts") or [])
+    require("contracts/wardveil.cloudflare.runtime-acceptance.json" in related, "runtime-acceptance must identify its acceptance policy contract")
+    require("contracts/wardveil.platform-evidence.runtime-acceptance.json" in related, "runtime-acceptance must retain its platform delivery boundary contract")
+
+    acceptance_schema = load_json(ROOT / "contracts/wardveil.cloudflare.acceptance-evidence.schema.json")
+    acceptance_properties = acceptance_schema.get("properties") or {}
+    require("valid_until" in set(acceptance_schema.get("required") or []), "runtime-acceptance producer contract must require valid_until")
+    require((acceptance_properties.get("valid_until") or {}).get("format") == "date-time", "runtime-acceptance valid_until format drifted")
+    require((acceptance_properties.get("acceptance_status") or {}).get("enum") == ["unaccepted", "degraded", "accepted"], "runtime-acceptance outcome vocabulary drifted")
+    acceptance_policy = load_json(ROOT / "contracts/wardveil.cloudflare.runtime-acceptance.json")
+    require(acceptance_policy.get("evidence_validity_seconds") == 3600, "runtime-acceptance producer freshness window drifted")
+    require(acceptance_policy.get("production_runtime_status") == "unaccepted", "source contract cannot claim runtime production acceptance")
 
     for assertion, (record_type, outcome_field) in EXPECTED_RUNTIME_BINDINGS.items():
         binding = bindings.get(assertion) or {}
@@ -87,13 +116,6 @@ def validate_producer_bindings(profile: dict) -> None:
         require(binding.get("reason_code") == reason_code, f"{assertion} fail-closed reason drifted")
         for field in ("contract", "record_type", "outcome_field", "validity_field"):
             require(binding.get(field) is None, f"{assertion} cannot carry partial {field} authority while unbound")
-
-    runtime_acceptance = bindings["runtime-acceptance"]
-    related = set(runtime_acceptance.get("related_contracts") or [])
-    require("contracts/wardveil.cloudflare.acceptance-evidence.schema.json" in related, "runtime-acceptance must identify its current evidence model")
-    require("contracts/wardveil.cloudflare.runtime-acceptance.json" in related, "runtime-acceptance must identify its current acceptance contract")
-    acceptance_schema = load_json(ROOT / "contracts/wardveil.cloudflare.acceptance-evidence.schema.json")
-    require("valid_until" not in (acceptance_schema.get("properties") or {}), "runtime-acceptance evidence unexpectedly gained valid_until; re-review producer binding instead of preserving this blocker")
 
 
 def wardveil_rule(schema: dict) -> dict:
