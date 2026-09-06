@@ -49,5 +49,16 @@ jobs:
       - name: Validate isolated V1.2 evaluation contract
         run: python3 website/validate_v1_2_evaluation.py
 
-      - name: Exercise V1.2 evaluation in Chrome
+      - name: Exercise V1.2 evaluation in Chrome and capture review evidence
+        env:
+          WARDVEIL_V12_SCREENSHOT_DIR: website/evidence/v1.2-evaluation
         run: python3 website/browser_v1_2_evaluation_smoke.py
+
+      - name: Upload V1.2 optical review evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: wardveil-v1.2-frosted-neutral-optical-review
+          path: website/evidence/v1.2-evaluation
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 6
