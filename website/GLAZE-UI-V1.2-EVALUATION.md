@@ -45,6 +45,20 @@ Reference candidate substrate values exercised by the Wardveil subset include:
 - Deep Dark overlay glass: `rgba(24,24,27,0.86)`.
 - Standard candidate blur: `28px`.
 
+## Automated optical-review evidence
+
+The dedicated evaluation workflow produces five deterministic review screenshots from the exact checked-out Wardveil revision after the production V1.1 validation and isolated V1.2 contract validation pass:
+
+- Light desktop at 1180 × 900.
+- Light mobile at 390 × 844.
+- Dark desktop at 1180 × 900.
+- Deep Dark desktop at 1180 × 900.
+- Reduced Transparency desktop at 1180 × 900.
+
+The PNG files are accompanied by a machine-readable manifest containing the upstream Glaze candidate revision, Wardveil source revision, viewport and appearance state, header material readings, byte size, and SHA-256 digest for every capture. CI publishes the evidence as `wardveil-v1.2-frosted-neutral-optical-review` for 14 days using an immutable `actions/upload-artifact` revision.
+
+This evidence exists to make human visual review reproducible. Automated screenshot generation is not itself human optical approval.
+
 ## Acceptance boundary
 
 Passing repository automation establishes only that the isolated evaluation artifact is mechanically consistent with the bounded contract recorded here. It does not establish:
