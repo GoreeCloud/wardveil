@@ -44,23 +44,26 @@ platform_systems:
     evidence:
       - README.md
       - contracts/wardveil.mesh-evidence-profile.json
-    notes: Wardveil defines recovery coordination and authority boundaries with Everkeep, but live Everkeep recovery-provider integration and production acceptance remain incomplete.
+      - reference/wardveil_sqlite_execution_state.py
+    notes: Wardveil now has source-validated single-host durable execution-state persistence and restart-safe replay/reconciliation semantics, while Everkeep remains the recovery authority and live Everkeep backup/restore integration and production acceptance remain incomplete.
   glaze_ui:
     result: applicable-migration-required
     version: '2.1.0'
     evidence:
       - website/GLAZE-UI-2.1-ADOPTION.md
       - website/glaze-ui-2.1.0.css
-    notes: Security Center has source-level Glaze UI 2.1.0 adoption evidence, while the current Platform Contract consumer baseline is 1.1.0; current-contract reconciliation, human/rendered acceptance, and production consumer acceptance remain separate.
+    notes: Security Center still carries source-level pre-reset Glaze UI 2.1.0 adoption evidence. The current Platform Contract consumer baseline is GLAZE UI V1.1 / 1.1.0; the upstream 1.1.1 corrective Release Candidate has repaired import closure but is not yet immutable Stable authority, so current-contract re-pin, human/rendered acceptance, and production consumer acceptance remain separate.
   mesh:
     result: applicable-migration-required
     version: null
     evidence:
       - contracts/wardveil.mesh-evidence-profile.json
       - reference/wardveil_mesh_delivery.py
-    notes: Wardveil defines a minimized Mesh evidence profile and source delivery client, while runtime delivery production acceptance remains false and live producer identity, routing, delivery, and end-to-end acceptance remain required.
+      - reference/wardveil_platform_registry_delivery.py
+    notes: Wardveil implements source-validated minimized Mesh security-evidence delivery and producer-bound Platform Registry publication with scoped Identity credentials, producer/receipt binding, authority_transfer=false, and secret-safe error handling. Live producer identity, target routing, delivery, registry publication, and end-to-end production acceptance remain required.
     capabilities:
       - security-evidence-producer
+      - platform-registry-producer
       - trust-evaluation
       - policy-decision
       - scan-finding
@@ -76,7 +79,9 @@ platform_systems:
     evidence:
       - README.md
       - contracts/wardveil.mesh-evidence-profile.json
-    notes: GoreeCloud Identity remains authoritative for production service identity and scoped credentials used by Wardveil services and executors, but production Identity service identity, signing-key lifecycle, and approved cryptography/key management remain unaccepted.
+      - reference/wardveil_mesh_delivery.py
+      - reference/wardveil_platform_registry_delivery.py
+    notes: Wardveil implements source-validated narrowly scoped credential-provider boundaries for Mesh evidence and Platform Registry publication, while GoreeCloud Identity remains authoritative for production service identity, issuance, signing keys, JWKS trust, rotation/revocation, approved cryptography, and key management; those deployed acceptance gates remain open.
 
 health:
   health_endpoint: null
@@ -87,11 +92,12 @@ continuity:
     required: true
     requirements:
       - Protect durable Wardveil policy, trust, execution-state, replay, audit, quarantine, incident, service-identity, signing-key metadata, and required security evidence state according to approved retention and privacy boundaries.
+      - The current SQLite execution-state implementation provides exact-head validated same-host durability and restart-safe replay/idempotency state; it is not a substitute for accepted Everkeep backup and recovery.
       - Protect configuration and state needed to restore Wardveil services without placing reusable credentials or private key material in ordinary evidence or Git history.
   restore:
     required: true
     requirements:
-      - Validate isolated restoration of Wardveil durable state, replay protection, execution reconciliation, policy behavior, audit provenance, and required Scan service state before broad production dependence.
+      - Validate isolated Everkeep-backed restoration of Wardveil durable state, replay protection, execution reconciliation, policy behavior, audit provenance, and required Scan service state before broad production dependence.
       - Require Wardveil verification of restored security-sensitive services while preserving Everkeep as the recovery authority.
   export:
     required: true
@@ -122,9 +128,15 @@ compatibility:
     - wardveil-security-foundation-0.9
     - wardveil-mesh-evidence-profile-v1
     - wardveil-scan
+    - wardveil-durable-execution-state-single-host
+    - wardveil-platform-registry-delivery
 
 evidence:
-  acceptance_tests: []
+  acceptance_tests:
+    - scripts/test_wardveil_execution_state.py
+    - scripts/test_wardveil_sqlite_execution_state.py
+    - scripts/test_wardveil_mesh_delivery.py
+    - scripts/test_wardveil_platform_registry_delivery.py
   release: []
 
 conformance:
@@ -137,15 +149,21 @@ conformance:
     - EXECUTION-STATE.md
     - SERVICE-IDENTITY.md
     - contracts/wardveil.capabilities.json
+    - contracts/wardveil.execution-state.json
     - contracts/wardveil.mesh-evidence-profile.json
+    - reference/wardveil_sqlite_execution_state.py
+    - reference/wardveil_mesh_delivery.py
+    - reference/wardveil_platform_registry_delivery.py
+    - scripts/test_wardveil_sqlite_execution_state.py
+    - scripts/test_wardveil_platform_registry_delivery.py
     - website/GLAZE-UI-2.1-ADOPTION.md
   blockers:
     - Wardveil Foundation 0.9 remains in Active Development and overall production runtime acceptance remains unaccepted even though bounded Wardveil Scan runtime and consumer scopes have exact-environment evidence.
     - GoreeCloud Manager integration and acceptance for Wardveil service state are not established.
-    - Production GoreeCloud Identity service identity, signing-key lifecycle, approved cryptography, and key management remain incomplete.
+    - Source-scoped GoreeCloud Identity credential boundaries are implemented, but production service identity, issuance, signing-key lifecycle, deployed JWKS trust, credential rotation/revocation, approved cryptography, and key management remain incomplete.
     - Privacy Shield integration and production acceptance remain incomplete.
-    - Everkeep recovery-provider integration and production acceptance remain incomplete.
-    - Mesh evidence delivery remains production-unaccepted and requires live producer identity, target routing, delivery, and end-to-end acceptance.
-    - Security Center requires current-contract Glaze UI reconciliation plus final human, rendered, deployment, provenance, and production consumer acceptance.
-    - Authorized Quarantine execution, target readback, idempotency/reconciliation, authoritative Audit/Security Center provenance, and broader protection-claim authority remain unaccepted.
-    - Any required multi-host replay/capacity acceptance and Stable qualification remain open.
+    - Single-host durable execution-state and restart-safe reconciliation are implemented and exact-head tested, but accepted Everkeep recovery, target-side readback, distributed/multi-host replay guarantees, and broader production durability remain incomplete.
+    - Source-level Mesh evidence and Platform Registry clients are implemented and exact-head validated, but live producer identity, routing, publication, delivery, and end-to-end Mesh acceptance remain production-unaccepted.
+    - Security Center requires current-contract Glaze UI reconciliation plus final human, rendered, deployment, provenance, and production consumer acceptance; corrected GLAZE UI V1.1.1 is not yet immutable Stable authority.
+    - Authorized Quarantine execution, external target readback/idempotency, authoritative Audit/Security Center provenance, and broader protection-claim authority remain unaccepted.
+    - Any required multi-host capacity acceptance and final Stable qualification remain open.
