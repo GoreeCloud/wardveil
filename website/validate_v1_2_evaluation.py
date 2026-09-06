@@ -14,7 +14,7 @@ EVAL = SITE / "dist-v1.2-evaluation"
 SOURCE_HTML = SITE / "index.html"
 EVAL_CSS_PATH = SITE / "glaze-ui-v1.2-frosted-neutral.evaluation.css"
 RECORD = SITE / "GLAZE-UI-V1.2-EVALUATION.md"
-UPSTREAM_SHA = "4e511b939afdb2fe26a5525f4fb998e95610e392"
+UPSTREAM_SHA = "94e0db139da2b9a3f7ead7744cbcd0ad9d7627bd"
 
 
 def require(ok: bool, message: str) -> None:
