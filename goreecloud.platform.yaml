@@ -133,10 +133,27 @@ compatibility:
 
 evidence:
   acceptance_tests:
-    - scripts/test_wardveil_execution_state.py
-    - scripts/test_wardveil_sqlite_execution_state.py
-    - scripts/test_wardveil_mesh_delivery.py
-    - scripts/test_wardveil_platform_registry_delivery.py
+    - id: wardveil-execution-state-20260906
+      category: security
+      path: scripts/test_wardveil_execution_state.py
+      revision: 9c650b59a224ac048555473627e669358b8e0bfe
+      result: passed
+      observed_at: '2026-09-06T12:51:33Z'
+      notes: Included in successful Validate Wardveil foundation run 34034330640 on the exact reconciliation head.
+    - id: wardveil-mesh-delivery-20260906
+      category: integration
+      path: scripts/test_wardveil_mesh_delivery.py
+      revision: 9c650b59a224ac048555473627e669358b8e0bfe
+      result: passed
+      observed_at: '2026-09-06T12:51:33Z'
+      notes: Included in successful Validate Wardveil foundation run 34034330640 on the exact reconciliation head.
+    - id: wardveil-platform-registry-delivery-20260906
+      category: integration
+      path: scripts/test_wardveil_platform_registry_delivery.py
+      revision: 9b402825a4a831e4399f7d0e52556fb6f45f331b
+      result: passed
+      observed_at: '2026-09-06T12:48:07Z'
+      notes: Validated by dedicated exact-head Platform Registry delivery run 34034171679.
   release: []
 
 conformance:
