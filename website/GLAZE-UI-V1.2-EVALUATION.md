@@ -3,7 +3,7 @@
 Status: **Non-production evaluation**  
 Active production target: **GLAZE UI V1.1 / 1.1.0 Stable**  
 Candidate evaluated: **GLAZE UI V1.2 / 1.2.0-candidate**  
-Upstream candidate revision: `4e511b939afdb2fe26a5525f4fb998e95610e392`
+Upstream candidate revision: `94e0db139da2b9a3f7ead7744cbcd0ad9d7627bd`
 
 ## Purpose
 
@@ -40,7 +40,7 @@ The evaluation covers System/Light, Dark, and Deep Dark appearance behavior whil
 
 Reference candidate substrate values exercised by the Wardveil subset include:
 
-- Light overlay glass: `rgba(250,255,250,0.82)` is **not** permitted because it would introduce chromatic bias. The actual candidate value remains neutral `rgba(250,250,250,0.82)`.
+- Light overlay glass: the evaluated substrate remains neutral `rgba(250,250,250,0.82)`; green, teal, aqua, and amber substrate bias is not permitted.
 - Dark overlay glass: `rgba(42,42,45,0.82)`.
 - Deep Dark overlay glass: `rgba(24,24,27,0.86)`.
 - Standard candidate blur: `28px`.
