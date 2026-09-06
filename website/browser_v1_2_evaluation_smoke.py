@@ -151,9 +151,11 @@ def main() -> int:
         deep_dark = req(
             "POST",
             f"/session/{session}/execute/sync",
-            {"script": """delete document.documentElement.dataset.glzTransparency;document.documentElement.dataset.glzAppearance='deep-dark';const h=document.querySelector('.glz12-evaluation-glaze');return {appearance:document.documentElement.dataset.glzAppearance,bg:getComputedStyle(h).backgroundColor};""", "args": []},
+            {"script": """const r=document.documentElement;r.dataset.glzAppearance='deep-dark';r.dataset.theme='dark';delete r.dataset.glzTransparency;const h=document.querySelector('.glz12-evaluation-glaze'),card=document.querySelector('[data-glaze-material-level=surface]');return {appearance:r.dataset.glzAppearance,productTheme:r.dataset.theme,bg:getComputedStyle(h).backgroundColor,surface:getComputedStyle(card).backgroundColor,text:getComputedStyle(card).color};""", "args": []},
         )
         require(isinstance(deep_dark, dict) and deep_dark.get("appearance") == "deep-dark", f"Deep Dark mapping failed: {deep_dark}")
+        require(deep_dark.get("productTheme") == "dark", f"Deep Dark did not activate Wardveil product dark theme: {deep_dark}")
+        require("255, 255, 255" not in str(deep_dark.get("surface", "")), f"Deep Dark left a light Security Center surface active: {deep_dark}")
 
         def capture(name: str, width: int, height: int, appearance: str, reduced_transparency: bool = False) -> None:
             if not evidence_dir:
@@ -163,11 +165,15 @@ def main() -> int:
                 "POST",
                 f"/session/{session}/execute/sync",
                 {
-                    "script": """const r=document.documentElement;const appearance=arguments[0],reduced=arguments[1];if(appearance==='system')delete r.dataset.glzAppearance;else r.dataset.glzAppearance=appearance;if(reduced)r.dataset.glzTransparency='reduced';else delete r.dataset.glzTransparency;const button=document.querySelector('[data-theme-toggle]');const label=appearance==='deep-dark'?'Deep Dark':appearance==='system'?'System':appearance.charAt(0).toUpperCase()+appearance.slice(1);if(button){button.textContent=label;button.setAttribute('aria-label',`Appearance: ${label}. Review capture state.`);}window.scrollTo(0,0);const h=document.querySelector('.glz12-evaluation-glaze'),s=getComputedStyle(h);return {appearance:r.dataset.glzAppearance||'system',transparency:r.dataset.glzTransparency||'standard',background:s.backgroundColor,blur:s.backdropFilter||s.webkitBackdropFilter||'none',width:innerWidth,height:innerHeight,label:button?.textContent||''};""",
+                    "script": """const r=document.documentElement;const appearance=arguments[0],reduced=arguments[1];if(appearance==='system'){delete r.dataset.glzAppearance;delete r.dataset.theme;}else{r.dataset.glzAppearance=appearance;r.dataset.theme=appearance==='light'?'light':'dark';}if(reduced)r.dataset.glzTransparency='reduced';else delete r.dataset.glzTransparency;const button=document.querySelector('[data-theme-toggle]');const label=appearance==='deep-dark'?'Deep Dark':appearance==='system'?'System':appearance.charAt(0).toUpperCase()+appearance.slice(1);if(button){button.textContent=label;button.setAttribute('aria-label',`Appearance: ${label}. Review capture state.`);}window.scrollTo(0,0);const h=document.querySelector('.glz12-evaluation-glaze'),card=document.querySelector('[data-glaze-material-level=surface]'),s=getComputedStyle(h);return {appearance:r.dataset.glzAppearance||'system',productTheme:r.dataset.theme||'system',transparency:r.dataset.glzTransparency||'standard',background:s.backgroundColor,blur:s.backdropFilter||s.webkitBackdropFilter||'none',surfaceBackground:getComputedStyle(card).backgroundColor,width:innerWidth,height:innerHeight,label:button?.textContent||''};""",
                     "args": [appearance, reduced_transparency],
                 },
             )
             require(isinstance(state, dict), f"capture state unreadable: {name}")
+            expected_product_theme = "light" if appearance == "light" else "dark" if appearance in {"dark", "deep-dark"} else "system"
+            require(state.get("productTheme") == expected_product_theme, f"capture product theme does not match appearance for {name}: {state}")
+            if appearance in {"dark", "deep-dark"}:
+                require("255, 255, 255" not in str(state.get("surfaceBackground", "")), f"dark capture contains a light Security Center surface: {name}: {state}")
             encoded = req("GET", f"/session/{session}/screenshot")
             require(isinstance(encoded, str) and encoded, f"screenshot unavailable: {name}")
             image = base64.b64decode(encoded)
@@ -181,10 +187,12 @@ def main() -> int:
                     "bytes": len(image),
                     "viewport": [width, height],
                     "appearance": state.get("appearance"),
+                    "product_theme": state.get("productTheme"),
                     "transparency": state.get("transparency"),
                     "appearance_label": state.get("label"),
                     "header_background": state.get("background"),
                     "header_backdrop_filter": state.get("blur"),
+                    "surface_background": state.get("surfaceBackground"),
                 }
             )
 
@@ -209,7 +217,7 @@ def main() -> int:
 
         print(
             "Wardveil GLAZE UI V1.2 evaluation Chrome smoke passed: bounded frosted header, solid security surfaces, "
-            "compact mobile navigation, responsive geometry, Reduced Transparency, Deep Dark"
+            "compact mobile navigation, synchronized Wardveil/Glaze appearance state, responsive geometry, Reduced Transparency, Deep Dark"
             + (", five deterministic optical-review screenshots captured." if evidence_dir else ".")
         )
         return 0
