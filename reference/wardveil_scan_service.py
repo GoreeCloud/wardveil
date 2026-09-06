@@ -33,6 +33,7 @@ from reference.wardveil_detect_scan import ScanFinding
 
 SCAN_PATH = "/v1/scan"
 HEALTH_PATH = "/healthz"
+READINESS_PATH = "/readyz"
 LOOPBACK_HOST = "127.0.0.1"
 DEFAULT_SCAN_SERVICE_PORT = 8791
 DEFAULT_MAX_CONCURRENT_SCANS = 8
@@ -303,6 +304,33 @@ class WardveilScanService:
     def max_stream_bytes(self) -> int:
         return self.client.config.max_stream_bytes
 
+    def readiness(self) -> tuple[bool, dict]:
+        """Return bounded scanner readiness without granting protection authority."""
+        observed_now = self.now()
+        if observed_now.tzinfo is None:
+            raise ValueError("Wardveil Scan clock must be timezone-aware")
+        observed_now = observed_now.astimezone(timezone.utc)
+        health = collect_clamav_health(
+            self.client,
+            policy=self.policy,
+            now=observed_now,
+        )
+        current = health.observed_at <= observed_now < health.valid_until
+        ready = health.clean_verdicts_eligible and current
+        payload = {
+            "status": "ready" if ready else "not_ready",
+            "component": "Wardveil Scan authenticated transport",
+            "scanner_runtime_state": health.runtime_state,
+            "signature_freshness": health.signature_freshness,
+            "production_runtime_status": "unaccepted",
+            "protection_claim_authority": False,
+        }
+        if not ready:
+            payload["reason_codes"] = list(health.degraded_reasons) or [
+                "scanner_health_not_acceptable_for_clean_verdict"
+            ]
+        return ready, payload
+
     def authenticate_request(
         self,
         request: ScanServiceRequest,
@@ -439,18 +467,22 @@ def build_http_server(
             return
 
         def do_GET(self) -> None:
-            if self.path != HEALTH_PATH:
-                self._json(HTTPStatus.NOT_FOUND, {"error": "not_found"})
+            if self.path == HEALTH_PATH:
+                self._json(
+                    HTTPStatus.OK,
+                    {
+                        "status": "ok",
+                        "component": "Wardveil Scan authenticated transport",
+                        "production_runtime_status": "unaccepted",
+                        "protection_claim_authority": False,
+                    },
+                )
                 return
-            self._json(
-                HTTPStatus.OK,
-                {
-                    "status": "ok",
-                    "component": "Wardveil Scan authenticated transport",
-                    "production_runtime_status": "unaccepted",
-                    "protection_claim_authority": False,
-                },
-            )
+            if self.path == READINESS_PATH:
+                ready, payload = service.readiness()
+                self._json(HTTPStatus.OK if ready else HTTPStatus.SERVICE_UNAVAILABLE, payload)
+                return
+            self._json(HTTPStatus.NOT_FOUND, {"error": "not_found"})
 
         def do_POST(self) -> None:
             if self.path != SCAN_PATH:
