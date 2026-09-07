@@ -34,13 +34,13 @@ def main() -> None:
     require(evidence.get("consumer") == "GoreeCloud Care", "unexpected consumer identity")
     require(evidence.get("consumer_repository") == "GoreeCloud/goreecloud-zorin-os", "unexpected consumer repository")
     require(evidence.get("consumer_component") == "apps/goreecloud-care", "unexpected consumer component")
-    require(evidence.get("consumer_version") == "0.1.0-dev22", "unexpected Development version")
+    require(evidence.get("consumer_version") == "0.1.0-dev22", "unexpected Care runtime version")
     require(evidence.get("consumer_package_version") == "0.1.0~dev22", "unexpected package version")
     require(evidence.get("representative_target") == "Zorin OS 17.3", "unexpected representative target")
     require(immutable_sha(evidence.get("consumer_revision")), "consumer revision must be immutable")
     require(immutable_sha(evidence.get("consumer_source_tree_sha")), "consumer source tree must be immutable")
     require(evidence.get("source_integration_status") == "implemented", "Care source integration must be explicitly implemented")
-    # Exact target acceptance is not Wardveil adoption/protection promotion.
+    # Exact target/RC/Privacy evidence is not Wardveil adoption/protection promotion.
     require(evidence.get("runtime_acceptance_status") == "unaccepted", "governed Wardveil runtime adoption must remain unaccepted")
     require(evidence.get("source_evidence_is_production_protection_claim") is False, "source evidence must not authorize protection")
 
@@ -63,7 +63,7 @@ def main() -> None:
     require(positive_int(details.get("consumer_ci_run_number")), "missing CI run number")
     require(positive_int(details.get("consumer_ci_run_id")), "missing CI run ID")
     require(positive_int(details.get("consumer_theme_validation_run_id")), "missing theme validation run ID")
-    require(details.get("consumer_ci_test_count", 0) >= 134, "Care evidence must preserve the 134-test checkpoint")
+    require(details.get("consumer_ci_test_count", 0) >= 144, "Care RC evidence must preserve the 144-test checkpoint")
     require(sha256(details.get("consumer_package_sha256")), "CI package SHA-256 must be explicit")
     require(positive_int(details.get("consumer_ci_artifact_id")), "missing CI artifact ID")
     require(sha256(details.get("consumer_ci_artifact_digest")), "artifact digest must be SHA-256")
@@ -102,6 +102,7 @@ def main() -> None:
         "passing_evidence_has_bounded_freshness",
         "explicit_text_state_semantics",
         "sensitive_evidence_minimized",
+        "immutable_release_candidate_regression_evidence_passed",
         "current_representative_zorin_exact_candidate_installed_boundary_acceptance_passed",
         "current_representative_zorin_source_validation_passed",
         "current_representative_zorin_package_lifecycle_passed",
@@ -109,6 +110,7 @@ def main() -> None:
         "current_representative_zorin_cross_umask_package_identity_passed",
         "current_representative_zorin_target_handoff_generated",
         "privacy_shield_current_exact_candidate_acceptance_passed",
+        "privacy_shield_production_approved",
         "latest_representative_negative_evidence_exists",
         "prior_representative_negative_evidence_exists",
         "historical_representative_zorin_lifecycle_evidence_exists",
@@ -125,7 +127,6 @@ def main() -> None:
         "latest_representative_negative_evidence_target_handoff_generated",
         "historical_representative_zorin_cleanup_action_invoked",
         "historical_representative_zorin_reproducible_build_byte_identity_established",
-        "privacy_shield_production_approved",
     ):
         require(details.get(key) is False, f"unsafe, stale, or overbroad Care claim: {key}")
 
@@ -136,7 +137,7 @@ def main() -> None:
     require(current_target_revision == evidence.get("consumer_revision"), "current target revision must equal current Care revision")
     require(current_target_tree == evidence.get("consumer_source_tree_sha"), "current target tree must equal current Care tree")
     require(current_target_package == details.get("consumer_package_sha256"), "current physical package must equal current CI/cross-environment package")
-    require(details.get("current_representative_zorin_exact_candidate_test_count", 0) >= 134, "current target must preserve the 134-test checkpoint")
+    require(details.get("current_representative_zorin_exact_candidate_test_count", 0) >= 144, "current target must preserve the 144-test checkpoint")
     require(details.get("current_representative_zorin_post_install_provenance_directory_mode") == "0755", "current target must preserve repaired provenance directory mode")
     require(details.get("current_representative_zorin_post_install_provenance_file_mode") == "0644", "current target must preserve repaired provenance file mode")
 
@@ -185,13 +186,13 @@ def main() -> None:
     required_remaining = {
         "representative_zorin_policykit_agent_security_boundary_acceptance_if_required",
         "governed_wardveil_adoption_promotion",
-        "immutable_release_candidate_regression_evidence",
     }
     require(required_remaining.issubset(remaining), "runtime acceptance remainder is incomplete")
     require("representative_zorin_exact_candidate_installed_boundary_acceptance" not in remaining, "passed exact-target acceptance must not remain open")
     require("privacy_shield_exact_candidate_acceptance" not in remaining, "passed exact Privacy Shield acceptance must not remain open")
+    require("immutable_release_candidate_regression_evidence" not in remaining, "passed immutable RC regression evidence must not remain open")
 
-    print("Wardveil GoreeCloud Care evidence validation passed; current exact Zorin target and Privacy Shield runtime acceptance are recorded, while governed Wardveil adoption/protection remains unaccepted.")
+    print("Wardveil GoreeCloud Care evidence validation passed; exact current RC CI/package/target evidence and Care-specific Privacy Shield production approval are recorded, while governed Wardveil adoption/protection remains unaccepted.")
 
 
 if __name__ == "__main__":
