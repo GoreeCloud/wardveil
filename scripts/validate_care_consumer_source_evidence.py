@@ -62,21 +62,20 @@ def main() -> None:
     require(positive_int(details.get("consumer_ci_run_number")), "missing CI run number")
     require(positive_int(details.get("consumer_ci_run_id")), "missing CI run ID")
     require(positive_int(details.get("consumer_theme_validation_run_id")), "missing theme validation run ID")
-    require(details.get("consumer_ci_test_count", 0) >= 131, "Care evidence must preserve the 131-test checkpoint")
+    require(details.get("consumer_ci_test_count", 0) >= 134, "Care evidence must preserve the 134-test checkpoint")
     require(sha256(details.get("consumer_package_sha256")), "CI package SHA-256 must be explicit")
     require(positive_int(details.get("consumer_ci_artifact_id")), "missing CI artifact ID")
     require(sha256(details.get("consumer_ci_artifact_digest")), "artifact digest must be SHA-256")
 
-    # A source-only script/test change may legitimately not trigger the dedicated
-    # Platform Contract workflow. Record that absence explicitly rather than
-    # attaching an older workflow run to the current exact source revision.
-    platform_triggered = details.get("consumer_platform_contract_workflow_triggered")
-    require(platform_triggered is False, "current script/test-only Care update must record Platform Contract as not triggered")
-    require(details.get("consumer_platform_contract_run_id") is None, "untriggered current Platform Contract must not invent a run ID")
+    # The current exact Care revision has a dedicated passing Platform Contract
+    # run. Keep the older successful run only as historical context; never use it
+    # to manufacture current evidence or to imply target/runtime acceptance.
+    require(details.get("consumer_platform_contract_workflow_triggered") is True, "current Care revision must record its triggered Platform Contract workflow")
+    require(positive_int(details.get("consumer_platform_contract_run_id")), "missing current Platform Contract run ID")
     require(positive_int(details.get("consumer_last_successful_platform_contract_run_id")), "missing historical successful Platform Contract run ID")
     last_platform_revision = details.get("consumer_last_successful_platform_contract_revision")
     require(immutable_sha(last_platform_revision), "historical Platform Contract revision must be immutable")
-    require(last_platform_revision != evidence.get("consumer_revision"), "historical Platform Contract run must not be relabeled as current exact-head evidence")
+    require(last_platform_revision != evidence.get("consumer_revision"), "historical Platform Contract revision must remain distinct from current exact-head evidence")
 
     require(details.get("consumer_cross_environment_reproducibility_passed") is True, "current Care package must have cross-environment reproducibility evidence")
     require(positive_int(details.get("consumer_cross_environment_artifact_id")), "missing cross-environment artifact ID")
@@ -93,6 +92,8 @@ def main() -> None:
         "source_tree_matches_ci_tree",
         "installed_package_lifecycle_prequalification_passed",
         "same_version_exact_package_reinstall_prequalification_passed",
+        "cross_umask_package_reproducibility_prequalification_passed",
+        "installed_provenance_mode_repair_prequalification_passed",
         "installed_privilege_boundary_prequalification_passed",
         "root_owned_nonwritable_helper_required",
         "root_owned_nonwritable_policy_required",
@@ -104,6 +105,7 @@ def main() -> None:
         "explicit_text_state_semantics",
         "sensitive_evidence_minimized",
         "latest_representative_negative_evidence_exists",
+        "prior_representative_negative_evidence_exists",
         "historical_representative_zorin_lifecycle_evidence_exists",
         "historical_representative_zorin_exact_candidate_installed_boundary_acceptance_passed",
         "historical_representative_zorin_package_lifecycle_passed",
@@ -115,6 +117,7 @@ def main() -> None:
         "cross_service_execution_authority_claimed",
         "care_cleanup_invoked_by_lifecycle_prequalification",
         "current_representative_zorin_exact_candidate_installed_boundary_acceptance_passed",
+        "latest_representative_negative_evidence_target_handoff_generated",
         "historical_representative_zorin_cleanup_action_invoked",
         "historical_representative_zorin_reproducible_build_byte_identity_established",
     ):
@@ -122,14 +125,33 @@ def main() -> None:
 
     require(details.get("current_representative_zorin_exact_candidate_revision") is None, "current source must not claim target acceptance before the fresh Zorin run")
 
+    # Latest negative physical evidence: 387ebe proved exact same-version package
+    # replacement but exposed cross-host package-mode/provenance trust variance.
     negative_revision = details.get("latest_representative_negative_evidence_revision")
     require(immutable_sha(negative_revision), "latest negative-evidence revision must be immutable")
-    require(negative_revision != evidence.get("consumer_revision"), "stopped prior target attempt must not be relabeled as current acceptance")
-    require(sha256(details.get("latest_representative_negative_evidence_package_sha256")), "negative-evidence package SHA-256 must be explicit")
-    require(details.get("latest_representative_negative_evidence_test_count", 0) >= 130, "negative evidence must preserve the 130-test checkpoint")
-    require(details.get("latest_representative_negative_evidence_stage") == "lifecycle-step-1-install-upgrade", "unexpected negative-evidence stage")
+    require(negative_revision != evidence.get("consumer_revision"), "failed prior target attempt must not be relabeled as current acceptance")
+    require(immutable_sha(details.get("latest_representative_negative_evidence_source_tree_sha")), "latest negative-evidence Care tree must be immutable")
+    physical_sha = details.get("latest_representative_negative_evidence_package_sha256")
+    same_source_ci_sha = details.get("latest_representative_negative_evidence_same_source_ci_package_sha256")
+    require(sha256(physical_sha), "latest negative-evidence physical package SHA-256 must be explicit")
+    require(sha256(same_source_ci_sha), "latest negative-evidence same-source CI package SHA-256 must be explicit")
+    require(physical_sha != same_source_ci_sha, "latest negative evidence must preserve the observed same-source package mismatch")
+    require(details.get("latest_representative_negative_evidence_test_count", 0) >= 131, "latest negative evidence must preserve the 131-test checkpoint")
+    require(details.get("latest_representative_negative_evidence_same_version_reinstall_passed") is True, "latest negative evidence must preserve successful same-version exact reinstall")
+    require(details.get("latest_representative_negative_evidence_stage") == "post-install-continuity-trust-validation-before-lifecycle-step-2", "unexpected latest negative-evidence stage")
     negative_reason = str(details.get("latest_representative_negative_evidence_reason") or "").lower()
-    require("did not replace" in negative_reason and "target handoff" in negative_reason, "negative evidence must retain the exact-package failure boundary")
+    require("reinstalled" in negative_reason and "differed" in negative_reason and "no target handoff" in negative_reason, "latest negative evidence must retain the package/provenance failure boundary")
+
+    # Prior negative physical evidence: 16cbd exposed APT same-version no-op.
+    prior_negative_revision = details.get("prior_representative_negative_evidence_revision")
+    require(immutable_sha(prior_negative_revision), "prior negative-evidence revision must be immutable")
+    require(prior_negative_revision != evidence.get("consumer_revision"), "prior failed target attempt must remain historical")
+    require(prior_negative_revision != negative_revision, "negative physical checkpoints must remain distinct")
+    require(sha256(details.get("prior_representative_negative_evidence_package_sha256")), "prior negative-evidence package SHA-256 must be explicit")
+    require(details.get("prior_representative_negative_evidence_test_count", 0) >= 130, "prior negative evidence must preserve the 130-test checkpoint")
+    require(details.get("prior_representative_negative_evidence_stage") == "lifecycle-step-1-install-upgrade", "unexpected prior negative-evidence stage")
+    prior_reason = str(details.get("prior_representative_negative_evidence_reason") or "").lower()
+    require("did not replace" in prior_reason and "target handoff" in prior_reason, "prior negative evidence must retain the same-version replacement failure boundary")
 
     historical_lifecycle_revision = details.get("historical_representative_zorin_lifecycle_revision")
     historical_target_revision = details.get("historical_representative_zorin_exact_candidate_revision")
@@ -151,7 +173,7 @@ def main() -> None:
     }
     require(required_remaining.issubset(remaining), "runtime acceptance remainder is incomplete")
 
-    print("Wardveil GoreeCloud Care current-source evidence validation passed; current target acceptance remains unaccepted and historical/negative target evidence remains revision-scoped.")
+    print("Wardveil GoreeCloud Care current-source evidence validation passed; current target acceptance remains unaccepted, 4f7aecd source/package evidence is current, and historical/negative target evidence remains revision-scoped.")
 
 
 if __name__ == "__main__":
