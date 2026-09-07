@@ -40,7 +40,8 @@ def main() -> None:
     require(immutable_sha(evidence.get("consumer_revision")), "consumer revision must be immutable")
     require(immutable_sha(evidence.get("consumer_source_tree_sha")), "consumer source tree must be immutable")
     require(evidence.get("source_integration_status") == "implemented", "Care source integration must be explicitly implemented")
-    require(evidence.get("runtime_acceptance_status") == "unaccepted", "current target evidence must remain unaccepted")
+    # Exact target acceptance is not Wardveil adoption/protection promotion.
+    require(evidence.get("runtime_acceptance_status") == "unaccepted", "governed Wardveil runtime adoption must remain unaccepted")
     require(evidence.get("source_evidence_is_production_protection_claim") is False, "source evidence must not authorize protection")
 
     details = evidence.get("evidence") or {}
@@ -67,9 +68,6 @@ def main() -> None:
     require(positive_int(details.get("consumer_ci_artifact_id")), "missing CI artifact ID")
     require(sha256(details.get("consumer_ci_artifact_digest")), "artifact digest must be SHA-256")
 
-    # The current exact Care revision has a dedicated passing Platform Contract
-    # run. Keep the older successful run only as historical context; never use it
-    # to manufacture current evidence or to imply target/runtime acceptance.
     require(details.get("consumer_platform_contract_workflow_triggered") is True, "current Care revision must record its triggered Platform Contract workflow")
     require(positive_int(details.get("consumer_platform_contract_run_id")), "missing current Platform Contract run ID")
     require(positive_int(details.get("consumer_last_successful_platform_contract_run_id")), "missing historical successful Platform Contract run ID")
@@ -104,6 +102,13 @@ def main() -> None:
         "passing_evidence_has_bounded_freshness",
         "explicit_text_state_semantics",
         "sensitive_evidence_minimized",
+        "current_representative_zorin_exact_candidate_installed_boundary_acceptance_passed",
+        "current_representative_zorin_source_validation_passed",
+        "current_representative_zorin_package_lifecycle_passed",
+        "current_representative_zorin_same_version_exact_package_reinstall_passed",
+        "current_representative_zorin_cross_umask_package_identity_passed",
+        "current_representative_zorin_target_handoff_generated",
+        "privacy_shield_current_exact_candidate_acceptance_passed",
         "latest_representative_negative_evidence_exists",
         "prior_representative_negative_evidence_exists",
         "historical_representative_zorin_lifecycle_evidence_exists",
@@ -116,14 +121,27 @@ def main() -> None:
         "protected_by_wardveil_claim_allowed",
         "cross_service_execution_authority_claimed",
         "care_cleanup_invoked_by_lifecycle_prequalification",
-        "current_representative_zorin_exact_candidate_installed_boundary_acceptance_passed",
+        "current_representative_zorin_cleanup_action_invoked",
         "latest_representative_negative_evidence_target_handoff_generated",
         "historical_representative_zorin_cleanup_action_invoked",
         "historical_representative_zorin_reproducible_build_byte_identity_established",
+        "privacy_shield_production_approved",
     ):
         require(details.get(key) is False, f"unsafe, stale, or overbroad Care claim: {key}")
 
-    require(details.get("current_representative_zorin_exact_candidate_revision") is None, "current source must not claim target acceptance before the fresh Zorin run")
+    # Current physical exact-target evidence must bind to the same source/tree/package as CI.
+    current_target_revision = details.get("current_representative_zorin_exact_candidate_revision")
+    current_target_tree = details.get("current_representative_zorin_exact_candidate_source_tree_sha")
+    current_target_package = details.get("current_representative_zorin_exact_candidate_package_sha256")
+    require(current_target_revision == evidence.get("consumer_revision"), "current target revision must equal current Care revision")
+    require(current_target_tree == evidence.get("consumer_source_tree_sha"), "current target tree must equal current Care tree")
+    require(current_target_package == details.get("consumer_package_sha256"), "current physical package must equal current CI/cross-environment package")
+    require(details.get("current_representative_zorin_exact_candidate_test_count", 0) >= 134, "current target must preserve the 134-test checkpoint")
+    require(details.get("current_representative_zorin_post_install_provenance_directory_mode") == "0755", "current target must preserve repaired provenance directory mode")
+    require(details.get("current_representative_zorin_post_install_provenance_file_mode") == "0644", "current target must preserve repaired provenance file mode")
+
+    privacy_revision = details.get("privacy_shield_current_exact_candidate_acceptance_revision")
+    require(immutable_sha(privacy_revision), "current Privacy Shield acceptance revision must be immutable")
 
     # Latest negative physical evidence: 387ebe proved exact same-version package
     # replacement but exposed cross-host package-mode/provenance trust variance.
@@ -157,7 +175,7 @@ def main() -> None:
     historical_target_revision = details.get("historical_representative_zorin_exact_candidate_revision")
     require(immutable_sha(historical_lifecycle_revision), "historical lifecycle revision must be immutable")
     require(immutable_sha(historical_target_revision), "historical exact-target revision must be immutable")
-    require(historical_target_revision != evidence.get("consumer_revision"), "historical target acceptance must not be carried forward")
+    require(historical_target_revision != evidence.get("consumer_revision"), "historical target acceptance must remain revision-scoped")
     require(details.get("historical_representative_zorin_exact_candidate_test_count", 0) >= 106, "historical target must preserve 106-test checkpoint")
     require(sha256(details.get("historical_representative_zorin_final_lifecycle_package_sha256")), "historical final package SHA-256 must be explicit")
     require(sha256(details.get("historical_representative_zorin_pre_lifecycle_build_sha256")), "historical pre-lifecycle package SHA-256 must be explicit")
@@ -165,15 +183,15 @@ def main() -> None:
 
     remaining = set(evidence.get("runtime_acceptance_requirements_remaining") or [])
     required_remaining = {
-        "representative_zorin_exact_candidate_installed_boundary_acceptance",
         "representative_zorin_policykit_agent_security_boundary_acceptance_if_required",
-        "privacy_shield_exact_candidate_acceptance",
         "governed_wardveil_adoption_promotion",
         "immutable_release_candidate_regression_evidence",
     }
     require(required_remaining.issubset(remaining), "runtime acceptance remainder is incomplete")
+    require("representative_zorin_exact_candidate_installed_boundary_acceptance" not in remaining, "passed exact-target acceptance must not remain open")
+    require("privacy_shield_exact_candidate_acceptance" not in remaining, "passed exact Privacy Shield acceptance must not remain open")
 
-    print("Wardveil GoreeCloud Care current-source evidence validation passed; current target acceptance remains unaccepted, 4f7aecd source/package evidence is current, and historical/negative target evidence remains revision-scoped.")
+    print("Wardveil GoreeCloud Care evidence validation passed; current exact Zorin target and Privacy Shield runtime acceptance are recorded, while governed Wardveil adoption/protection remains unaccepted.")
 
 
 if __name__ == "__main__":
