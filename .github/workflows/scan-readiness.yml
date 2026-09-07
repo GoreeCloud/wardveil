@@ -1,0 +1,42 @@
+name: Wardveil Scan Readiness
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'reference/wardveil_scan_service.py'
+      - 'reference/wardveil_clamav_runtime.py'
+      - 'scripts/test_wardveil_scan_readiness.py'
+      - '.github/workflows/scan-readiness.yml'
+  pull_request:
+    paths:
+      - 'reference/wardveil_scan_service.py'
+      - 'reference/wardveil_clamav_runtime.py'
+      - 'scripts/test_wardveil_scan_readiness.py'
+      - '.github/workflows/scan-readiness.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-readiness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out exact Wardveil revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Compile readiness-sensitive modules
+        run: >-
+          python3 -m py_compile
+          reference/wardveil_scan_service.py
+          reference/wardveil_clamav_runtime.py
+          scripts/test_wardveil_scan_readiness.py
+      - name: Validate liveness and fail-closed readiness
+        run: python3 scripts/test_wardveil_scan_readiness.py
+      - name: Preserve full authenticated scan-service behavior
+        run: python3 scripts/test_wardveil_scan_service.py

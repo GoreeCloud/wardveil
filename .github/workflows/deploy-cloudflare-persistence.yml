@@ -164,9 +164,16 @@ jobs:
           from pathlib import Path
 
           probe = json.loads(Path('/tmp/wardveil-probe.json').read_text())
+          runtime_contract = json.loads(Path('contracts/wardveil.cloudflare.runtime-acceptance.json').read_text())
           sha = os.environ['GITHUB_SHA']
           source = os.environ['EVIDENCE_SOURCE']
-          now = datetime.datetime.now(datetime.timezone.utc).isoformat().replace('+00:00', 'Z')
+          validity_seconds = runtime_contract.get('evidence_validity_seconds')
+          if validity_seconds != 3600:
+              raise SystemExit('runtime acceptance validity policy must remain exactly one hour')
+          collected_at = datetime.datetime.now(datetime.timezone.utc)
+          valid_until = collected_at + datetime.timedelta(seconds=validity_seconds)
+          now = collected_at.isoformat().replace('+00:00', 'Z')
+          expiry = valid_until.isoformat().replace('+00:00', 'Z')
 
           if probe.get('revision') != sha:
               raise SystemExit('probe revision does not match deployed revision')
@@ -219,6 +226,7 @@ jobs:
               'environment': 'production',
               'deployed_revision': sha,
               'collected_at': now,
+              'valid_until': expiry,
               'acceptance_status': 'unaccepted',
               'checks': checks,
               'storage_health_is_protection_claim': False,
@@ -246,6 +254,7 @@ jobs:
             echo '- Bounded observability failure path: passed through Cloudflare Worker tail evidence'
             echo '- Public health endpoint: passed'
             echo '- Generic public mutation endpoint: absent (404/405)'
+            echo '- Producer-declared evidence validity: one hour from manifest collection time'
             echo '- Remaining pending acceptance evidence: Everkeep-governed restore verification'
             echo '- Runtime acceptance status: **unaccepted** until every required check is passed for this exact revision'
             echo

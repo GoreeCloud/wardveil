@@ -29,6 +29,14 @@ Acceptance records are `test_only`, use the `transient` retention class, and are
 
 The acceptance alarm still uses Cloudflare's normal Durable Object alarm mechanism and the production retention handler. The shortened schedule exists only to make the acceptance exercise bounded; it does not replace the normal six-hour maintenance schedule or create a second retention implementation.
 
+## Producer-declared freshness
+
+The deployment workflow reads `evidence_validity_seconds` from `contracts/wardveil.cloudflare.runtime-acceptance.json`. The governed value is 3600 seconds. At manifest construction time the producer records `collected_at` and computes `valid_until` exactly one hour later.
+
+The deadline is part of Wardveil's acceptance evidence, not a consumer preference. GoreeCloud Mesh and other consumers may reject evidence after `valid_until`, but they must not extend or replace the deadline. A later deployment or later evidence collection requires a new revision-bound manifest; historical evidence does not regain currency merely because it remains stored or visible.
+
+The source-controlled production template is deliberately expired and uses a placeholder revision. It is contract scaffolding only and cannot satisfy current-evidence queries.
+
 ## Evidence intentionally left pending
 
 The deployment workflow must not self-certify recovery authority. After the expanded runtime probe and independent Cloudflare tail observation complete, the remaining acceptance requirement is:
@@ -42,6 +50,8 @@ PITR availability is not restore verification. Deployment success is not runtime
 The workflow emits a machine-readable revision-bound evidence manifest into the GitHub Actions log and job summary. The manifest must remain `acceptance_status: unaccepted` until every required check in the canonical Cloudflare runtime-acceptance contract has passed for the same exact deployed revision.
 
 The internal acceptance probe itself may report only `unaccepted` or `degraded`; it has no capability to promote production status to `accepted`. Even when retention and observability exercises pass, Everkeep restore verification remains a separate acceptance authority.
+
+A manifest that eventually reaches `accepted` would still be current only until its producer-declared `valid_until`. Transporting an accepted manifest does not establish broad Wardveil production acceptance or any resource-level protection, trust, authorization, cleanliness, incident, or recovery claim.
 
 ## Authority boundaries
 
