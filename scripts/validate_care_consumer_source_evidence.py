@@ -51,11 +51,11 @@ def main() -> None:
     )
     require(
         evidence.get("runtime_acceptance_status") == "unaccepted",
-        "source evidence must not claim governed runtime acceptance",
+        "target evidence must not claim governed Wardveil runtime acceptance",
     )
     require(
         evidence.get("source_evidence_is_production_protection_claim") is False,
-        "source evidence must not authorize a production protection claim",
+        "evidence must not authorize a production protection claim",
     )
 
     details = evidence.get("evidence") or {}
@@ -84,7 +84,7 @@ def main() -> None:
     require(positive_int(details.get("consumer_platform_contract_run_id")), "missing Platform Contract run ID")
     require(positive_int(details.get("consumer_theme_validation_run_id")), "missing theme validation run ID")
     require(details.get("consumer_ci_test_count", 0) >= 106, "Care evidence must preserve the 106-test checkpoint")
-    require(sha256(details.get("consumer_package_sha256")), "package SHA-256 must be explicit")
+    require(sha256(details.get("consumer_package_sha256")), "CI package SHA-256 must be explicit")
     require(positive_int(details.get("consumer_ci_artifact_id")), "missing CI artifact ID")
     require(sha256(details.get("consumer_ci_artifact_digest")), "artifact digest must be SHA-256")
     require(immutable_sha(details.get("historical_representative_zorin_lifecycle_revision")), "historical target revision must be immutable")
@@ -104,27 +104,55 @@ def main() -> None:
         "explicit_text_state_semantics",
         "sensitive_evidence_minimized",
         "historical_representative_zorin_lifecycle_evidence_exists",
+        "representative_zorin_exact_candidate_installed_boundary_acceptance_passed",
+        "representative_zorin_package_lifecycle_passed",
     ):
-        require(details.get(key) is True, f"missing required Care source evidence: {key}")
+        require(details.get(key) is True, f"missing required Care evidence: {key}")
 
     for key in (
         "protected_by_wardveil_claim_allowed",
         "cross_service_execution_authority_claimed",
         "care_cleanup_invoked_by_lifecycle_prequalification",
+        "representative_zorin_cleanup_action_invoked",
+        "representative_zorin_reproducible_build_byte_identity_established",
     ):
         require(details.get(key) is False, f"unsafe or overbroad Care claim: {key}")
 
+    target_revision = details.get("representative_zorin_exact_candidate_revision")
+    require(immutable_sha(target_revision), "representative exact-candidate revision must be immutable")
+    require(target_revision == evidence.get("consumer_revision"), "representative target revision must match consumer revision")
+    require(
+        details.get("representative_zorin_exact_candidate_test_count", 0) >= 106,
+        "representative target must preserve the 106-test checkpoint",
+    )
+    require(
+        sha256(details.get("representative_zorin_final_lifecycle_package_sha256")),
+        "representative final lifecycle package SHA-256 must be explicit",
+    )
+    require(
+        sha256(details.get("representative_zorin_pre_lifecycle_build_sha256")),
+        "representative pre-lifecycle package SHA-256 must be explicit",
+    )
+    require(
+        details.get("representative_zorin_final_lifecycle_package_sha256")
+        != details.get("representative_zorin_pre_lifecycle_build_sha256"),
+        "the observed non-byte-identical local rebuilds must remain explicit",
+    )
+
     remaining = set(evidence.get("runtime_acceptance_requirements_remaining") or [])
     required_remaining = {
-        "representative_zorin_exact_candidate_installed_boundary_acceptance",
         "representative_zorin_policykit_agent_security_boundary_acceptance_if_required",
         "privacy_shield_exact_candidate_acceptance",
         "governed_wardveil_adoption_promotion",
         "immutable_release_candidate_regression_evidence",
     }
     require(required_remaining.issubset(remaining), "runtime acceptance remainder is incomplete")
+    require(
+        "representative_zorin_exact_candidate_installed_boundary_acceptance" not in remaining,
+        "accepted exact-candidate installed-boundary gate must not remain open",
+    )
 
-    print("Wardveil GoreeCloud Care consumer source evidence validation passed.")
+    print("Wardveil GoreeCloud Care exact-target evidence validation passed.")
 
 
 if __name__ == "__main__":
