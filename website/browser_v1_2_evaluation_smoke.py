@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Exercise Wardveil's isolated V1.2 evaluation in headless Chrome and optionally capture review evidence."""
+"""Exercise Wardveil's isolated V1.2 Stable evaluation in headless Chrome and optionally capture review evidence."""
 from __future__ import annotations
 
 import base64
@@ -21,7 +21,8 @@ DRIVER_PORT = 9519
 BASE = f"http://127.0.0.1:{DRIVER_PORT}"
 TARGET = f"http://127.0.0.1:{WEB_PORT}/"
 VIEWPORTS = ((1180, 900), (768, 900), (390, 844), (320, 844))
-UPSTREAM_GLAZE_SHA = "94e0db139da2b9a3f7ead7744cbcd0ad9d7627bd"
+UPSTREAM_GLAZE_STABLE_SHA = "f285b9145e27e6e7027b075c37299d101945c272"
+UPSTREAM_GLAZE_SOURCE_ANCHOR = "b0eadf9a60f73d45caffb62ffc7e9e0334cddc97"
 
 
 class BrowserError(RuntimeError):
@@ -113,12 +114,12 @@ def main() -> int:
         initial = req(
             "POST",
             f"/session/{session}/execute/sync",
-            {"script": """const r=document.documentElement,h=document.querySelector('.glz12-evaluation-glaze'),cards=[...document.querySelectorAll('[data-glaze-material-level=surface]')];const hs=getComputedStyle(h);return {upgrade:r.dataset.glazeUpgrade,candidate:document.querySelector('meta[name=goreecloud-glaze-ui-candidate]')?.content||'',blur:hs.backdropFilter||hs.webkitBackdropFilter||'',cards:cards.length,blurredCards:cards.filter(x=>{const s=getComputedStyle(x);const b=s.backdropFilter||s.webkitBackdropFilter||'none';return b&&b!=='none'}).length,bg:hs.backgroundColor};""", "args": []},
+            {"script": """const r=document.documentElement,h=document.querySelector('.glz12-evaluation-glaze'),cards=[...document.querySelectorAll('[data-glaze-material-level=surface]')];const hs=getComputedStyle(h);return {upgrade:r.dataset.glazeUpgrade,evaluation:document.querySelector('meta[name=goreecloud-glaze-ui-evaluation]')?.content||'',blur:hs.backdropFilter||hs.webkitBackdropFilter||'',cards:cards.length,blurredCards:cards.filter(x=>{const s=getComputedStyle(x);const b=s.backdropFilter||s.webkitBackdropFilter||'none';return b&&b!=='none'}).length,bg:hs.backgroundColor};""", "args": []},
         )
-        require(isinstance(initial, dict), "candidate state unreadable")
-        require(initial.get("upgrade") == "v1.2-frosted-neutral", f"candidate activation missing: {initial}")
-        require(initial.get("candidate") == "1.2.0-candidate", f"candidate metadata missing: {initial}")
-        require("blur" in str(initial.get("blur", "")), f"candidate header is not exercising backdrop blur: {initial}")
+        require(isinstance(initial, dict), "Stable evaluation state unreadable")
+        require(initial.get("upgrade") == "v1.2-stable-evaluation", f"Stable evaluation activation missing: {initial}")
+        require(initial.get("evaluation") == "1.2.0-stable", f"Stable evaluation metadata missing: {initial}")
+        require("blur" in str(initial.get("blur", "")), f"Stable evaluation header is not exercising backdrop blur: {initial}")
         require(int(initial.get("cards", 0)) >= 8, f"expected solid security surfaces missing: {initial}")
         require(int(initial.get("blurredCards", -1)) == 0, f"security-reading surfaces acquired backdrop blur: {initial}")
 
@@ -138,8 +139,8 @@ def main() -> int:
             require(float(state.get("minNav", 0)) >= 47.5, f"navigation target below 48px at {width}px: {state}")
             if width <= 390:
                 require(float(state.get("hh", 999)) <= 190, f"mobile evaluation header consumes excessive viewport height at {width}px: {state}")
-                require(state.get("navDisplay") == "flex", f"mobile candidate navigation must be a compact flex capsule at {width}px: {state}")
-                require(state.get("navOverflowX") in {"auto", "scroll"}, f"mobile candidate navigation must scroll horizontally at {width}px: {state}")
+                require(state.get("navDisplay") == "flex", f"mobile Stable evaluation navigation must be a compact flex capsule at {width}px: {state}")
+                require(state.get("navOverflowX") in {"auto", "scroll"}, f"mobile Stable evaluation navigation must scroll horizontally at {width}px: {state}")
 
         reduced = req(
             "POST",
@@ -205,9 +206,10 @@ def main() -> int:
         if evidence_dir:
             require(len(captures) == 5, f"expected five optical-review captures, got {len(captures)}")
             manifest = {
-                "schema": "goreecloud.wardveil.glaze-v1.2-evaluation-evidence/v1",
+                "schema": "goreecloud.wardveil.glaze-v1.2-evaluation-evidence/v2",
                 "non_production": True,
-                "upstream_glaze_candidate_revision": UPSTREAM_GLAZE_SHA,
+                "upstream_glaze_stable_revision": UPSTREAM_GLAZE_STABLE_SHA,
+                "upstream_glaze_source_qualification_anchor": UPSTREAM_GLAZE_SOURCE_ANCHOR,
                 "wardveil_source_revision": evidence_sha,
                 "capture_count": len(captures),
                 "captures": captures,
@@ -216,13 +218,13 @@ def main() -> int:
             (evidence_dir / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
 
         print(
-            "Wardveil GLAZE UI V1.2 evaluation Chrome smoke passed: bounded frosted header, solid security surfaces, "
+            "Wardveil GLAZE UI V1.2 Stable evaluation Chrome smoke passed: bounded frosted header, solid security surfaces, "
             "compact mobile navigation, synchronized Wardveil/Glaze appearance state, responsive geometry, Reduced Transparency, Deep Dark"
             + (", five deterministic optical-review screenshots captured." if evidence_dir else ".")
         )
         return 0
     except Exception as exc:
-        print(f"Wardveil GLAZE UI V1.2 evaluation Chrome smoke failed: {exc}")
+        print(f"Wardveil GLAZE UI V1.2 Stable evaluation Chrome smoke failed: {exc}")
         if log_path:
             try:
                 print(Path(log_path).read_text(errors="replace")[-6000:])
