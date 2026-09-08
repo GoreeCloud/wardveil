@@ -10,7 +10,7 @@
   "representative_target": "Zorin OS 17.3",
   "integration": "Wardveil-compatible local privileged-maintenance boundary evidence producer",
   "source_integration_status": "implemented",
-  "runtime_acceptance_status": "unaccepted",
+  "runtime_acceptance_status": "accepted",
   "evidence": {
     "consumer_integration_document": "apps/goreecloud-care/WARDVEIL-INTEGRATION.md",
     "consumer_platform_status_source": "apps/goreecloud-care/goreecloud_care/platform_status.py",
@@ -53,7 +53,8 @@
     "passing_evidence_has_bounded_freshness": true,
     "explicit_text_state_semantics": true,
     "sensitive_evidence_minimized": true,
-    "protected_by_wardveil_claim_allowed": false,
+    "protected_by_wardveil_claim_allowed": true,
+    "protected_by_wardveil_claim_scope": "GoreeCloud Care local-maintenance-privilege-boundary only",
     "cross_service_execution_authority_claimed": false,
     "care_cleanup_invoked_by_lifecycle_prequalification": false,
     "immutable_release_candidate_regression_evidence_passed": true,
@@ -70,6 +71,18 @@
     "current_representative_zorin_cleanup_action_invoked": false,
     "current_representative_zorin_post_install_provenance_directory_mode": "0755",
     "current_representative_zorin_post_install_provenance_file_mode": "0644",
+    "representative_zorin_policykit_agent_security_boundary_acceptance_passed": true,
+    "representative_zorin_policykit_care_confirmation_cancellation_passed": true,
+    "representative_zorin_policykit_authorization_cancellation_passed": true,
+    "representative_zorin_policykit_apt_clean_success_passed": true,
+    "representative_zorin_policykit_memory_reclaim_success_passed": true,
+    "representative_zorin_policykit_invalid_action_rejected_passed": true,
+    "representative_zorin_policykit_invalid_action_exit_status": 64,
+    "representative_zorin_policykit_post_acceptance_installed_validation_passed": true,
+    "representative_zorin_policykit_post_acceptance_security_status_passing": true,
+    "representative_zorin_policykit_post_acceptance_continuity_ready": true,
+    "representative_zorin_policykit_observation_basis": "user-observed physical Zorin OS 17.3 acceptance of the prescribed Care RC PolicyKit suite",
+    "governed_wardveil_adoption_promotion": true,
     "privacy_shield_current_exact_candidate_acceptance_passed": true,
     "privacy_shield_current_exact_candidate_acceptance_revision": "d2ee2c626beb2ebc2d951d01db877fc8f46d3791",
     "privacy_shield_production_approved": true,
@@ -101,9 +114,6 @@
     "historical_representative_zorin_reproducible_build_byte_identity_established": false,
     "historical_representative_zorin_apt_local_file_notice_nonfatal": true
   },
-  "runtime_acceptance_requirements_remaining": [
-    "representative_zorin_policykit_agent_security_boundary_acceptance_if_required",
-    "governed_wardveil_adoption_promotion"
-  ],
+  "runtime_acceptance_requirements_remaining": [],
   "source_evidence_is_production_protection_claim": false
 }
