@@ -3,9 +3,9 @@
   "consumer": "Wardveil Security",
   "provider": "Everkeep",
   "provider_repository": "GoreeCloud/goreecloud-everkeep",
-  "provider_contract_id": "https://goreecloud.dev/everkeep/contracts/everkeep.restore-verification.schema.json",
-  "provider_contract_version": "1.0",
-  "provider_contract_introduced_in_revision": "33c5c6e85cbe6057225199811891644c4c65cac5",
+  "provider_contract_id": "https://goreecloud.dev/everkeep/contracts/everkeep.restore-verification.v1.1.schema.json",
+  "provider_contract_version": "1.1",
+  "provider_contract_introduced_in_revision": "4de9a3425215bbee5595eb929c1eb94d94d6f7b2",
   "accepted_environment": "production",
   "target": {
     "system": "Wardveil Security",
@@ -14,7 +14,7 @@
     "deployed_revision_must_match_exactly": true
   },
   "required_provider_evidence": {
-    "schema_version": "1.0",
+    "schema_version": "1.1",
     "status": "pass",
     "authoritative": true,
     "isolated_verification": true,
@@ -22,7 +22,10 @@
     "restored_state_verified": true,
     "evidence_refs_required": true,
     "security_state_authority_transferred": false,
-    "timezone_qualified_timestamps_required": true
+    "timezone_qualified_timestamps_required": true,
+    "fresh_until_required": true,
+    "freshness_deadline_must_be_current": true,
+    "consumer_may_shorten_but_not_extend_provider_freshness": true
   },
   "satisfies_only": "restore_verification_exercise",
   "pitr_availability_is_restore_verification": false,
