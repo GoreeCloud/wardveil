@@ -31,7 +31,7 @@ def parse_timestamp(value: object) -> datetime | None:
 def accepts(record: dict, deployed_revision: str, now: datetime | None = None) -> bool:
     target = record.get("target", {})
     exercise = record.get("exercise", {})
-    if record.get("schemaVersion") != "1.0":
+    if record.get("schemaVersion") != "1.1":
         return False
     if record.get("environment") != "production":
         return False
@@ -64,14 +64,19 @@ def accepts(record: dict, deployed_revision: str, now: datetime | None = None) -
     started = parse_timestamp(exercise.get("startedAt"))
     completed = parse_timestamp(exercise.get("completedAt"))
     captured = parse_timestamp(record.get("capturedAt"))
-    if None in (started, completed, captured):
+    fresh_until = parse_timestamp(record.get("freshUntil"))
+    if None in (started, completed, captured, fresh_until):
         return False
 
     current = now or datetime.now(timezone.utc)
     if current.tzinfo is None or current.utcoffset() is None:
         return False
     current = current.astimezone(timezone.utc)
-    return started < completed <= captured <= current
+
+    # Everkeep owns the freshness deadline. Wardveil may require a stricter
+    # deadline in future policy, but it must never extend this producer-owned
+    # bound. At the deadline itself the evidence is expired and fails closed.
+    return started < completed <= captured <= current < fresh_until and captured < fresh_until
 
 
 def main():
@@ -84,9 +89,9 @@ def main():
         "consumer": "Wardveil Security",
         "provider": "Everkeep",
         "provider_repository": "GoreeCloud/goreecloud-everkeep",
-        "provider_contract_id": "https://goreecloud.dev/everkeep/contracts/everkeep.restore-verification.schema.json",
-        "provider_contract_version": "1.0",
-        "provider_contract_introduced_in_revision": "33c5c6e85cbe6057225199811891644c4c65cac5",
+        "provider_contract_id": "https://goreecloud.dev/everkeep/contracts/everkeep.restore-verification.v1.1.schema.json",
+        "provider_contract_version": "1.1",
+        "provider_contract_introduced_in_revision": "4de9a3425215bbee5595eb929c1eb94d94d6f7b2",
         "accepted_environment": "production",
         "satisfies_only": "restore_verification_exercise",
         "pitr_availability_is_restore_verification": False,
@@ -108,7 +113,7 @@ def main():
 
     provider = contract.get("required_provider_evidence", {})
     require(provider == {
-        "schema_version": "1.0",
+        "schema_version": "1.1",
         "status": "pass",
         "authoritative": True,
         "isolated_verification": True,
@@ -117,6 +122,9 @@ def main():
         "evidence_refs_required": True,
         "security_state_authority_transferred": False,
         "timezone_qualified_timestamps_required": True,
+        "fresh_until_required": True,
+        "freshness_deadline_must_be_current": True,
+        "consumer_may_shorten_but_not_extend_provider_freshness": True,
     }, "restore consumer provider evidence requirements drifted")
 
     require("restore_verification_exercise" in runtime.get("required_acceptance_evidence", []), "runtime acceptance must require restore verification")
@@ -124,13 +132,14 @@ def main():
     require(runtime.get("everkeep_recovery_authority_preserved") is True, "Everkeep recovery authority must remain preserved")
 
     revision = "a" * 40
-    fixed_now = datetime(2026, 9, 5, 16, 0, tzinfo=timezone.utc)
+    fixed_now = datetime(2026, 9, 8, 14, 0, tzinfo=timezone.utc)
     good = {
-        "schemaVersion": "1.0",
+        "schemaVersion": "1.1",
         "verificationId": "wardveil-restore-test",
         "environment": "production",
-        "capturedAt": "2026-09-05T15:30:00Z",
-        "everkeepSourceRevision": "33c5c6e85cbe6057225199811891644c4c65cac5",
+        "capturedAt": "2026-09-08T13:30:00Z",
+        "freshUntil": "2026-09-08T15:00:00Z",
+        "everkeepSourceRevision": "4de9a3425215bbee5595eb929c1eb94d94d6f7b2",
         "target": {
             "system": "Wardveil Security",
             "component": "Cloudflare persistence runtime",
@@ -141,8 +150,8 @@ def main():
         "authoritative": True,
         "exercise": {
             "recoveryPointId": "recovery-point-test",
-            "startedAt": "2026-09-05T15:00:00Z",
-            "completedAt": "2026-09-05T15:20:00Z",
+            "startedAt": "2026-09-08T13:00:00Z",
+            "completedAt": "2026-09-08T13:20:00Z",
             "isolatedVerification": True,
             "integrityVerified": True,
             "restoredStateVerified": True,
@@ -151,7 +160,7 @@ def main():
         "evidenceRefs": ["everkeep:restore:test"],
         "securityStateAuthorityTransferred": False,
     }
-    require(accepts(good, revision, fixed_now), "valid Everkeep restore verification must satisfy Wardveil consumer")
+    require(accepts(good, revision, fixed_now), "valid fresh Everkeep restore verification must satisfy Wardveil consumer")
 
     bad = json.loads(json.dumps(good))
     bad["target"]["deployedRevision"] = "b" * 40
@@ -163,14 +172,29 @@ def main():
     bad["exercise"]["integrityVerified"] = False
     require(not accepts(bad, revision, fixed_now), "integrity-unverified restore evidence must fail closed")
     bad = json.loads(json.dumps(good))
-    bad["schemaVersion"] = "0.9"
-    require(not accepts(bad, revision, fixed_now), "wrong provider schema version must fail closed")
+    bad["schemaVersion"] = "1.0"
+    require(not accepts(bad, revision, fixed_now), "older provider schema version must fail closed after deliberate v1.1 adoption")
     bad = json.loads(json.dumps(good))
     bad["securityStateAuthorityTransferred"] = True
     require(not accepts(bad, revision, fixed_now), "security-authority transfer claim must fail closed")
     bad = json.loads(json.dumps(good))
-    bad["capturedAt"] = "2026-09-05T15:30:00"
+    bad["capturedAt"] = "2026-09-08T13:30:00"
     require(not accepts(bad, revision, fixed_now), "timezone-less restore evidence must fail closed")
+    bad = json.loads(json.dumps(good))
+    bad.pop("freshUntil")
+    require(not accepts(bad, revision, fixed_now), "missing freshness deadline must fail closed")
+    bad = json.loads(json.dumps(good))
+    bad["freshUntil"] = "2026-09-08T14:00:00Z"
+    require(not accepts(bad, revision, fixed_now), "evidence at its freshness deadline must fail closed")
+    bad = json.loads(json.dumps(good))
+    bad["freshUntil"] = "2026-09-08T13:00:00Z"
+    require(not accepts(bad, revision, fixed_now), "freshness deadline before capture must fail closed")
+    bad = json.loads(json.dumps(good))
+    bad["freshUntil"] = "2026-09-08T15:00:00"
+    require(not accepts(bad, revision, fixed_now), "timezone-less freshness deadline must fail closed")
+    bad = json.loads(json.dumps(good))
+    bad["capturedAt"] = "2026-09-08T14:30:00Z"
+    require(not accepts(bad, revision, fixed_now), "future-captured evidence must fail closed")
     bad = json.loads(json.dumps(good))
     bad["target"]["deployedRevision"] = "not-a-revision"
     require(not accepts(bad, "not-a-revision", fixed_now), "malformed matching revisions must fail closed")
@@ -180,13 +204,16 @@ def main():
         "PITR availability is not restore verification",
         "can satisfy only the recovery-verification requirement",
         "cannot create, extend, reinterpret, or upgrade a `Protected by Wardveil` claim",
-        "schemaVersion=1.0",
+        "schemaVersion=1.1",
+        "freshUntil",
+        "may shorten",
+        "must not extend",
         "securityStateAuthorityTransferred=false",
         "timezone-qualified",
     ]:
         require(phrase in doc, f"Everkeep restore handoff documentation missing: {phrase}")
 
-    print("Wardveil Everkeep restore verification consumer validation passed")
+    print("Wardveil Everkeep restore verification v1.1 consumer validation passed")
 
 
 if __name__ == "__main__":
