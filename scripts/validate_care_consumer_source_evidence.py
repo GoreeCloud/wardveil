@@ -8,6 +8,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 EVIDENCE = ROOT / "contracts" / "wardveil.care.consumer-source-evidence.json"
 
+EXPECTED_SOURCE = "bbc4779454c2887b810aa0ddc9e8a686a4c68ebd"
+EXPECTED_TREE = "ebe028347c978b6d09fb1d2af011729249f63bc3"
+EXPECTED_PACKAGE_SHA = "819cff6e0132bf6b09df0986682995c25b14c39e74982f725efd0b5a21b71160"
+EXPECTED_PRIVACY = "0af47f4817191541e1ea12928cff5c3458baf377"
+EXPECTED_EVERKEEP = "4586246aad87a4038c7f8984de809d32333f2599"
+
 
 def require(condition: bool, message: str) -> None:
     if not condition:
@@ -36,10 +42,10 @@ def main() -> None:
         "consumer": "GoreeCloud Care",
         "consumer_repository": "GoreeCloud/goreecloud-zorin-os",
         "consumer_component": "apps/goreecloud-care",
-        "consumer_revision": "334b53102c5fe0bd5d348397ba8b13cc5608ada2",
-        "consumer_source_tree_sha": "4d8c243adb456913687045e67df509fb66736c28",
-        "consumer_version": "0.1.0-dev22",
-        "consumer_package_version": "0.1.0~dev22",
+        "consumer_revision": EXPECTED_SOURCE,
+        "consumer_source_tree_sha": EXPECTED_TREE,
+        "consumer_version": "0.1.0",
+        "consumer_package_version": "0.1.0",
         "representative_target": "Zorin OS 17.3",
         "source_integration_status": "implemented",
         "runtime_acceptance_status": "accepted",
@@ -63,21 +69,21 @@ def main() -> None:
     for key, expected in expected_paths.items():
         require(details.get(key) == expected, f"unexpected evidence path: {key}")
 
-    require(details.get("consumer_ci_revision") == record["consumer_revision"], "CI revision mismatch")
-    require(details.get("consumer_ci_source_tree_sha") == record["consumer_source_tree_sha"], "CI tree mismatch")
-    require(details.get("consumer_ci_run_number") == 416, "unexpected Care RC run number")
-    require(details.get("consumer_ci_run_id") == 34169330536, "unexpected Care RC run ID")
-    require(details.get("consumer_platform_contract_run_id") == 34169330837, "unexpected Platform Contract run")
-    require(details.get("consumer_theme_validation_run_id") == 34169330531, "unexpected theme validation run")
-    require(details.get("consumer_ci_test_count", 0) >= 144, "144-test RC checkpoint missing")
-    require(positive_int(details.get("consumer_ci_artifact_id")), "missing package artifact")
-    require(positive_int(details.get("consumer_cross_environment_artifact_id")), "missing cross-environment artifact")
+    require(details.get("consumer_ci_revision") == EXPECTED_SOURCE, "CI revision mismatch")
+    require(details.get("consumer_ci_source_tree_sha") == EXPECTED_TREE, "CI tree mismatch")
+    require(details.get("consumer_ci_run_number") == 421, "unexpected Care 0.1.0 run number")
+    require(details.get("consumer_ci_run_id") == 34180765807, "unexpected Care 0.1.0 run ID")
+    require(details.get("consumer_platform_contract_run_id") == 34180766156, "unexpected Platform Contract run")
+    require(details.get("consumer_theme_validation_run_id") == 34180765817, "unexpected theme validation run")
+    require(details.get("consumer_ci_test_count", 0) >= 143, "143-test exact-candidate checkpoint missing")
+    require(details.get("consumer_package_sha256") == EXPECTED_PACKAGE_SHA, "unexpected Care package SHA-256")
+    require(sha256(details.get("consumer_package_sha256")), "Care package SHA-256 must be explicit")
+    require(details.get("consumer_ci_artifact_id") == 10038827656, "unexpected package artifact")
+    require(details.get("consumer_cross_environment_artifact_id") == 10038821545, "unexpected cross-environment artifact")
     require(sha256(details.get("consumer_ci_artifact_digest")), "invalid package artifact digest")
     require(sha256(details.get("consumer_cross_environment_artifact_digest")), "invalid cross-environment artifact digest")
-    package_sha = details.get("consumer_package_sha256")
-    require(sha256(package_sha), "invalid Care package SHA-256")
-    require(details.get("consumer_cross_environment_ubuntu_22_04_sha256") == package_sha, "Ubuntu 22.04 package mismatch")
-    require(details.get("consumer_cross_environment_ubuntu_24_04_sha256") == package_sha, "Ubuntu 24.04 package mismatch")
+    require(details.get("consumer_cross_environment_ubuntu_22_04_sha256") == EXPECTED_PACKAGE_SHA, "Ubuntu 22.04 package mismatch")
+    require(details.get("consumer_cross_environment_ubuntu_24_04_sha256") == EXPECTED_PACKAGE_SHA, "Ubuntu 24.04 package mismatch")
 
     required_true = (
         "exact_ci_revision_passed",
@@ -115,6 +121,8 @@ def main() -> None:
         "governed_wardveil_adoption_promotion",
         "privacy_shield_current_exact_candidate_acceptance_passed",
         "privacy_shield_production_approved",
+        "everkeep_current_exact_candidate_ready",
+        "everkeep_current_exact_candidate_local_record_installed",
         "latest_representative_negative_evidence_exists",
         "prior_representative_negative_evidence_exists",
         "historical_representative_zorin_lifecycle_evidence_exists",
@@ -124,34 +132,39 @@ def main() -> None:
     for key in required_true:
         require(details.get(key) is True, f"missing required accepted evidence: {key}")
 
-    require(details.get("protected_by_wardveil_claim_allowed") is True, "scoped Wardveil protection claim permission must be explicit")
+    require(details.get("protected_by_wardveil_claim_allowed") is True, "scoped Wardveil protection permission must be explicit")
     require(
         details.get("protected_by_wardveil_claim_scope") == "GoreeCloud Care local-maintenance-privilege-boundary only",
         "Wardveil protection permission must stay narrowly scoped",
     )
     require(details.get("cross_service_execution_authority_claimed") is False, "Care must not receive cross-service execution authority")
     require(details.get("care_cleanup_invoked_by_lifecycle_prequalification") is False, "Care cleanup must not be invoked by lifecycle prequalification")
-    require(details.get("current_representative_zorin_cleanup_action_invoked") is False, "Care cleanup must not be invoked by representative lifecycle acceptance")
-    require(details.get("representative_zorin_policykit_invalid_action_exit_status") == 64, "invalid helper action must fail closed with status 64")
-    basis = str(details.get("representative_zorin_policykit_observation_basis") or "").lower()
-    require("user-observed" in basis and "zorin os 17.3" in basis and "policykit" in basis, "PolicyKit physical acceptance basis must remain explicit")
+    require(details.get("current_representative_zorin_cleanup_action_invoked") is False, "Care cleanup must not be invoked by target acceptance")
 
-    require(details.get("current_representative_zorin_exact_candidate_revision") == record["consumer_revision"], "target revision mismatch")
-    require(details.get("current_representative_zorin_exact_candidate_source_tree_sha") == record["consumer_source_tree_sha"], "target tree mismatch")
-    require(details.get("current_representative_zorin_exact_candidate_package_sha256") == package_sha, "target package mismatch")
-    require(details.get("current_representative_zorin_exact_candidate_test_count", 0) >= 144, "target test checkpoint missing")
+    require(details.get("current_representative_zorin_exact_candidate_revision") == EXPECTED_SOURCE, "target revision mismatch")
+    require(details.get("current_representative_zorin_exact_candidate_source_tree_sha") == EXPECTED_TREE, "target tree mismatch")
+    require(details.get("current_representative_zorin_exact_candidate_package_sha256") == EXPECTED_PACKAGE_SHA, "target package mismatch")
+    require(details.get("current_representative_zorin_exact_candidate_test_count", 0) >= 143, "target test checkpoint missing")
     require(details.get("current_representative_zorin_post_install_provenance_directory_mode") == "0755", "unexpected target provenance directory mode")
     require(details.get("current_representative_zorin_post_install_provenance_file_mode") == "0644", "unexpected target provenance file mode")
 
-    require(
-        details.get("privacy_shield_current_exact_candidate_acceptance_revision")
-        == "d2ee2c626beb2ebc2d951d01db877fc8f46d3791",
-        "unexpected current Privacy Shield authority",
-    )
+    require(details.get("representative_zorin_policykit_invalid_action_exit_status") == 64, "invalid helper action must fail closed with status 64")
+    basis = str(details.get("representative_zorin_policykit_observation_basis") or "").lower()
+    for token in ("user-observed", "zorin os 17.3", "0.1.0", "policykit", "six"):
+        require(token in basis, f"PolicyKit acceptance basis missing token: {token}")
+
+    require(details.get("privacy_shield_current_exact_candidate_acceptance_revision") == EXPECTED_PRIVACY, "unexpected Privacy Shield authority")
+    require(details.get("privacy_shield_current_exact_candidate_validation_run_id") == 34183154605, "unexpected Privacy Shield validation run")
+    require(details.get("everkeep_current_exact_candidate_authority_revision") == EXPECTED_EVERKEEP, "unexpected Everkeep authority")
+    require(details.get("everkeep_current_exact_candidate_local_trust_directory_mode") == "0755", "unexpected Everkeep trust directory mode")
+    require(details.get("everkeep_current_exact_candidate_local_trust_file_mode") == "0644", "unexpected Everkeep trust file mode")
+    require(details.get("everkeep_current_exact_candidate_continuity_state") == "ready", "Everkeep continuity must be ready")
+    require(details.get("everkeep_current_exact_candidate_continuity_stage") == "everkeep-promoted", "Everkeep stage mismatch")
 
     require(details.get("latest_representative_negative_evidence_target_handoff_generated") is False, "failed 387ebe target must not acquire a handoff")
     require(details.get("historical_representative_zorin_cleanup_action_invoked") is False, "historical lifecycle must preserve no-cleanup boundary")
     require(details.get("historical_representative_zorin_reproducible_build_byte_identity_established") is False, "historical non-reproducibility must remain explicit")
+
     for key in (
         "latest_representative_negative_evidence_revision",
         "latest_representative_negative_evidence_source_tree_sha",
@@ -172,10 +185,10 @@ def main() -> None:
     require(record.get("runtime_acceptance_requirements_remaining") == [], "accepted Care Wardveil adoption must have no runtime acceptance remainder")
 
     print(
-        "Wardveil GoreeCloud Care evidence validation passed; exact RC CI/package/physical target, "
-        "Privacy Shield, real-desktop PolicyKit security-boundary evidence, and governed Wardveil "
-        "adoption are accepted. Scoped Wardveil protection-claim permission is recorded without "
-        "granting cross-service execution authority."
+        "Wardveil GoreeCloud Care evidence validation passed for exact 0.1.0: CI/package/physical target, "
+        "Privacy Shield, local Everkeep readiness, real-desktop PolicyKit security-boundary evidence, "
+        "and governed Wardveil adoption are accepted. Protection-claim permission remains narrowly scoped "
+        "to the Care local-maintenance-privilege-boundary with no cross-service execution authority."
     )
 
 
