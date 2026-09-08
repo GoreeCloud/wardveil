@@ -35,24 +35,60 @@
     "private_bytecode_cleanup_passed": true,
     "care_cleanup_invoked_by_prequalification": false
   },
+  "physical_target_evidence": {
+    "status": "passed",
+    "observed_date": "2026-09-07",
+    "target": "Zorin OS 17.3",
+    "source_revision": "bbc4779454c2887b810aa0ddc9e8a686a4c68ebd",
+    "source_tree_sha": "ebe028347c978b6d09fb1d2af011729249f63bc3",
+    "package_sha256": "819cff6e0132bf6b09df0986682995c25b14c39e74982f725efd0b5a21b71160",
+    "local_test_count": 143,
+    "physical_package_matched_ci_sha256": true,
+    "source_validation_passed": true,
+    "same_environment_reproducibility_passed": true,
+    "cross_umask_package_identity_passed": true,
+    "package_lifecycle_passed": true,
+    "candidate_install_upgrade_passed": true,
+    "candidate_removal_passed": true,
+    "fresh_reinstall_passed": true,
+    "accepted_dev17_downgrade_passed": true,
+    "candidate_restore_passed": true,
+    "final_installed_state_passed": true,
+    "representative_target_handoff_generated": true,
+    "care_cleanup_invoked": false,
+    "post_install_provenance_directory_mode": "0755",
+    "post_install_provenance_file_mode": "0644",
+    "continuity_state_after_target_acceptance": "attention",
+    "continuity_stage_after_target_acceptance": "target-accepted-governance-pending"
+  },
+  "privacy_shield_authority": {
+    "runtime_accepted": true,
+    "production_approved": true,
+    "revision": "0af47f4817191541e1ea12928cff5c3458baf377",
+    "validation_run_id": 34183154605,
+    "validation_run_number": 235,
+    "scope": [
+      "telemetry-minimization",
+      "data-minimization",
+      "privacy-status"
+    ]
+  },
   "governance": {
     "source_integration_status": "implemented",
-    "representative_target_status": "pending",
+    "representative_target_status": "passed",
     "runtime_acceptance_status": "unaccepted",
     "wardveil_adoption_promoted": false,
     "protected_by_wardveil_claim_allowed": false,
     "protected_by_wardveil": false,
     "cross_service_execution_authority_claimed": false,
-    "privacy_shield_exact_candidate_runtime_accepted": false,
-    "privacy_shield_production_approved": false,
+    "privacy_shield_exact_candidate_runtime_accepted": true,
+    "privacy_shield_production_approved": true,
     "stable_promotion_authorized": false
   },
   "remaining_requirements": [
-    "Physical Zorin OS 17.3 representative acceptance must pass for the exact source, tree, package version, and package SHA-256.",
-    "The real desktop PolicyKit-agent boundary must remain accepted for the exact 0.1.0 candidate before Wardveil adoption can be refreshed.",
-    "Privacy Shield exact-candidate runtime acceptance and its separate production approval must be governed for the exact 0.1.0 candidate.",
-    "Wardveil adoption/runtime acceptance must be separately governed after all exact-candidate evidence is complete.",
-    "A Protected by Wardveil claim remains forbidden until that governed adoption explicitly grants the narrowly scoped local-maintenance-privilege-boundary claim."
+    "The real desktop PolicyKit-agent boundary must be accepted for this exact 0.1.0 candidate before Wardveil adoption can be refreshed.",
+    "Wardveil adoption/runtime acceptance must be separately governed after exact-candidate PolicyKit evidence is complete.",
+    "A Protected by Wardveil claim remains forbidden until governed adoption explicitly grants the narrowly scoped local-maintenance-privilege-boundary claim."
   ],
   "predecessor_authority": {
     "wardveil_revision": "e16fc489dbf98849601a198358863dffe7df81d4",
