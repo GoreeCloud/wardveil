@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://security.goreecloud.com/contracts/wardveil.security-center.v2.schema.json",
+  "title": "Wardveil Security Center 2.0 View Model",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "generated_at",
+    "resource_scope",
+    "security_state",
+    "coverage_state",
+    "claim_authority",
+    "why_this_status",
+    "areas",
+    "presentation",
+    "acceptance"
+  ],
+  "properties": {
+    "schema_version": {"const": "0.1.0"},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "resource_scope": {"type": "string", "minLength": 1, "maxLength": 256},
+    "security_state": {
+      "enum": ["protected", "at_risk", "action_required", "unknown", "not_covered", "degraded", "contained", "recovering", "reconciliation_required"]
+    },
+    "coverage_state": {"enum": ["covered", "partial", "not_covered", "unknown", "stale", "degraded"]},
+    "claim_authority": {"type": "boolean"},
+    "why_this_status": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "scope", "coverage", "reason_code", "producer", "observed_at", "evidence_valid", "protective_execution_requested", "protective_execution_verified", "reconciliation_required", "summary", "next_action"],
+      "properties": {
+        "state": {"type": "string"},
+        "scope": {"type": "string", "minLength": 1},
+        "coverage": {"type": "string"},
+        "reason_code": {"type": "string", "minLength": 1, "maxLength": 128},
+        "producer": {"type": "string", "minLength": 1, "maxLength": 160},
+        "observed_at": {"type": "string", "format": "date-time"},
+        "valid_until": {"type": ["string", "null"], "format": "date-time"},
+        "evidence_valid": {"type": "boolean"},
+        "protective_execution_requested": {"type": "boolean"},
+        "protective_execution_verified": {"type": "boolean"},
+        "reconciliation_required": {"type": "boolean"},
+        "summary": {"type": "string", "minLength": 1, "maxLength": 512},
+        "next_action": {"type": "string", "minLength": 1, "maxLength": 512}
+      }
+    },
+    "areas": {
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 12,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "protection",
+          "protection_coverage",
+          "threats",
+          "quarantine",
+          "incidents",
+          "sessions_and_devices",
+          "application_access",
+          "security_policies",
+          "recommendations",
+          "security_evidence",
+          "audit_history",
+          "recovery_verification"
+        ]
+      }
+    },
+    "presentation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["glaze_ui_version", "glaze_ui_revision", "rollback_version", "appearance", "responsive", "reduced_transparency", "reduced_motion", "increased_contrast", "forced_colors", "touch_assistance", "material_fallback", "performance_fallback"],
+      "properties": {
+        "glaze_ui_version": {"const": "1.3.0"},
+        "glaze_ui_revision": {"const": "8354308445da9ac35ced2b37a7f503a08a0aaf72"},
+        "rollback_version": {"const": "1.2.0"},
+        "appearance": {"enum": ["light", "dark", "deep_dark"]},
+        "responsive": {"type": "boolean"},
+        "reduced_transparency": {"type": "boolean"},
+        "reduced_motion": {"type": "boolean"},
+        "increased_contrast": {"type": "boolean"},
+        "forced_colors": {"type": "boolean"},
+        "touch_assistance": {"type": "boolean"},
+        "material_fallback": {"type": "boolean"},
+        "performance_fallback": {"type": "boolean"}
+      }
+    },
+    "acceptance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_validated", "rendered_visual_review", "accessibility_runtime", "live_evidence_consumption", "deployment_verified", "rollback_verified", "runtime_validated", "production_accepted", "stable_qualified"],
+      "properties": {
+        "source_validated": {"type": "boolean"},
+        "rendered_visual_review": {"type": "boolean"},
+        "accessibility_runtime": {"type": "boolean"},
+        "live_evidence_consumption": {"type": "boolean"},
+        "deployment_verified": {"type": "boolean"},
+        "rollback_verified": {"type": "boolean"},
+        "runtime_validated": {"type": "boolean"},
+        "production_accepted": {"type": "boolean"},
+        "stable_qualified": {"type": "boolean"}
+      }
+    }
+  }
+}
