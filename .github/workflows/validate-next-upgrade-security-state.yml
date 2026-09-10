@@ -27,6 +27,7 @@ on:
       - "QUARANTINE-OBJECT-V2.md"
       - "INCIDENT-PLANE-V2.md"
       - "AUDIT-EVIDENCE-LEDGER-V2.md"
+      - "FEATURE-ROADMAP.md"
       - ".github/workflows/validate-next-upgrade-security-state.yml"
   push:
     branches:
@@ -56,6 +57,7 @@ on:
       - "QUARANTINE-OBJECT-V2.md"
       - "INCIDENT-PLANE-V2.md"
       - "AUDIT-EVIDENCE-LEDGER-V2.md"
+      - "FEATURE-ROADMAP.md"
 
 permissions:
   contents: read
