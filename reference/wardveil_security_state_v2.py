@@ -1,0 +1,419 @@
+#!/usr/bin/env python3
+"""Wardveil next-upgrade security-state and protection-coverage reference model.
+
+This module is a dependency-free source reference. It defines deterministic
+contract behavior for the next Wardveil upgrade, but it is not itself evidence
+of runtime or production protection.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from typing import Iterable
+from uuid import uuid4
+
+SECURITY_STATES = (
+    "protected",
+    "at_risk",
+    "action_required",
+    "unknown",
+    "not_covered",
+    "degraded",
+    "contained",
+    "recovering",
+    "reconciliation_required",
+)
+
+COVERAGE_STATES = ("covered", "partial", "not_covered", "unknown")
+
+ADOPTION_STATES = (
+    "planned",
+    "implemented",
+    "source_validated",
+    "runtime_validated",
+    "production_accepted",
+)
+
+EVIDENCE_STATES = ("current", "stale", "unavailable", "unverified")
+
+CAPABILITIES = (
+    "authentication_protection",
+    "authorization_enforcement",
+    "session_protection",
+    "device_trust",
+    "malware_protection",
+    "malicious_url_protection",
+    "vulnerability_monitoring",
+    "security_update_posture",
+    "secret_protection",
+    "network_exposure_controls",
+    "runtime_integrity",
+    "security_event_reporting",
+    "audit_coverage",
+    "recovery_security_verification",
+)
+
+LEGACY_PRESENTATION_MAP = {
+    "protected": "protected",
+    "at_risk": "attention",
+    "action_required": "attention",
+    "unknown": "unknown",
+    "not_covered": "unknown",
+    "degraded": "degraded",
+    "contained": "attention",
+    "recovering": "degraded",
+    "reconciliation_required": "degraded",
+}
+
+
+def _utc_now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def _require_aware(value: datetime, field_name: str) -> None:
+    if value.tzinfo is None or value.utcoffset() is None:
+        raise ValueError(f"{field_name} must be timezone-aware")
+
+
+@dataclass(frozen=True)
+class EvidenceObservation:
+    evidence_id: str
+    producer_id: str
+    control: str
+    authoritative: bool
+    status: str
+    observed_at: datetime
+    valid_until: datetime | None = None
+    verifies_protection: bool = False
+
+    def __post_init__(self) -> None:
+        if not self.evidence_id:
+            raise ValueError("evidence_id is required")
+        if not self.producer_id:
+            raise ValueError("producer_id is required")
+        if not self.control:
+            raise ValueError("control is required")
+        if self.status not in EVIDENCE_STATES:
+            raise ValueError(f"unsupported evidence status: {self.status}")
+        _require_aware(self.observed_at, "observed_at")
+        if self.valid_until is not None:
+            _require_aware(self.valid_until, "valid_until")
+            if self.valid_until <= self.observed_at:
+                raise ValueError("valid_until must be later than observed_at")
+
+    def effective_status(self, now: datetime) -> str:
+        _require_aware(now, "now")
+        if not self.authoritative:
+            return "unverified"
+        if self.status != "current":
+            return self.status
+        if self.observed_at > now:
+            return "unverified"
+        if self.valid_until is None or self.valid_until <= now:
+            return "stale"
+        return "current"
+
+
+@dataclass(frozen=True)
+class CoverageObservation:
+    capability: str
+    coverage_state: str
+    adoption_state: str
+    evidence_status: str
+    evidence_refs: tuple[str, ...] = field(default_factory=tuple)
+    observed_at: datetime | None = None
+    valid_until: datetime | None = None
+
+    def __post_init__(self) -> None:
+        if self.capability not in CAPABILITIES:
+            raise ValueError(f"unsupported capability: {self.capability}")
+        if self.coverage_state not in COVERAGE_STATES:
+            raise ValueError(f"unsupported coverage state: {self.coverage_state}")
+        if self.adoption_state not in ADOPTION_STATES:
+            raise ValueError(f"unsupported adoption state: {self.adoption_state}")
+        if self.evidence_status not in EVIDENCE_STATES:
+            raise ValueError(f"unsupported evidence status: {self.evidence_status}")
+        if self.observed_at is not None:
+            _require_aware(self.observed_at, "observed_at")
+        if self.valid_until is not None:
+            _require_aware(self.valid_until, "valid_until")
+            if self.observed_at is None:
+                raise ValueError("valid_until requires observed_at")
+            if self.valid_until <= self.observed_at:
+                raise ValueError("valid_until must be later than observed_at")
+
+    def current(self, now: datetime) -> bool:
+        _require_aware(now, "now")
+        if self.evidence_status != "current":
+            return False
+        if self.observed_at is None or self.valid_until is None:
+            return False
+        return self.observed_at <= now < self.valid_until
+
+
+@dataclass(frozen=True)
+class SecuritySignals:
+    active_threat: bool = False
+    action_required: bool = False
+    contained: bool = False
+    recovering: bool = False
+    degraded: bool = False
+    reconciliation_required: bool = False
+
+
+@dataclass(frozen=True)
+class SecurityAssessment:
+    state: str
+    coverage_state: str
+    reason_codes: tuple[str, ...]
+    evidence_refs: tuple[str, ...]
+    observed_at: datetime
+    valid_until: datetime | None
+    protected_by_wardveil: bool
+
+    @property
+    def legacy_presentation_state(self) -> str:
+        return LEGACY_PRESENTATION_MAP[self.state]
+
+    def as_record(
+        self,
+        *,
+        scope_kind: str,
+        scope_id: str,
+        authority_system: str = "wardveil",
+        authority_control: str = "security_state_engine",
+    ) -> dict:
+        return {
+            "contract_version": "0.2.0",
+            "record_type": "security_state",
+            "record_id": f"security-state-{uuid4()}",
+            "scope": {"kind": scope_kind, "id": scope_id},
+            "authority": {
+                "system": authority_system,
+                "control": authority_control,
+                "authoritative": True,
+            },
+            "state": self.state,
+            "coverage": {"status": self.coverage_state},
+            "evidence": {
+                "status": "current" if self.protected_by_wardveil else _assessment_evidence_status(self),
+                "observed_at": self.observed_at.isoformat(),
+                **({"valid_until": self.valid_until.isoformat()} if self.valid_until else {}),
+                "references": list(self.evidence_refs),
+            },
+            "claim": {"protected_by_wardveil": self.protected_by_wardveil},
+            "explanation": {
+                "reason_codes": list(self.reason_codes),
+                "legacy_presentation_state": self.legacy_presentation_state,
+            },
+        }
+
+
+def _assessment_evidence_status(assessment: SecurityAssessment) -> str:
+    reasons = set(assessment.reason_codes)
+    if "required_evidence_unavailable" in reasons:
+        return "unavailable"
+    if "required_evidence_unverified" in reasons:
+        return "unverified"
+    if "required_evidence_stale" in reasons:
+        return "stale"
+    return "current"
+
+
+def summarize_coverage(
+    required_capabilities: Iterable[str],
+    coverage: Iterable[CoverageObservation],
+    *,
+    now: datetime | None = None,
+) -> tuple[str, tuple[str, ...], tuple[str, ...]]:
+    now = now or _utc_now()
+    _require_aware(now, "now")
+    required = tuple(dict.fromkeys(required_capabilities))
+    for capability in required:
+        if capability not in CAPABILITIES:
+            raise ValueError(f"unsupported required capability: {capability}")
+
+    by_capability = {item.capability: item for item in coverage}
+    missing: list[str] = []
+    uncertain: list[str] = []
+    covered: list[str] = []
+
+    for capability in required:
+        item = by_capability.get(capability)
+        if item is None or item.coverage_state == "not_covered" or item.adoption_state == "planned":
+            missing.append(capability)
+            continue
+        if (
+            item.coverage_state != "covered"
+            or item.adoption_state != "production_accepted"
+            or not item.current(now)
+        ):
+            uncertain.append(capability)
+            continue
+        covered.append(capability)
+
+    if not required:
+        return "unknown", (), ()
+    if len(missing) == len(required):
+        return "not_covered", tuple(missing), ()
+    if missing or uncertain:
+        return "partial", tuple(missing), tuple(uncertain)
+    return "covered", (), ()
+
+
+def evaluate_security_state(
+    *,
+    evidence: Iterable[EvidenceObservation],
+    coverage: Iterable[CoverageObservation],
+    required_capabilities: Iterable[str],
+    signals: SecuritySignals = SecuritySignals(),
+    now: datetime | None = None,
+) -> SecurityAssessment:
+    now = now or _utc_now()
+    _require_aware(now, "now")
+
+    observations = tuple(evidence)
+    coverage_state, missing_caps, uncertain_caps = summarize_coverage(
+        required_capabilities, coverage, now=now
+    )
+
+    evidence_refs = tuple(dict.fromkeys(item.evidence_id for item in observations))
+    reason_codes: list[str] = []
+    valid_until_values: list[datetime] = []
+
+    effective = [item.effective_status(now) for item in observations]
+    for item in observations:
+        if item.valid_until is not None and item.effective_status(now) == "current":
+            valid_until_values.append(item.valid_until)
+
+    if coverage_state == "not_covered":
+        reason_codes.extend(f"capability_not_covered:{cap}" for cap in missing_caps)
+        return SecurityAssessment(
+            "not_covered",
+            coverage_state,
+            tuple(reason_codes or ("required_capability_not_covered",)),
+            evidence_refs,
+            now,
+            None,
+            False,
+        )
+
+    if not observations:
+        return SecurityAssessment(
+            "unknown",
+            coverage_state,
+            ("required_evidence_unavailable",),
+            (),
+            now,
+            None,
+            False,
+        )
+
+    if "unverified" in effective:
+        reason_codes.append("required_evidence_unverified")
+    if "unavailable" in effective:
+        reason_codes.append("required_evidence_unavailable")
+    if "stale" in effective:
+        reason_codes.append("required_evidence_stale")
+
+    if reason_codes:
+        return SecurityAssessment(
+            "unknown",
+            coverage_state,
+            tuple(dict.fromkeys(reason_codes)),
+            evidence_refs,
+            now,
+            min(valid_until_values) if valid_until_values else None,
+            False,
+        )
+
+    if signals.reconciliation_required:
+        return SecurityAssessment(
+            "reconciliation_required",
+            coverage_state,
+            ("execution_outcome_uncertain",),
+            evidence_refs,
+            now,
+            min(valid_until_values) if valid_until_values else None,
+            False,
+        )
+    if signals.active_threat:
+        return SecurityAssessment(
+            "at_risk",
+            coverage_state,
+            ("active_security_threat",),
+            evidence_refs,
+            now,
+            min(valid_until_values) if valid_until_values else None,
+            False,
+        )
+    if signals.action_required:
+        return SecurityAssessment(
+            "action_required",
+            coverage_state,
+            ("security_action_required",),
+            evidence_refs,
+            now,
+            min(valid_until_values) if valid_until_values else None,
+            False,
+        )
+    if signals.contained:
+        return SecurityAssessment(
+            "contained",
+            coverage_state,
+            ("threat_contained_pending_resolution",),
+            evidence_refs,
+            now,
+            min(valid_until_values) if valid_until_values else None,
+            False,
+        )
+    if signals.recovering:
+        return SecurityAssessment(
+            "recovering",
+            coverage_state,
+            ("recovery_in_progress",),
+            evidence_refs,
+            now,
+            min(valid_until_values) if valid_until_values else None,
+            False,
+        )
+    if signals.degraded or coverage_state == "partial":
+        details = ["security_control_degraded"] if signals.degraded else []
+        details.extend(f"capability_not_covered:{cap}" for cap in missing_caps)
+        details.extend(f"capability_not_production_accepted:{cap}" for cap in uncertain_caps)
+        return SecurityAssessment(
+            "degraded",
+            coverage_state,
+            tuple(details or ("coverage_partial",)),
+            evidence_refs,
+            now,
+            min(valid_until_values) if valid_until_values else None,
+            False,
+        )
+
+    protection_evidence = [item for item in observations if item.verifies_protection]
+    if (
+        coverage_state == "covered"
+        and protection_evidence
+        and all(item.authoritative and item.effective_status(now) == "current" for item in observations)
+    ):
+        return SecurityAssessment(
+            "protected",
+            coverage_state,
+            ("current_authoritative_protection_evidence",),
+            evidence_refs,
+            now,
+            min(valid_until_values),
+            True,
+        )
+
+    return SecurityAssessment(
+        "unknown",
+        coverage_state,
+        ("no_authoritative_protection_verification",),
+        evidence_refs,
+        now,
+        min(valid_until_values) if valid_until_values else None,
+        False,
+    )

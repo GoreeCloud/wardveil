@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:goreecloud:wardveil:security-state:0.2.0",
+  "title": "Wardveil Next-Upgrade Security State Record",
+  "description": "Evidence-backed Wardveil security-state contract for the next upgrade. Protected requires current authoritative evidence and covered production-accepted capabilities.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract_version", "record_type", "record_id", "scope", "authority", "state", "coverage", "evidence", "claim", "explanation"],
+  "properties": {
+    "contract_version": {"const": "0.2.0"},
+    "record_type": {"const": "security_state"},
+    "record_id": {"type": "string", "minLength": 1, "maxLength": 160},
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id"],
+      "properties": {
+        "kind": {"type": "string", "enum": ["account", "application", "service", "device", "network", "data", "control", "platform", "other"]},
+        "id": {"type": "string", "minLength": 1, "maxLength": 128}
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["system", "control", "authoritative"],
+      "properties": {
+        "system": {"type": "string", "minLength": 1, "maxLength": 128},
+        "control": {"type": "string", "minLength": 1, "maxLength": 128},
+        "authoritative": {"type": "boolean"}
+      }
+    },
+    "state": {
+      "type": "string",
+      "enum": ["protected", "at_risk", "action_required", "unknown", "not_covered", "degraded", "contained", "recovering", "reconciliation_required"]
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status"],
+      "properties": {
+        "status": {"type": "string", "enum": ["covered", "partial", "not_covered", "unknown"]}
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "observed_at", "references"],
+      "properties": {
+        "status": {"type": "string", "enum": ["current", "stale", "unavailable", "unverified"]},
+        "observed_at": {"type": "string", "format": "date-time"},
+        "valid_until": {"type": "string", "format": "date-time"},
+        "references": {"type": "array", "maxItems": 64, "items": {"type": "string", "minLength": 1, "maxLength": 256}}
+      }
+    },
+    "claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protected_by_wardveil"],
+      "properties": {"protected_by_wardveil": {"type": "boolean"}}
+    },
+    "explanation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reason_codes", "legacy_presentation_state"],
+      "properties": {
+        "reason_codes": {"type": "array", "minItems": 1, "maxItems": 32, "items": {"type": "string", "minLength": 1, "maxLength": 160}},
+        "legacy_presentation_state": {"type": "string", "enum": ["protected", "attention", "degraded", "unknown", "not_applicable"]}
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"state": {"const": "protected"}}, "required": ["state"]},
+      "then": {
+        "properties": {
+          "authority": {"properties": {"authoritative": {"const": true}}, "required": ["authoritative"]},
+          "coverage": {"properties": {"status": {"const": "covered"}}, "required": ["status"]},
+          "evidence": {"properties": {"status": {"const": "current"}}, "required": ["status", "valid_until"]},
+          "claim": {"properties": {"protected_by_wardveil": {"const": true}}, "required": ["protected_by_wardveil"]}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"claim": {"properties": {"protected_by_wardveil": {"const": true}}, "required": ["protected_by_wardveil"]}}, "required": ["claim"]},
+      "then": {
+        "properties": {
+          "state": {"const": "protected"},
+          "authority": {"properties": {"authoritative": {"const": true}}, "required": ["authoritative"]},
+          "coverage": {"properties": {"status": {"const": "covered"}}, "required": ["status"]},
+          "evidence": {"properties": {"status": {"const": "current"}}, "required": ["status", "valid_until"]}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"coverage": {"properties": {"status": {"const": "not_covered"}}, "required": ["status"]}}, "required": ["coverage"]},
+      "then": {
+        "properties": {
+          "state": {"const": "not_covered"},
+          "claim": {"properties": {"protected_by_wardveil": {"const": false}}, "required": ["protected_by_wardveil"]}
+        }
+      }
+    }
+  ]
+}

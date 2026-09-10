@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:goreecloud:wardveil:protection-coverage:0.1.0",
+  "title": "Wardveil Protection Coverage Record",
+  "description": "Per-capability Wardveil coverage and adoption evidence. Coverage is independent from security state and does not itself authorize a Protected by Wardveil claim.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract_version", "record_type", "record_id", "scope", "capability", "coverage_state", "adoption_state", "evidence"],
+  "properties": {
+    "contract_version": {"const": "0.1.0"},
+    "record_type": {"const": "protection_coverage"},
+    "record_id": {"type": "string", "minLength": 1, "maxLength": 160},
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id"],
+      "properties": {
+        "kind": {"type": "string", "enum": ["account", "application", "service", "device", "network", "data", "control", "platform", "other"]},
+        "id": {"type": "string", "minLength": 1, "maxLength": 128}
+      }
+    },
+    "capability": {
+      "type": "string",
+      "enum": ["authentication_protection", "authorization_enforcement", "session_protection", "device_trust", "malware_protection", "malicious_url_protection", "vulnerability_monitoring", "security_update_posture", "secret_protection", "network_exposure_controls", "runtime_integrity", "security_event_reporting", "audit_coverage", "recovery_security_verification"]
+    },
+    "coverage_state": {"type": "string", "enum": ["covered", "partial", "not_covered", "unknown"]},
+    "adoption_state": {"type": "string", "enum": ["planned", "implemented", "source_validated", "runtime_validated", "production_accepted"]},
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "observed_at", "references"],
+      "properties": {
+        "status": {"type": "string", "enum": ["current", "stale", "unavailable", "unverified"]},
+        "observed_at": {"type": "string", "format": "date-time"},
+        "valid_until": {"type": "string", "format": "date-time"},
+        "references": {"type": "array", "maxItems": 32, "items": {"type": "string", "minLength": 1, "maxLength": 256}}
+      }
+    }
+  }
+}
