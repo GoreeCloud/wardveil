@@ -11,7 +11,9 @@ ROOT = Path(__file__).resolve().parents[1]
 STATE_SCHEMA = ROOT / "contracts" / "wardveil.security-state.v2.schema.json"
 COVERAGE_SCHEMA = ROOT / "contracts" / "wardveil.protection-coverage.v1.schema.json"
 REFERENCE = ROOT / "reference" / "wardveil_security_state_v2.py"
+REGISTRY_REFERENCE = ROOT / "reference" / "wardveil_protection_coverage_registry.py"
 TEST = ROOT / "scripts" / "test_wardveil_security_state_v2.py"
+REGISTRY_TEST = ROOT / "scripts" / "test_wardveil_protection_coverage_registry.py"
 
 EXPECTED_STATES = {
     "protected",
@@ -23,6 +25,15 @@ EXPECTED_STATES = {
     "contained",
     "recovering",
     "reconciliation_required",
+}
+
+EXPECTED_COVERAGE = {
+    "covered",
+    "partial",
+    "not_covered",
+    "unknown",
+    "stale",
+    "degraded",
 }
 
 EXPECTED_CAPABILITIES = {
@@ -91,6 +102,8 @@ def main() -> None:
     )
     if set(state["properties"]["state"]["enum"]) != EXPECTED_STATES:
         fail("security state vocabulary is incomplete")
+    if set(state["properties"]["coverage"]["properties"]["status"]["enum"]) != EXPECTED_COVERAGE:
+        fail("security-state coverage vocabulary is incomplete")
 
     protected_rule = state["allOf"][0]["then"]["properties"]
     require_equal(protected_rule["coverage"]["properties"]["status"]["const"], "covered", "Protected coverage requirement")
@@ -98,13 +111,26 @@ def main() -> None:
     require_equal(protected_rule["authority"]["properties"]["authoritative"]["const"], True, "Protected authority requirement")
     require_equal(protected_rule["claim"]["properties"]["protected_by_wardveil"]["const"], True, "Protected claim requirement")
 
-    require_equal(coverage.get("$id"), "urn:goreecloud:wardveil:protection-coverage:0.1.0", "coverage schema id")
+    require_equal(coverage.get("$id"), "urn:goreecloud:wardveil:protection-coverage:0.2.0", "coverage schema id")
+    if set(coverage["properties"]["coverage_state"]["enum"]) != EXPECTED_COVERAGE:
+        fail("coverage state vocabulary is incomplete")
     if set(coverage["properties"]["capability"]["enum"]) != EXPECTED_CAPABILITIES:
         fail("coverage capability vocabulary is incomplete")
     if set(coverage["properties"]["adoption_state"]["enum"]) != EXPECTED_ADOPTION:
         fail("adoption lifecycle vocabulary is incomplete")
 
-    for path in (REFERENCE, TEST):
+    for property_name in (
+        "subject",
+        "enforcement",
+        "dependencies",
+        "known_gaps",
+        "remediation",
+        "stable_qualification_impact",
+    ):
+        if property_name not in coverage["properties"]:
+            fail(f"coverage contract missing registry field: {property_name}")
+
+    for path in (REFERENCE, REGISTRY_REFERENCE, TEST, REGISTRY_TEST):
         if not path.is_file():
             fail(f"missing required implementation file: {path.relative_to(ROOT)}")
 
@@ -115,11 +141,25 @@ def main() -> None:
         "production_accepted",
         "no_authoritative_protection_verification",
         "required_evidence_stale",
+        "coverage_evidence_stale",
+        "effective_coverage_state",
     ):
         if token not in reference_text:
             fail(f"reference implementation missing required invariant token: {token}")
 
-    print("Wardveil next-upgrade security-state contracts validated.")
+    registry_text = REGISTRY_REFERENCE.read_text(encoding="utf-8")
+    for token in (
+        "ProtectionCoverageRegistry",
+        "older coverage evidence cannot overwrite",
+        "conflicting coverage evidence",
+        "stable_qualification_impact",
+        "required_enforcement_points",
+        "implemented_enforcement_points",
+    ):
+        if token not in registry_text:
+            fail(f"coverage registry missing required invariant token: {token}")
+
+    print("Wardveil next-upgrade security-state and coverage contracts validated.")
 
 
 if __name__ == "__main__":
