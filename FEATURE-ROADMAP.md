@@ -17,7 +17,8 @@ This file is the repository-side feature roadmap control for Wardveil Security. 
 | FR-001 | Reconcile and maintain every current planned or recommended Wardveil Security feature from the authoritative project record and verified repository evidence in this roadmap. | High | Ongoing control |
 | FR-002 | Move actionable feature obligations into GoreeCloud Tasks Management when required, preserving priority, dependency, and lifecycle disposition. | High | Ongoing control |
 | FR-003 | Do not mark features implemented, complete, cancelled, or superseded without authoritative evidence and synchronized repository/Drive roadmap updates. | High | Ongoing control |
-| FR-004 | Develop the Wardveil next-upgrade security-state and protection-coverage foundation, including evidence freshness, fail-closed protection claims, Foundation 0.9 compatibility, and exact-head validation. | High | Source Validated — Development candidate (PR #145; runtime and production acceptance pending) |
+| FR-004 | Develop the Wardveil next-upgrade security-state foundation, including evidence freshness, fail-closed protection claims, Foundation 0.9 compatibility, and exact-head validation. | High | Source Validated — Development candidate (PR #145; runtime and production acceptance pending) |
+| FR-005 | Implement the machine-readable Protection Coverage Registry across application/service scope and capability, including Covered, Partial, Not Covered, Unknown, Stale, and Degraded states; enforcement-point coverage; evidence freshness; adoption lifecycle; conflict rejection; gap/remediation visibility; Stable impact; and exact-head validation. | High | Source Validated — Development candidate (PR #145; runtime integration, Security Center consumption, production acceptance, and Stable qualification pending) |
 
 ## Maintenance and synchronization
 
