@@ -2,10 +2,10 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:goreecloud:wardveil:incident:0.1.0",
   "title": "Wardveil Next-Upgrade Incident",
-  "description": "Evidence-driven Wardveil incident record. Resolution requires explicit evidence; uncertainty remains visible and may block stronger lifecycle states.",
+  "description": "Evidence-driven Wardveil incident record. Resolution requires explicit evidence; uncertainty remains individually attributable and may block stronger lifecycle states.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["contract_version", "record_type", "incident_id", "correlation_id", "severity", "state", "owner_role", "target", "initiating_evidence_refs", "source_record_refs", "quarantine_object_refs", "recovery_refs", "everkeep_evidence_refs", "wardveil_recovery_verification_refs", "reconciliation_open", "timeline", "transitions"],
+  "required": ["contract_version", "record_type", "incident_id", "correlation_id", "severity", "state", "owner_role", "target", "initiating_evidence_refs", "source_record_refs", "quarantine_object_refs", "recovery_refs", "everkeep_evidence_refs", "wardveil_recovery_verification_refs", "reconciliation_open", "open_reconciliation_refs", "timeline", "transitions"],
   "properties": {
     "contract_version": {"const": "0.1.0"},
     "record_type": {"const": "incident"},
@@ -31,6 +31,7 @@
     "everkeep_evidence_refs": {"type": "array", "maxItems": 64, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 256}},
     "wardveil_recovery_verification_refs": {"type": "array", "maxItems": 64, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 256}},
     "reconciliation_open": {"type": "boolean"},
+    "open_reconciliation_refs": {"type": "array", "maxItems": 64, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 256}},
     "timeline": {
       "type": "array",
       "maxItems": 512,
@@ -92,11 +93,44 @@
   "allOf": [
     {
       "if": {"properties": {"state": {"enum": ["resolved", "archived"]}}, "required": ["state"]},
-      "then": {"required": ["resolution"]}
+      "then": {
+        "required": ["resolution"],
+        "properties": {
+          "timeline": {
+            "contains": {"type": "object", "properties": {"event_type": {"const": "resolution"}}, "required": ["event_type"]},
+            "minContains": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {"properties": {"state": {"const": "contained"}}, "required": ["state"]},
+      "then": {
+        "properties": {
+          "timeline": {
+            "contains": {
+              "type": "object",
+              "properties": {
+                "event_type": {"enum": ["protection_action", "quarantine"]},
+                "execution_state": {"const": "verified"}
+              },
+              "required": ["event_type", "execution_state"]
+            },
+            "minContains": 1
+          }
+        }
+      }
     },
     {
       "if": {"properties": {"reconciliation_open": {"const": true}}, "required": ["reconciliation_open"]},
-      "then": {"not": {"properties": {"state": {"enum": ["contained", "verification_pending", "resolved", "archived"]}}, "required": ["state"]}}
+      "then": {
+        "properties": {"open_reconciliation_refs": {"minItems": 1}},
+        "not": {"properties": {"state": {"enum": ["contained", "verification_pending", "resolved", "archived"]}}, "required": ["state"]}
+      }
+    },
+    {
+      "if": {"properties": {"reconciliation_open": {"const": false}}, "required": ["reconciliation_open"]},
+      "then": {"properties": {"open_reconciliation_refs": {"maxItems": 0}}}
     }
   ]
 }

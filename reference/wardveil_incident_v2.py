@@ -55,6 +55,8 @@ EXECUTION_STATES = (
     "uncertain",
 )
 
+CONTAINMENT_EVENT_TYPES = {"protection_action", "quarantine"}
+
 ALLOWED_TRANSITIONS = {
     "open": {"investigating"},
     "investigating": {"containment_pending", "recovery_pending", "verification_pending"},
@@ -198,7 +200,7 @@ class Incident:
         self.recovery_refs: list[str] = []
         self.everkeep_evidence_refs: list[str] = []
         self.wardveil_recovery_verification_refs: list[str] = []
-        self.reconciliation_open = False
+        self.open_reconciliation_refs: list[str] = []
         self.resolution_evidence_refs: list[str] = []
         self.final_outcome: str | None = None
         self.timeline: list[IncidentTimelineEvent] = []
@@ -211,6 +213,10 @@ class Incident:
             evidence_refs=evidence,
             now=now,
         )
+
+    @property
+    def reconciliation_open(self) -> bool:
+        return bool(self.open_reconciliation_refs)
 
     def _append_transition(
         self,
@@ -238,6 +244,13 @@ class Incident:
         )
         self.state = to_state
 
+    def _has_verified_containment(self) -> bool:
+        return any(
+            event.event_type in CONTAINMENT_EVENT_TYPES
+            and event.execution_state == "verified"
+            for event in self.timeline
+        )
+
     def add_timeline_event(
         self,
         *,
@@ -263,8 +276,15 @@ class Incident:
         if not evidence:
             raise ValueError("incident_timeline_event_requires_evidence")
         sources = _refs(source_record_refs, field="source_record_refs")
-        if event_type in {"protection_action", "quarantine"} and execution_state == "not_applicable":
+        if event_type in CONTAINMENT_EVENT_TYPES and execution_state == "not_applicable":
             raise ValueError("security_action_event_requires_execution_state")
+        if execution_state == "uncertain" and not sources:
+            raise ValueError("uncertain_execution_requires_source_record")
+        if event_type == "reconciliation" and execution_state == "verified":
+            if not sources:
+                raise ValueError("verified_reconciliation_requires_source_record")
+            if not any(ref in self.open_reconciliation_refs for ref in sources):
+                raise ValueError("reconciliation_does_not_match_open_uncertainty")
 
         quarantine_ref = _optional_text(quarantine_object_ref, "quarantine_object_ref")
         recovery = _optional_text(recovery_ref, "recovery_ref")
@@ -289,9 +309,14 @@ class Incident:
         if recovery and recovery not in self.recovery_refs:
             self.recovery_refs.append(recovery)
         if execution_state == "uncertain":
-            self.reconciliation_open = True
+            for ref in sources:
+                if ref not in self.open_reconciliation_refs:
+                    self.open_reconciliation_refs.append(ref)
         if event_type == "reconciliation" and execution_state == "verified":
-            self.reconciliation_open = False
+            matched = set(sources)
+            self.open_reconciliation_refs = [
+                ref for ref in self.open_reconciliation_refs if ref not in matched
+            ]
         if event_type == "everkeep_recovery_evidence":
             for ref in evidence:
                 if ref not in self.everkeep_evidence_refs:
@@ -324,10 +349,13 @@ class Incident:
 
         if new_state in {"contained", "verification_pending", "resolved"} and self.reconciliation_open:
             raise ValueError("incident_reconciliation_must_complete_before_state_upgrade")
-
+        if new_state == "contained" and not self._has_verified_containment():
+            raise ValueError("contained_incident_requires_verified_containment")
         if new_state == "recovering" and not self.recovery_refs:
             raise ValueError("recovering_requires_recovery_reference")
 
+        resolution_refs: tuple[str, ...] = ()
+        final_outcome_text: str | None = None
         if new_state == "resolved":
             resolution_refs = _refs(
                 resolution_evidence_refs,
@@ -342,8 +370,7 @@ class Incident:
                     raise ValueError("recovery_linked_incident_requires_everkeep_evidence")
                 if not self.wardveil_recovery_verification_refs:
                     raise ValueError("recovery_linked_incident_requires_wardveil_verification")
-            self.resolution_evidence_refs = list(resolution_refs)
-            self.final_outcome = _text(final_outcome, "final_outcome", 256)
+            final_outcome_text = _text(final_outcome, "final_outcome", 256)
 
         self._append_transition(
             from_state=self.state,
@@ -353,6 +380,20 @@ class Incident:
             evidence_refs=evidence,
             now=now,
         )
+
+        if new_state == "resolved":
+            assert final_outcome_text is not None
+            self.resolution_evidence_refs = list(resolution_refs)
+            self.final_outcome = final_outcome_text
+            self.add_timeline_event(
+                event_type="resolution",
+                producer_id=actor_id,
+                authority_domain="security",
+                summary=f"Incident resolved: {final_outcome_text}",
+                evidence_refs=resolution_refs,
+                execution_state="not_applicable",
+                now=now,
+            )
 
     def as_record(self) -> dict:
         return {
@@ -377,6 +418,7 @@ class Incident:
                 self.wardveil_recovery_verification_refs
             ),
             "reconciliation_open": self.reconciliation_open,
+            "open_reconciliation_refs": list(self.open_reconciliation_refs),
             "timeline": [event.as_record() for event in self.timeline],
             "transitions": [transition.as_record() for transition in self.transitions],
             **(
