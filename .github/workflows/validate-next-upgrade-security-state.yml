@@ -7,21 +7,26 @@ on:
       - "reference/wardveil_protection_coverage_registry.py"
       - "reference/wardveil_quarantine_object_v2.py"
       - "reference/wardveil_incident_v2.py"
+      - "reference/wardveil_audit_ledger_v2.py"
       - "contracts/wardveil.security-state.v2.schema.json"
       - "contracts/wardveil.protection-coverage.v1.schema.json"
       - "contracts/wardveil.quarantine-object.v1.schema.json"
       - "contracts/wardveil.incident.v1.schema.json"
+      - "contracts/wardveil.audit-event.v1.schema.json"
       - "scripts/test_wardveil_security_state_v2.py"
       - "scripts/test_wardveil_protection_coverage_registry.py"
       - "scripts/test_wardveil_quarantine_object_v2.py"
       - "scripts/test_wardveil_incident_v2.py"
+      - "scripts/test_wardveil_audit_ledger_v2.py"
       - "scripts/validate_wardveil_security_state_v2.py"
       - "scripts/validate_wardveil_quarantine_object_v2.py"
       - "scripts/validate_wardveil_incident_v2.py"
+      - "scripts/validate_wardveil_audit_ledger_v2.py"
       - "SECURITY-STATE-V2.md"
       - "PROTECTION-COVERAGE-REGISTRY.md"
       - "QUARANTINE-OBJECT-V2.md"
       - "INCIDENT-PLANE-V2.md"
+      - "AUDIT-EVIDENCE-LEDGER-V2.md"
       - ".github/workflows/validate-next-upgrade-security-state.yml"
   push:
     branches:
@@ -31,21 +36,26 @@ on:
       - "reference/wardveil_protection_coverage_registry.py"
       - "reference/wardveil_quarantine_object_v2.py"
       - "reference/wardveil_incident_v2.py"
+      - "reference/wardveil_audit_ledger_v2.py"
       - "contracts/wardveil.security-state.v2.schema.json"
       - "contracts/wardveil.protection-coverage.v1.schema.json"
       - "contracts/wardveil.quarantine-object.v1.schema.json"
       - "contracts/wardveil.incident.v1.schema.json"
+      - "contracts/wardveil.audit-event.v1.schema.json"
       - "scripts/test_wardveil_security_state_v2.py"
       - "scripts/test_wardveil_protection_coverage_registry.py"
       - "scripts/test_wardveil_quarantine_object_v2.py"
       - "scripts/test_wardveil_incident_v2.py"
+      - "scripts/test_wardveil_audit_ledger_v2.py"
       - "scripts/validate_wardveil_security_state_v2.py"
       - "scripts/validate_wardveil_quarantine_object_v2.py"
       - "scripts/validate_wardveil_incident_v2.py"
+      - "scripts/validate_wardveil_audit_ledger_v2.py"
       - "SECURITY-STATE-V2.md"
       - "PROTECTION-COVERAGE-REGISTRY.md"
       - "QUARANTINE-OBJECT-V2.md"
       - "INCIDENT-PLANE-V2.md"
+      - "AUDIT-EVIDENCE-LEDGER-V2.md"
 
 permissions:
   contents: read
@@ -83,6 +93,9 @@ jobs:
       - name: Test Incident Plane
         run: python3 scripts/test_wardveil_incident_v2.py
 
+      - name: Test Audit and Evidence Ledger
+        run: python3 scripts/test_wardveil_audit_ledger_v2.py
+
       - name: Validate next-upgrade security-state and coverage contracts
         run: python3 scripts/validate_wardveil_security_state_v2.py
 
@@ -92,6 +105,9 @@ jobs:
       - name: Validate next-upgrade Incident Plane contract
         run: python3 scripts/validate_wardveil_incident_v2.py
 
+      - name: Validate next-upgrade Audit and Evidence Ledger contract
+        run: python3 scripts/validate_wardveil_audit_ledger_v2.py
+
       - name: Compile next-upgrade source
         run: >-
           python3 -m py_compile
@@ -99,10 +115,13 @@ jobs:
           reference/wardveil_protection_coverage_registry.py
           reference/wardveil_quarantine_object_v2.py
           reference/wardveil_incident_v2.py
+          reference/wardveil_audit_ledger_v2.py
           scripts/test_wardveil_security_state_v2.py
           scripts/test_wardveil_protection_coverage_registry.py
           scripts/test_wardveil_quarantine_object_v2.py
           scripts/test_wardveil_incident_v2.py
+          scripts/test_wardveil_audit_ledger_v2.py
           scripts/validate_wardveil_security_state_v2.py
           scripts/validate_wardveil_quarantine_object_v2.py
           scripts/validate_wardveil_incident_v2.py
+          scripts/validate_wardveil_audit_ledger_v2.py
