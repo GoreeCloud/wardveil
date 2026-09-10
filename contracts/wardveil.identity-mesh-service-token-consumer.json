@@ -1,0 +1,65 @@
+{
+  "contract_version": "0.1.0",
+  "contract_type": "goreecloud-identity-mesh-service-token-consumer",
+  "consumer": "wardveil-security",
+  "consumer_repository": "GoreeCloud/goreecloud-wardveil-security",
+  "identity_authority_repository": "GoreeCloud/goreecloud-identity",
+  "identity_authority_contract": "contracts/mesh-service-token.v1.json",
+  "identity_authority_profile": "goreecloud-identity.mesh-service-token.v1",
+  "identity_candidate_schema_version": "1.3.0",
+  "identity_candidate_pr": 8,
+  "identity_candidate_head": "4ce7d193ff251ce3e7c39b8a19712317dd013c5d",
+  "integration_scope": "wardveil-to-mesh-evidence-delivery",
+  "credential_use": {
+    "issuer": "goreecloud-identity",
+    "audience": "goreecloud-mesh",
+    "subject": "service:wardveil-security",
+    "service_id": "wardveil-security",
+    "required_scope": "mesh.evidence.write",
+    "authorization_header": "Bearer <short-lived GoreeCloud Identity service credential>",
+    "default_lifetime_seconds": 300,
+    "maximum_lifetime_seconds": 900,
+    "clock_skew_seconds": 60,
+    "refresh_model": "obtain a new short-lived credential; do not extend an existing token"
+  },
+  "signing_profile": {
+    "algorithm": "RS256",
+    "minimum_rsa_key_bits": 2048,
+    "rsa_public_exponent": "odd integer greater than or equal to 3",
+    "kid_required": true,
+    "kid_pattern": "^[A-Za-z0-9._-]{8,128}$",
+    "verification_keys": "JWKS",
+    "jwks_media_type": "application/json",
+    "token_selected_or_embedded_key_sources_allowed": false,
+    "rejected_key_source_headers": ["jku", "jwk", "x5u", "x5c"]
+  },
+  "wardveil_behavior": {
+    "wardveil_may_mint_identity_credentials": false,
+    "wardveil_may_export_identity_private_keys": false,
+    "wardveil_may_reinterpret_identity_credential_semantics": false,
+    "wardveil_may_use_mesh_credential_as_direct_protection_authorization": false,
+    "mesh_delivery_success_implies_protection_success": false,
+    "mesh_delivery_success_implies_security_state": false,
+    "credential_may_be_persisted_in_evidence": false,
+    "credential_may_be_logged": false,
+    "credential_may_be_returned_in_delivery_receipts": false
+  },
+  "trust_boundary": {
+    "identity_owns_service_identity_and_credential_issuance": true,
+    "mesh_owns_verification_for_mesh_audience": true,
+    "wardveil_owns_security_semantics": true,
+    "wardveil_direct_execution_authorization_is_separate": true,
+    "identity_credential_authenticates_the_workload_but_does_not_prove_security_execution": true
+  },
+  "source_status": {
+    "wardveil_consumer_contract_implemented": true,
+    "wardveil_delivery_client_consumes_bearer_credential": true,
+    "identity_candidate_contract_is_draft": true,
+    "identity_durable_private_key_storage_integrated": false,
+    "identity_jwks_endpoint_deployed": false,
+    "identity_live_service_issuance_deployed": false,
+    "end_to_end_runtime_acceptance": false,
+    "production_acceptance": false
+  },
+  "acceptance_boundary": "This contract records Wardveil source compatibility with the exact GoreeCloud Identity PR #8 Mesh service-token candidate profile for Wardveil-to-Mesh evidence delivery only. It does not promote the draft Identity contract, establish deployed Identity issuance or JWKS, authorize direct Wardveil protection actions, prove Mesh runtime acceptance, or establish Wardveil production acceptance."
+}
