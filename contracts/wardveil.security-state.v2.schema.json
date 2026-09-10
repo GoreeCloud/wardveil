@@ -38,7 +38,7 @@
       "additionalProperties": false,
       "required": ["status"],
       "properties": {
-        "status": {"type": "string", "enum": ["covered", "partial", "not_covered", "unknown"]}
+        "status": {"type": "string", "enum": ["covered", "partial", "not_covered", "unknown", "stale", "degraded"]}
       }
     },
     "evidence": {
