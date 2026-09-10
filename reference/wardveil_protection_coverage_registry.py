@@ -138,7 +138,9 @@ class CoverageRegistryRecord:
         evidence_status = self.evidence_status
         if self.observed_at > now:
             evidence_status = "unverified"
-        elif self.valid_until is None or self.valid_until <= now:
+        elif self.evidence_status == "current" and (
+            self.valid_until is None or self.valid_until <= now
+        ):
             evidence_status = "stale"
 
         return {
