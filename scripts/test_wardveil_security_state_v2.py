@@ -109,6 +109,35 @@ def main() -> None:
         "production-acceptance gap must be explainable",
     )
 
+    stale_coverage = CoverageObservation(
+        capability="malware_protection",
+        coverage_state="covered",
+        adoption_state="production_accepted",
+        evidence_status="current",
+        evidence_refs=("coverage-stale",),
+        observed_at=NOW - timedelta(minutes=20),
+        valid_until=NOW - timedelta(seconds=1),
+    )
+    assessment = evaluate_security_state(
+        evidence=(evidence(),),
+        coverage=(stale_coverage,),
+        required_capabilities=("malware_protection",),
+        now=NOW,
+    )
+    check(assessment.coverage_state == "stale", "expired coverage evidence must remain explicitly stale")
+    check(assessment.state == "unknown", "stale coverage cannot produce a Protected security state")
+    check("coverage_evidence_stale" in assessment.reason_codes, "stale coverage must have an explicit reason")
+
+    assessment = evaluate_security_state(
+        evidence=(evidence(),),
+        coverage=(coverage(state="degraded"),),
+        required_capabilities=("malware_protection",),
+        now=NOW,
+    )
+    check(assessment.coverage_state == "degraded", "degraded coverage must remain distinct")
+    check(assessment.state == "degraded", "degraded required coverage must degrade security state")
+    check("coverage_degraded" in assessment.reason_codes, "degraded coverage must be explainable")
+
     assessment = evaluate_security_state(
         evidence=(evidence(),),
         coverage=(coverage(),),
