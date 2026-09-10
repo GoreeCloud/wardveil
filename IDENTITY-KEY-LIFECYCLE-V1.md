@@ -10,9 +10,11 @@ This package establishes a fail-closed Wardveil acceptance boundary for service 
 
 Wardveil must never claim more protection than GoreeCloud can prove.
 
-## Current authoritative Identity source reference
+## Pinned Identity credential-profile source reference
 
-The currently reviewed GoreeCloud Identity development reference is draft PR #8 at exact revision `4ce7d193ff251ce3e7c39b8a19712317dd013c5d`.
+For the exact `goreecloud-identity.mesh-service-token.v1` credential-profile semantics consumed by this Wardveil package, the pinned source reference is GoreeCloud Identity draft PR #8 at exact revision `4ce7d193ff251ce3e7c39b8a19712317dd013c5d`.
+
+This pin is deliberately narrow. It identifies the reviewed source contract for this Mesh credential profile; it does not make PR #8 the global authority for all current GoreeCloud Identity development, supersede the canonical `Project Specification — Identity`, resolve other active Identity review branches, or establish Identity production acceptance.
 
 That revision publishes `goreecloud-identity.mesh-service-token.v1` schema version `1.3.0` with these source-level semantics:
 
@@ -31,7 +33,7 @@ That revision publishes `goreecloud-identity.mesh-service-token.v1` schema versi
 - new signing keys published to JWKS before credentials using them are issued;
 - fail-closed signature, protected-header, issuer, audience, expiry, not-before, service-identity, scope, key-ID, key-strength, and key-material verification.
 
-The exact Identity revision has successful dedicated GoreeCloud Mesh Service Token and GoreeCloud Identity Evidence Contract workflow results. Identity PR #8 remains draft and unmerged, and broader inherited-runtime CI has separate failures. Those facts do not invalidate the bounded source contract, but they do prevent any claim of completed Identity production acceptance.
+The pinned Identity revision has successful dedicated GoreeCloud Mesh Service Token and GoreeCloud Identity Evidence Contract workflow results for its bounded credential-profile scope. Identity PR #8 remains draft and unmerged. Other active Identity development lines may carry different broader project changes or contract versions, so Wardveil must not generalize this pin beyond the exact credential profile evaluated here. Those boundaries prevent any claim of completed Identity production acceptance.
 
 ## Audience separation
 
@@ -48,7 +50,7 @@ Any future direct Wardveil service-credential profile must be defined and approv
 For the current Mesh profile it requires, at minimum:
 
 - exact GoreeCloud Identity authority;
-- the reviewed exact Identity source revision;
+- the reviewed exact Identity credential-profile source revision;
 - source-validated credential profile evidence;
 - exact RS256 / issuer / audience profile matching;
 - bounded lifetime;
