@@ -1,15 +1,24 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:goreecloud:wardveil:protection-coverage:0.1.0",
+  "$id": "urn:goreecloud:wardveil:protection-coverage:0.2.0",
   "title": "Wardveil Protection Coverage Record",
   "description": "Per-capability Wardveil coverage and adoption evidence. Coverage is independent from security state and does not itself authorize a Protected by Wardveil claim.",
   "type": "object",
   "additionalProperties": false,
   "required": ["contract_version", "record_type", "record_id", "scope", "capability", "coverage_state", "adoption_state", "evidence"],
   "properties": {
-    "contract_version": {"const": "0.1.0"},
+    "contract_version": {"const": "0.2.0"},
     "record_type": {"const": "protection_coverage"},
     "record_id": {"type": "string", "minLength": 1, "maxLength": 160},
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id"],
+      "properties": {
+        "kind": {"type": "string", "enum": ["application", "service"]},
+        "id": {"type": "string", "minLength": 1, "maxLength": 128}
+      }
+    },
     "scope": {
       "type": "object",
       "additionalProperties": false,
@@ -23,8 +32,17 @@
       "type": "string",
       "enum": ["authentication_protection", "authorization_enforcement", "session_protection", "device_trust", "malware_protection", "malicious_url_protection", "vulnerability_monitoring", "security_update_posture", "secret_protection", "network_exposure_controls", "runtime_integrity", "security_event_reporting", "audit_coverage", "recovery_security_verification"]
     },
-    "coverage_state": {"type": "string", "enum": ["covered", "partial", "not_covered", "unknown"]},
+    "coverage_state": {"type": "string", "enum": ["covered", "partial", "not_covered", "unknown", "stale", "degraded"]},
     "adoption_state": {"type": "string", "enum": ["planned", "implemented", "source_validated", "runtime_validated", "production_accepted"]},
+    "enforcement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required", "implemented"],
+      "properties": {
+        "required": {"type": "array", "maxItems": 64, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 160}},
+        "implemented": {"type": "array", "maxItems": 64, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 160}}
+      }
+    },
     "evidence": {
       "type": "object",
       "additionalProperties": false,
@@ -35,6 +53,10 @@
         "valid_until": {"type": "string", "format": "date-time"},
         "references": {"type": "array", "maxItems": 32, "items": {"type": "string", "minLength": 1, "maxLength": 256}}
       }
-    }
+    },
+    "dependencies": {"type": "array", "maxItems": 32, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 160}},
+    "known_gaps": {"type": "array", "maxItems": 32, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 256}},
+    "remediation": {"type": "array", "maxItems": 32, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 256}},
+    "stable_qualification_impact": {"type": "string", "enum": ["none", "blocks_stable", "unknown"]}
   }
 }
