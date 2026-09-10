@@ -65,7 +65,7 @@ for needle in (
     "rendered visual review",
     "deployment verification",
     "rollback verification",
-    "presentation is not authority",
+    "Presentation is not authority",
     "source validation only",
 ):
     require(needle in doc, f"Security Center 2.0 documentation missing invariant: {needle}")
