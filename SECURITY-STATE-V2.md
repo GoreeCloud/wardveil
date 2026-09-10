@@ -4,7 +4,7 @@
 
 **Development / source-reference candidate.**
 
-This document describes the first implementation slice of the next Wardveil upgrade. It does not establish runtime validation, production acceptance, Stable qualification, or a broad `Protected by Wardveil` claim.
+This document describes the current source implementation of the next Wardveil upgrade security-state foundation and its Protection Coverage Registry. It does not establish runtime validation, production acceptance, Stable qualification, or a broad `Protected by Wardveil` claim.
 
 ## Purpose
 
@@ -46,17 +46,36 @@ These states are deliberately more expressive than the Foundation 0.9 presentati
 
 Coverage state is separate from implementation/adoption state.
 
-Coverage uses `covered`, `partial`, `not_covered`, and `unknown`.
+Coverage uses:
+
+- `covered`
+- `partial`
+- `not_covered`
+- `unknown`
+- `stale`
+- `degraded`
+
+`stale` preserves the distinction between previously established coverage whose evidence has expired and a capability that was never covered. `degraded` preserves the distinction between a present control path with impaired supporting controls and an absent integration.
 
 Adoption uses `planned`, `implemented`, `source_validated`, `runtime_validated`, and `production_accepted`.
 
 A capability is not treated as fully covered by the reference evaluator unless it has current evidence and reaches `production_accepted`.
 
+## Protection Coverage Registry
+
+`reference/wardveil_protection_coverage_registry.py` provides the first executable Work Package B registry reference.
+
+The registry binds coverage to the exact application or service, exact resource scope, and exact Wardveil capability. It tracks required and implemented enforcement points, dependencies, known gaps, remediation, evidence freshness, and Stable-qualification impact.
+
+Registry updates reject older evidence that would overwrite a newer observation and reject conflicting records at the same observation time. Missing enforcement points downgrade an otherwise covered capability to `partial`. Future-dated or unavailable evidence fails closed to `unknown`; expired evidence becomes `stale`.
+
+See `PROTECTION-COVERAGE-REGISTRY.md` for the registry contract and source-validation boundary.
+
 ## Evidence rules
 
 Evidence is evaluated fail closed. A current record must come from an authoritative producer, not be future-dated, include a bounded `valid_until`, remain inside that validity window, and preserve the exact scope represented by the assessment.
 
-Missing evidence becomes `unknown`. Non-authoritative evidence becomes `unknown`. Expired evidence becomes `unknown`. Current health or source availability alone does not prove protection unless the evidence explicitly verifies the represented protection.
+Missing evidence becomes `unknown`. Non-authoritative evidence becomes `unknown`. Expired evidence becomes `unknown` at the security-state layer while its protection coverage remains explicitly `stale`. Current health or source availability alone does not prove protection unless the evidence explicitly verifies the represented protection.
 
 ## Compatibility
 
@@ -76,8 +95,11 @@ This mapping prevents old consumers from treating a more precise next-upgrade st
 - `contracts/wardveil.security-state.v2.schema.json`
 - `contracts/wardveil.protection-coverage.v1.schema.json`
 - `reference/wardveil_security_state_v2.py`
+- `reference/wardveil_protection_coverage_registry.py`
 - `scripts/test_wardveil_security_state_v2.py`
+- `scripts/test_wardveil_protection_coverage_registry.py`
 - `scripts/validate_wardveil_security_state_v2.py`
+- `PROTECTION-COVERAGE-REGISTRY.md`
 
 ## Validation
 
@@ -85,8 +107,14 @@ Run:
 
 ```bash
 python3 scripts/test_wardveil_security_state_v2.py
+python3 scripts/test_wardveil_protection_coverage_registry.py
 python3 scripts/validate_wardveil_security_state_v2.py
-python3 -m py_compile reference/wardveil_security_state_v2.py scripts/test_wardveil_security_state_v2.py scripts/validate_wardveil_security_state_v2.py
+python3 -m py_compile \
+  reference/wardveil_security_state_v2.py \
+  reference/wardveil_protection_coverage_registry.py \
+  scripts/test_wardveil_security_state_v2.py \
+  scripts/test_wardveil_protection_coverage_registry.py \
+  scripts/validate_wardveil_security_state_v2.py
 ```
 
 These checks establish only source-level behavior for this development candidate.
