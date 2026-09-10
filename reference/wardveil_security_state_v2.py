@@ -25,7 +25,14 @@ SECURITY_STATES = (
     "reconciliation_required",
 )
 
-COVERAGE_STATES = ("covered", "partial", "not_covered", "unknown")
+COVERAGE_STATES = (
+    "covered",
+    "partial",
+    "not_covered",
+    "unknown",
+    "stale",
+    "degraded",
+)
 
 ADOPTION_STATES = (
     "planned",
@@ -151,6 +158,28 @@ class CoverageObservation:
             return False
         return self.observed_at <= now < self.valid_until
 
+    def effective_coverage_state(self, now: datetime) -> str:
+        """Return coverage without converting uncertainty into reassurance."""
+
+        _require_aware(now, "now")
+        if self.adoption_state == "planned" or self.coverage_state == "not_covered":
+            return "not_covered"
+        if self.evidence_status in ("unavailable", "unverified"):
+            return "unknown"
+        if self.evidence_status == "stale":
+            return "stale"
+        if self.observed_at is None or self.valid_until is None:
+            return "unknown"
+        if self.observed_at > now:
+            return "unknown"
+        if self.valid_until <= now:
+            return "stale"
+        if self.coverage_state in ("unknown", "stale", "degraded", "partial"):
+            return self.coverage_state
+        if self.adoption_state != "production_accepted":
+            return "partial"
+        return "covered"
+
 
 @dataclass(frozen=True)
 class SecuritySignals:
@@ -216,7 +245,7 @@ def _assessment_evidence_status(assessment: SecurityAssessment) -> str:
         return "unavailable"
     if "required_evidence_unverified" in reasons:
         return "unverified"
-    if "required_evidence_stale" in reasons:
+    if "required_evidence_stale" in reasons or "coverage_evidence_stale" in reasons:
         return "stale"
     return "current"
 
@@ -237,29 +266,46 @@ def summarize_coverage(
     by_capability = {item.capability: item for item in coverage}
     missing: list[str] = []
     uncertain: list[str] = []
+    partial: list[str] = []
+    stale: list[str] = []
+    degraded: list[str] = []
     covered: list[str] = []
 
     for capability in required:
         item = by_capability.get(capability)
-        if item is None or item.coverage_state == "not_covered" or item.adoption_state == "planned":
+        if item is None:
             missing.append(capability)
             continue
-        if (
-            item.coverage_state != "covered"
-            or item.adoption_state != "production_accepted"
-            or not item.current(now)
-        ):
+
+        effective = item.effective_coverage_state(now)
+        if effective == "not_covered":
+            missing.append(capability)
+        elif effective == "unknown":
             uncertain.append(capability)
-            continue
-        covered.append(capability)
+        elif effective == "partial":
+            partial.append(capability)
+        elif effective == "stale":
+            stale.append(capability)
+        elif effective == "degraded":
+            degraded.append(capability)
+        else:
+            covered.append(capability)
 
     if not required:
         return "unknown", (), ()
     if len(missing) == len(required):
         return "not_covered", tuple(missing), ()
-    if missing or uncertain:
-        return "partial", tuple(missing), tuple(uncertain)
-    return "covered", (), ()
+    if missing or partial:
+        return "partial", tuple(missing), tuple(partial + uncertain + stale + degraded)
+    if uncertain:
+        return "unknown", (), tuple(uncertain)
+    if stale:
+        return "stale", (), tuple(stale)
+    if degraded:
+        return "degraded", (), tuple(degraded)
+    if len(covered) == len(required):
+        return "covered", (), ()
+    return "unknown", (), tuple(required)
 
 
 def evaluate_security_state(
@@ -328,6 +374,27 @@ def evaluate_security_state(
             False,
         )
 
+    if coverage_state == "unknown":
+        return SecurityAssessment(
+            "unknown",
+            coverage_state,
+            ("coverage_unknown",),
+            evidence_refs,
+            now,
+            min(valid_until_values) if valid_until_values else None,
+            False,
+        )
+    if coverage_state == "stale":
+        return SecurityAssessment(
+            "unknown",
+            coverage_state,
+            ("coverage_evidence_stale",),
+            evidence_refs,
+            now,
+            min(valid_until_values) if valid_until_values else None,
+            False,
+        )
+
     if signals.reconciliation_required:
         return SecurityAssessment(
             "reconciliation_required",
@@ -378,14 +445,16 @@ def evaluate_security_state(
             min(valid_until_values) if valid_until_values else None,
             False,
         )
-    if signals.degraded or coverage_state == "partial":
+    if signals.degraded or coverage_state in ("partial", "degraded"):
         details = ["security_control_degraded"] if signals.degraded else []
+        if coverage_state == "degraded":
+            details.append("coverage_degraded")
         details.extend(f"capability_not_covered:{cap}" for cap in missing_caps)
         details.extend(f"capability_not_production_accepted:{cap}" for cap in uncertain_caps)
         return SecurityAssessment(
             "degraded",
             coverage_state,
-            tuple(details or ("coverage_partial",)),
+            tuple(dict.fromkeys(details or ("coverage_partial",))),
             evidence_refs,
             now,
             min(valid_until_values) if valid_until_values else None,
