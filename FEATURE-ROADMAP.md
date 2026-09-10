@@ -1,7 +1,7 @@
 # Wardveil Security — Feature Roadmap
 
 **Status:** Active roadmap control  
-**As of:** 2026-09-09  
+**As of:** 2026-09-10  
 **Authoritative project record:** Project Specification — Wardveil Security  
 **Canonical repository:** GoreeCloud/goreecloud-wardveil-security
 **Drive control:** `GoreeCloud/Feature Roadmap/Wardveil Security/FEATURE-ROADMAP.docx`
@@ -20,6 +20,7 @@ This file is the repository-side feature roadmap control for Wardveil Security. 
 | FR-004 | Develop the Wardveil next-upgrade security-state foundation, including evidence freshness, fail-closed protection claims, Foundation 0.9 compatibility, and exact-head validation. | High | Source Validated — Development candidate (PR #145; runtime and production acceptance pending) |
 | FR-005 | Implement the machine-readable Protection Coverage Registry across application/service scope and capability, including Covered, Partial, Not Covered, Unknown, Stale, and Degraded states; enforcement-point coverage; evidence freshness; adoption lifecycle; conflict rejection; gap/remediation visibility; Stable impact; and exact-head validation. | High | Source Validated — Development candidate (PR #145; runtime integration, Security Center consumption, production acceptance, and Stable qualification pending) |
 | FR-006 | Implement the durable next-upgrade Quarantine object and execution-reconciliation model, including non-destructive lifecycle states, separate authorization for quarantine/release/restore/remove/rescan/escalate/recover, destructive Delete separation, authoritative target-state verification, durable transition history, uncertain-outcome reconciliation, and no blind reuse of the original authorization. | High | Source Validated — Development candidate (PR #145; live target execution/readback, runtime validation, production acceptance, Security Center consumption, and Stable qualification pending) |
+| FR-007 | Implement the next-upgrade Incident Plane with evidence-driven lifecycle transitions; normalized finding, detection, trust, policy, authorization, protection, quarantine, reconciliation, recovery, and resolution events; individually attributable unresolved execution state; verified containment requirements; Everkeep/Wardveil recovery boundaries; explicit resolution evidence; and an explainable Security Center-ready timeline. | High | Source Validated — Development candidate (PR #145; durable production storage, live event ingestion, runtime validation, Security Center live consumption, production recovery integration, production acceptance, and Stable qualification pending) |
 
 ## Maintenance and synchronization
 
