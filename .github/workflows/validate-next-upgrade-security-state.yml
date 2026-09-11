@@ -10,6 +10,8 @@ on:
       - "reference/wardveil_audit_ledger_v2.py"
       - "reference/wardveil_security_center_v2.py"
       - "reference/wardveil_identity_key_lifecycle_v1.py"
+      - "reference/wardveil_platform_adoption_governance_v1.py"
+      - "reference/wardveil_policy_decision_v2.py"
       - "contracts/wardveil.security-state.v2.schema.json"
       - "contracts/wardveil.protection-coverage.v1.schema.json"
       - "contracts/wardveil.quarantine-object.v1.schema.json"
@@ -17,6 +19,7 @@ on:
       - "contracts/wardveil.audit-event.v1.schema.json"
       - "contracts/wardveil.security-center.v2.schema.json"
       - "contracts/wardveil.identity-key-lifecycle.v1.schema.json"
+      - "contracts/wardveil.policy-decision.v2.schema.json"
       - "scripts/test_wardveil_security_state_v2.py"
       - "scripts/test_wardveil_protection_coverage_registry.py"
       - "scripts/test_wardveil_quarantine_object_v2.py"
@@ -24,12 +27,15 @@ on:
       - "scripts/test_wardveil_audit_ledger_v2.py"
       - "scripts/test_wardveil_security_center_v2.py"
       - "scripts/test_wardveil_identity_key_lifecycle_v1.py"
+      - "scripts/test_wardveil_platform_adoption_governance_v1.py"
+      - "scripts/test_wardveil_policy_decision_v2.py"
       - "scripts/validate_wardveil_security_state_v2.py"
       - "scripts/validate_wardveil_quarantine_object_v2.py"
       - "scripts/validate_wardveil_incident_v2.py"
       - "scripts/validate_wardveil_audit_ledger_v2.py"
       - "scripts/validate_wardveil_security_center_v2.py"
       - "scripts/validate_wardveil_identity_key_lifecycle_v1.py"
+      - "scripts/validate_wardveil_policy_decision_v2.py"
       - "SECURITY-STATE-V2.md"
       - "PROTECTION-COVERAGE-REGISTRY.md"
       - "QUARANTINE-OBJECT-V2.md"
@@ -37,6 +43,8 @@ on:
       - "AUDIT-EVIDENCE-LEDGER-V2.md"
       - "SECURITY-CENTER-V2.md"
       - "IDENTITY-KEY-LIFECYCLE-V1.md"
+      - "PLATFORM-ADOPTION-AND-REPOSITORY-GOVERNANCE-V1.md"
+      - "POLICY-DECISION-AND-ENFORCEMENT-V2.md"
       - "FEATURE-ROADMAP.md"
       - ".github/workflows/validate-next-upgrade-security-state.yml"
   push:
@@ -50,6 +58,8 @@ on:
       - "reference/wardveil_audit_ledger_v2.py"
       - "reference/wardveil_security_center_v2.py"
       - "reference/wardveil_identity_key_lifecycle_v1.py"
+      - "reference/wardveil_platform_adoption_governance_v1.py"
+      - "reference/wardveil_policy_decision_v2.py"
       - "contracts/wardveil.security-state.v2.schema.json"
       - "contracts/wardveil.protection-coverage.v1.schema.json"
       - "contracts/wardveil.quarantine-object.v1.schema.json"
@@ -57,6 +67,7 @@ on:
       - "contracts/wardveil.audit-event.v1.schema.json"
       - "contracts/wardveil.security-center.v2.schema.json"
       - "contracts/wardveil.identity-key-lifecycle.v1.schema.json"
+      - "contracts/wardveil.policy-decision.v2.schema.json"
       - "scripts/test_wardveil_security_state_v2.py"
       - "scripts/test_wardveil_protection_coverage_registry.py"
       - "scripts/test_wardveil_quarantine_object_v2.py"
@@ -64,12 +75,15 @@ on:
       - "scripts/test_wardveil_audit_ledger_v2.py"
       - "scripts/test_wardveil_security_center_v2.py"
       - "scripts/test_wardveil_identity_key_lifecycle_v1.py"
+      - "scripts/test_wardveil_platform_adoption_governance_v1.py"
+      - "scripts/test_wardveil_policy_decision_v2.py"
       - "scripts/validate_wardveil_security_state_v2.py"
       - "scripts/validate_wardveil_quarantine_object_v2.py"
       - "scripts/validate_wardveil_incident_v2.py"
       - "scripts/validate_wardveil_audit_ledger_v2.py"
       - "scripts/validate_wardveil_security_center_v2.py"
       - "scripts/validate_wardveil_identity_key_lifecycle_v1.py"
+      - "scripts/validate_wardveil_policy_decision_v2.py"
       - "SECURITY-STATE-V2.md"
       - "PROTECTION-COVERAGE-REGISTRY.md"
       - "QUARANTINE-OBJECT-V2.md"
@@ -77,6 +91,8 @@ on:
       - "AUDIT-EVIDENCE-LEDGER-V2.md"
       - "SECURITY-CENTER-V2.md"
       - "IDENTITY-KEY-LIFECYCLE-V1.md"
+      - "PLATFORM-ADOPTION-AND-REPOSITORY-GOVERNANCE-V1.md"
+      - "POLICY-DECISION-AND-ENFORCEMENT-V2.md"
       - "FEATURE-ROADMAP.md"
 
 permissions:
@@ -124,6 +140,12 @@ jobs:
       - name: Test Identity and key lifecycle acceptance model
         run: python3 scripts/test_wardveil_identity_key_lifecycle_v1.py
 
+      - name: Test platform adoption and repository governance
+        run: python3 scripts/test_wardveil_platform_adoption_governance_v1.py
+
+      - name: Test Policy Decision and Enforcement Contract
+        run: python3 scripts/test_wardveil_policy_decision_v2.py
+
       - name: Validate next-upgrade security-state and coverage contracts
         run: python3 scripts/validate_wardveil_security_state_v2.py
 
@@ -142,6 +164,9 @@ jobs:
       - name: Validate Identity and key lifecycle contract
         run: python3 scripts/validate_wardveil_identity_key_lifecycle_v1.py
 
+      - name: Validate Policy Decision and Enforcement Contract
+        run: python3 scripts/validate_wardveil_policy_decision_v2.py
+
       - name: Compile next-upgrade source
         run: >-
           python3 -m py_compile
@@ -152,6 +177,8 @@ jobs:
           reference/wardveil_audit_ledger_v2.py
           reference/wardveil_security_center_v2.py
           reference/wardveil_identity_key_lifecycle_v1.py
+          reference/wardveil_platform_adoption_governance_v1.py
+          reference/wardveil_policy_decision_v2.py
           scripts/test_wardveil_security_state_v2.py
           scripts/test_wardveil_protection_coverage_registry.py
           scripts/test_wardveil_quarantine_object_v2.py
@@ -159,9 +186,12 @@ jobs:
           scripts/test_wardveil_audit_ledger_v2.py
           scripts/test_wardveil_security_center_v2.py
           scripts/test_wardveil_identity_key_lifecycle_v1.py
+          scripts/test_wardveil_platform_adoption_governance_v1.py
+          scripts/test_wardveil_policy_decision_v2.py
           scripts/validate_wardveil_security_state_v2.py
           scripts/validate_wardveil_quarantine_object_v2.py
           scripts/validate_wardveil_incident_v2.py
           scripts/validate_wardveil_audit_ledger_v2.py
           scripts/validate_wardveil_security_center_v2.py
           scripts/validate_wardveil_identity_key_lifecycle_v1.py
+          scripts/validate_wardveil_policy_decision_v2.py
