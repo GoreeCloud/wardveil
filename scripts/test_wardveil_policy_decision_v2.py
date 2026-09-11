@@ -107,6 +107,42 @@ def test_revoked_decision_fails_closed() -> None:
     assert "decision_revoked" in result["reason_codes"]
 
 
+def test_revocation_before_decision_fails_closed() -> None:
+    candidate = record()
+    candidate["revocation"] = {
+        "state": "revoked",
+        "reason_code": "policy_superseded",
+        "revoked_at": "2026-09-11T17:58:59Z",
+    }
+    result = evaluate_policy_decision(candidate, evaluated_at=NOW)
+    assert result["decision_usable"] is False
+    assert "revocation_before_decision" in result["reason_codes"]
+
+
+def test_future_revocation_timestamp_fails_closed() -> None:
+    candidate = record()
+    candidate["revocation"] = {
+        "state": "revoked",
+        "reason_code": "policy_superseded",
+        "revoked_at": "2026-09-11T18:00:01Z",
+    }
+    result = evaluate_policy_decision(candidate, evaluated_at=NOW)
+    assert result["decision_usable"] is False
+    assert "revocation_from_future" in result["reason_codes"]
+
+
+def test_active_revocation_metadata_is_rejected() -> None:
+    candidate = record()
+    candidate["revocation"] = {
+        "state": "active",
+        "reason_code": "stale_metadata",
+        "revoked_at": None,
+    }
+    result = evaluate_policy_decision(candidate, evaluated_at=NOW)
+    assert result["decision_usable"] is False
+    assert "active_revocation_metadata_present" in result["reason_codes"]
+
+
 def test_expired_decision_fails_closed() -> None:
     candidate = record()
     candidate["valid_until"] = "2026-09-11T17:59:59Z"
