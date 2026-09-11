@@ -158,12 +158,21 @@ def evaluate_policy_decision(record: dict[str, Any], *, evaluated_at: str) -> di
     revocation_state = revocation.get("state")
     if revocation_state not in REVOCATION_STATES:
         reasons.append("revocation_state_invalid")
+    if revocation_state == "active":
+        if revocation.get("reason_code") is not None or revocation.get("revoked_at") is not None:
+            reasons.append("active_revocation_metadata_present")
     if revocation_state == "revoked":
         reasons.append("decision_revoked")
         if not _nonempty(revocation.get("reason_code")):
             reasons.append("revocation_reason_missing")
-        if not _nonempty(revocation.get("revoked_at")):
-            reasons.append("revocation_time_missing")
+        try:
+            revoked_at = _parse_time(revocation.get("revoked_at"))
+            if observed_at is not None and revoked_at < observed_at:
+                reasons.append("revocation_before_decision")
+            if revoked_at > now:
+                reasons.append("revocation_from_future")
+        except (ValueError, TypeError):
+            reasons.append("revocation_time_invalid")
 
     boundary = record.get("execution_boundary")
     if not isinstance(boundary, dict):
