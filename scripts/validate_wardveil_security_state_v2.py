@@ -139,6 +139,8 @@ def main() -> None:
         "LEGACY_PRESENTATION_MAP",
         "COVERAGE_PRECEDENCE",
         "_conservative_coverage_state",
+        "_conflicting_evidence_ids",
+        "required_evidence_identity_conflict",
         "reconciliation_required",
         "production_accepted",
         "no_authoritative_protection_verification",
@@ -159,6 +161,9 @@ def main() -> None:
         "security assessment must reject record serialization under a different scope",
         "conflicting duplicate coverage must never become Protected regardless of input order",
         "duplicate coverage conflict resolution must be deterministic and conservative",
+        "exact duplicate evidence replay must remain idempotent",
+        "conflicting duplicate evidence IDs must fail closed regardless of input order",
+        "evidence ID conflict resolution must be deterministic and explainable",
     ):
         if token not in test_text:
             fail(f"security-state tests missing exact-scope or conflict regression: {token}")
