@@ -6,6 +6,7 @@ execution authorization and does not prove that any external side effect ran.
 """
 from __future__ import annotations
 
+import unicodedata
 from datetime import datetime, timezone
 from typing import Any
 from uuid import UUID
@@ -64,9 +65,18 @@ EXECUTION_BOUNDARY_FIELDS = {
 }
 
 
+def _canonical_text(value: Any) -> bool:
+    return (
+        isinstance(value, str)
+        and bool(value)
+        and value == value.strip()
+        and not any(unicodedata.category(char).startswith("C") for char in value)
+    )
+
+
 def _parse_time(value: str) -> datetime:
-    if not isinstance(value, str) or not value:
-        raise ValueError("timestamp must be a non-empty string")
+    if not _canonical_text(value):
+        raise ValueError("timestamp must be a canonical non-empty string")
     parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
     if parsed.tzinfo is None:
         raise ValueError("timestamp must include timezone")
@@ -74,7 +84,7 @@ def _parse_time(value: str) -> datetime:
 
 
 def _nonempty(value: Any) -> bool:
-    return isinstance(value, str) and bool(value.strip()) and value == value.strip()
+    return _canonical_text(value)
 
 
 def _unique_nonempty_strings(value: Any) -> bool:
