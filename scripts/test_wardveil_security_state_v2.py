@@ -107,22 +107,22 @@ def main() -> None:
         duplicate,
         replace(duplicate, authoritative=False),
     )
-    conflict_first = assess(evidence_items=conflicting_evidence)
-    conflict_reversed = assess(evidence_items=tuple(reversed(conflicting_evidence)))
+    identity_conflict_first = assess(evidence_items=conflicting_evidence)
+    identity_conflict_reversed = assess(evidence_items=tuple(reversed(conflicting_evidence)))
     check(
-        conflict_first.state == "unknown" and conflict_reversed.state == "unknown",
+        identity_conflict_first.state == "unknown" and identity_conflict_reversed.state == "unknown",
         "conflicting duplicate evidence IDs must fail closed regardless of input order",
     )
     check(
-        conflict_first.protected_by_wardveil is False and conflict_reversed.protected_by_wardveil is False,
+        identity_conflict_first.protected_by_wardveil is False and identity_conflict_reversed.protected_by_wardveil is False,
         "conflicting duplicate evidence IDs cannot authorize a protection claim",
     )
     check(
-        conflict_first.reason_codes == conflict_reversed.reason_codes == ("required_evidence_identity_conflict",),
+        identity_conflict_first.reason_codes == identity_conflict_reversed.reason_codes == ("required_evidence_identity_conflict",),
         "evidence ID conflict resolution must be deterministic and explainable",
     )
     check(
-        conflict_first.evidence_refs == conflict_reversed.evidence_refs == (duplicate.evidence_id,),
+        identity_conflict_first.evidence_refs == identity_conflict_reversed.evidence_refs == (duplicate.evidence_id,),
         "evidence ID conflict must retain one bounded reference without hiding the conflict reason",
     )
 
@@ -137,18 +137,18 @@ def main() -> None:
         coverage(state="not_covered", adoption="implemented"),
         coverage(),
     )
-    conflict_first = assess(evidence_items=(evidence(),), coverage_items=conflicting)
-    conflict_reversed = assess(evidence_items=(evidence(),), coverage_items=tuple(reversed(conflicting)))
+    coverage_conflict_first = assess(evidence_items=(evidence(),), coverage_items=conflicting)
+    coverage_conflict_reversed = assess(evidence_items=(evidence(),), coverage_items=tuple(reversed(conflicting)))
     check(
-        conflict_first.state == "not_covered" and conflict_reversed.state == "not_covered",
+        coverage_conflict_first.state == "not_covered" and coverage_conflict_reversed.state == "not_covered",
         "conflicting duplicate coverage must never become Protected regardless of input order",
     )
     check(
-        conflict_first.protected_by_wardveil is False and conflict_reversed.protected_by_wardveil is False,
+        coverage_conflict_first.protected_by_wardveil is False and coverage_conflict_reversed.protected_by_wardveil is False,
         "conflicting duplicate coverage cannot authorize a protection claim",
     )
     check(
-        conflict_first.coverage_state == conflict_reversed.coverage_state == "not_covered",
+        coverage_conflict_first.coverage_state == coverage_conflict_reversed.coverage_state == "not_covered",
         "duplicate coverage conflict resolution must be deterministic and conservative",
     )
 
@@ -214,8 +214,9 @@ def main() -> None:
         "record must carry an explicit compatibility presentation state",
     )
 
-    conflict_record = conflict_first.as_record()
+    conflict_record = identity_conflict_first.as_record()
     check(conflict_record["claim"]["protected_by_wardveil"] is False, "conflicting evidence record cannot claim protection")
+    check(conflict_record["evidence"]["status"] == "unverified", "conflicting evidence record must serialize as unverified")
 
     try:
         protected.as_record(scope_kind=SCOPE_KIND, scope_id="goreecloud-other")
