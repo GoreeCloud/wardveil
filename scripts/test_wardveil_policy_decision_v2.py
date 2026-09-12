@@ -58,6 +58,41 @@ def test_allow_is_usable_but_never_execution_authority() -> None:
     assert result["execution_success_proven"] is False
 
 
+def test_hidden_top_level_extension_fails_closed() -> None:
+    candidate = record()
+    candidate["force_allow"] = True
+    result = evaluate_policy_decision(candidate, evaluated_at=NOW)
+    assert result["decision_usable"] is False
+    assert result["enforcement_allowed"] is False
+    assert "record_shape_invalid" in result["reason_codes"]
+
+
+def test_hidden_nested_extensions_fail_closed() -> None:
+    mutations = [
+        ("policy", "override", True, "policy_shape_invalid"),
+        ("actor", "administrator", True, "actor_shape_invalid"),
+        ("request", "skip_authorization", True, "request_shape_invalid"),
+        ("trust", "force_trusted", True, "trust_shape_invalid"),
+        ("revocation", "ignore_revocation", True, "revocation_shape_invalid"),
+        ("execution_boundary", "execution_authorized", True, "execution_boundary_shape_invalid"),
+    ]
+    for section, field, value, expected_reason in mutations:
+        candidate = record()
+        candidate[section][field] = value
+        result = evaluate_policy_decision(candidate, evaluated_at=NOW)
+        assert result["decision_usable"] is False
+        assert result["enforcement_allowed"] is False
+        assert expected_reason in result["reason_codes"]
+
+
+def test_surrounding_whitespace_in_authority_fields_fails_closed() -> None:
+    candidate = record()
+    candidate["request"]["target"] = " drive:file:example"
+    result = evaluate_policy_decision(candidate, evaluated_at=NOW)
+    assert result["decision_usable"] is False
+    assert "request_target_missing" in result["reason_codes"]
+
+
 def test_conditional_allow_requires_obligations() -> None:
     candidate = record()
     candidate["decision"] = "allow_with_obligations"
