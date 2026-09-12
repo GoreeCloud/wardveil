@@ -117,7 +117,7 @@ def _closed_optional_shape(value: Any, allowed: set[str]) -> bool:
     return isinstance(value, dict) and bool(value) and set(value) <= allowed
 
 
-def evaluate_policy_decision(record: dict[str, Any], *, evaluated_at: str) -> dict[str, Any]:
+def evaluate_policy_decision(record: Any, *, evaluated_at: str) -> dict[str, Any]:
     """Evaluate one durable Policy decision conservatively and fail closed."""
     reasons: list[str] = []
     try:
@@ -128,6 +128,8 @@ def evaluate_policy_decision(record: dict[str, Any], *, evaluated_at: str) -> di
 
     if not _closed_shape(record, TOP_LEVEL_FIELDS):
         reasons.append("record_shape_invalid")
+        if not isinstance(record, dict):
+            record = {}
 
     if record.get("contract_version") != CONTRACT_VERSION:
         reasons.append("contract_version_mismatch")
