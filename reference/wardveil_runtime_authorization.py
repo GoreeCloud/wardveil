@@ -23,6 +23,8 @@ AUTHORIZATION_VERSION = "0.1.0"
 SIGNATURE_ALGORITHM = "HMAC-SHA256-reference-only"
 DEFAULT_REFERENCE_SIGNING_KEY_ID = "reference-static"
 MAX_AUTHORIZATION_TTL = timedelta(minutes=5)
+MAX_SIGNING_KEY_ID_LENGTH = 128
+MAX_AUTHORIZATION_IDENTITY_LENGTH = 256
 POLICY_ACTIONS = {
     "allow", "allow_and_log", "warn", "step_up", "restrict",
     "quarantine", "revoke", "block", "isolate", "escalate",
@@ -32,6 +34,16 @@ HIGH_IMPACT_ACTIONS = {"restrict", "quarantine", "revoke", "block", "isolate", "
 
 def _canonical(value: object) -> bytes:
     return json.dumps(value, sort_keys=True, separators=(",", ":")).encode("utf-8")
+
+
+def _canonical_identifier(value: object, maximum: int) -> bool:
+    return (
+        isinstance(value, str)
+        and bool(value)
+        and value == value.strip()
+        and len(value) <= maximum
+        and not any(ord(char) < 32 or 127 <= ord(char) <= 159 for char in value)
+    )
 
 
 def _parse_time(value: object) -> datetime | None:
@@ -166,13 +178,13 @@ def create_execution_authorization(
         raise ValueError(error)
     if not signing_key:
         raise ValueError("signing_key_required")
-    if not isinstance(signing_key_id, str) or not signing_key_id.strip() or len(signing_key_id.strip()) > 128:
+    if not _canonical_identifier(signing_key_id, MAX_SIGNING_KEY_ID_LENGTH):
         raise ValueError("signing_key_id_required")
-    if not isinstance(executor_id, str) or not executor_id.strip():
+    if not _canonical_identifier(executor_id, MAX_AUTHORIZATION_IDENTITY_LENGTH):
         raise ValueError("executor_id_required")
-    if not isinstance(idempotency_key, str) or not idempotency_key.strip():
+    if not _canonical_identifier(idempotency_key, MAX_AUTHORIZATION_IDENTITY_LENGTH):
         raise ValueError("idempotency_key_required")
-    if not isinstance(nonce, str) or not nonce.strip():
+    if not _canonical_identifier(nonce, MAX_AUTHORIZATION_IDENTITY_LENGTH):
         raise ValueError("nonce_required")
     if ttl <= timedelta(0) or ttl > MAX_AUTHORIZATION_TTL:
         raise ValueError("invalid_authorization_ttl")
@@ -192,15 +204,15 @@ def create_execution_authorization(
         "issuer_id": policy_record["producer"]["id"],
         "policy_record_id": policy_record["record_id"],
         "correlation_id": policy_record["correlation_id"],
-        "executor_id": executor_id.strip(),
+        "executor_id": executor_id,
         "action": policy_record["policy_decision"],
         "scope": scope,
-        "idempotency_key": idempotency_key.strip(),
-        "nonce": nonce.strip(),
+        "idempotency_key": idempotency_key,
+        "nonce": nonce,
         "issued_at": observed.isoformat(),
         "expires_at": expires.isoformat(),
         "policy_digest_sha256": policy_digest,
-        "signing_key_id": signing_key_id.strip(),
+        "signing_key_id": signing_key_id,
     }
     signature = hmac.new(signing_key, _canonical(material), sha256).hexdigest()
     return ExecutionAuthorization(
@@ -237,11 +249,18 @@ def verify_execution_authorization(
         return AuthorizationVerification(False, "signing_key_required")
     if authorization.signature_algorithm != SIGNATURE_ALGORITHM:
         return AuthorizationVerification(False, "unsupported_signature_algorithm")
-    if not authorization.signing_key_id:
+    if not _canonical_identifier(authorization.signing_key_id, MAX_SIGNING_KEY_ID_LENGTH):
         return AuthorizationVerification(False, "signing_key_id_required")
-    if not expected_executor_id or authorization.executor_id != expected_executor_id:
+    if (
+        not _canonical_identifier(expected_executor_id, MAX_AUTHORIZATION_IDENTITY_LENGTH)
+        or not _canonical_identifier(authorization.executor_id, MAX_AUTHORIZATION_IDENTITY_LENGTH)
+        or authorization.executor_id != expected_executor_id
+    ):
         return AuthorizationVerification(False, "executor_binding_mismatch")
-    if not authorization.idempotency_key or not authorization.nonce:
+    if (
+        not _canonical_identifier(authorization.idempotency_key, MAX_AUTHORIZATION_IDENTITY_LENGTH)
+        or not _canonical_identifier(authorization.nonce, MAX_AUTHORIZATION_IDENTITY_LENGTH)
+    ):
         return AuthorizationVerification(False, "missing_replay_identity")
 
     policy_error = _policy_error(policy_record, observed)
