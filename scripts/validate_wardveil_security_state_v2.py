@@ -118,6 +118,30 @@ def main() -> None:
         fail("coverage capability vocabulary is incomplete")
     if set(coverage["properties"]["adoption_state"]["enum"]) != EXPECTED_ADOPTION:
         fail("adoption lifecycle vocabulary is incomplete")
+    references = coverage["properties"]["evidence"]["properties"]["references"]
+    require_equal(references.get("maxItems"), 32, "coverage evidence-reference maximum")
+    require_equal(references.get("uniqueItems"), True, "coverage evidence-reference uniqueness")
+    production_rule = coverage.get("allOf", [])[0]
+    require_equal(
+        production_rule["if"]["properties"]["coverage_state"]["const"],
+        "covered",
+        "production coverage evidence rule state",
+    )
+    require_equal(
+        production_rule["if"]["properties"]["adoption_state"]["const"],
+        "production_accepted",
+        "production coverage evidence rule adoption",
+    )
+    require_equal(
+        production_rule["if"]["properties"]["evidence"]["properties"]["status"]["const"],
+        "current",
+        "production coverage evidence rule freshness",
+    )
+    require_equal(
+        production_rule["then"]["properties"]["evidence"]["properties"]["references"]["minItems"],
+        1,
+        "production coverage evidence-reference minimum",
+    )
 
     for property_name in (
         "subject",
@@ -140,7 +164,9 @@ def main() -> None:
         "COVERAGE_PRECEDENCE",
         "_conservative_coverage_state",
         "_conflicting_evidence_ids",
+        "_validate_coverage_evidence_refs",
         "required_evidence_identity_conflict",
+        "capability_coverage_unverified",
         "reconciliation_required",
         "production_accepted",
         "no_authoritative_protection_verification",
@@ -164,21 +190,33 @@ def main() -> None:
         "exact duplicate evidence replay must remain idempotent",
         "conflicting duplicate evidence IDs must fail closed regardless of input order",
         "evidence ID conflict resolution must be deterministic and explainable",
+        "unreferenced production coverage must never produce Protected",
+        "missing production coverage evidence must be explainable",
     ):
         if token not in test_text:
-            fail(f"security-state tests missing exact-scope or conflict regression: {token}")
+            fail(f"security-state tests missing exact-scope, conflict, or evidence regression: {token}")
 
     registry_text = REGISTRY_REFERENCE.read_text(encoding="utf-8")
     for token in (
         "ProtectionCoverageRegistry",
         "older coverage evidence cannot overwrite",
         "conflicting coverage evidence",
+        "coverage evidence references must be unique",
         "stable_qualification_impact",
         "required_enforcement_points",
         "implemented_enforcement_points",
     ):
         if token not in registry_text:
             fail(f"coverage registry missing required invariant token: {token}")
+
+    registry_test_text = REGISTRY_TEST.read_text(encoding="utf-8")
+    for token in (
+        "production-accepted covered capability without evidence references must fail closed to unknown",
+        "unreferenced production coverage must not imply Stable eligibility",
+        "invalid or duplicate coverage evidence references must be rejected",
+    ):
+        if token not in registry_test_text:
+            fail(f"coverage registry tests missing production-evidence invariant: {token}")
 
     print("Wardveil next-upgrade security-state and coverage contracts validated.")
 
