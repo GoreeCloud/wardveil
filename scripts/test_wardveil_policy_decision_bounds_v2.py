@@ -47,6 +47,16 @@ def record() -> dict:
     }
 
 
+def test_non_object_record_fails_closed_without_raising() -> None:
+    for candidate in (None, [], "policy-decision", 7):
+        result = evaluate_policy_decision(candidate, evaluated_at=NOW)
+        assert result["decision_usable"] is False
+        assert result["enforcement_allowed"] is False
+        assert result["must_defer"] is True
+        assert result["decision"] == "unknown"
+        assert "record_shape_invalid" in result["reason_codes"]
+
+
 def test_noncanonical_uuid_text_fails_closed() -> None:
     for decision_id in (
         "194F6865-2C91-4B36-AC81-F31252277635",
