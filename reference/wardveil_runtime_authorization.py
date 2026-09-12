@@ -53,9 +53,16 @@ def _parse_time(value: object) -> datetime | None:
         parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
     except ValueError:
         return None
-    if parsed.tzinfo is None:
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
         return None
     return parsed.astimezone(timezone.utc)
+
+
+def _evaluation_time(now: datetime | None) -> datetime:
+    observed = now if now is not None else datetime.now(timezone.utc)
+    if not isinstance(observed, datetime) or observed.tzinfo is None or observed.utcoffset() is None:
+        raise ValueError("evaluation_time_must_be_timezone_aware")
+    return observed.astimezone(timezone.utc)
 
 
 def _policy_error(policy_record: object, now: datetime) -> str | None:
@@ -172,7 +179,7 @@ def create_execution_authorization(
     now: datetime | None = None,
     ttl: timedelta = timedelta(minutes=2),
 ) -> ExecutionAuthorization:
-    observed = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
+    observed = _evaluation_time(now)
     error = _policy_error(policy_record, observed)
     if error:
         raise ValueError(error)
@@ -244,7 +251,10 @@ def verify_execution_authorization(
     now: datetime | None = None,
     clock_skew: timedelta = timedelta(seconds=30),
 ) -> AuthorizationVerification:
-    observed = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
+    try:
+        observed = _evaluation_time(now)
+    except ValueError as exc:
+        return AuthorizationVerification(False, str(exc))
     if not signing_key:
         return AuthorizationVerification(False, "signing_key_required")
     if authorization.signature_algorithm != SIGNATURE_ALGORITHM:
