@@ -121,6 +121,27 @@ def main() -> None:
         lambda: create_execution_authorization(record, signing_key=b"", executor_id=EXECUTOR, idempotency_key="x", nonce="x", now=NOW),
     )
 
+    expect_raises(
+        "signing_key_id_required",
+        lambda: create_execution_authorization(record, signing_key=KEY, signing_key_id=" reference-static", executor_id=EXECUTOR, idempotency_key="x", nonce="x", now=NOW),
+    )
+    expect_raises(
+        "executor_id_required",
+        lambda: create_execution_authorization(record, signing_key=KEY, executor_id=f" {EXECUTOR}", idempotency_key="x", nonce="x", now=NOW),
+    )
+    expect_raises(
+        "idempotency_key_required",
+        lambda: create_execution_authorization(record, signing_key=KEY, executor_id=EXECUTOR, idempotency_key=" idem-1", nonce="x", now=NOW),
+    )
+    expect_raises(
+        "nonce_required",
+        lambda: create_execution_authorization(record, signing_key=KEY, executor_id=EXECUTOR, idempotency_key="x", nonce="nonce-1\n", now=NOW),
+    )
+    assert verify(replace(auth, executor_id=f" {EXECUTOR}"), record).reason == "executor_binding_mismatch"
+    assert verify(replace(auth, idempotency_key=" idem-1"), record).reason == "missing_replay_identity"
+    assert verify(replace(auth, nonce="nonce-1\n"), record).reason == "missing_replay_identity"
+    assert verify(replace(auth, signing_key_id=" reference-static"), record).reason == "signing_key_id_required"
+
     ledger = AuthorizationReplayLedger()
     first = verify(auth, record, ledger=ledger)
     second = verify(auth, record, ledger=ledger)
@@ -170,7 +191,7 @@ def main() -> None:
         assert forbidden_key not in envelope
     assert "wardveil-reference-test-key" not in str(envelope)
 
-    print("Wardveil runtime execution authorization tests passed (21 cases).")
+    print("Wardveil runtime execution authorization tests passed (29 cases).")
 
 
 if __name__ == "__main__":
