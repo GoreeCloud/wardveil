@@ -144,10 +144,15 @@ def main() -> None:
     for token in (
         "signing_key_id: str",
         '"signing_key_id": self.signing_key_id',
-        '"signing_key_id": signing_key_id.strip()',
-        "if not authorization.signing_key_id",
+        '"signing_key_id": signing_key_id',
+        "_canonical_identifier(signing_key_id, MAX_SIGNING_KEY_ID_LENGTH)",
+        "_canonical_identifier(authorization.signing_key_id, MAX_SIGNING_KEY_ID_LENGTH)",
     ):
         require(token in runtime_reference, f"runtime authorization missing key binding: {token}")
+    require(
+        '"signing_key_id": signing_key_id.strip()' not in runtime_reference,
+        "runtime authorization must not normalize signing key identifiers",
+    )
 
     required_bindings = set(runtime_contract.get("required_bindings") or [])
     require("signing_key_id" in required_bindings, "runtime contract must require signing_key_id")
