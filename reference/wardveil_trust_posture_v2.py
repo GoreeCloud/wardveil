@@ -154,6 +154,12 @@ def evaluate_trust_posture(
     else:
         trust_state = proposed_state
 
+    # An explicit restrictive proposal may safely make the result stricter, but
+    # reevaluation logic must never soften an already-untrusted posture.
+    if proposed_state == "untrusted" and trust_state != "untrusted":
+        trust_state = "untrusted"
+        reasons.append("proposed_untrusted_state_preserved")
+
     # A caller cannot force a stronger state than the evaluator's fail-closed result.
     if proposed_state == "trusted" and trust_state != "trusted":
         reasons.append("proposed_trusted_state_not_supported")
