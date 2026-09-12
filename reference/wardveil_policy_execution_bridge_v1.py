@@ -10,6 +10,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from hashlib import sha256
 import json
+import unicodedata
 from typing import Any, Mapping
 
 from reference.wardveil_policy_decision_v2 import evaluate_policy_decision
@@ -24,6 +25,8 @@ from reference.wardveil_runtime_authorization import (
 
 BRIDGE_CONTRACT_VERSION = "0.1.0"
 BRIDGE_PRODUCER_ID = "wardveil-policy-v2-execution-bridge"
+MAX_BRIDGE_TEXT = 1000
+MAX_BRIDGE_EVIDENCE_REFS = 128
 
 
 def _canonical(value: object) -> bytes:
@@ -31,7 +34,13 @@ def _canonical(value: object) -> bytes:
 
 
 def _nonempty(value: Any) -> bool:
-    return isinstance(value, str) and bool(value.strip())
+    return (
+        isinstance(value, str)
+        and bool(value)
+        and value == value.strip()
+        and len(value) <= MAX_BRIDGE_TEXT
+        and not any(unicodedata.category(char).startswith("C") for char in value)
+    )
 
 
 def _normalized_obligation_evidence(
@@ -49,7 +58,7 @@ def _normalized_obligation_evidence(
         reference = evidence.get(obligation)
         if not _nonempty(reference):
             raise ValueError("policy_obligation_evidence_invalid")
-        normalized[obligation] = reference.strip()
+        normalized[obligation] = reference
     return normalized
 
 
@@ -92,6 +101,8 @@ def build_foundation_09_policy_record(
     ):
         if reference not in evidence_refs:
             evidence_refs.append(reference)
+            if len(evidence_refs) > MAX_BRIDGE_EVIDENCE_REFS:
+                raise ValueError("policy_evidence_reference_limit_exceeded")
 
     return {
         "contract_version": "0.1.0",
@@ -103,7 +114,7 @@ def build_foundation_09_policy_record(
             "authoritative": True,
         },
         "scope": {
-            "resource_type": target_resource_type.strip(),
+            "resource_type": target_resource_type,
             "resource_id": request["target"],
             "purpose": request["purpose"],
             "scopes": list(request["scopes"]),
