@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Self-tests for the Wardveil next-upgrade security-state engine."""
 
+from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import sys
@@ -97,6 +98,34 @@ def main() -> None:
     check(assessment.state == "unknown", "non-authoritative evidence must fail closed")
     check("required_evidence_unverified" in assessment.reason_codes, "unverified evidence must be explicit")
 
+    duplicate = evidence()
+    exact_replay = assess(evidence_items=(duplicate, duplicate))
+    check(exact_replay.state == "protected", "exact duplicate evidence replay must remain idempotent")
+    check(exact_replay.evidence_refs == (duplicate.evidence_id,), "exact duplicate replay must not duplicate evidence references")
+
+    conflicting_evidence = (
+        duplicate,
+        replace(duplicate, authoritative=False),
+    )
+    conflict_first = assess(evidence_items=conflicting_evidence)
+    conflict_reversed = assess(evidence_items=tuple(reversed(conflicting_evidence)))
+    check(
+        conflict_first.state == "unknown" and conflict_reversed.state == "unknown",
+        "conflicting duplicate evidence IDs must fail closed regardless of input order",
+    )
+    check(
+        conflict_first.protected_by_wardveil is False and conflict_reversed.protected_by_wardveil is False,
+        "conflicting duplicate evidence IDs cannot authorize a protection claim",
+    )
+    check(
+        conflict_first.reason_codes == conflict_reversed.reason_codes == ("required_evidence_identity_conflict",),
+        "evidence ID conflict resolution must be deterministic and explainable",
+    )
+    check(
+        conflict_first.evidence_refs == conflict_reversed.evidence_refs == (duplicate.evidence_id,),
+        "evidence ID conflict must retain one bounded reference without hiding the conflict reason",
+    )
+
     assessment = assess(
         evidence_items=(evidence(),),
         coverage_items=(coverage(state="not_covered", adoption="implemented"),),
@@ -184,6 +213,9 @@ def main() -> None:
         record["explanation"]["legacy_presentation_state"] == "protected",
         "record must carry an explicit compatibility presentation state",
     )
+
+    conflict_record = conflict_first.as_record()
+    check(conflict_record["claim"]["protected_by_wardveil"] is False, "conflicting evidence record cannot claim protection")
 
     try:
         protected.as_record(scope_kind=SCOPE_KIND, scope_id="goreecloud-other")
