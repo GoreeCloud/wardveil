@@ -138,6 +138,36 @@ def main() -> None:
     )
     assert verified.accepted and verified.reason == "validated_execution_authorization"
 
+    naive_now = datetime(2026, 9, 11, 20, 0)
+    expect_raises(
+        "evaluation_time_must_be_timezone_aware",
+        lambda: create_v2_bound_execution_authorization(
+            record,
+            target_resource_type="file",
+            evaluated_at=NOW.isoformat(),
+            obligation_evidence={},
+            signing_key=KEY,
+            signing_key_id="reference-bridge-key",
+            executor_id=EXECUTOR,
+            idempotency_key="idem-naive-clock",
+            nonce="nonce-naive-clock",
+            now=naive_now,
+        ),
+    )
+    naive_verification = verify_v2_bound_execution_authorization(
+        auth,
+        record,
+        target_resource_type="file",
+        evaluated_at=NOW.isoformat(),
+        obligation_evidence={},
+        signing_key=KEY,
+        expected_executor_id=EXECUTOR,
+        replay_ledger=AuthorizationReplayLedger(),
+        now=naive_now,
+    )
+    assert not naive_verification.accepted
+    assert naive_verification.reason == "evaluation_time_must_be_timezone_aware"
+
     for outcome in ("deny", "require_step_up", "defer", "unknown"):
         expect_raises(
             f"policy_decision_not_enforcement_allowed:{outcome}",
@@ -291,7 +321,7 @@ def main() -> None:
 
     assert "wardveil-v2-bridge-reference-key" not in str(adapted)
     assert "wardveil-v2-bridge-reference-key" not in str(auth.as_dict())
-    print("Wardveil v2 Policy execution bridge tests passed (17 bounded cases).")
+    print("Wardveil v2 Policy execution bridge tests passed (19 bounded cases).")
 
 
 if __name__ == "__main__":
