@@ -51,12 +51,36 @@
         "status": {"type": "string", "enum": ["current", "stale", "unavailable", "unverified"]},
         "observed_at": {"type": "string", "format": "date-time"},
         "valid_until": {"type": "string", "format": "date-time"},
-        "references": {"type": "array", "maxItems": 32, "items": {"type": "string", "minLength": 1, "maxLength": 256}}
+        "references": {"type": "array", "maxItems": 32, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 256}}
       }
     },
     "dependencies": {"type": "array", "maxItems": 32, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 160}},
     "known_gaps": {"type": "array", "maxItems": 32, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 256}},
     "remediation": {"type": "array", "maxItems": 32, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 256}},
     "stable_qualification_impact": {"type": "string", "enum": ["none", "blocks_stable", "unknown"]}
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "coverage_state": {"const": "covered"},
+          "adoption_state": {"const": "production_accepted"},
+          "evidence": {
+            "properties": {"status": {"const": "current"}},
+            "required": ["status"]
+          }
+        },
+        "required": ["coverage_state", "adoption_state", "evidence"]
+      },
+      "then": {
+        "properties": {
+          "evidence": {
+            "properties": {
+              "references": {"minItems": 1, "uniqueItems": true}
+            }
+          }
+        }
+      }
+    }
+  ]
 }
