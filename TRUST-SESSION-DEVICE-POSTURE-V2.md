@@ -57,4 +57,4 @@ Applications and Wardveil Policy may use the evaluated trust state as one bounde
 
 ## Acceptance boundary
 
-Work Package K is source-level Development work only. It does not establish production GoreeCloud Identity acceptance, live session/device telemetry, accepted device-integrity providers, production runtime validation, Security Center live adoption, target-environment acceptance, production trust acceptance, production acceptance, Stable qualification, or a broader `Protected by Wardveil` claim.
+Work Package K is source-level Development work only. It does not establish production trust acceptance. It also does not establish production GoreeCloud Identity acceptance, live session/device telemetry, accepted device-integrity providers, production runtime validation, Security Center live adoption, target-environment acceptance, production acceptance, Stable qualification, or a broader `Protected by Wardveil` claim.
