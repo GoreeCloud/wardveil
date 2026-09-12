@@ -12,7 +12,7 @@ The new state engine separates three concepts that the earlier presentation cont
 
 1. **Security state** — what Wardveil can currently prove about the scoped security condition.
 2. **Protection coverage** — which security capabilities are actually integrated and accepted for that scope.
-3. **Evidence validity** — whether the evidence supporting the state is authoritative, current, and still inside its validity window.
+3. **Evidence validity** — whether the evidence supporting the state is authoritative, current, inside its validity window, and bound to the exact represented scope.
 
 The defining rule remains:
 
@@ -34,7 +34,7 @@ The source contract introduces:
 
 These states are deliberately more expressive than the Foundation 0.9 presentation vocabulary.
 
-`protected` is permitted only when the required protection coverage is `covered`, required evidence is authoritative and current, at least one current authoritative record verifies protection for the represented scope, and no higher-priority adverse state is active.
+`protected` is permitted only when the required protection coverage is `covered`, required evidence is authoritative and current, at least one current authoritative record verifies protection for the exact represented scope, and no higher-priority adverse state is active.
 
 `not_covered` means the capability applies to the scope but Wardveil does not have the required accepted integration. It is not equivalent to `not_applicable`.
 
@@ -74,6 +74,12 @@ See `PROTECTION-COVERAGE-REGISTRY.md` for the registry contract and source-valid
 ## Evidence rules
 
 Evidence is evaluated fail closed. A current record must come from an authoritative producer, not be future-dated, include a bounded `valid_until`, remain inside that validity window, and preserve the exact scope represented by the assessment.
+
+Each `EvidenceObservation` carries an explicit `scope_kind` and `scope_id`. The public evaluator also requires the exact scope being assessed. If any evidence record is bound to another otherwise-valid scope, the assessment fails closed to `unknown` with `required_evidence_scope_mismatch`; foreign-scope evidence cannot authorize a `protected` claim.
+
+The exact scope also travels with the resulting `SecurityAssessment`. Serialization uses that assessment-bound scope. A caller may provide the same scope again as an assertion, but attempting to serialize the assessment under another scope is rejected. Presentation cannot relabel evidence-derived protection authority after evaluation.
+
+Scope kinds follow the security-state contract vocabulary: `account`, `application`, `service`, `device`, `network`, `data`, `control`, `platform`, and `other`. Scope IDs are non-empty, canonical, bounded to the schema's 128-character ceiling, and control-free.
 
 Missing evidence becomes `unknown`. Non-authoritative evidence becomes `unknown`. Expired evidence becomes `unknown` at the security-state layer while its protection coverage remains explicitly `stale`. Current health or source availability alone does not prove protection unless the evidence explicitly verifies the represented protection.
 
