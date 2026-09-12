@@ -16,6 +16,8 @@ from wardveil_security_state_v2 import (
 )
 
 NOW = datetime(2026, 9, 9, 20, 0, tzinfo=timezone.utc)
+SCOPE_KIND = "application"
+SCOPE_ID = "goreecloud-test"
 
 
 def check(condition: bool, message: str) -> None:
@@ -23,11 +25,13 @@ def check(condition: bool, message: str) -> None:
         raise AssertionError(message)
 
 
-def evidence(*, status="current", authoritative=True, verifies=True):
+def evidence(*, status="current", authoritative=True, verifies=True, scope_kind=SCOPE_KIND, scope_id=SCOPE_ID):
     return EvidenceObservation(
         evidence_id="ev-protect-1",
         producer_id="wardveil-protect-test",
         control="malware_protection",
+        scope_kind=scope_kind,
+        scope_id=scope_id,
         authoritative=authoritative,
         status=status,
         observed_at=NOW - timedelta(minutes=1),
@@ -48,60 +52,61 @@ def coverage(*, state="covered", adoption="production_accepted", evidence_status
     )
 
 
-def main() -> None:
-    protected = evaluate_security_state(
-        evidence=(evidence(),),
-        coverage=(coverage(),),
+def assess(*, evidence_items, coverage_items=None, signals=SecuritySignals()):
+    return evaluate_security_state(
+        scope_kind=SCOPE_KIND,
+        scope_id=SCOPE_ID,
+        evidence=evidence_items,
+        coverage=coverage_items if coverage_items is not None else (coverage(),),
         required_capabilities=("malware_protection",),
+        signals=signals,
         now=NOW,
     )
+
+
+def main() -> None:
+    protected = assess(evidence_items=(evidence(),))
     check(protected.state == "protected", "current authoritative production-accepted evidence should protect")
     check(protected.protected_by_wardveil is True, "protected state must permit the scoped Wardveil claim")
     check(protected.legacy_presentation_state == "protected", "legacy mapping must preserve protected")
+    check(protected.scope_kind == SCOPE_KIND and protected.scope_id == SCOPE_ID, "assessment must retain exact scope")
+
+    foreign = assess(evidence_items=(evidence(scope_id="goreecloud-other"),))
+    check(foreign.state == "unknown", "valid evidence for a different scope must fail closed")
+    check(foreign.protected_by_wardveil is False, "foreign-scope evidence cannot authorize protection")
+    check("required_evidence_scope_mismatch" in foreign.reason_codes, "scope mismatch must be explainable")
 
     stale = EvidenceObservation(
         evidence_id="ev-stale",
         producer_id="wardveil-protect-test",
         control="malware_protection",
+        scope_kind=SCOPE_KIND,
+        scope_id=SCOPE_ID,
         authoritative=True,
         status="current",
         observed_at=NOW - timedelta(minutes=10),
         valid_until=NOW - timedelta(minutes=1),
         verifies_protection=True,
     )
-    assessment = evaluate_security_state(
-        evidence=(stale,),
-        coverage=(coverage(),),
-        required_capabilities=("malware_protection",),
-        now=NOW,
-    )
+    assessment = assess(evidence_items=(stale,))
     check(assessment.state == "unknown", "expired evidence must fail closed to unknown")
     check("required_evidence_stale" in assessment.reason_codes, "stale evidence reason must be explainable")
     check(assessment.protected_by_wardveil is False, "stale evidence cannot authorize a protection claim")
 
-    assessment = evaluate_security_state(
-        evidence=(evidence(authoritative=False),),
-        coverage=(coverage(),),
-        required_capabilities=("malware_protection",),
-        now=NOW,
-    )
+    assessment = assess(evidence_items=(evidence(authoritative=False),))
     check(assessment.state == "unknown", "non-authoritative evidence must fail closed")
     check("required_evidence_unverified" in assessment.reason_codes, "unverified evidence must be explicit")
 
-    assessment = evaluate_security_state(
-        evidence=(evidence(),),
-        coverage=(coverage(state="not_covered", adoption="implemented"),),
-        required_capabilities=("malware_protection",),
-        now=NOW,
+    assessment = assess(
+        evidence_items=(evidence(),),
+        coverage_items=(coverage(state="not_covered", adoption="implemented"),),
     )
     check(assessment.state == "not_covered", "explicitly unintegrated required capability must be not covered")
     check(assessment.protected_by_wardveil is False, "not-covered state cannot authorize protection")
 
-    assessment = evaluate_security_state(
-        evidence=(evidence(),),
-        coverage=(coverage(adoption="runtime_validated"),),
-        required_capabilities=("malware_protection",),
-        now=NOW,
+    assessment = assess(
+        evidence_items=(evidence(),),
+        coverage_items=(coverage(adoption="runtime_validated"),),
     )
     check(assessment.state == "degraded", "runtime validation without production acceptance must not be Protected")
     check(
@@ -118,63 +123,55 @@ def main() -> None:
         observed_at=NOW - timedelta(minutes=20),
         valid_until=NOW - timedelta(seconds=1),
     )
-    assessment = evaluate_security_state(
-        evidence=(evidence(),),
-        coverage=(stale_coverage,),
-        required_capabilities=("malware_protection",),
-        now=NOW,
-    )
+    assessment = assess(evidence_items=(evidence(),), coverage_items=(stale_coverage,))
     check(assessment.coverage_state == "stale", "expired coverage evidence must remain explicitly stale")
     check(assessment.state == "unknown", "stale coverage cannot produce a Protected security state")
     check("coverage_evidence_stale" in assessment.reason_codes, "stale coverage must have an explicit reason")
 
-    assessment = evaluate_security_state(
-        evidence=(evidence(),),
-        coverage=(coverage(state="degraded"),),
-        required_capabilities=("malware_protection",),
-        now=NOW,
+    assessment = assess(
+        evidence_items=(evidence(),),
+        coverage_items=(coverage(state="degraded"),),
     )
     check(assessment.coverage_state == "degraded", "degraded coverage must remain distinct")
     check(assessment.state == "degraded", "degraded required coverage must degrade security state")
     check("coverage_degraded" in assessment.reason_codes, "degraded coverage must be explainable")
 
-    assessment = evaluate_security_state(
-        evidence=(evidence(),),
-        coverage=(coverage(),),
-        required_capabilities=("malware_protection",),
+    assessment = assess(
+        evidence_items=(evidence(),),
         signals=SecuritySignals(reconciliation_required=True),
-        now=NOW,
     )
     check(assessment.state == "reconciliation_required", "uncertain side effect must require reconciliation")
     check(assessment.legacy_presentation_state == "degraded", "legacy UI must not overstate reconciliation state")
 
-    assessment = evaluate_security_state(
-        evidence=(evidence(),),
-        coverage=(coverage(),),
-        required_capabilities=("malware_protection",),
+    assessment = assess(
+        evidence_items=(evidence(),),
         signals=SecuritySignals(active_threat=True),
-        now=NOW,
     )
     check(assessment.state == "at_risk", "active threat must override otherwise good evidence")
     check(assessment.protected_by_wardveil is False, "active threat must disable Protected claim")
 
-    assessment = evaluate_security_state(
-        evidence=(evidence(),),
-        coverage=(coverage(),),
-        required_capabilities=("malware_protection",),
+    assessment = assess(
+        evidence_items=(evidence(),),
         signals=SecuritySignals(contained=True),
-        now=NOW,
     )
     check(assessment.state == "contained", "contained threat must remain distinct from Protected")
 
-    record = protected.as_record(scope_kind="application", scope_id="goreecloud-test")
+    record = protected.as_record()
     check(record["contract_version"] == "0.2.0", "next-upgrade state contract must be versioned")
+    check(record["scope"] == {"kind": SCOPE_KIND, "id": SCOPE_ID}, "record must use assessment-bound scope")
     check(record["claim"]["protected_by_wardveil"] is True, "record claim must match assessment")
     check(record["coverage"]["status"] == "covered", "record must preserve independent coverage state")
     check(
         record["explanation"]["legacy_presentation_state"] == "protected",
         "record must carry an explicit compatibility presentation state",
     )
+
+    try:
+        protected.as_record(scope_kind=SCOPE_KIND, scope_id="goreecloud-other")
+    except ValueError as exc:
+        check("cannot be relabeled" in str(exc), "scope relabel rejection must be explicit")
+    else:
+        raise AssertionError("security assessment must reject record serialization under a different scope")
 
     print("Wardveil next-upgrade security-state self-tests passed.")
 
