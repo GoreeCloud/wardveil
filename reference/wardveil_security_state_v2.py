@@ -8,7 +8,7 @@ of runtime or production protection.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 from typing import Iterable
 from uuid import uuid4
@@ -43,6 +43,17 @@ ADOPTION_STATES = (
 )
 
 EVIDENCE_STATES = ("current", "stale", "unavailable", "unverified")
+SCOPE_KINDS = (
+    "account",
+    "application",
+    "service",
+    "device",
+    "network",
+    "data",
+    "control",
+    "platform",
+    "other",
+)
 
 CAPABILITIES = (
     "authentication_protection",
@@ -83,11 +94,23 @@ def _require_aware(value: datetime, field_name: str) -> None:
         raise ValueError(f"{field_name} must be timezone-aware")
 
 
+def _validate_scope(scope_kind: str, scope_id: str) -> tuple[str, str]:
+    if scope_kind not in SCOPE_KINDS:
+        raise ValueError(f"unsupported scope kind: {scope_kind}")
+    if not isinstance(scope_id, str) or not scope_id or scope_id != scope_id.strip():
+        raise ValueError("scope_id must be a non-empty canonical identifier")
+    if len(scope_id) > 128 or any(ord(char) < 32 or 127 <= ord(char) <= 159 for char in scope_id):
+        raise ValueError("scope_id must be bounded and control-free")
+    return scope_kind, scope_id
+
+
 @dataclass(frozen=True)
 class EvidenceObservation:
     evidence_id: str
     producer_id: str
     control: str
+    scope_kind: str
+    scope_id: str
     authoritative: bool
     status: str
     observed_at: datetime
@@ -101,6 +124,7 @@ class EvidenceObservation:
             raise ValueError("producer_id is required")
         if not self.control:
             raise ValueError("control is required")
+        _validate_scope(self.scope_kind, self.scope_id)
         if self.status not in EVIDENCE_STATES:
             raise ValueError(f"unsupported evidence status: {self.status}")
         _require_aware(self.observed_at, "observed_at")
@@ -200,6 +224,8 @@ class SecurityAssessment:
     observed_at: datetime
     valid_until: datetime | None
     protected_by_wardveil: bool
+    scope_kind: str = ""
+    scope_id: str = ""
 
     @property
     def legacy_presentation_state(self) -> str:
@@ -208,16 +234,23 @@ class SecurityAssessment:
     def as_record(
         self,
         *,
-        scope_kind: str,
-        scope_id: str,
+        scope_kind: str | None = None,
+        scope_id: str | None = None,
         authority_system: str = "wardveil",
         authority_control: str = "security_state_engine",
     ) -> dict:
+        bound_kind, bound_id = _validate_scope(self.scope_kind, self.scope_id)
+        if scope_kind is not None or scope_id is not None:
+            if scope_kind is None or scope_id is None:
+                raise ValueError("scope_kind and scope_id must be supplied together")
+            requested_kind, requested_id = _validate_scope(scope_kind, scope_id)
+            if (requested_kind, requested_id) != (bound_kind, bound_id):
+                raise ValueError("security assessment scope cannot be relabeled")
         return {
             "contract_version": "0.2.0",
             "record_type": "security_state",
             "record_id": f"security-state-{uuid4()}",
-            "scope": {"kind": scope_kind, "id": scope_id},
+            "scope": {"kind": bound_kind, "id": bound_id},
             "authority": {
                 "system": authority_system,
                 "control": authority_control,
@@ -243,7 +276,7 @@ def _assessment_evidence_status(assessment: SecurityAssessment) -> str:
     reasons = set(assessment.reason_codes)
     if "required_evidence_unavailable" in reasons:
         return "unavailable"
-    if "required_evidence_unverified" in reasons:
+    if "required_evidence_unverified" in reasons or "required_evidence_scope_mismatch" in reasons:
         return "unverified"
     if "required_evidence_stale" in reasons or "coverage_evidence_stale" in reasons:
         return "stale"
@@ -308,7 +341,7 @@ def summarize_coverage(
     return "unknown", (), tuple(required)
 
 
-def evaluate_security_state(
+def _evaluate_security_state_unscoped(
     *,
     evidence: Iterable[EvidenceObservation],
     coverage: Iterable[CoverageObservation],
@@ -486,3 +519,50 @@ def evaluate_security_state(
         min(valid_until_values) if valid_until_values else None,
         False,
     )
+
+
+def evaluate_security_state(
+    *,
+    scope_kind: str,
+    scope_id: str,
+    evidence: Iterable[EvidenceObservation],
+    coverage: Iterable[CoverageObservation],
+    required_capabilities: Iterable[str],
+    signals: SecuritySignals = SecuritySignals(),
+    now: datetime | None = None,
+) -> SecurityAssessment:
+    """Evaluate evidence only for the exact scope represented by the assessment."""
+
+    scope_kind, scope_id = _validate_scope(scope_kind, scope_id)
+    observations = tuple(evidence)
+    evidence_refs = tuple(dict.fromkeys(item.evidence_id for item in observations))
+
+    if any(
+        item.scope_kind != scope_kind or item.scope_id != scope_id
+        for item in observations
+    ):
+        observed_at = now or _utc_now()
+        _require_aware(observed_at, "now")
+        coverage_state, _, _ = summarize_coverage(
+            required_capabilities, coverage, now=observed_at
+        )
+        return SecurityAssessment(
+            "unknown",
+            coverage_state,
+            ("required_evidence_scope_mismatch",),
+            evidence_refs,
+            observed_at,
+            None,
+            False,
+            scope_kind,
+            scope_id,
+        )
+
+    assessment = _evaluate_security_state_unscoped(
+        evidence=observations,
+        coverage=coverage,
+        required_capabilities=required_capabilities,
+        signals=signals,
+        now=now,
+    )
+    return replace(assessment, scope_kind=scope_kind, scope_id=scope_id)
