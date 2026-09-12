@@ -13,6 +13,8 @@ from uuid import UUID
 
 CONTRACT_VERSION = "0.1.0"
 RECORD_TYPE = "policy_decision"
+MAX_TEXT_LENGTH = 1000
+MAX_LIST_ITEMS = 128
 DECISIONS = (
     "allow",
     "deny",
@@ -69,6 +71,7 @@ def _canonical_text(value: Any) -> bool:
     return (
         isinstance(value, str)
         and bool(value)
+        and len(value) <= MAX_TEXT_LENGTH
         and value == value.strip()
         and not any(unicodedata.category(char).startswith("C") for char in value)
     )
@@ -90,15 +93,18 @@ def _nonempty(value: Any) -> bool:
 def _unique_nonempty_strings(value: Any) -> bool:
     return (
         isinstance(value, list)
+        and len(value) <= MAX_LIST_ITEMS
         and all(_nonempty(item) for item in value)
         and len(value) == len(set(value))
     )
 
 
 def _valid_uuid(value: Any) -> bool:
+    if not _canonical_text(value):
+        return False
     try:
-        UUID(str(value))
-        return True
+        parsed = UUID(value)
+        return str(parsed) == value
     except (ValueError, TypeError, AttributeError):
         return False
 
