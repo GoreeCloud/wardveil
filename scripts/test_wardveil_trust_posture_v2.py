@@ -74,6 +74,20 @@ def main() -> int:
     result = evaluate_trust_posture(changed, evaluated_at=NOW)
     assert result["trust_state"] == "restricted"
 
+    already_untrusted = fixture()
+    already_untrusted["proposed_state"] = "untrusted"
+    already_untrusted["reevaluation_triggers"] = {"material_posture_changed": True}
+    result = evaluate_trust_posture(already_untrusted, evaluated_at=NOW)
+    assert result["trust_state"] == "untrusted"
+    assert "proposed_untrusted_state_preserved" in result["reason_codes"]
+
+    untrusted_with_missing_evidence = fixture()
+    untrusted_with_missing_evidence["proposed_state"] = "untrusted"
+    untrusted_with_missing_evidence["inputs"][0]["state"] = "missing"
+    untrusted_with_missing_evidence["inputs"][0]["evidence_reference"] = None
+    result = evaluate_trust_posture(untrusted_with_missing_evidence, evaluated_at=NOW)
+    assert result["trust_state"] == "untrusted"
+
     high_impact = fixture()
     high_impact["impact"] = "high"
     high_impact["observed_at"] = "2026-09-12T04:49:00Z"
