@@ -29,6 +29,7 @@ def record(
     evidence_status="current",
     observed_at=None,
     valid_until=None,
+    evidence_refs=None,
     required=("upload_gate", "download_gate"),
     implemented=("upload_gate", "download_gate"),
     subject_kind="application",
@@ -45,7 +46,7 @@ def record(
         evidence_status=evidence_status,
         observed_at=observed_at or NOW - timedelta(minutes=2),
         valid_until=valid_until or NOW + timedelta(minutes=8),
-        evidence_refs=(f"evidence:{subject_id}:{capability}",),
+        evidence_refs=(f"evidence:{subject_id}:{capability}",) if evidence_refs is None else evidence_refs,
         required_enforcement_points=required,
         implemented_enforcement_points=implemented,
         dependencies=("wardveil-scan",),
@@ -69,6 +70,32 @@ def main() -> None:
     check(current == malware, "registry must return the exact current capability record")
     check(current.effective_coverage_state(NOW) == "covered", "accepted current coverage should remain covered")
     check(current.stable_qualification_impact(NOW) == "none", "fully accepted coverage should not block Stable")
+
+    unreferenced = record(evidence_refs=())
+    check(
+        unreferenced.effective_coverage_state(NOW) == "unknown",
+        "production-accepted covered capability without evidence references must fail closed to unknown",
+    )
+    check(
+        unreferenced.stable_qualification_impact(NOW) == "unknown",
+        "unreferenced production coverage must not imply Stable eligibility",
+    )
+    unreferenced_record = unreferenced.as_record(NOW)
+    check(unreferenced_record["coverage_state"] == "unknown", "serialized unreferenced coverage must remain unknown")
+    check(unreferenced_record["evidence"]["status"] == "unverified", "serialized unreferenced production coverage must expose unverified evidence")
+
+    for bad_refs in (
+        ("duplicate", "duplicate"),
+        (" leading-space",),
+        ("x" * 257,),
+        tuple(f"evidence:{index}" for index in range(33)),
+    ):
+        try:
+            record(evidence_refs=bad_refs)
+        except ValueError as exc:
+            check("coverage evidence references" in str(exc), "invalid evidence-reference rejection should be explainable")
+        else:
+            raise AssertionError("invalid or duplicate coverage evidence references must be rejected")
 
     partial_enforcement = record(implemented=("upload_gate",))
     check(
