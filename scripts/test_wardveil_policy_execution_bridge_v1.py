@@ -148,15 +148,16 @@ def main() -> None:
         "policy_request_action_not_high_impact",
         lambda: bridge_record(decision(action="allow")),
     )
-    expect_raises(
-        "target_resource_type_required",
-        lambda: build_foundation_09_policy_record(
-            record,
-            target_resource_type="",
-            evaluated_at=NOW.isoformat(),
-            obligation_evidence={},
-        ),
-    )
+    for invalid_resource_type in ("", " file", "file\n"):
+        expect_raises(
+            "target_resource_type_required",
+            lambda value=invalid_resource_type: build_foundation_09_policy_record(
+                record,
+                target_resource_type=value,
+                evaluated_at=NOW.isoformat(),
+                obligation_evidence={},
+            ),
+        )
 
     conditional = decision(
         outcome="allow_with_obligations",
@@ -177,6 +178,17 @@ def main() -> None:
             },
         ),
     )
+    for invalid_reference in (" evidence:backup", "evidence:backup\n", "evidence:\u0000backup"):
+        expect_raises(
+            "policy_obligation_evidence_invalid",
+            lambda value=invalid_reference: bridge_record(
+                conditional,
+                obligation_evidence={
+                    "fresh-backup-required": value,
+                    "audit-event-required": "evidence:audit",
+                },
+            ),
+        )
     conditional_evidence = {
         "fresh-backup-required": "evidence:backup",
         "audit-event-required": "evidence:audit",
@@ -185,6 +197,14 @@ def main() -> None:
     assert conditional_adapted["v2_binding"]["obligation_evidence"] == conditional_evidence
     assert "evidence:backup" in conditional_adapted["evidence_refs"]
     assert "evidence:audit" in conditional_adapted["evidence_refs"]
+
+    oversized_evidence = decision()
+    oversized_evidence["evidence_refs"] = [f"evidence:policy:{index}" for index in range(128)]
+    oversized_evidence["trust"]["evidence_refs"] = ["evidence:trust:extra"]
+    expect_raises(
+        "policy_evidence_reference_limit_exceeded",
+        lambda: bridge_record(oversized_evidence),
+    )
 
     revoked = decision()
     revoked["revocation"] = {
@@ -271,7 +291,7 @@ def main() -> None:
 
     assert "wardveil-v2-bridge-reference-key" not in str(adapted)
     assert "wardveil-v2-bridge-reference-key" not in str(auth.as_dict())
-    print("Wardveil v2 Policy execution bridge tests passed (14 bounded cases).")
+    print("Wardveil v2 Policy execution bridge tests passed (17 bounded cases).")
 
 
 if __name__ == "__main__":
