@@ -7,7 +7,7 @@ not grant target-side resource authority.
 """
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from hashlib import sha256
 import json
 import unicodedata
@@ -167,7 +167,6 @@ def create_v2_bound_execution_authorization(
     ttl: timedelta = timedelta(minutes=2),
 ) -> tuple[dict[str, Any], ExecutionAuthorization]:
     """Build the bridge record and mint the existing Foundation 0.9 authorization."""
-    observed = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
     policy_record = build_foundation_09_policy_record(
         policy_decision_v2,
         target_resource_type=target_resource_type,
@@ -181,7 +180,7 @@ def create_v2_bound_execution_authorization(
         executor_id=executor_id,
         idempotency_key=idempotency_key,
         nonce=nonce,
-        now=observed,
+        now=now,
         ttl=ttl,
     )
     return policy_record, authorization
