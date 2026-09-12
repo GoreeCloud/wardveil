@@ -143,9 +143,21 @@ def main() -> None:
         "required_evidence_stale",
         "coverage_evidence_stale",
         "effective_coverage_state",
+        "required_evidence_scope_mismatch",
+        "security assessment scope cannot be relabeled",
+        "scope_kind: str",
+        "scope_id: str",
     ):
         if token not in reference_text:
             fail(f"reference implementation missing required invariant token: {token}")
+
+    test_text = TEST.read_text(encoding="utf-8")
+    for token in (
+        "valid evidence for a different scope must fail closed",
+        "security assessment must reject record serialization under a different scope",
+    ):
+        if token not in test_text:
+            fail(f"security-state tests missing exact-scope regression: {token}")
 
     registry_text = REGISTRY_REFERENCE.read_text(encoding="utf-8")
     for token in (
