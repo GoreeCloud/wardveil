@@ -97,6 +97,10 @@ def _closed_shape(value: Any, expected: set[str]) -> bool:
     return isinstance(value, dict) and set(value) == expected
 
 
+def _closed_optional_shape(value: Any, allowed: set[str]) -> bool:
+    return isinstance(value, dict) and bool(value) and set(value) <= allowed
+
+
 def evaluate_policy_decision(record: dict[str, Any], *, evaluated_at: str) -> dict[str, Any]:
     """Evaluate one durable Policy decision conservatively and fail closed."""
     reasons: list[str] = []
@@ -127,7 +131,7 @@ def evaluate_policy_decision(record: dict[str, Any], *, evaluated_at: str) -> di
             reasons.append(f"policy_{field}_missing")
 
     actor = record.get("actor")
-    if not _closed_shape(actor, ACTOR_FIELDS):
+    if not _closed_optional_shape(actor, ACTOR_FIELDS):
         reasons.append("actor_shape_invalid")
         actor = actor if isinstance(actor, dict) else {}
     if not (_nonempty(actor.get("subject_id")) or _nonempty(actor.get("service_id"))):
