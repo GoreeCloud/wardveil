@@ -288,11 +288,30 @@ def _assessment_evidence_status(assessment: SecurityAssessment) -> str:
     reasons = set(assessment.reason_codes)
     if "required_evidence_unavailable" in reasons:
         return "unavailable"
-    if "required_evidence_unverified" in reasons or "required_evidence_scope_mismatch" in reasons:
+    if (
+        "required_evidence_unverified" in reasons
+        or "required_evidence_scope_mismatch" in reasons
+        or "required_evidence_identity_conflict" in reasons
+    ):
         return "unverified"
     if "required_evidence_stale" in reasons or "coverage_evidence_stale" in reasons:
         return "stale"
     return "current"
+
+
+def _conflicting_evidence_ids(observations: Iterable[EvidenceObservation]) -> tuple[str, ...]:
+    """Return evidence IDs reused for materially different observations."""
+
+    first_by_id: dict[str, EvidenceObservation] = {}
+    conflicts: list[str] = []
+    for item in observations:
+        previous = first_by_id.get(item.evidence_id)
+        if previous is None:
+            first_by_id[item.evidence_id] = item
+            continue
+        if previous != item and item.evidence_id not in conflicts:
+            conflicts.append(item.evidence_id)
+    return tuple(conflicts)
 
 
 def _conservative_coverage_state(
@@ -570,13 +589,29 @@ def evaluate_security_state(
     scope_kind, scope_id = _validate_scope(scope_kind, scope_id)
     observations = tuple(evidence)
     evidence_refs = tuple(dict.fromkeys(item.evidence_id for item in observations))
+    observed_at = now or _utc_now()
+    _require_aware(observed_at, "now")
+
+    if _conflicting_evidence_ids(observations):
+        coverage_state, _, _ = summarize_coverage(
+            required_capabilities, coverage, now=observed_at
+        )
+        return SecurityAssessment(
+            "unknown",
+            coverage_state,
+            ("required_evidence_identity_conflict",),
+            evidence_refs,
+            observed_at,
+            None,
+            False,
+            scope_kind,
+            scope_id,
+        )
 
     if any(
         item.scope_kind != scope_kind or item.scope_id != scope_id
         for item in observations
     ):
-        observed_at = now or _utc_now()
-        _require_aware(observed_at, "now")
         coverage_state, _, _ = summarize_coverage(
             required_capabilities, coverage, now=observed_at
         )
@@ -597,6 +632,6 @@ def evaluate_security_state(
         coverage=coverage,
         required_capabilities=required_capabilities,
         signals=signals,
-        now=now,
+        now=observed_at,
     )
     return replace(assessment, scope_kind=scope_kind, scope_id=scope_id)
