@@ -104,6 +104,25 @@ def main() -> None:
     check(assessment.state == "not_covered", "explicitly unintegrated required capability must be not covered")
     check(assessment.protected_by_wardveil is False, "not-covered state cannot authorize protection")
 
+    conflicting = (
+        coverage(state="not_covered", adoption="implemented"),
+        coverage(),
+    )
+    conflict_first = assess(evidence_items=(evidence(),), coverage_items=conflicting)
+    conflict_reversed = assess(evidence_items=(evidence(),), coverage_items=tuple(reversed(conflicting)))
+    check(
+        conflict_first.state == "not_covered" and conflict_reversed.state == "not_covered",
+        "conflicting duplicate coverage must never become Protected regardless of input order",
+    )
+    check(
+        conflict_first.protected_by_wardveil is False and conflict_reversed.protected_by_wardveil is False,
+        "conflicting duplicate coverage cannot authorize a protection claim",
+    )
+    check(
+        conflict_first.coverage_state == conflict_reversed.coverage_state == "not_covered",
+        "duplicate coverage conflict resolution must be deterministic and conservative",
+    )
+
     assessment = assess(
         evidence_items=(evidence(),),
         coverage_items=(coverage(adoption="runtime_validated"),),

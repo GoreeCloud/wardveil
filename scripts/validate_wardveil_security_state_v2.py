@@ -137,6 +137,8 @@ def main() -> None:
     reference_text = REFERENCE.read_text(encoding="utf-8")
     for token in (
         "LEGACY_PRESENTATION_MAP",
+        "COVERAGE_PRECEDENCE",
+        "_conservative_coverage_state",
         "reconciliation_required",
         "production_accepted",
         "no_authoritative_protection_verification",
@@ -155,9 +157,11 @@ def main() -> None:
     for token in (
         "valid evidence for a different scope must fail closed",
         "security assessment must reject record serialization under a different scope",
+        "conflicting duplicate coverage must never become Protected regardless of input order",
+        "duplicate coverage conflict resolution must be deterministic and conservative",
     ):
         if token not in test_text:
-            fail(f"security-state tests missing exact-scope regression: {token}")
+            fail(f"security-state tests missing exact-scope or conflict regression: {token}")
 
     registry_text = REGISTRY_REFERENCE.read_text(encoding="utf-8")
     for token in (

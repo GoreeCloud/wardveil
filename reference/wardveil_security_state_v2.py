@@ -72,6 +72,18 @@ CAPABILITIES = (
     "recovery_security_verification",
 )
 
+# Lower index is more conservative for conflicting observations. This mirrors
+# summarize_coverage()'s existing aggregate precedence while removing the prior
+# order-dependent last-write-wins behavior for duplicate capabilities.
+COVERAGE_PRECEDENCE = (
+    "not_covered",
+    "partial",
+    "unknown",
+    "stale",
+    "degraded",
+    "covered",
+)
+
 LEGACY_PRESENTATION_MAP = {
     "protected": "protected",
     "at_risk": "attention",
@@ -283,6 +295,25 @@ def _assessment_evidence_status(assessment: SecurityAssessment) -> str:
     return "current"
 
 
+def _conservative_coverage_state(
+    observations: Iterable[CoverageObservation],
+    *,
+    now: datetime,
+) -> str:
+    """Resolve duplicate capability observations deterministically and fail closed."""
+
+    effective_states = {
+        item.effective_coverage_state(now)
+        for item in observations
+    }
+    if not effective_states:
+        return "not_covered"
+    return next(
+        state for state in COVERAGE_PRECEDENCE
+        if state in effective_states
+    )
+
+
 def summarize_coverage(
     required_capabilities: Iterable[str],
     coverage: Iterable[CoverageObservation],
@@ -296,7 +327,10 @@ def summarize_coverage(
         if capability not in CAPABILITIES:
             raise ValueError(f"unsupported required capability: {capability}")
 
-    by_capability = {item.capability: item for item in coverage}
+    by_capability: dict[str, list[CoverageObservation]] = {}
+    for item in coverage:
+        by_capability.setdefault(item.capability, []).append(item)
+
     missing: list[str] = []
     uncertain: list[str] = []
     partial: list[str] = []
@@ -305,12 +339,12 @@ def summarize_coverage(
     covered: list[str] = []
 
     for capability in required:
-        item = by_capability.get(capability)
-        if item is None:
+        items = by_capability.get(capability)
+        if not items:
             missing.append(capability)
             continue
 
-        effective = item.effective_coverage_state(now)
+        effective = _conservative_coverage_state(items, now=now)
         if effective == "not_covered":
             missing.append(capability)
         elif effective == "unknown":
