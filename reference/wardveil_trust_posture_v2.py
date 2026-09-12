@@ -5,6 +5,7 @@ The evaluator prefers explicit uncertainty over a global or permanent trust labe
 """
 from __future__ import annotations
 
+import unicodedata
 from datetime import datetime, timezone
 from typing import Any, Mapping
 
@@ -20,6 +21,29 @@ INPUT_STATES = {"present", "missing", "stale", "conflicting", "invalid"}
 IMPACT_LEVELS = {"low", "medium", "high"}
 HIGH_IMPACT_MAX_AGE_SECONDS = 300
 DEFAULT_MAX_AGE_SECONDS = 900
+TOP_LEVEL_FIELDS = {
+    "schema_version",
+    "subject_id",
+    "device_id",
+    "session_id",
+    "runtime_id",
+    "application_id",
+    "action",
+    "impact",
+    "observed_at",
+    "expires_at",
+    "inputs",
+    "reevaluation_triggers",
+    "proposed_state",
+}
+INPUT_FIELDS = {"id", "state", "authority", "evidence_reference"}
+TRIGGER_FIELDS = {
+    "session_revoked",
+    "credential_compromised",
+    "runtime_integrity_failed",
+    "material_posture_changed",
+    "material_security_incident",
+}
 
 
 def _parse_time(value: Any, name: str) -> datetime:
@@ -32,14 +56,25 @@ def _parse_time(value: Any, name: str) -> datetime:
     return parsed.astimezone(timezone.utc)
 
 
-def _string(record: Mapping[str, Any], name: str, limit: int = 256) -> str:
-    value = record.get(name)
+def _closed(record: Mapping[str, Any], allowed: set[str], name: str) -> None:
+    unsupported = set(record) - allowed
+    if unsupported:
+        raise ValueError(f"{name} contains unsupported fields: {sorted(unsupported)!r}")
+
+
+def _clean_text(value: Any, name: str, limit: int) -> str:
     if not isinstance(value, str) or not value.strip():
         raise ValueError(f"{name} must be a non-empty string")
-    value = value.strip()
-    if len(value) > limit:
+    text = value.strip()
+    if len(text) > limit:
         raise ValueError(f"{name} exceeds {limit} characters")
-    return value
+    if any(unicodedata.category(char).startswith("C") for char in text):
+        raise ValueError(f"{name} contains control characters")
+    return text
+
+
+def _string(record: Mapping[str, Any], name: str, limit: int = 256) -> str:
+    return _clean_text(record.get(name), name, limit)
 
 
 def evaluate_trust_posture(
@@ -50,6 +85,12 @@ def evaluate_trust_posture(
     The result cannot authorize execution. Missing, stale, conflicting, invalid,
     revoked, compromised, or integrity-failed evidence fails closed.
     """
+    if not isinstance(record, Mapping):
+        raise ValueError("trust posture record must be an object")
+    _closed(record, TOP_LEVEL_FIELDS, "trust posture record")
+    if record.get("schema_version") != SCHEMA_VERSION:
+        raise ValueError("trust posture schema_version is unsupported")
+
     subject_id = _string(record, "subject_id", 128)
     device_id = _string(record, "device_id", 128)
     session_id = _string(record, "session_id", 128)
@@ -78,6 +119,7 @@ def evaluate_trust_posture(
     for index, item in enumerate(inputs):
         if not isinstance(item, Mapping):
             raise ValueError(f"inputs[{index}] must be an object")
+        _closed(item, INPUT_FIELDS, f"inputs[{index}]")
         input_id = _string(item, "id", 128)
         if input_id in seen:
             raise ValueError(f"duplicate trust input {input_id}")
@@ -88,11 +130,21 @@ def evaluate_trust_posture(
         authority = _string(item, "authority", 128)
         evidence_reference = item.get("evidence_reference")
         if state == "present":
-            if not isinstance(evidence_reference, str) or not evidence_reference.strip():
-                raise ValueError(f"present trust input {input_id} requires evidence_reference")
-            evidence_reference = evidence_reference.strip()
-        elif evidence_reference is not None and not isinstance(evidence_reference, str):
-            raise ValueError(f"trust input {input_id} evidence_reference must be a string or null")
+            evidence_reference = _clean_text(
+                evidence_reference,
+                f"inputs[{index}].evidence_reference",
+                512,
+            )
+        elif evidence_reference is not None:
+            if not isinstance(evidence_reference, str):
+                raise ValueError(
+                    f"trust input {input_id} evidence_reference must be a string or null"
+                )
+            evidence_reference = _clean_text(
+                evidence_reference,
+                f"inputs[{index}].evidence_reference",
+                512,
+            )
 
         if state != "present":
             reasons.append(f"input_{state}:{input_id}")
@@ -108,6 +160,7 @@ def evaluate_trust_posture(
     triggers = record.get("reevaluation_triggers", {})
     if not isinstance(triggers, Mapping):
         raise ValueError("reevaluation_triggers must be an object")
+    _closed(triggers, TRIGGER_FIELDS, "reevaluation_triggers")
     trigger_names = (
         "session_revoked",
         "credential_compromised",
