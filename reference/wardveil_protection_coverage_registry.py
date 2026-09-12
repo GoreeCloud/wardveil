@@ -46,6 +46,22 @@ def _utc_now() -> datetime:
     return datetime.now(timezone.utc)
 
 
+def _validate_evidence_refs(references: tuple[str, ...]) -> None:
+    if len(references) > 32:
+        raise ValueError("coverage evidence references must contain at most 32 entries")
+    if len(set(references)) != len(references):
+        raise ValueError("coverage evidence references must be unique")
+    for reference in references:
+        if (
+            not isinstance(reference, str)
+            or not reference
+            or reference != reference.strip()
+            or len(reference) > 256
+            or any(ord(char) < 32 or 127 <= ord(char) <= 159 for char in reference)
+        ):
+            raise ValueError("coverage evidence references must be bounded canonical text")
+
+
 @dataclass(frozen=True)
 class CoverageRegistryRecord:
     subject_kind: str
@@ -82,6 +98,7 @@ class CoverageRegistryRecord:
             raise ValueError(f"unsupported adoption state: {self.adoption_state}")
         if self.evidence_status not in EVIDENCE_STATES:
             raise ValueError(f"unsupported evidence status: {self.evidence_status}")
+        _validate_evidence_refs(self.evidence_refs)
         _require_aware(self.observed_at, "observed_at")
         if self.valid_until is not None:
             _require_aware(self.valid_until, "valid_until")
@@ -142,6 +159,13 @@ class CoverageRegistryRecord:
             self.valid_until is None or self.valid_until <= now
         ):
             evidence_status = "stale"
+        elif (
+            self.evidence_status == "current"
+            and self.coverage_state == "covered"
+            and self.adoption_state == "production_accepted"
+            and not self.evidence_refs
+        ):
+            evidence_status = "unverified"
 
         return {
             "contract_version": "0.2.0",
