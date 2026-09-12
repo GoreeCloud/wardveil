@@ -116,6 +116,22 @@ def _validate_scope(scope_kind: str, scope_id: str) -> tuple[str, str]:
     return scope_kind, scope_id
 
 
+def _validate_coverage_evidence_refs(references: tuple[str, ...]) -> None:
+    if len(references) > 32:
+        raise ValueError("coverage evidence references must contain at most 32 entries")
+    if len(set(references)) != len(references):
+        raise ValueError("coverage evidence references must be unique")
+    for reference in references:
+        if (
+            not isinstance(reference, str)
+            or not reference
+            or reference != reference.strip()
+            or len(reference) > 256
+            or any(ord(char) < 32 or 127 <= ord(char) <= 159 for char in reference)
+        ):
+            raise ValueError("coverage evidence references must be bounded canonical text")
+
+
 @dataclass(frozen=True)
 class EvidenceObservation:
     evidence_id: str
@@ -177,6 +193,7 @@ class CoverageObservation:
             raise ValueError(f"unsupported adoption state: {self.adoption_state}")
         if self.evidence_status not in EVIDENCE_STATES:
             raise ValueError(f"unsupported evidence status: {self.evidence_status}")
+        _validate_coverage_evidence_refs(self.evidence_refs)
         if self.observed_at is not None:
             _require_aware(self.observed_at, "observed_at")
         if self.valid_until is not None:
@@ -191,6 +208,8 @@ class CoverageObservation:
         if self.evidence_status != "current":
             return False
         if self.observed_at is None or self.valid_until is None:
+            return False
+        if self.coverage_state == "covered" and self.adoption_state == "production_accepted" and not self.evidence_refs:
             return False
         return self.observed_at <= now < self.valid_until
 
@@ -214,6 +233,8 @@ class CoverageObservation:
             return self.coverage_state
         if self.adoption_state != "production_accepted":
             return "partial"
+        if not self.evidence_refs:
+            return "unknown"
         return "covered"
 
 
@@ -461,10 +482,13 @@ def _evaluate_security_state_unscoped(
         )
 
     if coverage_state == "unknown":
+        details = tuple(
+            f"capability_coverage_unverified:{cap}" for cap in uncertain_caps
+        ) or ("coverage_unknown",)
         return SecurityAssessment(
             "unknown",
             coverage_state,
-            ("coverage_unknown",),
+            details,
             evidence_refs,
             now,
             min(valid_until_values) if valid_until_values else None,
