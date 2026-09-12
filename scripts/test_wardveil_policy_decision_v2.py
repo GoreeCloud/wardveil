@@ -93,6 +93,24 @@ def test_surrounding_whitespace_in_authority_fields_fails_closed() -> None:
     assert "request_target_missing" in result["reason_codes"]
 
 
+def test_control_characters_in_policy_evidence_fail_closed() -> None:
+    mutations = [
+        ("correlation", lambda candidate: candidate.__setitem__("correlation_id", "corr-policy\n001"), "correlation_id_missing"),
+        ("target", lambda candidate: candidate["request"].__setitem__("target", "drive:file:\u0000example"), "request_target_missing"),
+        ("scope", lambda candidate: candidate["request"].__setitem__("scopes", ["drive.file\tquarantine"]), "request_scopes_invalid"),
+        ("trust evidence", lambda candidate: candidate["trust"].__setitem__("evidence_refs", ["evidence:trust:\n001"]), "trust_evidence_refs_invalid"),
+        ("evidence", lambda candidate: candidate.__setitem__("evidence_refs", ["evidence:scan:\r001"]), "evidence_refs_invalid"),
+        ("time", lambda candidate: candidate.__setitem__("observed_at", "2026-09-11T17:59:00Z\n"), "decision_time_invalid"),
+    ]
+    for _, mutate, expected_reason in mutations:
+        candidate = record()
+        mutate(candidate)
+        result = evaluate_policy_decision(candidate, evaluated_at=NOW)
+        assert result["decision_usable"] is False
+        assert result["enforcement_allowed"] is False
+        assert expected_reason in result["reason_codes"]
+
+
 def test_conditional_allow_requires_obligations() -> None:
     candidate = record()
     candidate["decision"] = "allow_with_obligations"
