@@ -44,6 +44,15 @@ def fixture() -> dict:
     }
 
 
+def assert_rejected(record: dict, expected: str) -> None:
+    try:
+        evaluate_trust_posture(record, evaluated_at=NOW)
+    except ValueError as exc:
+        assert expected in str(exc)
+    else:
+        raise AssertionError(f"trust posture record should have failed: {expected}")
+
+
 def main() -> int:
     result = evaluate_trust_posture(fixture(), evaluated_at=NOW)
     assert result["trust_state"] == "trusted"
@@ -109,12 +118,27 @@ def main() -> int:
 
     duplicate = fixture()
     duplicate["inputs"].append(copy.deepcopy(duplicate["inputs"][0]))
-    try:
-        evaluate_trust_posture(duplicate, evaluated_at=NOW)
-    except ValueError as exc:
-        assert "duplicate trust input" in str(exc)
-    else:
-        raise AssertionError("duplicate trust inputs must fail closed")
+    assert_rejected(duplicate, "duplicate trust input")
+
+    wrong_schema = fixture()
+    wrong_schema["schema_version"] = "0.2.0"
+    assert_rejected(wrong_schema, "schema_version")
+
+    extra_top_level = fixture()
+    extra_top_level["global_override"] = True
+    assert_rejected(extra_top_level, "unsupported fields")
+
+    extra_input = fixture()
+    extra_input["inputs"][0]["authorization_effect"] = True
+    assert_rejected(extra_input, "unsupported fields")
+
+    extra_trigger = fixture()
+    extra_trigger["reevaluation_triggers"] = {"force_trusted": True}
+    assert_rejected(extra_trigger, "unsupported fields")
+
+    control_character = fixture()
+    control_character["inputs"][0]["authority"] = "goreecloud-identity\ntrusted"
+    assert_rejected(control_character, "control characters")
 
     print("Wardveil trust posture tests passed")
     return 0
