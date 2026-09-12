@@ -41,13 +41,13 @@ def evidence(*, status="current", authoritative=True, verifies=True, scope_kind=
     )
 
 
-def coverage(*, state="covered", adoption="production_accepted", evidence_status="current"):
+def coverage(*, state="covered", adoption="production_accepted", evidence_status="current", evidence_refs=("coverage-1",)):
     return CoverageObservation(
         capability="malware_protection",
         coverage_state=state,
         adoption_state=adoption,
         evidence_status=evidence_status,
-        evidence_refs=("coverage-1",),
+        evidence_refs=evidence_refs,
         observed_at=NOW - timedelta(minutes=1),
         valid_until=NOW + timedelta(minutes=9),
     )
@@ -125,6 +125,24 @@ def main() -> None:
         identity_conflict_first.evidence_refs == identity_conflict_reversed.evidence_refs == (duplicate.evidence_id,),
         "evidence ID conflict must retain one bounded reference without hiding the conflict reason",
     )
+
+    unreferenced_coverage = coverage(evidence_refs=())
+    assessment = assess(evidence_items=(evidence(),), coverage_items=(unreferenced_coverage,))
+    check(assessment.coverage_state == "unknown", "unreferenced production coverage must fail closed to unknown")
+    check(assessment.state == "unknown", "unreferenced production coverage must never produce Protected")
+    check(assessment.protected_by_wardveil is False, "unreferenced production coverage cannot authorize a protection claim")
+    check(
+        "capability_coverage_unverified:malware_protection" in assessment.reason_codes,
+        "missing production coverage evidence must be explainable",
+    )
+
+    for bad_refs in (("duplicate", "duplicate"), (" bad",), ("x" * 257,)):
+        try:
+            coverage(evidence_refs=bad_refs)
+        except ValueError as exc:
+            check("coverage evidence references" in str(exc), "invalid coverage evidence reference rejection should be explainable")
+        else:
+            raise AssertionError("invalid coverage evidence references must be rejected")
 
     assessment = assess(
         evidence_items=(evidence(),),
