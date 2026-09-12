@@ -34,6 +34,35 @@ FOUNDATION_09_COMPATIBILITY = {
     "escalate": ("defer", ("route_to_authorized_response_path",)),
 }
 
+TOP_LEVEL_FIELDS = {
+    "contract_version",
+    "record_type",
+    "decision_id",
+    "correlation_id",
+    "policy",
+    "actor",
+    "request",
+    "trust",
+    "decision",
+    "reason_codes",
+    "obligations",
+    "evidence_refs",
+    "observed_at",
+    "valid_until",
+    "revocation",
+    "execution_boundary",
+}
+POLICY_FIELDS = {"policy_id", "policy_version", "policy_digest"}
+ACTOR_FIELDS = {"subject_id", "service_id"}
+REQUEST_FIELDS = {"action", "target", "purpose", "scopes", "audiences"}
+TRUST_FIELDS = {"state", "evidence_refs"}
+REVOCATION_FIELDS = {"state", "reason_code", "revoked_at"}
+EXECUTION_BOUNDARY_FIELDS = {
+    "execution_authorization_required",
+    "policy_decision_is_execution_authorization",
+    "policy_decision_proves_execution_success",
+}
+
 
 def _parse_time(value: str) -> datetime:
     if not isinstance(value, str) or not value:
@@ -45,7 +74,7 @@ def _parse_time(value: str) -> datetime:
 
 
 def _nonempty(value: Any) -> bool:
-    return isinstance(value, str) and bool(value.strip())
+    return isinstance(value, str) and bool(value.strip()) and value == value.strip()
 
 
 def _unique_nonempty_strings(value: Any) -> bool:
@@ -64,6 +93,10 @@ def _valid_uuid(value: Any) -> bool:
         return False
 
 
+def _closed_shape(value: Any, expected: set[str]) -> bool:
+    return isinstance(value, dict) and set(value) == expected
+
+
 def evaluate_policy_decision(record: dict[str, Any], *, evaluated_at: str) -> dict[str, Any]:
     """Evaluate one durable Policy decision conservatively and fail closed."""
     reasons: list[str] = []
@@ -72,6 +105,9 @@ def evaluate_policy_decision(record: dict[str, Any], *, evaluated_at: str) -> di
     except ValueError:
         now = datetime.max.replace(tzinfo=timezone.utc)
         reasons.append("evaluation_time_invalid")
+
+    if not _closed_shape(record, TOP_LEVEL_FIELDS):
+        reasons.append("record_shape_invalid")
 
     if record.get("contract_version") != CONTRACT_VERSION:
         reasons.append("contract_version_mismatch")
@@ -83,24 +119,24 @@ def evaluate_policy_decision(record: dict[str, Any], *, evaluated_at: str) -> di
         reasons.append("correlation_id_missing")
 
     policy = record.get("policy")
-    if not isinstance(policy, dict):
-        reasons.append("policy_binding_missing")
-        policy = {}
+    if not _closed_shape(policy, POLICY_FIELDS):
+        reasons.append("policy_shape_invalid")
+        policy = policy if isinstance(policy, dict) else {}
     for field in ("policy_id", "policy_version", "policy_digest"):
         if not _nonempty(policy.get(field)):
             reasons.append(f"policy_{field}_missing")
 
     actor = record.get("actor")
-    if not isinstance(actor, dict):
-        reasons.append("actor_binding_missing")
-        actor = {}
+    if not _closed_shape(actor, ACTOR_FIELDS):
+        reasons.append("actor_shape_invalid")
+        actor = actor if isinstance(actor, dict) else {}
     if not (_nonempty(actor.get("subject_id")) or _nonempty(actor.get("service_id"))):
         reasons.append("actor_identity_missing")
 
     request = record.get("request")
-    if not isinstance(request, dict):
-        reasons.append("request_binding_missing")
-        request = {}
+    if not _closed_shape(request, REQUEST_FIELDS):
+        reasons.append("request_shape_invalid")
+        request = request if isinstance(request, dict) else {}
     for field in ("action", "target", "purpose"):
         if not _nonempty(request.get(field)):
             reasons.append(f"request_{field}_missing")
@@ -109,9 +145,9 @@ def evaluate_policy_decision(record: dict[str, Any], *, evaluated_at: str) -> di
             reasons.append(f"request_{field}_invalid")
 
     trust = record.get("trust")
-    if not isinstance(trust, dict):
-        reasons.append("trust_binding_missing")
-        trust = {}
+    if not _closed_shape(trust, TRUST_FIELDS):
+        reasons.append("trust_shape_invalid")
+        trust = trust if isinstance(trust, dict) else {}
     if not _nonempty(trust.get("state")):
         reasons.append("trust_state_missing")
     if not _unique_nonempty_strings(trust.get("evidence_refs")):
@@ -152,9 +188,9 @@ def evaluate_policy_decision(record: dict[str, Any], *, evaluated_at: str) -> di
         reasons.append("decision_time_invalid")
 
     revocation = record.get("revocation")
-    if not isinstance(revocation, dict):
-        reasons.append("revocation_state_missing")
-        revocation = {}
+    if not _closed_shape(revocation, REVOCATION_FIELDS):
+        reasons.append("revocation_shape_invalid")
+        revocation = revocation if isinstance(revocation, dict) else {}
     revocation_state = revocation.get("state")
     if revocation_state not in REVOCATION_STATES:
         reasons.append("revocation_state_invalid")
@@ -175,9 +211,9 @@ def evaluate_policy_decision(record: dict[str, Any], *, evaluated_at: str) -> di
             reasons.append("revocation_time_invalid")
 
     boundary = record.get("execution_boundary")
-    if not isinstance(boundary, dict):
-        reasons.append("execution_boundary_missing")
-        boundary = {}
+    if not _closed_shape(boundary, EXECUTION_BOUNDARY_FIELDS):
+        reasons.append("execution_boundary_shape_invalid")
+        boundary = boundary if isinstance(boundary, dict) else {}
     if boundary.get("execution_authorization_required") is not True:
         reasons.append("execution_authorization_requirement_missing")
     if boundary.get("policy_decision_is_execution_authorization") is not False:
