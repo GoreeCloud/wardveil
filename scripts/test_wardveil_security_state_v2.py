@@ -41,15 +41,23 @@ def evidence(*, status="current", authoritative=True, verifies=True, scope_kind=
     )
 
 
-def coverage(*, state="covered", adoption="production_accepted", evidence_status="current", evidence_refs=("coverage-1",)):
+def coverage(
+    *,
+    state="covered",
+    adoption="production_accepted",
+    evidence_status="current",
+    evidence_refs=("coverage-1",),
+    observed_at=None,
+    valid_until=None,
+):
     return CoverageObservation(
         capability="malware_protection",
         coverage_state=state,
         adoption_state=adoption,
         evidence_status=evidence_status,
         evidence_refs=evidence_refs,
-        observed_at=NOW - timedelta(minutes=1),
-        valid_until=NOW + timedelta(minutes=9),
+        observed_at=observed_at or NOW - timedelta(minutes=1),
+        valid_until=valid_until or NOW + timedelta(minutes=9),
     )
 
 
@@ -71,6 +79,41 @@ def main() -> None:
     check(protected.protected_by_wardveil is True, "protected state must permit the scoped Wardveil claim")
     check(protected.legacy_presentation_state == "protected", "legacy mapping must preserve protected")
     check(protected.scope_kind == SCOPE_KIND and protected.scope_id == SCOPE_ID, "assessment must retain exact scope")
+    check(
+        protected.evidence_refs == ("ev-protect-1", "coverage-1"),
+        "Protected assessment must expose both direct protection and required coverage evidence references",
+    )
+    check(
+        protected.valid_until == NOW + timedelta(minutes=4),
+        "Protected lifetime must use the earliest current evidence expiry",
+    )
+
+    short_coverage = coverage(
+        evidence_refs=("coverage-short",),
+        valid_until=NOW + timedelta(minutes=2),
+    )
+    coverage_bounded = assess(
+        evidence_items=(evidence(),),
+        coverage_items=(short_coverage,),
+    )
+    check(coverage_bounded.state == "protected", "shorter current coverage evidence can still support Protected before expiry")
+    check(
+        coverage_bounded.valid_until == short_coverage.valid_until,
+        "Protected state must not outlive the coverage evidence that justified covered capability state",
+    )
+    check(
+        coverage_bounded.evidence_refs == ("ev-protect-1", "coverage-short"),
+        "Protected evidence references must retain the coverage proof that bounds the claim",
+    )
+    coverage_bounded_record = coverage_bounded.as_record()
+    check(
+        coverage_bounded_record["evidence"]["valid_until"] == short_coverage.valid_until.isoformat(),
+        "serialized Protected evidence window must preserve the earliest coverage expiry",
+    )
+    check(
+        coverage_bounded_record["evidence"]["references"] == ["ev-protect-1", "coverage-short"],
+        "serialized Protected record must expose direct and coverage evidence references",
+    )
 
     foreign = assess(evidence_items=(evidence(scope_id="goreecloud-other"),))
     check(foreign.state == "unknown", "valid evidence for a different scope must fail closed")
@@ -101,7 +144,10 @@ def main() -> None:
     duplicate = evidence()
     exact_replay = assess(evidence_items=(duplicate, duplicate))
     check(exact_replay.state == "protected", "exact duplicate evidence replay must remain idempotent")
-    check(exact_replay.evidence_refs == (duplicate.evidence_id,), "exact duplicate replay must not duplicate evidence references")
+    check(
+        exact_replay.evidence_refs == (duplicate.evidence_id, "coverage-1"),
+        "exact duplicate replay must deduplicate direct evidence while retaining required coverage evidence",
+    )
 
     conflicting_evidence = (
         duplicate,
