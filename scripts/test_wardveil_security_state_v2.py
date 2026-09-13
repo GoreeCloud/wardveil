@@ -89,6 +89,13 @@ def main() -> None:
         "Protected lifetime must use the earliest current evidence expiry",
     )
 
+    nested_ref = "evidence+sha256:" + "a" * 64 + ":reports/coverage-1.json"
+    nested_coverage = coverage(evidence_refs=(nested_ref,))
+    check(
+        nested_coverage.effective_coverage_state(NOW) == "covered",
+        "credential-free nested logical locators must remain valid production evidence references",
+    )
+
     short_ref = "evidence+sha256:" + "d" * 64 + ":coverage-short"
     short_coverage = coverage(
         evidence_refs=(short_ref,),
@@ -190,6 +197,25 @@ def main() -> None:
         check("immutable evidence+sha256" in str(exc), "mutable production coverage rejection should be explainable")
     else:
         raise AssertionError("mutable production coverage evidence references must be rejected")
+
+    unsafe_digest = "f" * 64
+    unsafe_production_refs = (
+        f"evidence+sha256:{unsafe_digest}:https://evidence.example/report",
+        f"evidence+sha256:{unsafe_digest}:reports/current.json?token=secret",
+        f"evidence+sha256:{unsafe_digest}:user@host/report",
+        f"evidence+sha256:{unsafe_digest}:reports/%2E%2E/secret",
+        f"evidence+sha256:{unsafe_digest}:reports/report.json#fragment",
+    )
+    for unsafe_ref in unsafe_production_refs:
+        try:
+            coverage(evidence_refs=(unsafe_ref,))
+        except ValueError as exc:
+            check(
+                "credential-free logical locators" in str(exc),
+                "unsafe production coverage locator rejection should explain the credential-safe boundary",
+            )
+        else:
+            raise AssertionError("production coverage evidence locators must reject transport or credential-bearing syntax")
 
     source_only_mutable = coverage(
         adoption="source_validated",
