@@ -3,6 +3,14 @@
   "$id": "urn:goreecloud:wardveil:audit-event:0.1.0",
   "title": "Wardveil Next-Upgrade Audit Event",
   "description": "Privacy-minimized append-only Wardveil security provenance event.",
+  "$defs": {
+    "credentialSafeLogicalReference": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._+-]*(?::[A-Za-z0-9][A-Za-z0-9._+-]*)*(?:/[A-Za-z0-9][A-Za-z0-9._+-]*(?::[A-Za-z0-9][A-Za-z0-9._+-]*)*)*$"
+    }
+  },
   "type": "object",
   "additionalProperties": false,
   "required": ["contract_version", "record_type", "sequence", "audit_event_id", "correlation_id", "event_category", "producer", "observed_at", "evidence_observed_at", "target", "requested_action", "outcome", "evidence_refs", "verification_evidence_refs", "source_record_refs", "reconciliation_state", "reason_code", "summary", "retention", "event_hash"],
@@ -43,14 +51,14 @@
     },
     "requested_action": {"type": "string", "minLength": 1, "maxLength": 128},
     "outcome": {"type": "string", "enum": ["requested", "succeeded", "failed", "denied", "blocked", "partial", "unknown", "reconciled"]},
-    "evidence_refs": {"type": "array", "minItems": 1, "maxItems": 64, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 256}},
-    "verification_evidence_refs": {"type": "array", "maxItems": 64, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 256}},
-    "source_record_refs": {"type": "array", "minItems": 1, "maxItems": 64, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 256}},
+    "evidence_refs": {"type": "array", "minItems": 1, "maxItems": 64, "uniqueItems": true, "items": {"$ref": "#/$defs/credentialSafeLogicalReference"}},
+    "verification_evidence_refs": {"type": "array", "maxItems": 64, "uniqueItems": true, "items": {"$ref": "#/$defs/credentialSafeLogicalReference"}},
+    "source_record_refs": {"type": "array", "minItems": 1, "maxItems": 64, "uniqueItems": true, "items": {"$ref": "#/$defs/credentialSafeLogicalReference"}},
     "reconciliation_state": {"type": "string", "enum": ["not_applicable", "not_required", "required", "reconciled"]},
     "reconciles_audit_event_id": {"type": "string", "minLength": 1, "maxLength": 160},
     "reconciled_outcome": {"type": "string", "enum": ["succeeded", "failed", "not_executed", "unknown"]},
-    "incident_ref": {"type": "string", "minLength": 1, "maxLength": 256},
-    "quarantine_object_ref": {"type": "string", "minLength": 1, "maxLength": 256},
+    "incident_ref": {"$ref": "#/$defs/credentialSafeLogicalReference"},
+    "quarantine_object_ref": {"$ref": "#/$defs/credentialSafeLogicalReference"},
     "reason_code": {"type": "string", "minLength": 1, "maxLength": 128},
     "summary": {"type": "string", "minLength": 1, "maxLength": 512},
     "retention": {
