@@ -42,6 +42,22 @@ Each coverage record also preserves the independent Wardveil adoption lifecycle:
 
 A source-valid or runtime-valid integration does not become fully `covered` for protection-claim purposes until the applicable capability is production accepted and its evidence remains current.
 
+## Production coverage evidence integrity
+
+A record that would otherwise become `covered` with `adoption_state=production_accepted` and `evidence.status=current` must carry at least one immutable content-addressed evidence reference.
+
+The production reference form is:
+
+`evidence+sha256:<64-lowercase-hex-digest>:<locator>`
+
+This requirement binds the coverage claim to the exact evidence bytes that were accepted. Mutable references such as `artifact:latest`, unversioned URLs, or symbolic references such as `evidence:application:capability` cannot support a current production `covered` state.
+
+Production/current/covered evidence references are also bounded, unique, canonical, control-free, and limited to 32 entries of at most 256 characters each.
+
+Lower-lifecycle or non-covered records may continue to use bounded canonical references while implementation and qualification work is still evolving. Those references do not convert source validation, runtime validation, degraded evidence, or other non-production states into production `covered` protection.
+
+This is an evidence-integrity boundary, not an assertion that real production evidence already exists.
+
 ## Registry identity and scope
 
 The registry key binds:
@@ -69,6 +85,7 @@ Registry updates are ordered by authoritative observation time.
 - Future-dated evidence is treated as unverified.
 - Expired evidence becomes `stale`.
 - Unavailable or unverified evidence becomes `unknown`.
+- Current production `covered` evidence that is not content-addressed is rejected before it can support a coverage or protection claim.
 
 These rules are intentionally fail closed.
 
@@ -76,7 +93,7 @@ These rules are intentionally fail closed.
 
 The source reference exposes three bounded impact values:
 
-- `none` — current `covered` capability at `production_accepted`.
+- `none` — current `covered` capability at `production_accepted` with valid immutable coverage evidence.
 - `blocks_stable` — known partial, not-covered, stale, or degraded coverage blocks Stable qualification for a required capability.
 - `unknown` — current coverage cannot be established from valid evidence.
 
@@ -95,6 +112,6 @@ This is a coverage input to Stable qualification, not a complete Stable decision
 
 ## Validation boundary
 
-The source tests verify registry identity isolation, enforcement-point downgrades, adoption-state handling, stale evidence, degraded coverage, unavailable evidence, aggregate coverage, missing capabilities, out-of-order update rejection, same-time conflict rejection, application/service separation, and contract export.
+The source tests verify registry identity isolation, enforcement-point downgrades, adoption-state handling, immutable content-addressed evidence for current production covered capability state, mutable-reference rejection at the production boundary, lower-lifecycle reference handling without promotion, stale evidence, degraded coverage, unavailable evidence, aggregate coverage, missing capabilities, out-of-order update rejection, same-time conflict rejection, application/service separation, and contract export.
 
 These tests establish only source-level behavior. Runtime observation, live application integration, Security Center consumption, deployment, production acceptance, and Stable qualification remain separate evidence gates.
