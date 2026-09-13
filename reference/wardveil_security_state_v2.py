@@ -98,7 +98,7 @@ LEGACY_PRESENTATION_MAP = {
 }
 
 COVERAGE_EVIDENCE_REFERENCE = re.compile(
-    r"^evidence\+sha256:[0-9a-f]{64}:\S{1,175}$"
+    r"^evidence\+sha256:[0-9a-f]{64}:[A-Za-z0-9][A-Za-z0-9._-]*(?:/[A-Za-z0-9][A-Za-z0-9._-]*)*$"
 )
 
 
@@ -141,7 +141,7 @@ def _validate_coverage_evidence_refs(
             raise ValueError("coverage evidence references must be bounded canonical text")
         if require_content_addressed and COVERAGE_EVIDENCE_REFERENCE.fullmatch(reference) is None:
             raise ValueError(
-                "production coverage evidence references must use immutable evidence+sha256 references"
+                "production coverage evidence references must use immutable evidence+sha256 references with credential-free logical locators"
             )
 
 
