@@ -210,7 +210,9 @@ def main() -> None:
         resource_id="file-2",
         requested_action="quarantine",
         outcome="succeeded",
-        evidence_refs=("protect-receipt:2",),
+        evidence_refs=(
+            "evidence+sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:reports/protect-receipt-2.json",
+        ),
         verification_evidence_refs=("drive-readback:held:2",),
         source_record_refs=("execution-claim:2", "protect-receipt:2"),
         reconciliation_state="not_required",
@@ -257,6 +259,72 @@ def main() -> None:
         )
     else:
         raise AssertionError("audit ledger accepted obvious credential material")
+
+    credential_bearing_refs = (
+        "https://evidence.example/report",
+        "evidence:1?sig=opaque",
+        "evidence:1#fragment",
+        "operator@example",
+        "evidence%2F1",
+        "evidence:1&sig=opaque",
+        "evidence:1=opaque",
+        "evidence\\child",
+    )
+    for index, bad_ref in enumerate(credential_bearing_refs, start=1):
+        try:
+            ledger.append(
+                audit_event_id=f"audit-bad-ref-{index}",
+                correlation_id=f"corr-bad-ref-{index}",
+                event_category="security_observation",
+                producer_id="wardveil-audit",
+                authority_domain="security",
+                actor_id="operator-1",
+                target_authority="wardveil",
+                resource_type="service",
+                resource_id="wardveil-audit",
+                requested_action="observe",
+                outcome="succeeded",
+                evidence_refs=(bad_ref,),
+                source_record_refs=("record:credential-safe",),
+                reason_code="reference_privacy_test",
+                summary="Credential-bearing transport syntax must not be durable.",
+                now=NOW + timedelta(seconds=7 + index),
+            )
+        except ValueError as exc:
+            check(
+                "must_be_credential_safe_logical_reference" in str(exc),
+                "audit references must reject credential-bearing transport syntax",
+            )
+        else:
+            raise AssertionError(f"audit ledger accepted unsafe durable reference: {bad_ref}")
+
+    try:
+        ledger.append(
+            audit_event_id="audit-bad-incident-ref",
+            correlation_id="corr-bad-incident-ref",
+            event_category="security_observation",
+            producer_id="wardveil-audit",
+            authority_domain="security",
+            actor_id="operator-1",
+            target_authority="wardveil",
+            resource_type="service",
+            resource_id="wardveil-audit",
+            requested_action="observe",
+            outcome="succeeded",
+            evidence_refs=("evidence:incident-ref-test",),
+            source_record_refs=("record:incident-ref-test",),
+            incident_ref="https://incident.example/1?sig=opaque",
+            reason_code="incident_reference_privacy_test",
+            summary="Incident references must remain logical identifiers.",
+            now=NOW + timedelta(seconds=20),
+        )
+    except ValueError as exc:
+        check(
+            "incident_ref_must_be_credential_safe_logical_reference" in str(exc),
+            "incident references must use the same credential-safe logical grammar",
+        )
+    else:
+        raise AssertionError("audit ledger accepted a transport URL as incident_ref")
 
     check(ledger.verify_chain(), "complete audit chain must verify")
     tampered = replace(ledger.events[-1], summary="Tampered summary.")
