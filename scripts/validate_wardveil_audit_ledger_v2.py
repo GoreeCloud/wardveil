@@ -29,6 +29,12 @@ EXPECTED_OUTCOMES = {
     "unknown",
     "reconciled",
 }
+EXPECTED_REFERENCE_PATTERN = (
+    r"^[A-Za-z0-9][A-Za-z0-9._+-]*"
+    r"(?::[A-Za-z0-9][A-Za-z0-9._+-]*)*"
+    r"(?:/[A-Za-z0-9][A-Za-z0-9._+-]*"
+    r"(?::[A-Za-z0-9][A-Za-z0-9._+-]*)*)*$"
+)
 
 
 def fail(message: str) -> None:
@@ -55,6 +61,20 @@ def main() -> None:
         fail("audit event category vocabulary is incomplete")
     if set(props["outcome"]["enum"]) != EXPECTED_OUTCOMES:
         fail("audit outcome vocabulary is incomplete")
+
+    reference_def = schema.get("$defs", {}).get("credentialSafeLogicalReference", {})
+    if reference_def.get("pattern") != EXPECTED_REFERENCE_PATTERN:
+        fail("audit credential-safe logical-reference schema pattern drifted")
+    if reference_def.get("maxLength") != 256:
+        fail("audit logical references must remain bounded to 256 characters")
+
+    reference_ref = "#/$defs/credentialSafeLogicalReference"
+    for field in ("evidence_refs", "verification_evidence_refs", "source_record_refs"):
+        if props[field].get("items", {}).get("$ref") != reference_ref:
+            fail(f"audit {field} must use the credential-safe logical-reference contract")
+    for field in ("incident_ref", "quarantine_object_ref"):
+        if props[field].get("$ref") != reference_ref:
+            fail(f"audit {field} must use the credential-safe logical-reference contract")
 
     required = set(schema.get("required", []))
     for field in (
@@ -92,6 +112,9 @@ def main() -> None:
         "unknown_reconciliation_must_remain_required",
         "audit_event_requires_acting_identity",
         "contains_prohibited_sensitive_material",
+        "must_be_credential_safe_logical_reference",
+        "REFERENCE_PATTERN",
+        "_optional_reference",
         "verify_chain",
         "evidence_freshness",
         "security_provenance",
@@ -106,16 +129,21 @@ def main() -> None:
         "reconciliation must not clear unrelated uncertainty",
         "expired evidence may remain historical but must not present as current",
         "audit summaries must reject obvious reusable secret material",
+        "audit references must reject credential-bearing transport syntax",
+        "incident references must use the same credential-safe logical grammar",
+        "evidence+sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:reports/protect-receipt-2.json",
         "hash-linked ledger must detect event mutation",
     ):
         if token not in tests:
-            fail(f"audit tests missing negative invariant: {token}")
+            fail(f"audit tests missing negative or compatibility invariant: {token}")
 
     doc = DOC.read_text(encoding="utf-8")
     for phrase in (
         "Authorization is not execution success.",
         "Expired evidence may remain historical",
         "Privacy Shield remains the privacy and minimization authority.",
+        "Audit reference fields are logical identifiers, not transport URLs.",
+        "Retrieval credentials, signed URLs, bearer material, and similar access secrets must remain outside durable audit records.",
         "Production durable storage remains unaccepted.",
     ):
         if phrase not in doc:
