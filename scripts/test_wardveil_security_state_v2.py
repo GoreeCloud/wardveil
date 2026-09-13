@@ -19,6 +19,7 @@ from wardveil_security_state_v2 import (
 NOW = datetime(2026, 9, 9, 20, 0, tzinfo=timezone.utc)
 SCOPE_KIND = "application"
 SCOPE_ID = "goreecloud-test"
+COVERAGE_REF = "evidence+sha256:" + "c" * 64 + ":coverage-1"
 
 
 def check(condition: bool, message: str) -> None:
@@ -46,7 +47,7 @@ def coverage(
     state="covered",
     adoption="production_accepted",
     evidence_status="current",
-    evidence_refs=("coverage-1",),
+    evidence_refs=(COVERAGE_REF,),
     observed_at=None,
     valid_until=None,
 ):
@@ -80,7 +81,7 @@ def main() -> None:
     check(protected.legacy_presentation_state == "protected", "legacy mapping must preserve protected")
     check(protected.scope_kind == SCOPE_KIND and protected.scope_id == SCOPE_ID, "assessment must retain exact scope")
     check(
-        protected.evidence_refs == ("ev-protect-1", "coverage-1"),
+        protected.evidence_refs == ("ev-protect-1", COVERAGE_REF),
         "Protected assessment must expose both direct protection and required coverage evidence references",
     )
     check(
@@ -88,8 +89,9 @@ def main() -> None:
         "Protected lifetime must use the earliest current evidence expiry",
     )
 
+    short_ref = "evidence+sha256:" + "d" * 64 + ":coverage-short"
     short_coverage = coverage(
-        evidence_refs=("coverage-short",),
+        evidence_refs=(short_ref,),
         valid_until=NOW + timedelta(minutes=2),
     )
     coverage_bounded = assess(
@@ -102,7 +104,7 @@ def main() -> None:
         "Protected state must not outlive the coverage evidence that justified covered capability state",
     )
     check(
-        coverage_bounded.evidence_refs == ("ev-protect-1", "coverage-short"),
+        coverage_bounded.evidence_refs == ("ev-protect-1", short_ref),
         "Protected evidence references must retain the coverage proof that bounds the claim",
     )
     coverage_bounded_record = coverage_bounded.as_record()
@@ -111,7 +113,7 @@ def main() -> None:
         "serialized Protected evidence window must preserve the earliest coverage expiry",
     )
     check(
-        coverage_bounded_record["evidence"]["references"] == ["ev-protect-1", "coverage-short"],
+        coverage_bounded_record["evidence"]["references"] == ["ev-protect-1", short_ref],
         "serialized Protected record must expose direct and coverage evidence references",
     )
 
@@ -145,7 +147,7 @@ def main() -> None:
     exact_replay = assess(evidence_items=(duplicate, duplicate))
     check(exact_replay.state == "protected", "exact duplicate evidence replay must remain idempotent")
     check(
-        exact_replay.evidence_refs == (duplicate.evidence_id, "coverage-1"),
+        exact_replay.evidence_refs == (duplicate.evidence_id, COVERAGE_REF),
         "exact duplicate replay must deduplicate direct evidence while retaining required coverage evidence",
     )
 
@@ -182,6 +184,22 @@ def main() -> None:
         "missing production coverage evidence must be explainable",
     )
 
+    try:
+        coverage(evidence_refs=("artifact:latest",))
+    except ValueError as exc:
+        check("immutable evidence+sha256" in str(exc), "mutable production coverage rejection should be explainable")
+    else:
+        raise AssertionError("mutable production coverage evidence references must be rejected")
+
+    source_only_mutable = coverage(
+        adoption="source_validated",
+        evidence_refs=("source-validation:wardveil-malware",),
+    )
+    check(
+        source_only_mutable.effective_coverage_state(NOW) == "partial",
+        "non-production lifecycle evidence may remain canonical but mutable without becoming covered",
+    )
+
     for bad_refs in (("duplicate", "duplicate"), (" bad",), ("x" * 257,)):
         try:
             coverage(evidence_refs=bad_refs)
@@ -192,13 +210,13 @@ def main() -> None:
 
     assessment = assess(
         evidence_items=(evidence(),),
-        coverage_items=(coverage(state="not_covered", adoption="implemented"),),
+        coverage_items=(coverage(state="not_covered", adoption="implemented", evidence_refs=("implementation-note",)),),
     )
     check(assessment.state == "not_covered", "explicitly unintegrated required capability must be not covered")
     check(assessment.protected_by_wardveil is False, "not-covered state cannot authorize protection")
 
     conflicting = (
-        coverage(state="not_covered", adoption="implemented"),
+        coverage(state="not_covered", adoption="implemented", evidence_refs=("implementation-note",)),
         coverage(),
     )
     coverage_conflict_first = assess(evidence_items=(evidence(),), coverage_items=conflicting)
@@ -218,7 +236,7 @@ def main() -> None:
 
     assessment = assess(
         evidence_items=(evidence(),),
-        coverage_items=(coverage(adoption="runtime_validated"),),
+        coverage_items=(coverage(adoption="runtime_validated", evidence_refs=("runtime-validation:malware",)),),
     )
     check(assessment.state == "degraded", "runtime validation without production acceptance must not be Protected")
     check(
@@ -231,7 +249,7 @@ def main() -> None:
         coverage_state="covered",
         adoption_state="production_accepted",
         evidence_status="current",
-        evidence_refs=("coverage-stale",),
+        evidence_refs=("evidence+sha256:" + "e" * 64 + ":coverage-stale",),
         observed_at=NOW - timedelta(minutes=20),
         valid_until=NOW - timedelta(seconds=1),
     )
@@ -242,7 +260,7 @@ def main() -> None:
 
     assessment = assess(
         evidence_items=(evidence(),),
-        coverage_items=(coverage(state="degraded"),),
+        coverage_items=(coverage(state="degraded", evidence_refs=("degraded-observation",)),),
     )
     check(assessment.coverage_state == "degraded", "degraded coverage must remain distinct")
     check(assessment.state == "degraded", "degraded required coverage must degrade security state")
