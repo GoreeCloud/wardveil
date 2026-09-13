@@ -76,7 +76,16 @@
         "properties": {
           "evidence": {
             "properties": {
-              "references": {"minItems": 1, "uniqueItems": true}
+              "references": {
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "pattern": "^evidence\\+sha256:[0-9a-f]{64}:[^\\s]{1,175}$",
+                  "minLength": 82,
+                  "maxLength": 256
+                }
+              }
             }
           }
         }
