@@ -81,7 +81,7 @@
                 "uniqueItems": true,
                 "items": {
                   "type": "string",
-                  "pattern": "^evidence\\+sha256:[0-9a-f]{64}:[^\\s]{1,175}$",
+                  "pattern": "^evidence\\+sha256:[0-9a-f]{64}:[A-Za-z0-9][A-Za-z0-9._-]*(?:/[A-Za-z0-9][A-Za-z0-9._-]*)*$",
                   "minLength": 82,
                   "maxLength": 256
                 }
