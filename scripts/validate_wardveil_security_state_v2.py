@@ -165,6 +165,9 @@ def main() -> None:
         "_conservative_coverage_state",
         "_conflicting_evidence_ids",
         "_validate_coverage_evidence_refs",
+        "coverage_observations = tuple(coverage)",
+        "relevant_coverage",
+        "item.current(now)",
         "required_evidence_identity_conflict",
         "capability_coverage_unverified",
         "reconciliation_required",
@@ -192,9 +195,11 @@ def main() -> None:
         "evidence ID conflict resolution must be deterministic and explainable",
         "unreferenced production coverage must never produce Protected",
         "missing production coverage evidence must be explainable",
+        "Protected state must not outlive the coverage evidence that justified covered capability state",
+        "serialized Protected record must expose direct and coverage evidence references",
     ):
         if token not in test_text:
-            fail(f"security-state tests missing exact-scope, conflict, or evidence regression: {token}")
+            fail(f"security-state tests missing exact-scope, conflict, evidence, or lifetime regression: {token}")
 
     registry_text = REGISTRY_REFERENCE.read_text(encoding="utf-8")
     for token in (
