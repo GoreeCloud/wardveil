@@ -14,6 +14,7 @@ REFERENCE = ROOT / "reference" / "wardveil_security_state_v2.py"
 REGISTRY_REFERENCE = ROOT / "reference" / "wardveil_protection_coverage_registry.py"
 TEST = ROOT / "scripts" / "test_wardveil_security_state_v2.py"
 REGISTRY_TEST = ROOT / "scripts" / "test_wardveil_protection_coverage_registry.py"
+COVERAGE_GUIDE = ROOT / "PROTECTION-COVERAGE-REGISTRY.md"
 
 EXPECTED_STATES = {
     "protected",
@@ -160,9 +161,9 @@ def main() -> None:
         if property_name not in coverage["properties"]:
             fail(f"coverage contract missing registry field: {property_name}")
 
-    for path in (REFERENCE, REGISTRY_REFERENCE, TEST, REGISTRY_TEST):
+    for path in (REFERENCE, REGISTRY_REFERENCE, TEST, REGISTRY_TEST, COVERAGE_GUIDE):
         if not path.is_file():
-            fail(f"missing required implementation file: {path.relative_to(ROOT)}")
+            fail(f"missing required implementation or guidance file: {path.relative_to(ROOT)}")
 
     reference_text = REFERENCE.read_text(encoding="utf-8")
     for token in (
@@ -239,7 +240,18 @@ def main() -> None:
         if token not in registry_test_text:
             fail(f"coverage registry tests missing production-evidence invariant: {token}")
 
-    print("Wardveil next-upgrade security-state and coverage contracts validated.")
+    coverage_guide_text = COVERAGE_GUIDE.read_text(encoding="utf-8")
+    for token in (
+        "## Production coverage evidence integrity",
+        "evidence+sha256:<64-lowercase-hex-digest>:<locator>",
+        "Mutable references",
+        "Lower-lifecycle or non-covered records may continue to use bounded canonical references",
+        "This is an evidence-integrity boundary, not an assertion that real production evidence already exists.",
+    ):
+        if token not in coverage_guide_text:
+            fail(f"Protection Coverage Registry guidance missing production evidence invariant: {token}")
+
+    print("Wardveil next-upgrade security-state, coverage contracts, and coverage guidance validated.")
 
 
 if __name__ == "__main__":
