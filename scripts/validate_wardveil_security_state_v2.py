@@ -137,10 +137,16 @@ def main() -> None:
         "current",
         "production coverage evidence rule freshness",
     )
+    production_references = production_rule["then"]["properties"]["evidence"]["properties"]["references"]
     require_equal(
-        production_rule["then"]["properties"]["evidence"]["properties"]["references"]["minItems"],
+        production_references["minItems"],
         1,
         "production coverage evidence-reference minimum",
+    )
+    require_equal(
+        production_references["items"]["pattern"],
+        r"^evidence\+sha256:[0-9a-f]{64}:[^\s]{1,175}$",
+        "production coverage evidence-reference content address",
     )
 
     for property_name in (
@@ -162,9 +168,12 @@ def main() -> None:
     for token in (
         "LEGACY_PRESENTATION_MAP",
         "COVERAGE_PRECEDENCE",
+        "COVERAGE_EVIDENCE_REFERENCE",
         "_conservative_coverage_state",
         "_conflicting_evidence_ids",
         "_validate_coverage_evidence_refs",
+        "require_content_addressed",
+        "production coverage evidence references must use immutable evidence+sha256 references",
         "coverage_observations = tuple(coverage)",
         "relevant_coverage",
         "item.current(now)",
@@ -195,6 +204,8 @@ def main() -> None:
         "evidence ID conflict resolution must be deterministic and explainable",
         "unreferenced production coverage must never produce Protected",
         "missing production coverage evidence must be explainable",
+        "mutable production coverage evidence references must be rejected",
+        "non-production lifecycle evidence may remain canonical but mutable without becoming covered",
         "Protected state must not outlive the coverage evidence that justified covered capability state",
         "serialized Protected record must expose direct and coverage evidence references",
     ):
@@ -204,6 +215,9 @@ def main() -> None:
     registry_text = REGISTRY_REFERENCE.read_text(encoding="utf-8")
     for token in (
         "ProtectionCoverageRegistry",
+        "COVERAGE_EVIDENCE_REFERENCE",
+        "require_content_addressed",
+        "production coverage evidence references must use immutable evidence+sha256 references",
         "older coverage evidence cannot overwrite",
         "conflicting coverage evidence",
         "coverage evidence references must be unique",
@@ -218,6 +232,8 @@ def main() -> None:
     for token in (
         "production-accepted covered capability without evidence references must fail closed to unknown",
         "unreferenced production coverage must not imply Stable eligibility",
+        "mutable production coverage evidence references must be rejected",
+        "source-level coverage may retain canonical mutable evidence without becoming production covered",
         "invalid or duplicate coverage evidence references must be rejected",
     ):
         if token not in registry_test_text:
