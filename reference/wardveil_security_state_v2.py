@@ -427,17 +427,30 @@ def _evaluate_security_state_unscoped(
     _require_aware(now, "now")
 
     observations = tuple(evidence)
+    coverage_observations = tuple(coverage)
+    required = tuple(dict.fromkeys(required_capabilities))
     coverage_state, missing_caps, uncertain_caps = summarize_coverage(
-        required_capabilities, coverage, now=now
+        required, coverage_observations, now=now
+    )
+    relevant_coverage = tuple(
+        item for item in coverage_observations if item.capability in required
     )
 
-    evidence_refs = tuple(dict.fromkeys(item.evidence_id for item in observations))
+    evidence_refs = tuple(
+        dict.fromkeys(
+            [item.evidence_id for item in observations]
+            + [ref for item in relevant_coverage for ref in item.evidence_refs]
+        )
+    )
     reason_codes: list[str] = []
     valid_until_values: list[datetime] = []
 
     effective = [item.effective_status(now) for item in observations]
     for item in observations:
         if item.valid_until is not None and item.effective_status(now) == "current":
+            valid_until_values.append(item.valid_until)
+    for item in relevant_coverage:
+        if item.valid_until is not None and item.current(now):
             valid_until_values.append(item.valid_until)
 
     if coverage_state == "not_covered":
@@ -457,9 +470,9 @@ def _evaluate_security_state_unscoped(
             "unknown",
             coverage_state,
             ("required_evidence_unavailable",),
-            (),
+            evidence_refs,
             now,
-            None,
+            min(valid_until_values) if valid_until_values else None,
             False,
         )
 
@@ -612,13 +625,14 @@ def evaluate_security_state(
 
     scope_kind, scope_id = _validate_scope(scope_kind, scope_id)
     observations = tuple(evidence)
+    coverage_observations = tuple(coverage)
     evidence_refs = tuple(dict.fromkeys(item.evidence_id for item in observations))
     observed_at = now or _utc_now()
     _require_aware(observed_at, "now")
 
     if _conflicting_evidence_ids(observations):
         coverage_state, _, _ = summarize_coverage(
-            required_capabilities, coverage, now=observed_at
+            required_capabilities, coverage_observations, now=observed_at
         )
         return SecurityAssessment(
             "unknown",
@@ -637,7 +651,7 @@ def evaluate_security_state(
         for item in observations
     ):
         coverage_state, _, _ = summarize_coverage(
-            required_capabilities, coverage, now=observed_at
+            required_capabilities, coverage_observations, now=observed_at
         )
         return SecurityAssessment(
             "unknown",
@@ -653,7 +667,7 @@ def evaluate_security_state(
 
     assessment = _evaluate_security_state_unscoped(
         evidence=observations,
-        coverage=coverage,
+        coverage=coverage_observations,
         required_capabilities=required_capabilities,
         signals=signals,
         now=observed_at,
