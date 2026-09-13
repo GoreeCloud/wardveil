@@ -39,6 +39,10 @@ Privacy Shield remains the privacy and minimization authority.
 
 The contract deliberately has no arbitrary raw-payload or unrestricted metadata field. It records bounded identifiers, references, reason codes, summaries, and evidence links rather than file contents, message bodies, credentials, reusable tokens, private keys, or unrestricted diagnostics. The reference layer also rejects common obvious credential markers in bounded textual fields.
 
+Audit reference fields are logical identifiers, not transport URLs. `evidence_refs`, `verification_evidence_refs`, `source_record_refs`, `incident_ref`, and `quarantine_object_ref` use a bounded credential-safe logical-reference grammar that supports colon-delimited namespaces and slash-delimited logical paths, including content-addressed forms such as `evidence+sha256:<digest>:reports/verification.json`. Transport delimiters and common credential-bearing syntax—including `://`, query strings, fragments, user-info markers, percent-encoded material, assignment/parameter delimiters, backslashes, and whitespace—are rejected. Retrieval credentials, signed URLs, bearer material, and similar access secrets must remain outside durable audit records.
+
+This reference rule does not convert audit-event IDs, correlation IDs, authorization IDs, or other record identities into evidence locators. Those identities remain distinct from the logical references that point to evidence or source records.
+
 Audit events use the established `audit_evidence` retention class, with the existing Wardveil reference retention baseline of 365 days. Each event records purpose `security_provenance`, access authority `wardveil-audit`, expiry, and `may_leave_origin=false`.
 
 This source policy does not override a stricter Privacy Shield requirement, legal requirement, incident-preservation requirement, or approved environment-specific retention policy. Production retention enforcement and authorized export remain separate acceptance work.
