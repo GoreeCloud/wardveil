@@ -50,6 +50,10 @@ The production reference form is:
 
 `evidence+sha256:<64-lowercase-hex-digest>:<locator>`
 
+The `<locator>` is deliberately **not** a transport URL. It is a credential-free logical path made from slash-separated segments. Each segment begins with an ASCII letter or digit and may then contain only ASCII letters, digits, `.`, `_`, or `-`.
+
+This keeps the immutable digest binding while preventing production coverage records from becoming a credential-leak surface. Production evidence references must not embed URL schemes, query strings, fragments, user-info, percent-encoded material, bearer tokens, signed-URL parameters, passwords, secrets, or other transport credentials. If retrieval requires authenticated transport, the secret-bearing retrieval mechanism stays outside the durable coverage reference; the record retains only the content digest plus the safe logical locator.
+
 This requirement binds the coverage claim to the exact evidence bytes that were accepted. Mutable references such as `artifact:latest`, unversioned URLs, or symbolic references such as `evidence:application:capability` cannot support a current production `covered` state.
 
 Production/current/covered evidence references are also bounded, unique, canonical, control-free, and limited to 32 entries of at most 256 characters each.
@@ -85,7 +89,7 @@ Registry updates are ordered by authoritative observation time.
 - Future-dated evidence is treated as unverified.
 - Expired evidence becomes `stale`.
 - Unavailable or unverified evidence becomes `unknown`.
-- Current production `covered` evidence that is not content-addressed is rejected before it can support a coverage or protection claim.
+- Current production `covered` evidence that is not content-addressed with a credential-free logical locator is rejected before it can support a coverage or protection claim.
 
 These rules are intentionally fail closed.
 
@@ -112,6 +116,6 @@ This is a coverage input to Stable qualification, not a complete Stable decision
 
 ## Validation boundary
 
-The source tests verify registry identity isolation, enforcement-point downgrades, adoption-state handling, immutable content-addressed evidence for current production covered capability state, mutable-reference rejection at the production boundary, lower-lifecycle reference handling without promotion, stale evidence, degraded coverage, unavailable evidence, aggregate coverage, missing capabilities, out-of-order update rejection, same-time conflict rejection, application/service separation, and contract export.
+The source tests verify registry identity isolation, enforcement-point downgrades, adoption-state handling, immutable content-addressed evidence for current production covered capability state, credential-safe logical locator enforcement, transport/credential-bearing locator rejection, mutable-reference rejection at the production boundary, lower-lifecycle reference handling without promotion, stale evidence, degraded coverage, unavailable evidence, aggregate coverage, missing capabilities, out-of-order update rejection, same-time conflict rejection, application/service separation, and contract export.
 
 These tests establish only source-level behavior. Runtime observation, live application integration, Security Center consumption, deployment, production acceptance, and Stable qualification remain separate evidence gates.
