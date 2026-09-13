@@ -21,6 +21,10 @@ def check(condition: bool, message: str) -> None:
         raise AssertionError(message)
 
 
+def immutable_ref(subject_id: str, capability: str, fill: str = "a") -> str:
+    return f"evidence+sha256:{fill * 64}:{subject_id}-{capability}"
+
+
 def record(
     *,
     capability="malware_protection",
@@ -46,7 +50,7 @@ def record(
         evidence_status=evidence_status,
         observed_at=observed_at or NOW - timedelta(minutes=2),
         valid_until=valid_until or NOW + timedelta(minutes=8),
-        evidence_refs=(f"evidence:{subject_id}:{capability}",) if evidence_refs is None else evidence_refs,
+        evidence_refs=(immutable_ref(subject_id, capability),) if evidence_refs is None else evidence_refs,
         required_enforcement_points=required,
         implemented_enforcement_points=implemented,
         dependencies=("wardveil-scan",),
@@ -84,6 +88,22 @@ def main() -> None:
     check(unreferenced_record["coverage_state"] == "unknown", "serialized unreferenced coverage must remain unknown")
     check(unreferenced_record["evidence"]["status"] == "unverified", "serialized unreferenced production coverage must expose unverified evidence")
 
+    try:
+        record(evidence_refs=("evidence:goreecloud-drive:malware_protection",))
+    except ValueError as exc:
+        check("immutable evidence+sha256" in str(exc), "mutable production evidence rejection should be explainable")
+    else:
+        raise AssertionError("mutable production coverage evidence references must be rejected")
+
+    source_mutable = record(
+        adoption_state="source_validated",
+        evidence_refs=("source-validation:goreecloud-drive:malware_protection",),
+    )
+    check(
+        source_mutable.effective_coverage_state(NOW) == "partial",
+        "source-level coverage may retain canonical mutable evidence without becoming production covered",
+    )
+
     for bad_refs in (
         ("duplicate", "duplicate"),
         (" leading-space",),
@@ -107,7 +127,10 @@ def main() -> None:
         "partial enforcement must block Stable qualification",
     )
 
-    source_only = record(adoption_state="source_validated")
+    source_only = record(
+        adoption_state="source_validated",
+        evidence_refs=("source-validation:goreecloud-drive:malware_protection",),
+    )
     check(
         source_only.effective_coverage_state(NOW) == "partial",
         "source validation alone must not become covered production protection",
@@ -122,15 +145,15 @@ def main() -> None:
     check(stale_record["coverage_state"] == "stale", "serialized coverage must preserve stale state")
     check(stale_record["evidence"]["status"] == "stale", "serialized evidence must expose stale freshness")
 
-    degraded = record(coverage_state="degraded")
+    degraded = record(coverage_state="degraded", evidence_refs=("degraded-observation",))
     check(degraded.effective_coverage_state(NOW) == "degraded", "degraded coverage must remain explicit")
     check(degraded.stable_qualification_impact(NOW) == "blocks_stable", "degraded coverage must block Stable")
 
-    unknown = record(evidence_status="unavailable")
+    unknown = record(evidence_status="unavailable", evidence_refs=("evidence-unavailable",))
     check(unknown.effective_coverage_state(NOW) == "unknown", "unavailable evidence must fail closed to unknown")
     check(unknown.stable_qualification_impact(NOW) == "unknown", "unknown coverage must not imply Stable eligibility")
 
-    registry.upsert(record(capability="audit_coverage", required=("audit_write",), implemented=("audit_write",)))
+    registry.upsert(record(capability="audit_coverage", required=("audit_write",), implemented=("audit_write",), evidence_refs=(immutable_ref("goreecloud-drive", "audit_coverage", "b"),)))
     state, missing, uncertain = registry.summarize(
         subject_kind="application",
         subject_id="goreecloud-drive",
@@ -185,6 +208,7 @@ def main() -> None:
             subject_kind="service",
             subject_id="wardveil-scan",
             capability="runtime_integrity",
+            evidence_refs=(immutable_ref("wardveil-scan", "runtime_integrity", "c"),),
             required=("service_health",),
             implemented=("service_health",),
         )
