@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
+import re
 from typing import Iterable
 from uuid import uuid4
 
@@ -96,6 +97,10 @@ LEGACY_PRESENTATION_MAP = {
     "reconciliation_required": "degraded",
 }
 
+COVERAGE_EVIDENCE_REFERENCE = re.compile(
+    r"^evidence\+sha256:[0-9a-f]{64}:\S{1,175}$"
+)
+
 
 def _utc_now() -> datetime:
     return datetime.now(timezone.utc)
@@ -116,7 +121,11 @@ def _validate_scope(scope_kind: str, scope_id: str) -> tuple[str, str]:
     return scope_kind, scope_id
 
 
-def _validate_coverage_evidence_refs(references: tuple[str, ...]) -> None:
+def _validate_coverage_evidence_refs(
+    references: tuple[str, ...],
+    *,
+    require_content_addressed: bool = False,
+) -> None:
     if len(references) > 32:
         raise ValueError("coverage evidence references must contain at most 32 entries")
     if len(set(references)) != len(references):
@@ -130,6 +139,10 @@ def _validate_coverage_evidence_refs(references: tuple[str, ...]) -> None:
             or any(ord(char) < 32 or 127 <= ord(char) <= 159 for char in reference)
         ):
             raise ValueError("coverage evidence references must be bounded canonical text")
+        if require_content_addressed and COVERAGE_EVIDENCE_REFERENCE.fullmatch(reference) is None:
+            raise ValueError(
+                "production coverage evidence references must use immutable evidence+sha256 references"
+            )
 
 
 @dataclass(frozen=True)
@@ -193,7 +206,14 @@ class CoverageObservation:
             raise ValueError(f"unsupported adoption state: {self.adoption_state}")
         if self.evidence_status not in EVIDENCE_STATES:
             raise ValueError(f"unsupported evidence status: {self.evidence_status}")
-        _validate_coverage_evidence_refs(self.evidence_refs)
+        _validate_coverage_evidence_refs(
+            self.evidence_refs,
+            require_content_addressed=(
+                self.coverage_state == "covered"
+                and self.adoption_state == "production_accepted"
+                and self.evidence_status == "current"
+            ),
+        )
         if self.observed_at is not None:
             _require_aware(self.observed_at, "observed_at")
         if self.valid_until is not None:
