@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from hashlib import sha256
 import json
+import re
 from typing import Iterable
 from uuid import uuid4
 
@@ -50,6 +51,18 @@ SENSITIVE_MARKERS = (
     "token=",
     "api_key=",
     "apikey=",
+)
+
+# Audit reference fields are durable logical identifiers, not transport URLs.
+# Colon-delimited namespaces and slash-delimited logical paths are supported,
+# including content-addressed forms such as evidence+sha256:<digest>:<locator>.
+# URI/query/fragment/user-info/percent-encoded or assignment syntax is excluded
+# so the ledger cannot become a durable credential-bearing retrieval surface.
+REFERENCE_PATTERN = re.compile(
+    r"^[A-Za-z0-9][A-Za-z0-9._+-]*"
+    r"(?::[A-Za-z0-9][A-Za-z0-9._+-]*)*"
+    r"(?:/[A-Za-z0-9][A-Za-z0-9._+-]*"
+    r"(?::[A-Za-z0-9][A-Za-z0-9._+-]*)*)*$"
 )
 
 
@@ -91,6 +104,23 @@ def _optional_text(
     return _text(value, field, max_length, privacy_check=privacy_check)
 
 
+def _reference(value: str, field: str, max_length: int = 256) -> str:
+    normalized = _text(value, field, max_length)
+    if not REFERENCE_PATTERN.fullmatch(normalized):
+        raise ValueError(f"{field}_must_be_credential_safe_logical_reference")
+    return normalized
+
+
+def _optional_reference(
+    value: str | None,
+    field: str,
+    max_length: int = 256,
+) -> str | None:
+    if value is None:
+        return None
+    return _reference(value, field, max_length)
+
+
 def _refs(values: Iterable[str], *, field: str, max_items: int = 64) -> tuple[str, ...]:
     normalized = tuple(
         dict.fromkeys(str(value).strip() for value in values if str(value).strip())
@@ -98,7 +128,7 @@ def _refs(values: Iterable[str], *, field: str, max_items: int = 64) -> tuple[st
     if len(normalized) > max_items:
         raise ValueError(f"{field}_too_many")
     for value in normalized:
-        _text(value, field, 256)
+        _reference(value, field, 256)
     return normalized
 
 
@@ -322,8 +352,12 @@ class AuditLedger:
             "reconciles_audit_event_id",
             160,
         )
-        incident = _optional_text(incident_ref, "incident_ref", 256)
-        quarantine = _optional_text(quarantine_object_ref, "quarantine_object_ref", 256)
+        incident = _optional_reference(incident_ref, "incident_ref", 256)
+        quarantine = _optional_reference(
+            quarantine_object_ref,
+            "quarantine_object_ref",
+            256,
+        )
 
         if event_category == "execution":
             if not authorization or not executor:
