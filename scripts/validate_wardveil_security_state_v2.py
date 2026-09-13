@@ -62,6 +62,10 @@ EXPECTED_ADOPTION = {
     "production_accepted",
 }
 
+PRODUCTION_REFERENCE_PATTERN = (
+    r"^evidence\+sha256:[0-9a-f]{64}:[A-Za-z0-9][A-Za-z0-9._-]*(?:/[A-Za-z0-9][A-Za-z0-9._-]*)*$"
+)
+
 
 def fail(message: str) -> None:
     raise SystemExit(f"ERROR: {message}")
@@ -146,8 +150,8 @@ def main() -> None:
     )
     require_equal(
         production_references["items"]["pattern"],
-        r"^evidence\+sha256:[0-9a-f]{64}:[^\s]{1,175}$",
-        "production coverage evidence-reference content address",
+        PRODUCTION_REFERENCE_PATTERN,
+        "production coverage evidence-reference content address and safe locator",
     )
 
     for property_name in (
@@ -170,11 +174,12 @@ def main() -> None:
         "LEGACY_PRESENTATION_MAP",
         "COVERAGE_PRECEDENCE",
         "COVERAGE_EVIDENCE_REFERENCE",
+        "[A-Za-z0-9][A-Za-z0-9._-]*(?:/[A-Za-z0-9][A-Za-z0-9._-]*)*",
         "_conservative_coverage_state",
         "_conflicting_evidence_ids",
         "_validate_coverage_evidence_refs",
         "require_content_addressed",
-        "production coverage evidence references must use immutable evidence+sha256 references",
+        "credential-free logical locators",
         "coverage_observations = tuple(coverage)",
         "relevant_coverage",
         "item.current(now)",
@@ -206,19 +211,22 @@ def main() -> None:
         "unreferenced production coverage must never produce Protected",
         "missing production coverage evidence must be explainable",
         "mutable production coverage evidence references must be rejected",
+        "production coverage evidence locators must reject transport or credential-bearing syntax",
+        "credential-free nested logical locators must remain valid production evidence references",
         "non-production lifecycle evidence may remain canonical but mutable without becoming covered",
         "Protected state must not outlive the coverage evidence that justified covered capability state",
         "serialized Protected record must expose direct and coverage evidence references",
     ):
         if token not in test_text:
-            fail(f"security-state tests missing exact-scope, conflict, evidence, or lifetime regression: {token}")
+            fail(f"security-state tests missing exact-scope, conflict, evidence, locator, or lifetime regression: {token}")
 
     registry_text = REGISTRY_REFERENCE.read_text(encoding="utf-8")
     for token in (
         "ProtectionCoverageRegistry",
         "COVERAGE_EVIDENCE_REFERENCE",
+        "[A-Za-z0-9][A-Za-z0-9._-]*(?:/[A-Za-z0-9][A-Za-z0-9._-]*)*",
         "require_content_addressed",
-        "production coverage evidence references must use immutable evidence+sha256 references",
+        "credential-free logical locators",
         "older coverage evidence cannot overwrite",
         "conflicting coverage evidence",
         "coverage evidence references must be unique",
@@ -234,6 +242,8 @@ def main() -> None:
         "production-accepted covered capability without evidence references must fail closed to unknown",
         "unreferenced production coverage must not imply Stable eligibility",
         "mutable production coverage evidence references must be rejected",
+        "production evidence locators must reject transport or credential-bearing syntax",
+        "credential-free nested logical locators must remain valid production references",
         "source-level coverage may retain canonical mutable evidence without becoming production covered",
         "invalid or duplicate coverage evidence references must be rejected",
     ):
@@ -244,6 +254,9 @@ def main() -> None:
     for token in (
         "## Production coverage evidence integrity",
         "evidence+sha256:<64-lowercase-hex-digest>:<locator>",
+        "credential-free logical path",
+        "must not embed URL schemes, query strings, fragments, user-info, percent-encoded material",
+        "secret-bearing retrieval mechanism stays outside the durable coverage reference",
         "Mutable references",
         "Lower-lifecycle or non-covered records may continue to use bounded canonical references",
         "This is an evidence-integrity boundary, not an assertion that real production evidence already exists.",
