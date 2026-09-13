@@ -75,6 +75,13 @@ def main() -> None:
     check(current.effective_coverage_state(NOW) == "covered", "accepted current coverage should remain covered")
     check(current.stable_qualification_impact(NOW) == "none", "fully accepted coverage should not block Stable")
 
+    nested_ref = "evidence+sha256:" + "d" * 64 + ":reports/goreecloud-drive/malware.json"
+    nested = record(evidence_refs=(nested_ref,))
+    check(
+        nested.effective_coverage_state(NOW) == "covered",
+        "credential-free nested logical locators must remain valid production references",
+    )
+
     unreferenced = record(evidence_refs=())
     check(
         unreferenced.effective_coverage_state(NOW) == "unknown",
@@ -94,6 +101,24 @@ def main() -> None:
         check("immutable evidence+sha256" in str(exc), "mutable production evidence rejection should be explainable")
     else:
         raise AssertionError("mutable production coverage evidence references must be rejected")
+
+    unsafe_digest = "e" * 64
+    for unsafe_ref in (
+        f"evidence+sha256:{unsafe_digest}:https://evidence.example/report",
+        f"evidence+sha256:{unsafe_digest}:reports/current.json?sig=secret",
+        f"evidence+sha256:{unsafe_digest}:operator@host/report",
+        f"evidence+sha256:{unsafe_digest}:reports/%2Fsecret",
+        f"evidence+sha256:{unsafe_digest}:reports/current.json#review",
+    ):
+        try:
+            record(evidence_refs=(unsafe_ref,))
+        except ValueError as exc:
+            check(
+                "credential-free logical locators" in str(exc),
+                "unsafe production locator rejection should explain the credential-safe boundary",
+            )
+        else:
+            raise AssertionError("production evidence locators must reject transport or credential-bearing syntax")
 
     source_mutable = record(
         adoption_state="source_validated",
