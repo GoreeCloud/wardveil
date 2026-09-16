@@ -25,6 +25,9 @@ from reference.wardveil_runtime_authorization import (  # noqa: E402
 NOW = datetime(2026, 9, 11, 20, 0, tzinfo=timezone.utc)
 KEY = b"wardveil-v2-bridge-reference-key"
 EXECUTOR = "goreecloud-drive-quarantine-executor"
+BACKUP_EVIDENCE = "evidence+sha256:" + "a" * 64 + ":backup/fresh.json"
+AUDIT_EVIDENCE = "evidence+sha256:" + "b" * 64 + ":audit/event.json"
+EXTRA_EVIDENCE = "evidence+sha256:" + "c" * 64 + ":extra/record.json"
 
 
 def decision(
@@ -195,38 +198,48 @@ def main() -> None:
     )
     expect_raises(
         "policy_obligation_evidence_missing",
-        lambda: bridge_record(conditional, obligation_evidence={"fresh-backup-required": "evidence:backup"}),
+        lambda: bridge_record(conditional, obligation_evidence={"fresh-backup-required": BACKUP_EVIDENCE}),
     )
     expect_raises(
         "unexpected_policy_obligation_evidence",
         lambda: bridge_record(
             conditional,
             obligation_evidence={
-                "fresh-backup-required": "evidence:backup",
-                "audit-event-required": "evidence:audit",
-                "extra": "evidence:extra",
+                "fresh-backup-required": BACKUP_EVIDENCE,
+                "audit-event-required": AUDIT_EVIDENCE,
+                "extra": EXTRA_EVIDENCE,
             },
         ),
     )
-    for invalid_reference in (" evidence:backup", "evidence:backup\n", "evidence:\u0000backup"):
+    for invalid_reference in (
+        " evidence:backup",
+        "evidence:backup\n",
+        "evidence:\u0000backup",
+        "evidence:backup",
+        "evidence+sha256:" + "d" * 64 + ":https://evidence.example/report",
+        "evidence+sha256:" + "d" * 64 + ":reports/current.json?token=secret",
+        "evidence+sha256:" + "d" * 64 + ":user@host/report",
+        "evidence+sha256:" + "d" * 64 + ":reports/%2E%2E/secret",
+        "evidence+sha256:" + "d" * 64 + ":reports/report.json#fragment",
+    ):
         expect_raises(
             "policy_obligation_evidence_invalid",
             lambda value=invalid_reference: bridge_record(
                 conditional,
                 obligation_evidence={
                     "fresh-backup-required": value,
-                    "audit-event-required": "evidence:audit",
+                    "audit-event-required": AUDIT_EVIDENCE,
                 },
             ),
         )
     conditional_evidence = {
-        "fresh-backup-required": "evidence:backup",
-        "audit-event-required": "evidence:audit",
+        "fresh-backup-required": BACKUP_EVIDENCE,
+        "audit-event-required": AUDIT_EVIDENCE,
     }
     conditional_adapted = bridge_record(conditional, obligation_evidence=conditional_evidence)
     assert conditional_adapted["v2_binding"]["obligation_evidence"] == conditional_evidence
-    assert "evidence:backup" in conditional_adapted["evidence_refs"]
-    assert "evidence:audit" in conditional_adapted["evidence_refs"]
+    assert BACKUP_EVIDENCE in conditional_adapted["evidence_refs"]
+    assert AUDIT_EVIDENCE in conditional_adapted["evidence_refs"]
 
     oversized_evidence = decision()
     oversized_evidence["evidence_refs"] = [f"evidence:policy:{index}" for index in range(128)]
@@ -321,7 +334,7 @@ def main() -> None:
 
     assert "wardveil-v2-bridge-reference-key" not in str(adapted)
     assert "wardveil-v2-bridge-reference-key" not in str(auth.as_dict())
-    print("Wardveil v2 Policy execution bridge tests passed (19 bounded cases).")
+    print("Wardveil v2 Policy execution bridge tests passed (20 bounded cases).")
 
 
 if __name__ == "__main__":
