@@ -10,6 +10,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from hashlib import sha256
 import json
+import re
 import unicodedata
 from typing import Any, Mapping
 
@@ -27,6 +28,9 @@ BRIDGE_CONTRACT_VERSION = "0.1.0"
 BRIDGE_PRODUCER_ID = "wardveil-policy-v2-execution-bridge"
 MAX_BRIDGE_TEXT = 1000
 MAX_BRIDGE_EVIDENCE_REFS = 128
+BRIDGE_EVIDENCE_REFERENCE = re.compile(
+    r"^evidence\+sha256:[0-9a-f]{64}:[A-Za-z0-9][A-Za-z0-9._-]*(?:/[A-Za-z0-9][A-Za-z0-9._-]*)*$"
+)
 
 
 def _canonical(value: object) -> bytes:
@@ -56,7 +60,7 @@ def _normalized_obligation_evidence(
     normalized: dict[str, str] = {}
     for obligation in obligations:
         reference = evidence.get(obligation)
-        if not _nonempty(reference):
+        if not _nonempty(reference) or BRIDGE_EVIDENCE_REFERENCE.fullmatch(reference) is None:
             raise ValueError("policy_obligation_evidence_invalid")
         normalized[obligation] = reference
     return normalized
