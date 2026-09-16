@@ -60,9 +60,10 @@ def _bool(record: Mapping[str, Any], name: str) -> bool:
 
 def _string(record: Mapping[str, Any], name: str, limit: int = 256) -> str:
     value = record.get(name)
-    if not isinstance(value, str) or not value.strip():
+    if not isinstance(value, str) or not value:
         raise ValueError(f"{name} must be a non-empty string")
-    value = value.strip()
+    if value != value.strip():
+        raise ValueError(f"{name} must not contain leading or trailing whitespace")
     if len(value) > limit:
         raise ValueError(f"{name} exceeds {limit} characters")
     return value
@@ -94,9 +95,12 @@ def evaluate_identity_key_lifecycle(
     required_scopes = record.get("required_scopes")
     if not isinstance(required_scopes, list) or not required_scopes:
         raise ValueError("required_scopes must be a non-empty list")
-    if not all(isinstance(scope, str) and scope.strip() for scope in required_scopes):
-        raise ValueError("required_scopes must contain non-empty strings")
-    required_scopes = sorted(set(scope.strip() for scope in required_scopes))
+    if not all(
+        isinstance(scope, str) and scope and scope == scope.strip()
+        for scope in required_scopes
+    ):
+        raise ValueError("required_scopes must contain exact non-empty strings without surrounding whitespace")
+    required_scopes = sorted(set(required_scopes))
 
     credential = record.get("credential_verification")
     lifecycle = record.get("key_lifecycle")
