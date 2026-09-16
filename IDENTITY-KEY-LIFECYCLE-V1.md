@@ -35,6 +35,12 @@ That revision publishes `goreecloud-identity.mesh-service-token.v1` schema versi
 
 The pinned Identity revision has successful dedicated GoreeCloud Mesh Service Token and GoreeCloud Identity Evidence Contract workflow results for its bounded credential-profile scope. Identity PR #8 remains draft and unmerged. Other active Identity development lines may carry different broader project changes or contract versions, so Wardveil must not generalize this pin beyond the exact credential profile evaluated here. Those boundaries prevent any claim of completed Identity production acceptance.
 
+## Exact evidence-string binding
+
+Authority-bearing Identity evidence is matched exactly rather than normalized into an acceptable value. The Wardveil evaluator rejects leading or trailing whitespace on the Identity authority, credential profile, exact Identity revision, usage, represented service ID, intended audience, algorithm, issuer, credential audience, `kid`, credential service ID, JWKS media type, and every required scope. A padded or tab-prefixed value is malformed evidence, not an equivalent spelling of an accepted authority value.
+
+This rule prevents transport, parser, or producer differences from silently changing the bytes Wardveil treats as authoritative. Canonicalization, if required by a future Identity contract, must be explicitly defined and verified by GoreeCloud Identity before Wardveil adopts it; Wardveil must not invent normalization locally.
+
 ## Audience separation
 
 The published Mesh profile is a credential for the `goreecloud-mesh` audience. Wardveil may use it only where Wardveil is acting as a GoreeCloud Mesh service producer/consumer under an approved Mesh integration.
@@ -53,6 +59,7 @@ For the current Mesh profile it requires, at minimum:
 - the reviewed exact Identity credential-profile source revision;
 - source-validated credential profile evidence;
 - exact RS256 / issuer / audience profile matching;
+- exact canonical service, audience, profile, and scope strings without silent surrounding-whitespace normalization;
 - bounded lifetime;
 - canonical GoreeCloud service identity binding;
 - verified signature and protected header;
@@ -64,7 +71,7 @@ For the current Mesh profile it requires, at minimum:
 - acceptable RSA key strength and public exponent;
 - `application/json` JWKS media type.
 
-Any missing or contradictory required evidence fails closed.
+Any missing, malformed, padded, normalized, or contradictory required evidence fails closed.
 
 ## Production gates
 
