@@ -105,7 +105,10 @@ def _optional_text(
 
 
 def _reference(value: str, field: str, max_length: int = 256) -> str:
-    normalized = _text(value, field, max_length)
+    raw = str(value if value is not None else "")
+    if raw != raw.strip():
+        raise ValueError(f"{field}_must_be_credential_safe_logical_reference")
+    normalized = _text(raw, field, max_length)
     if not REFERENCE_PATTERN.fullmatch(normalized):
         raise ValueError(f"{field}_must_be_credential_safe_logical_reference")
     return normalized
@@ -122,13 +125,15 @@ def _optional_reference(
 
 
 def _refs(values: Iterable[str], *, field: str, max_items: int = 64) -> tuple[str, ...]:
-    normalized = tuple(
-        dict.fromkeys(str(value).strip() for value in values if str(value).strip())
-    )
+    validated: list[str] = []
+    for value in values:
+        raw = str(value if value is not None else "")
+        if not raw:
+            continue
+        validated.append(_reference(raw, field, 256))
+    normalized = tuple(dict.fromkeys(validated))
     if len(normalized) > max_items:
         raise ValueError(f"{field}_too_many")
-    for value in normalized:
-        _reference(value, field, 256)
     return normalized
 
 
