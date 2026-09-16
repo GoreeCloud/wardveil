@@ -269,6 +269,9 @@ def main() -> None:
         "evidence:1&sig=opaque",
         "evidence:1=opaque",
         "evidence\\child",
+        " evidence:1",
+        "evidence:1 ",
+        "evidence:1\t",
     )
     for index, bad_ref in enumerate(credential_bearing_refs, start=1):
         try:
