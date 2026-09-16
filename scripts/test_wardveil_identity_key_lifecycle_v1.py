@@ -123,6 +123,45 @@ def test_unpinned_identity_revision_fails_closed() -> None:
     assert "identity_revision_not_pinned" in result["reason_codes"]
 
 
+def test_authority_fields_reject_surrounding_whitespace() -> None:
+    for path in (
+        ("identity_authority",),
+        ("credential_profile",),
+        ("identity_revision",),
+        ("usage",),
+        ("service_id",),
+        ("intended_audience",),
+        ("credential_verification", "algorithm"),
+        ("credential_verification", "issuer"),
+        ("credential_verification", "audience"),
+        ("credential_verification", "kid"),
+        ("credential_verification", "service_id"),
+        ("key_lifecycle", "jwks_media_type"),
+    ):
+        candidate = record()
+        target = candidate
+        for key in path[:-1]:
+            target = target[key]
+        target[path[-1]] = f" {target[path[-1]]}"
+        try:
+            evaluate_identity_key_lifecycle(candidate, evaluated_at=NOW)
+        except ValueError as exc:
+            assert "leading or trailing whitespace" in str(exc)
+        else:
+            raise AssertionError(f"padded Identity authority field was accepted: {'.'.join(path)}")
+
+
+def test_required_scopes_reject_surrounding_whitespace() -> None:
+    candidate = record()
+    candidate["required_scopes"] = [" mesh.evidence.write"]
+    try:
+        evaluate_identity_key_lifecycle(candidate, evaluated_at=NOW)
+    except ValueError as exc:
+        assert "without surrounding whitespace" in str(exc)
+    else:
+        raise AssertionError("padded required scope was accepted")
+
+
 def test_production_requires_every_external_gate() -> None:
     candidate = record()
     candidate["acceptance_evidence"]["request_production_acceptance"] = True
