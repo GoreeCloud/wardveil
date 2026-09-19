@@ -197,7 +197,7 @@ def main() -> None:
     except (OSError, json.JSONDecodeError) as exc:
         fail(f"invalid Privacy Shield conformance vectors: {exc}")
 
-    if payload.get("contract_version") != 2:
+    if payload.get("contract_version") != 1:
         fail("unsupported Privacy Shield bridge contract version")
     vectors = payload.get("vectors")
     if not isinstance(vectors, list) or not vectors:
