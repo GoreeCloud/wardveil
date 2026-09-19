@@ -4,7 +4,7 @@ document_owner: "LaDamian Goree"
 version: "v0.2"
 status: "Active"
 created: "2026-09-08"
-last_updated: "2026-09-16"
+last_updated: "2026-09-19"
 classification: "Internal"
 document_type: "Feature Roadmap"
 project_name: "Wardveil Security"
@@ -29,6 +29,8 @@ The **Wardveil 2.0 — Adaptive Security & Trust** specification defines the pla
 This roadmap and the Drive `GoreeCloud/Feature Roadmap/Wardveil Security/FEATURE-ROADMAP.md` control must remain materially synchronized with one another and with the authoritative project record, verified repository state, the Wardveil 2.0 planned target specification, the current Stable Glaze UI requirement, applicable Integral Platform System requirements, and GoreeCloud Tasks Management.
 
 No feature may be represented as complete, Protected, Covered, deployed, production-accepted, or Stable solely because it appears in this roadmap.
+
+**Current Glaze UI consumer target:** GLAZE UI V1.6 / 1.6.0 Stable. Security Center's active repository-local source remains on historical V1.1 / 1.1.0 and therefore remains migration-required. V1.5.1 is retained by the Glaze UI authority as the immediate known-good rollback baseline, not the current consumer target.
 
 ## Reconciliation Rule
 
