@@ -1,7 +1,7 @@
 ---
 title: "Wardveil Security — Feature Roadmap"
 document_owner: "LaDamian Goree"
-version: "v0.2"
+version: "v0.3"
 status: "Active"
 created: "2026-09-08"
 last_updated: "2026-09-19"
@@ -13,7 +13,7 @@ authoritative_project_record: "Project Specification — Wardveil Security"
 planned_target_specification: "Wardveil 2.0 — Adaptive Security & Trust"
 canonical_repository: "GoreeCloud/goreecloud-wardveil"
 repository_control: "FEATURE-ROADMAP.md"
-implementation_task_record: "GoreeCloud/Tasks Management/Wardveil Security — 2.0 Implementation Task List.md"
+implementation_task_record: "GoreeCloud/Tasks Management/Wardveil Security — 2.0 Implementation Task List.docx"
 ---
 
 # Wardveil Security — Feature Roadmap
@@ -30,7 +30,7 @@ This roadmap and the Drive `GoreeCloud/Feature Roadmap/Wardveil Security/FEATURE
 
 No feature may be represented as complete, Protected, Covered, deployed, production-accepted, or Stable solely because it appears in this roadmap.
 
-**Current Glaze UI consumer target:** GLAZE UI V1.6 / 1.6.0 Stable. Security Center's active repository-local source remains on historical V1.1 / 1.1.0 and therefore remains migration-required. V1.5.1 is retained by the Glaze UI authority as the immediate known-good rollback baseline, not the current consumer target.
+**Current Glaze UI consumer target:** GLAZE UI V1.6 / 1.6.0 Stable. Security Center source migration was integrated through PR #150 / `01fe556f8c9f590edc04a1ccb566b482d5b1a0b0`; exact candidate `498d5be74ae42f0de4a6e5a637d8742e7edec820` passed Security Center V1.6 source-adoption run `35469328203`, Platform Contract run `35469328504`, Wardveil foundation run `35469328200`, Mesh evidence run `35469328213`, and authenticated Scan transport run `35469328214`. The repository remains `applicable-migration-required` until human rendered review, representative browser/device accessibility and performance acceptance, rollback, deployed-byte/provenance, consumer-registry, deployment, release, and production acceptance are complete. V1.5.1 remains the known-good Glaze rollback baseline.
 
 ## Reconciliation Rule
 
@@ -48,7 +48,7 @@ At each material feature change, reconcile this roadmap against the current auth
 | FR-006 | Implement the durable next-upgrade Quarantine object and execution-reconciliation model with non-destructive lifecycle states, separate authorization for mutations, destructive Delete separation, target-state verification, durable transition history, uncertain-outcome reconciliation, and no blind authorization reuse. | High | Source Validated — Development candidate; live target execution/readback, runtime validation, production acceptance, Security Center consumption, and Stable qualification pending |
 | FR-007 | Implement the next-upgrade Incident Plane with evidence-driven lifecycle transitions, normalized events, attributable unresolved execution state, verified containment, Everkeep/Wardveil recovery boundaries, resolution evidence, and a Security Center-ready timeline. | High | Source Validated — Development candidate; production storage, live ingestion, runtime validation, live Security Center consumption, recovery integration, production acceptance, and Stable qualification pending |
 | FR-008 | Implement the Audit and Evidence Ledger with privacy-minimized provenance, verified outcomes, append-only integrity chaining, bound reconciliation, evidence freshness, retention/purpose/access metadata, secret-exclusion safeguards, credential-safe durable references, and a Security Center-ready explanation contract. | P0 | Source Validated — Development candidate; production storage, ingestion, Security Center consumption, retention enforcement, Identity/key acceptance, Privacy Shield acceptance, production acceptance, and Stable qualification pending |
-| FR-009 | Implement Security Center 2.0 with complete security information architecture, first-class explanation, fail-closed Protected presentation, current Stable Glaze UI targeting, responsive/accessibility support, material/performance fallbacks, and rendered-review/live-evidence/deployment/rollback/runtime/production/Stable gates. | P0 | Source Validated — Development candidate; live-site migration, rendered review, live evidence consumption, deployment/rollback, runtime validation, production acceptance, and Stable qualification pending |
+| FR-009 | Implement Security Center 2.0 with complete security information architecture, first-class explanation, fail-closed Protected presentation, current Stable Glaze UI targeting, responsive/accessibility support, material/performance fallbacks, and rendered-review/live-evidence/deployment/rollback/runtime/production/Stable gates. | P0 | GLAZE UI V1.6 / 1.6.0 source/build migration integrated through PR #150 / `01fe556f8c9f590edc04a1ccb566b482d5b1a0b0`; exact candidate `498d5be74ae42f0de4a6e5a637d8742e7edec820` passed exact-head V1.6 site, Platform Contract, Foundation, Mesh, and Scan validation. Human rendered review, representative accessibility/performance, live evidence consumption, rollback, deployment/deployed-byte provenance, consumer-registry, runtime validation, production acceptance, and Stable qualification remain pending. |
 | FR-010 | Implement the GoreeCloud Identity consumer boundary for service identity and signing-key lifecycle evidence with exact binding, audience separation, short-lived credentials, key-profile checks, fail-closed verifier evidence, rotation/revocation/replay/expiry/audit/emergency-revocation gates, and rejection of Mesh credentials as direct execution authority. | High | Source Validated — Development candidate; production Identity/key custody, live issuance/JWKS, runtime validation, production acceptance, and Stable qualification pending |
 | FR-011 | Implement platform-adoption and repository-governance evidence with strict lifecycle progression, exact consumer/capability/contract binding, evidence freshness and gap visibility, CODEOWNERS source evidence, fail-closed live hosting-control verification, and separation between source correctness and repository governance. | High | Source Validated — Development candidate; live repository enforcement, runtime/production consumer acceptance, and Stable qualification pending |
 | FR-012 | Implement Policy Decision and Enforcement Contract with durable explainable decision objects; Allow, Deny, Allow with obligations, Require step-up, Defer, and Unknown outcomes; exact binding; expiry/revocation; Foundation 0.9 compatibility; fail-closed semantics; and separation between Policy decisions, execution authorization, target authority, and execution success. | High | Source Validated — Development candidate; runtime Policy integration, production Identity/key acceptance, execution authorization acceptance, executor enforcement, Security Center consumption, production acceptance, and Stable qualification pending |
@@ -94,7 +94,7 @@ The following roadmap obligations derive from the planned Wardveil 2.0 target sp
 
 ## Task Authority
 
-Granular implementation, integration, validation, deployment, and acceptance work for FR-017 through FR-044 is tracked in `GoreeCloud/Tasks Management/Wardveil Security — 2.0 Implementation Task List.md`.
+Granular implementation, integration, validation, deployment, and acceptance work for FR-017 through FR-044 is tracked in `GoreeCloud/Tasks Management/Wardveil Security — 2.0 Implementation Task List.docx`.
 
 That task file must remain open until all applicable work is completed and verified.
 
@@ -102,5 +102,5 @@ That task file must remain open until all applicable work is completed and verif
 
 | Version | Date | Status | Change |
 |---|---|---|---|
-| v0.2 | 2026-09-16 | Active | Synchronized the repository roadmap with the Markdown Drive control; preserved existing Foundation/next-upgrade obligations; added Wardveil 2.0 Adaptive Security & Trust obligations FR-017 through FR-044; corrected the canonical repository reference; linked the dedicated implementation task authority. |
+| v0.3 | 2026-09-19 | Active | Reconciled verified Security Center GLAZE UI V1.6 / 1.6.0 source/build migration through PR #150 / `01fe556f8c9f590edc04a1ccb566b482d5b1a0b0`, preserving rendered, accessibility/performance, rollback, deployment, consumer-registry, production, and Stable gates as open; corrected the implementation task reference to the authoritative DOCX record. |\n| v0.2 | 2026-09-16 | Active | Synchronized the repository roadmap with the Markdown Drive control; preserved existing Foundation/next-upgrade obligations; added Wardveil 2.0 Adaptive Security & Trust obligations FR-017 through FR-044; corrected the canonical repository reference; linked the dedicated implementation task authority. |
 | v0.1 | 2026-09-08 | Active | Initial repository-side roadmap control. |
