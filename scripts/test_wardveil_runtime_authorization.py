@@ -104,6 +104,20 @@ def main() -> None:
     malformed = replace(auth, issued_at="not-a-time")
     assert verify(malformed, record).reason == "invalid_authorization_time"
 
+    naive_now = datetime(2026, 8, 27, 11, 0)
+    expect_raises(
+        "evaluation_time_must_be_timezone_aware",
+        lambda: create_execution_authorization(
+            record,
+            signing_key=KEY,
+            executor_id=EXECUTOR,
+            idempotency_key="naive-create",
+            nonce="naive-create",
+            now=naive_now,
+        ),
+    )
+    assert verify(auth, record, now=naive_now).reason == "evaluation_time_must_be_timezone_aware"
+
     expect_raises(
         "invalid_authorization_ttl",
         lambda: create_execution_authorization(record, signing_key=KEY, executor_id=EXECUTOR, idempotency_key="x", nonce="x", now=NOW, ttl=timedelta(minutes=6)),
@@ -120,6 +134,27 @@ def main() -> None:
         "signing_key_required",
         lambda: create_execution_authorization(record, signing_key=b"", executor_id=EXECUTOR, idempotency_key="x", nonce="x", now=NOW),
     )
+
+    expect_raises(
+        "signing_key_id_required",
+        lambda: create_execution_authorization(record, signing_key=KEY, signing_key_id=" reference-static", executor_id=EXECUTOR, idempotency_key="x", nonce="x", now=NOW),
+    )
+    expect_raises(
+        "executor_id_required",
+        lambda: create_execution_authorization(record, signing_key=KEY, executor_id=f" {EXECUTOR}", idempotency_key="x", nonce="x", now=NOW),
+    )
+    expect_raises(
+        "idempotency_key_required",
+        lambda: create_execution_authorization(record, signing_key=KEY, executor_id=EXECUTOR, idempotency_key=" idem-1", nonce="x", now=NOW),
+    )
+    expect_raises(
+        "nonce_required",
+        lambda: create_execution_authorization(record, signing_key=KEY, executor_id=EXECUTOR, idempotency_key="x", nonce="nonce-1\n", now=NOW),
+    )
+    assert verify(replace(auth, executor_id=f" {EXECUTOR}"), record).reason == "executor_binding_mismatch"
+    assert verify(replace(auth, idempotency_key=" idem-1"), record).reason == "missing_replay_identity"
+    assert verify(replace(auth, nonce="nonce-1\n"), record).reason == "missing_replay_identity"
+    assert verify(replace(auth, signing_key_id=" reference-static"), record).reason == "signing_key_id_required"
 
     ledger = AuthorizationReplayLedger()
     first = verify(auth, record, ledger=ledger)
@@ -170,7 +205,7 @@ def main() -> None:
         assert forbidden_key not in envelope
     assert "wardveil-reference-test-key" not in str(envelope)
 
-    print("Wardveil runtime execution authorization tests passed (21 cases).")
+    print("Wardveil runtime execution authorization tests passed (31 cases).")
 
 
 if __name__ == "__main__":

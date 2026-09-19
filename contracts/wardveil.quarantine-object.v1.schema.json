@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:goreecloud:wardveil:quarantine-object:0.1.0",
+  "title": "Wardveil Next-Upgrade Quarantine Object",
+  "description": "Durable non-destructive Wardveil Quarantine state. Verified quarantine requires authoritative target-state readback; uncertain side effects require reconciliation and never authorize blind replay.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "record_type",
+    "quarantine_object_id",
+    "correlation_id",
+    "target",
+    "state",
+    "initiating_finding_ref",
+    "policy_decision_ref",
+    "history",
+    "reconciliation"
+  ],
+  "properties": {
+    "contract_version": {"const": "0.1.0"},
+    "record_type": {"const": "quarantine_object"},
+    "quarantine_object_id": {"type": "string", "minLength": 1, "maxLength": 160},
+    "correlation_id": {"type": "string", "minLength": 1, "maxLength": 160},
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["authority", "resource_type", "resource_id"],
+      "properties": {
+        "authority": {"type": "string", "minLength": 1, "maxLength": 128},
+        "resource_type": {"type": "string", "minLength": 1, "maxLength": 128},
+        "resource_id": {"type": "string", "minLength": 1, "maxLength": 256}
+      }
+    },
+    "state": {
+      "type": "string",
+      "enum": [
+        "quarantine_pending",
+        "isolation_requested",
+        "isolation_executing",
+        "verified_quarantined",
+        "reconciliation_required",
+        "release_pending",
+        "released",
+        "restore_pending",
+        "restored",
+        "rescan_pending",
+        "escalated",
+        "removal_pending",
+        "removed",
+        "failed"
+      ]
+    },
+    "initiating_finding_ref": {"type": "string", "minLength": 1, "maxLength": 256},
+    "policy_decision_ref": {"type": "string", "minLength": 1, "maxLength": 256},
+    "authorization_ref": {"type": "string", "minLength": 1, "maxLength": 256},
+    "executor_id": {"type": "string", "minLength": 1, "maxLength": 128},
+    "idempotency_key": {"type": "string", "minLength": 1, "maxLength": 256},
+    "target_state_ref": {"type": "string", "minLength": 1, "maxLength": 256},
+    "verified_resulting_state": {"type": "string", "minLength": 1, "maxLength": 128},
+    "related_incident_ref": {"type": "string", "minLength": 1, "maxLength": 256},
+    "audit_refs": {"type": "array", "maxItems": 64, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 256}},
+    "recovery_ref": {"type": "string", "minLength": 1, "maxLength": 256},
+    "history": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 256,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["sequence", "from_state", "to_state", "action", "observed_at", "reason", "evidence_refs"],
+        "properties": {
+          "sequence": {"type": "integer", "minimum": 1},
+          "from_state": {"type": ["string", "null"]},
+          "to_state": {"type": "string"},
+          "action": {"type": "string", "enum": ["create", "quarantine", "release", "restore", "remove", "rescan", "escalate", "recover", "reconcile", "fail"]},
+          "authorization_ref": {"type": "string", "minLength": 1, "maxLength": 256},
+          "observed_at": {"type": "string", "format": "date-time"},
+          "reason": {"type": "string", "minLength": 1, "maxLength": 256},
+          "evidence_refs": {"type": "array", "maxItems": 32, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 256}}
+        }
+      }
+    },
+    "reconciliation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required", "original_authorization_reusable"],
+      "properties": {
+        "required": {"type": "boolean"},
+        "reason": {"type": "string", "minLength": 1, "maxLength": 256},
+        "evidence_ref": {"type": "string", "minLength": 1, "maxLength": 256},
+        "original_authorization_reusable": {"const": false}
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"state": {"const": "verified_quarantined"}}, "required": ["state"]},
+      "then": {"required": ["authorization_ref", "executor_id", "idempotency_key", "target_state_ref", "verified_resulting_state"]}
+    },
+    {
+      "if": {"properties": {"state": {"const": "reconciliation_required"}}, "required": ["state"]},
+      "then": {
+        "properties": {
+          "reconciliation": {
+            "properties": {"required": {"const": true}, "original_authorization_reusable": {"const": false}},
+            "required": ["required", "reason", "original_authorization_reusable"]
+          }
+        }
+      }
+    }
+  ]
+}

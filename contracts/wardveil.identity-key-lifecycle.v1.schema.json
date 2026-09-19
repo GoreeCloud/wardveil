@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://security.goreecloud.com/contracts/wardveil.identity-key-lifecycle.v1.schema.json",
+  "title": "Wardveil GoreeCloud Identity and Key Lifecycle Acceptance Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "evaluated_at",
+    "identity_authority",
+    "identity_revision",
+    "credential_profile",
+    "usage",
+    "service_id",
+    "intended_audience",
+    "required_scopes",
+    "credential_verification",
+    "key_lifecycle",
+    "acceptance",
+    "reason_codes"
+  ],
+  "properties": {
+    "schema_version": {"const": "0.1.0"},
+    "evaluated_at": {"type": "string", "format": "date-time"},
+    "identity_authority": {"const": "goreecloud-identity"},
+    "identity_revision": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "credential_profile": {"type": "string", "minLength": 1, "maxLength": 160},
+    "usage": {"enum": ["mesh_transport", "direct_wardveil_execution"]},
+    "service_id": {"type": "string", "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$"},
+    "intended_audience": {"type": "string", "minLength": 1, "maxLength": 128},
+    "required_scopes": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1, "maxLength": 160}
+    },
+    "credential_verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "issuer", "audience", "kid", "issued_at", "expires_at", "accepted"],
+      "properties": {
+        "algorithm": {"type": "string", "minLength": 1, "maxLength": 32},
+        "issuer": {"type": "string", "minLength": 1, "maxLength": 128},
+        "audience": {"type": "string", "minLength": 1, "maxLength": 128},
+        "kid": {"type": "string", "minLength": 1, "maxLength": 128},
+        "issued_at": {"type": "string", "format": "date-time"},
+        "expires_at": {"type": "string", "format": "date-time"},
+        "accepted": {"type": "boolean"}
+      }
+    },
+    "key_lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rsa_key_bits", "rsa_public_exponent", "jwks_media_type", "production_gates"],
+      "properties": {
+        "rsa_key_bits": {"type": "integer", "minimum": 1},
+        "rsa_public_exponent": {"type": "integer", "minimum": 1},
+        "jwks_media_type": {"type": "string", "minLength": 1, "maxLength": 64},
+        "production_gates": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "identity_production_accepted",
+            "live_issuance_deployed",
+            "jwks_deployed",
+            "durable_private_key_custody_accepted",
+            "rotation_verified",
+            "credential_revocation_verified",
+            "replay_protection_verified",
+            "expiration_enforcement_verified",
+            "key_usage_audit_verified",
+            "emergency_revocation_verified",
+            "runtime_validated"
+          ],
+          "properties": {
+            "identity_production_accepted": {"type": "boolean"},
+            "live_issuance_deployed": {"type": "boolean"},
+            "jwks_deployed": {"type": "boolean"},
+            "durable_private_key_custody_accepted": {"type": "boolean"},
+            "rotation_verified": {"type": "boolean"},
+            "credential_revocation_verified": {"type": "boolean"},
+            "replay_protection_verified": {"type": "boolean"},
+            "expiration_enforcement_verified": {"type": "boolean"},
+            "key_usage_audit_verified": {"type": "boolean"},
+            "emergency_revocation_verified": {"type": "boolean"},
+            "runtime_validated": {"type": "boolean"}
+          }
+        }
+      }
+    },
+    "acceptance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["profile_source_validated", "identity_revision_pinned", "credential_accepted", "runtime_validated", "production_accepted", "claim_authority"],
+      "properties": {
+        "profile_source_validated": {"type": "boolean"},
+        "identity_revision_pinned": {"type": "boolean"},
+        "credential_accepted": {"type": "boolean"},
+        "runtime_validated": {"type": "boolean"},
+        "production_accepted": {"type": "boolean"},
+        "claim_authority": {"type": "boolean"}
+      }
+    },
+    "reason_codes": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1, "maxLength": 200}
+    }
+  }
+}

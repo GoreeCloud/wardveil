@@ -1,0 +1,96 @@
+name: Validate Wardveil policy execution bridge
+
+on:
+  pull_request:
+    paths:
+      - "reference/wardveil_policy_execution_bridge_v1.py"
+      - "reference/wardveil_policy_decision_v2.py"
+      - "reference/wardveil_runtime_authorization.py"
+      - "reference/wardveil_protect.py"
+      - "contracts/wardveil.policy-execution-bridge.v1.json"
+      - "contracts/wardveil.policy-decision.v2.schema.json"
+      - "contracts/wardveil.runtime-authorization.json"
+      - "contracts/wardveil.execution-state.json"
+      - "scripts/test_wardveil_policy_execution_bridge_v1.py"
+      - "scripts/test_wardveil_policy_decision_v2.py"
+      - "scripts/test_wardveil_policy_decision_bounds_v2.py"
+      - "scripts/test_wardveil_runtime_authorization.py"
+      - "scripts/validate_wardveil_policy_execution_bridge_v1.py"
+      - "POLICY-EXECUTION-BRIDGE-V1.md"
+      - "POLICY-DECISION-AND-ENFORCEMENT-V2.md"
+      - "RUNTIME-AUTHORIZATION.md"
+      - "EXECUTION-STATE.md"
+      - "FEATURE-ROADMAP.md"
+      - ".github/workflows/validate-policy-execution-bridge-v1.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "reference/wardveil_policy_execution_bridge_v1.py"
+      - "reference/wardveil_policy_decision_v2.py"
+      - "reference/wardveil_runtime_authorization.py"
+      - "reference/wardveil_protect.py"
+      - "contracts/wardveil.policy-execution-bridge.v1.json"
+      - "contracts/wardveil.policy-decision.v2.schema.json"
+      - "contracts/wardveil.runtime-authorization.json"
+      - "contracts/wardveil.execution-state.json"
+      - "scripts/test_wardveil_policy_execution_bridge_v1.py"
+      - "scripts/test_wardveil_policy_decision_v2.py"
+      - "scripts/test_wardveil_policy_decision_bounds_v2.py"
+      - "scripts/test_wardveil_runtime_authorization.py"
+      - "scripts/validate_wardveil_policy_execution_bridge_v1.py"
+      - "POLICY-EXECUTION-BRIDGE-V1.md"
+      - "POLICY-DECISION-AND-ENFORCEMENT-V2.md"
+      - "RUNTIME-AUTHORIZATION.md"
+      - "EXECUTION-STATE.md"
+      - "FEATURE-ROADMAP.md"
+      - ".github/workflows/validate-policy-execution-bridge-v1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out exact source revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+
+      - name: Verify exact source revision
+        env:
+          EXPECTED_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+
+      - name: Test v2 Policy Decision and Enforcement Contract
+        run: python3 scripts/test_wardveil_policy_decision_v2.py
+
+      - name: Test v2 Policy Decision evidence bounds
+        run: python3 scripts/test_wardveil_policy_decision_bounds_v2.py
+
+      - name: Test Foundation 0.9 runtime execution authorization
+        run: python3 scripts/test_wardveil_runtime_authorization.py
+
+      - name: Test v2 Policy-to-Execution bridge
+        run: python3 scripts/test_wardveil_policy_execution_bridge_v1.py
+
+      - name: Validate bridge contract
+        run: python3 scripts/validate_wardveil_policy_execution_bridge_v1.py
+
+      - name: Compile bridge source and validation
+        run: >-
+          python3 -m py_compile
+          reference/wardveil_policy_execution_bridge_v1.py
+          reference/wardveil_policy_decision_v2.py
+          scripts/test_wardveil_policy_decision_v2.py
+          scripts/test_wardveil_policy_decision_bounds_v2.py
+          scripts/test_wardveil_policy_execution_bridge_v1.py
+          scripts/validate_wardveil_policy_execution_bridge_v1.py

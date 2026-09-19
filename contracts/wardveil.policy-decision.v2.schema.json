@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://goreecloud.com/contracts/wardveil.policy-decision.v2.schema.json",
+  "title": "Wardveil Policy Decision and Enforcement Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "record_type",
+    "decision_id",
+    "correlation_id",
+    "policy",
+    "actor",
+    "request",
+    "trust",
+    "decision",
+    "reason_codes",
+    "obligations",
+    "evidence_refs",
+    "observed_at",
+    "valid_until",
+    "revocation",
+    "execution_boundary"
+  ],
+  "properties": {
+    "contract_version": {"const": "0.1.0"},
+    "record_type": {"const": "policy_decision"},
+    "decision_id": {"type": "string", "format": "uuid"},
+    "correlation_id": {"type": "string", "minLength": 1},
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["policy_id", "policy_version", "policy_digest"],
+      "properties": {
+        "policy_id": {"type": "string", "minLength": 1},
+        "policy_version": {"type": "string", "minLength": 1},
+        "policy_digest": {"type": "string", "minLength": 1}
+      }
+    },
+    "actor": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "subject_id": {"type": ["string", "null"], "minLength": 1},
+        "service_id": {"type": ["string", "null"], "minLength": 1}
+      },
+      "anyOf": [
+        {"required": ["subject_id"]},
+        {"required": ["service_id"]}
+      ]
+    },
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action", "target", "purpose", "scopes", "audiences"],
+      "properties": {
+        "action": {"type": "string", "minLength": 1},
+        "target": {"type": "string", "minLength": 1},
+        "purpose": {"type": "string", "minLength": 1},
+        "scopes": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "audiences": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "trust": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "evidence_refs"],
+      "properties": {
+        "state": {"type": "string", "minLength": 1},
+        "evidence_refs": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "decision": {
+      "enum": ["allow", "deny", "allow_with_obligations", "require_step_up", "defer", "unknown"]
+    },
+    "reason_codes": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "obligations": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "observed_at": {"type": "string", "format": "date-time"},
+    "valid_until": {"type": "string", "format": "date-time"},
+    "revocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state"],
+      "properties": {
+        "state": {"enum": ["active", "revoked"]},
+        "reason_code": {"type": ["string", "null"]},
+        "revoked_at": {"type": ["string", "null"], "format": "date-time"}
+      }
+    },
+    "execution_boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "execution_authorization_required",
+        "policy_decision_is_execution_authorization",
+        "policy_decision_proves_execution_success"
+      ],
+      "properties": {
+        "execution_authorization_required": {"const": true},
+        "policy_decision_is_execution_authorization": {"const": false},
+        "policy_decision_proves_execution_success": {"const": false}
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"decision": {"const": "allow_with_obligations"}}, "required": ["decision"]},
+      "then": {"properties": {"obligations": {"minItems": 1}}}
+    }
+  ]
+}
