@@ -1,4 +1,4 @@
-name: Validate Security Center GLAZE UI V1.1 Stable
+name: Validate Security Center historical GLAZE UI V1.1 baseline
 
 on:
   pull_request:
@@ -40,7 +40,7 @@ jobs:
         with:
           python-version: "3.13"
 
-      - name: Build and validate Security Center GLAZE UI V1.1 adoption
+      - name: Build and validate Security Center historical GLAZE UI V1.1 baseline
         run: python3 website/validate.py
 
       - name: Validate responsive public-document layout
