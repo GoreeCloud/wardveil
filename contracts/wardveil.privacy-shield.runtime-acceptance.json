@@ -4,10 +4,10 @@
   "purpose": "Fail-closed runtime acceptance boundary for Wardveil consumption of minimized Privacy Shield status in a shared production interaction.",
   "reviewed_privacy_shield_source": {
     "repository": "GoreeCloud/goreecloud-privacy-shield",
-    "revision": "4bc8e49a437f5e705481e07831b9ea84d1b38a77",
-    "source_tree_sha": "612b028ba1561235622d5eada7d4c6ee5954e0e9",
-    "validation_run_id": 35471946193,
-    "validation_run_number": 484
+    "revision": "536099d16f114bde4d32d1e0865b1c9bf55a00d7",
+    "source_tree_sha": "2a9e2cfe9adce463899d9647768f37c803a308ec",
+    "validation_run_id": 35472816139,
+    "validation_run_number": 486
   },
   "acceptance_schema": "contracts/wardveil.privacy-shield.runtime-acceptance.schema.json",
   "acceptance_records": "acceptance/privacy-shield/*.json",
