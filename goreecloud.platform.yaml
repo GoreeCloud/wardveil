@@ -48,11 +48,12 @@ platform_systems:
     notes: Wardveil now has source-validated single-host durable execution-state persistence and restart-safe replay/reconciliation semantics, while Everkeep remains the recovery authority and live Everkeep backup/restore integration and production acceptance remain incomplete.
   glaze_ui:
     result: applicable-migration-required
-    version: '2.1.0'
+    version: '1.1.0'
     evidence:
-      - website/GLAZE-UI-2.1-ADOPTION.md
-      - website/glaze-ui-2.1.0.css
-    notes: Security Center still carries source-level pre-reset Glaze UI 2.1.0 adoption evidence. The current Platform Contract consumer target is GLAZE UI V1.5 / 1.5.1. Current-contract source reconciliation plus Wardveil-specific rendered, accessibility, representative-target, rollback, release, and production acceptance remain separate requirements.
+      - website/GLAZE-UI-V1.1-ADOPTION.md
+      - website/glaze-ui-v1.1.0.css
+      - website/index.html
+    notes: Security Center's active repository-local source currently targets the historical post-reset GLAZE UI V1.1 / 1.1.0 contract; retained pre-reset 2.1.0 files are historical evidence only. The current shared consumer target is GLAZE UI V1.6 / 1.6.0. Wardveil-specific migration, exact-revision rendered review, accessibility, representative-target, rollback, release, and production acceptance remain required.
   mesh:
     result: applicable-migration-required
     version: null
@@ -135,10 +136,10 @@ external_dependencies:
 
 compatibility:
   platform_contract: '0.4'
-  glaze_ui_required: '1.5.1'
+  glaze_ui_required: '1.6.0'
   requires:
     - goreecloud-platform-contract==0.4
-    - glaze-ui==1.5.1
+    - glaze-ui==1.6.0
   provides:
     - wardveil-security-foundation-0.9
     - wardveil-mesh-evidence-profile-v1
