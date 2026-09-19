@@ -1,5 +1,5 @@
 {
-  "contract_version": 2,
+  "contract_version": 1,
   "privacy_shield_status_schema_version": 1,
   "vectors": [
     {
@@ -431,5 +431,6 @@
       "expected_wardveil_state": "unknown",
       "expected_protected_by_wardveil": false
     }
-  ]
+  ],
+  "vector_format_version": 2
 }
