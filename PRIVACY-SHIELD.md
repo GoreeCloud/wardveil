@@ -24,13 +24,23 @@ Wardveil must not infer missing Privacy Shield capabilities or promote a runtime
 
 ## Producer-source provenance
 
-Wardveil pins the Privacy Shield producer contract it has reviewed through `contracts/wardveil.privacy-shield.consumer-source-evidence.json`. The current source-evidence pin is Privacy Shield revision `da783c2e48a279b5b5c1bb500d9a5511e50423be` and source tree `f4a51c983c6a7627da9a8299c3341e0f4fc3a776`.
+Wardveil pins the Privacy Shield producer contract it has reviewed through `contracts/wardveil.privacy-shield.consumer-source-evidence.json`. The current source-evidence pin is Privacy Shield revision `4bc8e49a437f5e705481e07831b9ea84d1b38a77` and source tree `612b028ba1561235622d5eada7d4c6ee5954e0e9`.
 
-That evidence identifies the exact producer status schema, producer status validator, producer provider-production-acceptance gate, and the successful exact-revision Privacy Shield Validation run used for this Wardveil integration review. It also records that Privacy Shield has zero accepted production state-provider records and zero accepted production signing-provider records at this source revision.
+That evidence identifies the exact producer status schema, producer status validator, provider-production-acceptance gate, state/signing acceptance schemas, and the successful exact-revision Privacy Shield Validation run used for this Wardveil integration review. The reviewed producer source now also requires every future production provider acceptance to bind the exact approved provider-selection decision. It still records zero accepted production state-provider records and zero accepted production signing-provider records at this source revision.
 
 Source evidence does not establish runtime acceptance. Provider production acceptance remains unaccepted. A future Privacy Shield source revision, status-contract revision, provider-acceptance change, or validation change must be independently reviewed and repinned before Wardveil may treat it as the current reviewed producer boundary.
 
 For any shared interaction that goes beyond read-only presentation, Wardveil still requires separately governed Privacy Shield runtime acceptance, deployed Identity/authenticated transport acceptance, target-environment evidence, and independent Wardveil runtime acceptance. Producer-source evidence alone never authorizes execution, aggregation into Wardveil required-control protection, production acceptance, or a `Protected by Wardveil` claim.
+
+## Runtime acceptance boundary
+
+Wardveil now defines a separate fail-closed shared-interaction runtime boundary in `contracts/wardveil.privacy-shield.runtime-acceptance.json`, with record structure defined by `contracts/wardveil.privacy-shield.runtime-acceptance.schema.json`.
+
+This boundary is deliberately stronger than source provenance or status presentation. A future accepted shared interaction must bind exact Privacy Shield and Wardveil source revisions and trees, the exact minimized Privacy Shield status-record digest, authenticated and encrypted transport backed by GoreeCloud Identity, target-environment evidence, privacy-minimization evidence, a genuinely production-approved Privacy Shield runtime, and independent Wardveil consumer acceptance. Evidence must be content-addressed and freshness-bounded.
+
+The shared-interaction record is still non-authorizing. It must set `authorization_effect=false`, `authority_transfer=false`, `protected_by_wardveil=false`, and `production_approved=false`. It cannot authorize target execution, cannot transfer Privacy Shield authority into Wardveil, cannot establish overall Wardveil production acceptance, and cannot create a `Protected by Wardveil` claim.
+
+There are currently no records under `acceptance/privacy-shield/`. Source validation does not establish runtime acceptance. The current contract remains `production_runtime_status=unaccepted` until real producer-provider acceptance, deployed Identity-authenticated transport, target-environment evidence, and independent Wardveil runtime evidence are collected and accepted.
 
 ## Privacy boundary
 
