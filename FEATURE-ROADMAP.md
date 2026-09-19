@@ -1,19 +1,20 @@
 ---
 title: "Wardveil Security — Feature Roadmap"
 document_owner: "LaDamian Goree"
-version: "v0.3"
+version: "v0.4"
 status: "Active"
 created: "2026-09-08"
 last_updated: "2026-09-19"
 classification: "Internal"
 document_type: "Feature Roadmap"
 project_name: "Wardveil Security"
-authoritative_record: "Repository-side roadmap control; Drive FEATURE-ROADMAP.md must remain materially synchronized"
+authoritative_record: "Repository-side roadmap control; Drive Feature Roadmap — Wardveil Security.docx must remain materially synchronized"
 authoritative_project_record: "Project Specification — Wardveil Security"
-planned_target_specification: "Wardveil 2.0 — Adaptive Security & Trust"
+planned_target_specification: "Feature Roadmap — Wardveil Security.docx — consolidated planned target and future direction"
 canonical_repository: "GoreeCloud/goreecloud-wardveil"
 repository_control: "FEATURE-ROADMAP.md"
 implementation_task_record: "GoreeCloud/Tasks Management/Wardveil Security — 2.0 Implementation Task List.docx"
+future_roadmap_task_record: "GoreeCloud/Tasks Management/Wardveil Security — Future Roadmap Implementation Task List.docx"
 ---
 
 # Wardveil Security — Feature Roadmap
@@ -22,11 +23,11 @@ implementation_task_record: "GoreeCloud/Tasks Management/Wardveil Security — 2
 
 This file is the repository-side feature roadmap control for Wardveil Security. It records current planned and recommended feature work without replacing the authoritative project record, exact-revision implementation evidence, runtime or production acceptance, release gates, or GoreeCloud Tasks Management.
 
-The **Wardveil 2.0 — Adaptive Security & Trust** specification defines the planned major-version target. It does not establish that any Wardveil 2.0 capability is implemented, deployed, production-accepted, Protected, Covered, or Stable.
+The Drive **Feature Roadmap — Wardveil Security.docx** consolidates the planned major-version target and the proposed future roadmap additions. The established Wardveil 2.0 task authority remains scoped to FR-017 through FR-044, while proposed future additions FR-045 through FR-066 are tracked separately. None of these planning records establish implementation, deployment, production acceptance, Protected, Covered, or Stable status.
 
 ## Maintenance and Synchronization
 
-This roadmap and the Drive `GoreeCloud/Feature Roadmap/Wardveil Security/FEATURE-ROADMAP.md` control must remain materially synchronized with one another and with the authoritative project record, verified repository state, the Wardveil 2.0 planned target specification, the current Stable Glaze UI requirement, applicable Integral Platform System requirements, and GoreeCloud Tasks Management.
+This roadmap and the Drive `GoreeCloud/Feature Roadmap/Wardveil Security/Feature Roadmap — Wardveil Security.docx` control must remain materially synchronized with one another and with the authoritative project record, verified repository state, the Wardveil 2.0 planned target specification, the current Stable Glaze UI requirement, applicable Integral Platform System requirements, and GoreeCloud Tasks Management.
 
 No feature may be represented as complete, Protected, Covered, deployed, production-accepted, or Stable solely because it appears in this roadmap.
 
@@ -92,15 +93,48 @@ The following roadmap obligations derive from the planned Wardveil 2.0 target sp
 | FR-043 | Implement the Wardveil 2.0 cooperating-service architecture: Security, Trust, Policy, Integrity, Detection, Containment, Credential, Incident, Network Defense, Recovery Coordinator, and Security Center components. | P0 | Planned |
 | FR-044 | Enforce Wardveil 2.0 design principles: never trust automatically, minimize privilege, contain before compromise spreads, explain every security decision, treat recovery as part of security, keep privacy responsibility separate, and scale across personal through infrastructure deployments. | P0 | Planned |
 
+## Proposed Future Roadmap Additions
+
+The following obligations are proposed future additions from the consolidated Drive roadmap. They are **not assigned to Wardveil 2.0** and have no implementation state beyond **Proposed future addition** unless authoritative evidence and governed release scoping establish otherwise.
+
+| ID | Feature / obligation | Priority | Current state |
+|---|---|---:|---|
+| FR-045 | Implement the Security Action Inbox for prioritized human security decisions, with affected resources, available choices, expiration/deadline context, and consequence of inaction. | Not assigned | Proposed future addition |
+| FR-046 | Implement Policy Preview so administrators can understand likely restrictions, loss of reachability, compliance changes, step-up requirements, permission revocation, automation effects, and exception conflicts before enforcement. | Not assigned | Proposed future addition |
+| FR-047 | Implement Policy Shadow Mode for observation-only evaluation of what current policy would deny, restrict, isolate, challenge, or automate without enforcing those outcomes. | Not assigned | Proposed future addition |
+| FR-048 | Implement narrowly scoped Temporary Security Exceptions with reason, approving identity, start time, expiration, scope, risk impact, and automatic expiry. | Not assigned | Proposed future addition |
+| FR-049 | Implement configurable Emergency Lockdown Mode coordinating session, synchronization, administration, authentication, credential, application, device, network, and evidence-preservation restrictions. | Not assigned | Proposed future addition |
+| FR-050 | Implement Maintenance Mode with responsible administrator, affected resources, expected changes, allowed operations, bounded window, continued monitoring, and explicit expiration. | Not assigned | Proposed future addition |
+| FR-051 | Implement the Exposure and Reachability Map for application, device, service, network, administrative, and trust-path reachability. | Not assigned | Proposed future addition |
+| FR-052 | Implement “Why Can This Access That?” explanations showing actor, target, identity, trust state, policy, permissions, security profile, exceptions, network relationship, credential scope, and supporting evidence. | Not assigned | Proposed future addition |
+| FR-053 | Implement approved Security Baselines for device/service configuration, application permissions, administrative settings, network exposure, important files, policies, privileged services, and trust relationships. | Not assigned | Proposed future addition |
+| FR-054 | Implement Security Drift Detection with Expected, Approved, Needs Review, Suspicious, and Critical classifications for security-relevant baseline changes. | Not assigned | Proposed future addition |
+| FR-055 | Implement Resource Security Lifecycle tracking across Discovered, Enrolled, Verified, Trusted/Restricted, Suspended, and Retired states, including residual-access review at retirement. | Not assigned | Proposed future addition |
+| FR-056 | Implement interactive Incident Runbooks with investigation, evidence, approvals, containment, credential, recovery, integrity, verification, responsibility, and blocked-step tracking. | Not assigned | Proposed future addition |
+| FR-057 | Implement a Security Simulation Lab for safe evaluation of compromised-device, expired-credential, suspicious-application, unavailable-provider, integrity-failure, unreachable-service, quarantine, session-revocation, network-isolation, and stale-evidence scenarios without changing production state. | Not assigned | Proposed future addition |
+| FR-058 | Implement staged Automation Dry Runs using Draft → Simulate → Observe → Limited Deployment → Enforced progression and inspectable outcomes. | Not assigned | Proposed future addition |
+| FR-059 | Define and implement Offline and Degraded Security Operation with bounded low-risk continuation where policy allows and fail-closed handling for sensitive operations when required evidence cannot be established. | Not assigned | Proposed future addition |
+| FR-060 | Implement the Threat Hunting Workspace across incidents, accounts, sessions, devices, applications, services, processes, connections, integrity events, permissions, policies, credentials, and audit evidence, including saved searches/views. | Not assigned | Proposed future addition |
+| FR-061 | Implement the Credential Exposure Map without exposing credential values, showing identity, dependents, scope, age, expiration, rotation/revocation state, affected applications/services, and potential exposure radius. | Not assigned | Proposed future addition |
+| FR-062 | Implement Security Exception Debt tracking for expired exceptions, long-running temporary permissions, stale administrative access, excessive credential scope, unreviewed devices, unresolved recommendations, old temporary policies, deferred incidents, and partial coverage. | Not assigned | Proposed future addition |
+| FR-063 | Implement Protected Change Approval with impact previews for permission expansion, policy changes, administrative access, service exposure, authentication weakening, trust changes, protection disablement, and new exceptions. | Not assigned | Proposed future addition |
+| FR-064 | Implement Historical Security State reconstruction from authoritative evidence for past restriction, access, rotation, policy, exposure, and pre-incident-change questions. | Not assigned | Proposed future addition |
+| FR-065 | Implement Delegated Security Administration with narrowly scoped roles for incident, device, application, quarantine, credential, network, policy, evidence, and audit responsibilities. | Not assigned | Proposed future addition |
+| FR-066 | Implement Wardveil Self-Protection and Health across Security Engine availability, evidence freshness, policy evaluation, enforcement, credential/integrity/detection systems, incident/audit storage, notifications, recovery coordination, consumer adoption, coverage, and trust-provider availability. | Not assigned | Proposed future addition |
+
 ## Task Authority
 
 Granular implementation, integration, validation, deployment, and acceptance work for FR-017 through FR-044 is tracked in `GoreeCloud/Tasks Management/Wardveil Security — 2.0 Implementation Task List.docx`.
 
-That task file must remain open until all applicable work is completed and verified.
+Proposed future additions FR-045 through FR-066 are tracked separately in `GoreeCloud/Tasks Management/Wardveil Security — Future Roadmap Implementation Task List.docx` so they are not silently assigned to Wardveil 2.0.
+
+Both task records must remain governed by their stated scope and completion rules until their contained obligations are completed and verified or validly dispositioned.
 
 ## Change History
 
 | Version | Date | Status | Change |
 |---|---|---|---|
-| v0.3 | 2026-09-19 | Active | Reconciled verified Security Center GLAZE UI V1.6 / 1.6.0 source/build migration through PR #150 / `01fe556f8c9f590edc04a1ccb566b482d5b1a0b0`, preserving rendered, accessibility/performance, rollback, deployment, consumer-registry, production, and Stable gates as open; corrected the implementation task reference to the authoritative DOCX record. |\n| v0.2 | 2026-09-16 | Active | Synchronized the repository roadmap with the Markdown Drive control; preserved existing Foundation/next-upgrade obligations; added Wardveil 2.0 Adaptive Security & Trust obligations FR-017 through FR-044; corrected the canonical repository reference; linked the dedicated implementation task authority. |
-| v0.1 | 2026-09-08 | Active | Initial repository-side roadmap control. |
+| v0.4 | 2026-09-19 | Active | Synchronized the repository roadmap with the verified Office-format Drive roadmap; preserved current FR-001 through FR-044 implementation states including the Security Center V1.6 migration evidence; added proposed future additions FR-045 through FR-066 without assigning release scope or priority; updated Drive and task-record references. |
+| v0.3 | 2026-09-19 | Superseded | Reconciled verified Security Center GLAZE UI V1.6 / 1.6.0 source/build migration through PR #150 / `01fe556f8c9f590edc04a1ccb566b482d5b1a0b0`, preserving rendered, accessibility/performance, rollback, deployment, consumer-registry, production, and Stable gates as open; corrected the implementation task reference to the authoritative DOCX record. |
+| v0.2 | 2026-09-16 | Superseded | Synchronized the repository roadmap with the Markdown Drive control; preserved existing Foundation/next-upgrade obligations; added Wardveil 2.0 Adaptive Security & Trust obligations FR-017 through FR-044; corrected the canonical repository reference; linked the dedicated implementation task authority. |
+| v0.1 | 2026-09-08 | Superseded | Initial repository-side roadmap control. |
