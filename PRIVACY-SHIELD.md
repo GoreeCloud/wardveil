@@ -22,6 +22,16 @@ The Privacy Shield producer remains authoritative for:
 
 Wardveil must not infer missing Privacy Shield capabilities or promote a runtime's acceptance state.
 
+## Producer-source provenance
+
+Wardveil pins the Privacy Shield producer contract it has reviewed through `contracts/wardveil.privacy-shield.consumer-source-evidence.json`. The current source-evidence pin is Privacy Shield revision `da783c2e48a279b5b5c1bb500d9a5511e50423be` and source tree `f4a51c983c6a7627da9a8299c3341e0f4fc3a776`.
+
+That evidence identifies the exact producer status schema, producer status validator, producer provider-production-acceptance gate, and the successful exact-revision Privacy Shield Validation run used for this Wardveil integration review. It also records that Privacy Shield has zero accepted production state-provider records and zero accepted production signing-provider records at this source revision.
+
+Source evidence does not establish runtime acceptance. Provider production acceptance remains unaccepted. A future Privacy Shield source revision, status-contract revision, provider-acceptance change, or validation change must be independently reviewed and repinned before Wardveil may treat it as the current reviewed producer boundary.
+
+For any shared interaction that goes beyond read-only presentation, Wardveil still requires separately governed Privacy Shield runtime acceptance, deployed Identity/authenticated transport acceptance, target-environment evidence, and independent Wardveil runtime acceptance. Producer-source evidence alone never authorizes execution, aggregation into Wardveil required-control protection, production acceptance, or a `Protected by Wardveil` claim.
+
 ## Privacy boundary
 
 A Privacy Shield record is eligible for Wardveil presentation only when it explicitly declares all of the following:
