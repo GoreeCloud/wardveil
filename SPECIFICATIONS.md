@@ -123,7 +123,7 @@ Current accepted Everkeep production integration remains incomplete.
 
 Security Center and Wardveil-facing interfaces must use the current Stable Glaze UI contract, provide keyboard and assistive-technology support, avoid color-only security meaning, maintain readable status/explanations, and support reduced-motion/transparency fallbacks where applicable.
 
-The active repository-local Security Center remains on historical Glaze UI 1.1.0; migration to 1.6.0 and rendered acceptance are required.
+Security Center source/build migration to Glaze UI 1.6.0 is integrated. Final rendered review, representative accessibility/performance validation, rollback, deployed-byte/provenance, consumer-registry, deployment, runtime, and production acceptance remain required.
 
 ## Platform Integrations
 
@@ -150,7 +150,7 @@ Wardveil may claim production protection only when the exact candidate has:
 - accepted Identity/key custody and approved cryptography;
 - accepted target execution/readback for represented actions;
 - current evidence freshness and coverage;
-- accepted Privacy Shield, Everkeep, Glaze UI, Mesh, Manager, Policy, Observability, and other applicable platform-system integrations;
+- accepted Privacy Shield, Everkeep, Glaze UI consumer acceptance, Mesh, Manager, Policy, Observability, and other applicable platform-system integrations;
 - deployment, rollback, monitoring, recovery, and security validation;
 - exact release-candidate identity and complete Stable blockers where Stable is claimed.
 
