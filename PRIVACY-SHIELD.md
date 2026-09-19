@@ -35,6 +35,14 @@ If any required guarantee is absent, malformed, or weakened, Wardveil must rejec
 
 Wardveil must not request browsing history, visited URLs, search queries, DNS queries, network flows, cookies, request bodies, authentication headers, passwords, tokens, private keys, setup keys, recovery information, user identifiers, device identifiers, tracker-learning evidence, per-site exception contents, or raw application telemetry merely to populate a Privacy Shield summary.
 
+## Full-record validation
+
+Wardveil validates the complete Privacy Shield status record before applying any presentation mapping. Validation is fail-closed and preserves Privacy Shield as the producer authority rather than normalizing or repairing producer data.
+
+The consumer rejects the record to `unknown` when the record is malformed, contains unsupported properties, uses an invalid producer or runtime-authority identifier, duplicates capability identifiers, weakens the required privacy exclusions, removes `runtime_acceptance_required`, omits required bounded validity for a protected or production-approved state, is expired at observation time, or is future-dated relative to the observation used for the decision.
+
+Wardveil does not trim, rewrite, infer, or silently canonicalize Privacy Shield identifiers or timestamps. An invalid record must be corrected by the authoritative producer and reissued.
+
 ## Presentation mapping
 
 Privacy Shield and Wardveil intentionally use different state vocabularies. Wardveil may map a sanitized Privacy Shield status to its presentation vocabulary only with the following conservative rules:
