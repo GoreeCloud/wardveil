@@ -85,7 +85,7 @@ Live production storage, target execution/readback, production retention enforce
 
 Security Center is Wardveil’s primary user and administrator presentation surface.
 
-The active repository-local Security Center source remains on the historical Glaze UI 1.1.0 baseline while the current GoreeCloud consumer target is **Glaze UI 1.6.0 Stable**. Migration, rendered review, accessibility, representative-target validation, deployment/rollback verification, live evidence consumption, runtime acceptance, and production acceptance remain required.
+Security Center source/build migration to **Glaze UI 1.6.0 Stable** is integrated through PR #150. Final human rendered review, representative browser/device accessibility and performance acceptance, rollback, deployed-byte/provenance verification, consumer-registry evidence, live evidence consumption, deployment, runtime acceptance, and production acceptance remain required.
 
 ### Explainable security state
 
@@ -128,7 +128,7 @@ The repository manifest uses Platform Contract 0.4 and evaluates all nine GoreeC
 - **Privacy Shield:** applicable migration required; authority boundaries are preserved but live production Privacy Shield integration remains incomplete.
 - **Wardveil Security:** not applicable as a separate consumer because this repository implements the Wardveil authority.
 - **Everkeep:** applicable migration required; source-level durable state exists, but accepted Everkeep backup/restore and recovery integration remains incomplete.
-- **Glaze UI:** applicable migration required; Security Center must move from historical 1.1.0 to current Stable 1.6.0.
+- **Glaze UI:** applicable migration required; Security Center source now targets current Stable 1.6.0, while rendered/accessibility/performance, rollback, deployed-byte/provenance, consumer-registry, deployment, and production acceptance remain open.
 - **GoreeCloud Mesh:** applicable migration required; minimized security-evidence delivery exists at source level, while live routing, producer identity, registry publication, and production acceptance remain open.
 - **GoreeCloud Identity:** applicable migration required; production issuance/JWKS/key custody and acceptance remain open.
 - **GoreeCloud Policy:** applicable blocked pending accepted central Policy runtime integration.
@@ -189,7 +189,7 @@ Major open boundaries include:
 - accepted Privacy Shield integration;
 - accepted GoreeCloud Policy and Observability integrations;
 - accepted Everkeep recovery;
-- Security Center migration to Glaze UI 1.6.0 and live evidence consumption;
+- completion of Security Center Glaze UI 1.6 rendered/accessibility/performance, rollback, deployed-byte/provenance, consumer-registry, deployment, and live-evidence acceptance;
 - complete production monitoring, rollback, deployment, and release qualification;
 - default-branch protection/ruleset enforcement through the centralized GitHub governance workflow.
 
