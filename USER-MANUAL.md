@@ -42,7 +42,7 @@ Quarantine means non-destructive isolation or held state. Release, restore, remo
 
 Security Center is Wardveil’s primary user and administrative surface.
 
-The current repository-local Security Center source is a Development implementation on the historical Glaze UI 1.1.0 baseline. GoreeCloud’s current required consumer target is Glaze UI 1.6.0 Stable, so Security Center remains migration- and acceptance-required.
+Security Center source/build migration to the current Glaze UI 1.6.0 Stable target is integrated through PR #150. Security Center remains acceptance-required until human rendered review, representative accessibility/performance, rollback, deployed-byte/provenance, consumer-registry, deployment, live-evidence, runtime, and production gates are complete.
 
 Until that migration and live evidence acceptance are complete:
 
@@ -147,7 +147,7 @@ Current major limitations include:
 - production Identity/key custody and approved cryptography remain incomplete;
 - target execution/readback remains capability-specific and incomplete;
 - Privacy Shield, Everkeep, GoreeCloud Policy, and GoreeCloud Observability acceptance remain incomplete where applicable;
-- Security Center still requires migration to Glaze UI 1.6.0 and exact rendered/runtime acceptance;
+- Security Center’s Glaze UI 1.6 source migration is integrated, while exact rendered/accessibility/performance, rollback, deployed-byte/provenance, consumer-registry, deployment, live-evidence, runtime, and production acceptance remain open;
 - persistent Wardveil 2.0 engines and broad adaptive-security behavior remain planned/Development work;
 - release and Stable qualification remain open.
 
