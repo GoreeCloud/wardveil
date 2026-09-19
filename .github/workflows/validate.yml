@@ -184,6 +184,9 @@ jobs:
       - name: Validate Privacy Shield consumer conformance
         run: python3 scripts/validate_wardveil_privacy_shield.py
 
+      - name: Validate Privacy Shield producer-source evidence
+        run: python3 scripts/validate_privacy_shield_consumer_source_evidence.py
+
       - name: Self-test canonical icon validator
         run: python3 scripts/validate_wardveil_icon.py --self-test
 
