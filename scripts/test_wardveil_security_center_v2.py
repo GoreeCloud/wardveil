@@ -12,6 +12,20 @@ from reference.wardveil_security_center_v2 import AREAS, build_security_center_s
 NOW = "2026-09-10T18:30:00Z"
 
 
+def privacy_minimization(**overrides):
+    record = {
+        "raw_private_content_included": False,
+        "raw_private_activity_included": False,
+        "reusable_credentials_included": False,
+        "recovery_material_included": False,
+        "unrestricted_diagnostic_payloads_included": False,
+        "identifier_scope": "necessary_bounded",
+        "privacy_shield_review_required": True,
+    }
+    record.update(overrides)
+    return record
+
+
 def security(**overrides):
     record = {
         "security_state": "protected",
@@ -26,6 +40,7 @@ def security(**overrides):
         "protective_execution_verified": True,
         "reconciliation_required": False,
         "claim_authority": True,
+        "privacy_minimization": privacy_minimization(),
     }
     record.update(overrides)
     return record
@@ -132,6 +147,64 @@ def test_secret_markers_are_rejected_from_explanation_text():
             security(summary="Authorization: Bearer reusable-token"), coverage(), generated_at=NOW
         ),
         "credential material",
+    )
+
+
+def test_privacy_minimization_contract_is_exposed():
+    snapshot = build_security_center_snapshot(security(), coverage(), generated_at=NOW)
+    assert snapshot["privacy_minimization"] == privacy_minimization()
+
+
+def test_missing_privacy_minimization_is_rejected():
+    record = security()
+    del record["privacy_minimization"]
+    expect_error(
+        lambda: build_security_center_snapshot(record, coverage(), generated_at=NOW),
+        "privacy_minimization must be an object",
+    )
+
+
+def test_raw_private_content_guarantee_must_fail_closed():
+    expect_error(
+        lambda: build_security_center_snapshot(
+            security(privacy_minimization=privacy_minimization(raw_private_content_included=True)),
+            coverage(),
+            generated_at=NOW,
+        ),
+        "raw_private_content_included must be false",
+    )
+
+
+def test_unbounded_identifier_scope_is_rejected():
+    expect_error(
+        lambda: build_security_center_snapshot(
+            security(privacy_minimization=privacy_minimization(identifier_scope="unrestricted")),
+            coverage(),
+            generated_at=NOW,
+        ),
+        "identifier_scope must be necessary_bounded",
+    )
+
+
+def test_privacy_shield_review_requirement_cannot_be_removed():
+    expect_error(
+        lambda: build_security_center_snapshot(
+            security(privacy_minimization=privacy_minimization(privacy_shield_review_required=False)),
+            coverage(),
+            generated_at=NOW,
+        ),
+        "privacy_shield_review_required must be true",
+    )
+
+
+def test_private_payload_markers_are_rejected_from_explanation_text():
+    expect_error(
+        lambda: build_security_center_snapshot(
+            security(summary="request_body=private-message-content"),
+            coverage(),
+            generated_at=NOW,
+        ),
+        "private user content",
     )
 
 

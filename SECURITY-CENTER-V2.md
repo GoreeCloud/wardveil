@@ -120,12 +120,30 @@ Foundation 0.9 remains the accepted baseline for existing Wardveil services whil
 
 ## Privacy and evidence minimization
 
-Security Center explanations must remain privacy-minimized. Shared explanation surfaces must not expose reusable credentials, active tokens, private keys, signing secrets, recovery material, raw private content, or unrestricted diagnostic payloads merely to make a status understandable. Privacy Shield remains GoreeCloud's privacy and minimization authority.
+Security Center explanations must remain privacy-minimized. Shared explanation surfaces must not expose reusable credentials, active tokens, private keys, signing secrets, recovery material, raw private content, raw private activity, or unrestricted diagnostic payloads merely to make a status understandable. Privacy Shield remains GoreeCloud's privacy and minimization authority.
+
+### Administrative privacy-minimization contract
+
+Security Center 2.0 schema version `0.2.0` requires every projected administrative security record to carry explicit privacy-minimization guarantees. The projection is rejected unless all of the following are true:
+
+- `raw_private_content_included=false`
+- `raw_private_activity_included=false`
+- `reusable_credentials_included=false`
+- `recovery_material_included=false`
+- `unrestricted_diagnostic_payloads_included=false`
+- `identifier_scope=necessary_bounded`
+- `privacy_shield_review_required=true`
+
+The privacy-minimization object rejects extension fields. Missing guarantees, a true value for any prohibited-content flag, an unbounded identifier scope, or removal of the Privacy Shield review requirement fails closed instead of being silently repaired.
+
+Human-readable explanation fields also reject high-signal reusable-credential and raw-private-payload markers. These checks are a source contract and conformance boundary, not a content-classification engine and not proof of runtime privacy acceptance. Runtime Security Center implementations must still demonstrate that their actual data queries, logging, exports, diagnostics, and administrative views obey the same minimization rules in the target environment.
+
+The requirement for `privacy_shield_review_required=true` preserves the authority boundary: Wardveil may enforce its own security-side minimization rules, but it may not declare broader privacy acceptance on Privacy Shield's behalf.
 
 Everkeep remains the resilience, backup, restore, and recovery authority. Security Center may present Everkeep recovery evidence and separate Wardveil post-recovery security verification, but an Everkeep restore result alone cannot create a Protected state.
 
 ## Current acceptance boundary
 
-This package is **source validation only**. It defines the Security Center 2.0 schema, conservative projection reference, GLAZE UI V1.3 target, complete primary information architecture, explanation contract, accessibility/presentation metadata, and fail-closed acceptance fields.
+This package is **source validation only**. It defines the Security Center 2.0 schema, conservative projection reference, GLAZE UI V1.3 target, complete primary information architecture, explanation contract, explicit administrative privacy-minimization contract, accessibility/presentation metadata, and fail-closed acceptance fields.
 
 It does **not** establish rendered visual review, live next-upgrade evidence ingestion, production Security Center deployment, runtime accessibility acceptance, rollback execution, production Identity/key acceptance, Privacy Shield runtime acceptance, Everkeep production recovery integration, production acceptance, Stable qualification, or a broad Protected by Wardveil claim.

@@ -9,7 +9,7 @@ from copy import deepcopy
 from datetime import datetime, timezone
 from typing import Any, Mapping
 
-SCHEMA_VERSION = "0.1.0"
+SCHEMA_VERSION = "0.2.0"
 GLAZE_UI_VERSION = "1.3.0"
 GLAZE_UI_REVISION = "8354308445da9ac35ced2b37a7f503a08a0aaf72"
 GLAZE_UI_ROLLBACK_VERSION = "1.2.0"
@@ -59,11 +59,66 @@ def _bounded_text(value: Any, name: str, limit: int) -> str:
     value = value.strip()
     if len(value) > limit:
         raise ValueError(f"{name} exceeds {limit} characters")
-    forbidden = ("authorization: bearer ", "private_key", "client_secret", "password=")
+    credential_markers = (
+        "authorization: bearer ",
+        "private_key",
+        "client_secret",
+        "password=",
+        "session_token=",
+        "api_key=",
+    )
+    private_content_markers = (
+        "cookie:",
+        "set-cookie:",
+        "request_body=",
+        "raw_private_content=",
+        "raw_private_activity=",
+        "visited_url=",
+        "search_query=",
+        "dns_query=",
+        "recovery_code=",
+        "unrestricted_diagnostic_payload=",
+    )
     lowered = value.lower()
-    if any(marker in lowered for marker in forbidden):
+    if any(marker in lowered for marker in credential_markers):
         raise ValueError(f"{name} contains reusable credential material")
+    if any(marker in lowered for marker in private_content_markers):
+        raise ValueError(f"{name} contains private user content or unrestricted diagnostic material")
     return value
+
+
+def _privacy_minimization(value: Any) -> dict[str, Any]:
+    if not isinstance(value, Mapping):
+        raise ValueError("privacy_minimization must be an object")
+
+    false_fields = (
+        "raw_private_content_included",
+        "raw_private_activity_included",
+        "reusable_credentials_included",
+        "recovery_material_included",
+        "unrestricted_diagnostic_payloads_included",
+    )
+    required_fields = set(false_fields) | {"identifier_scope", "privacy_shield_review_required"}
+    if set(value) != required_fields:
+        raise ValueError("privacy_minimization fields must match the contract exactly")
+
+    for field in false_fields:
+        if value.get(field) is not False:
+            raise ValueError(f"privacy_minimization.{field} must be false")
+    if value.get("identifier_scope") != "necessary_bounded":
+        raise ValueError("privacy_minimization.identifier_scope must be necessary_bounded")
+    if value.get("privacy_shield_review_required") is not True:
+        raise ValueError("privacy_minimization.privacy_shield_review_required must be true")
+
+    return {
+        "raw_private_content_included": False,
+        "raw_private_activity_included": False,
+        "reusable_credentials_included": False,
+        "recovery_material_included": False,
+        "unrestricted_diagnostic_payloads_included": False,
+        "identifier_scope": "necessary_bounded",
+        "privacy_shield_review_required": True,
+    }
 
 
 def build_security_center_snapshot(
@@ -95,6 +150,8 @@ def build_security_center_snapshot(
     resource_scope = _bounded_text(security.get("resource_scope"), "resource_scope", 256)
     if coverage.get("resource_scope") != resource_scope:
         raise ValueError("coverage scope does not match security scope")
+
+    privacy_minimization = _privacy_minimization(security.get("privacy_minimization"))
 
     observed_at = _parse_time(security.get("observed_at"))
     valid_until_raw = security.get("valid_until")
@@ -168,6 +225,7 @@ def build_security_center_snapshot(
         "security_state": presented_state,
         "coverage_state": coverage_state,
         "claim_authority": claim_authority,
+        "privacy_minimization": privacy_minimization,
         "why_this_status": {
             "state": presented_state,
             "scope": resource_scope,
