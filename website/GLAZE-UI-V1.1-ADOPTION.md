@@ -1,13 +1,13 @@
 # Wardveil Security Center — GLAZE UI V1.1 Adoption
 
-Status: **Historical active-source baseline / migration required**  
+Status: **Historical source baseline / superseded by V1.6 source migration**  
 Active source: **GLAZE UI V1.1 / 1.1.0**  
 Current shared Stable consumer target: **GLAZE UI V1.6 / 1.6.0**  
 Canonical Stable promotion commit: `15cc76d2bcd4065552dc31c77145b63f34d9e7b2`
 
 ## Scope
 
-This record documents the Wardveil Security Center's retained GLAZE UI V1.1 / 1.1.0 source baseline without changing Wardveil's security authority or production-security acceptance state. GLAZE UI V1.6 / 1.6.0 is the current shared Stable consumer authority; Security Center migration and independent acceptance remain pending.
+This record preserves the Wardveil Security Center's former GLAZE UI V1.1 / 1.1.0 source baseline as historical provenance. The active source migration is now governed by `GLAZE-UI-V1.6-ADOPTION.md`; neither this historical record nor the newer source mapping changes Wardveil's security authority or establishes consumer production acceptance.
 
 The site preserves its existing information architecture and Sentinel Fold identity while adopting the current V1.1 material, interaction, appearance, accessibility, and target-size contracts. Content and consequential security-reading surfaces remain solid. Soft/translucent material is limited to bounded navigation and interaction chrome.
 
@@ -43,4 +43,4 @@ The canonical Glaze consumer registry must not mark Security Center production-e
 
 Wardveil Security remains the authority for security truth. GLAZE UI standardizes presentation only and cannot turn visual styling, a status color, an icon, or a successfully rendered page into evidence that a security control actually executed.
 
-Security Center must migrate directly to the current GLAZE UI V1.6 / 1.6.0 Stable consumer target and complete repository-local acceptance; retained intermediate release evidence does not establish current conformance.
+The active Security Center source now targets GLAZE UI V1.6 / 1.6.0. This V1.1 record remains historical only and cannot establish current conformance or production eligibility.
