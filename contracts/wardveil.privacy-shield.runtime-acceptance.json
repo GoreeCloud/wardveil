@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "contract_id": "goreecloud.wardveil.privacy-shield.runtime-acceptance.v1",
+  "purpose": "Fail-closed runtime acceptance boundary for Wardveil consumption of minimized Privacy Shield status in a shared production interaction.",
+  "reviewed_privacy_shield_source": {
+    "repository": "GoreeCloud/goreecloud-privacy-shield",
+    "revision": "4bc8e49a437f5e705481e07831b9ea84d1b38a77",
+    "source_tree_sha": "612b028ba1561235622d5eada7d4c6ee5954e0e9",
+    "validation_run_id": 35471946193,
+    "validation_run_number": 484
+  },
+  "acceptance_schema": "contracts/wardveil.privacy-shield.runtime-acceptance.schema.json",
+  "acceptance_records": "acceptance/privacy-shield/*.json",
+  "required_acceptance_evidence": [
+    "producer-runtime",
+    "producer-provider-acceptance",
+    "authenticated-transport",
+    "target-environment",
+    "privacy-minimization",
+    "wardveil-consumer"
+  ],
+  "required_transport": {
+    "authenticated": true,
+    "encrypted": true,
+    "producer_service_identity": "privacy-shield",
+    "identity_authority": "GoreeCloud/goreecloud-identity"
+  },
+  "privacy": {
+    "raw_private_activity_included": false,
+    "contains_credentials": false,
+    "contains_identifiers": false
+  },
+  "authority_boundary": {
+    "source_validation_is_runtime_acceptance": false,
+    "producer_runtime_acceptance_transfers_authority": false,
+    "shared_interaction_acceptance_authorizes_target_execution": false,
+    "shared_interaction_acceptance_authorizes_protected_by_wardveil": false,
+    "shared_interaction_acceptance_is_wardveil_production_acceptance": false
+  },
+  "production_runtime_status": "unaccepted"
+}
