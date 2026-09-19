@@ -9,16 +9,20 @@ ROOT = Path(__file__).resolve().parents[1]
 EVIDENCE = ROOT / "contracts" / "wardveil.privacy-shield.consumer-source-evidence.json"
 DOC = ROOT / "PRIVACY-SHIELD.md"
 
-EXPECTED_REVISION = "4bc8e49a437f5e705481e07831b9ea84d1b38a77"
-EXPECTED_TREE = "612b028ba1561235622d5eada7d4c6ee5954e0e9"
+EXPECTED_REVISION = "536099d16f114bde4d32d1e0865b1c9bf55a00d7"
+EXPECTED_TREE = "2a9e2cfe9adce463899d9647768f37c803a308ec"
 EXPECTED_STATUS_SCHEMA_BLOB = "f6b62576e68e19ad8b25ced5383f8a3df74716fb"
 EXPECTED_STATUS_VALIDATOR_BLOB = "22dd5fb95641a663f79822c66bc8f92422064741"
 EXPECTED_PROVIDER_GATE_BLOB = "23a53b5d40865159fe748348a0a178cd668dc9ff"
 EXPECTED_STATE_ACCEPTANCE_SCHEMA_BLOB = "b47891772ddec46e2bf522c6a6405423e426ec2a"
 EXPECTED_SIGNING_ACCEPTANCE_SCHEMA_BLOB = "4954b0ba76f8d250b2683b98c42df96eb6edf05e"
 EXPECTED_WORKFLOW_BLOB = "9b4df523e500b2352d1ad68469b2874e89f0203b"
-EXPECTED_VALIDATION_RUN = 35471946193
-EXPECTED_VALIDATION_RUN_NUMBER = 484
+EXPECTED_STATE_CANDIDATE_BLOB = "ebae8b7ac759c73a2fd9dd8fadb9f82aaa549136"
+EXPECTED_SIGNING_CANDIDATE_BLOB = "4dae55b58c4bbf3cd2c5e1a368c67bcbbbc22ed1"
+EXPECTED_STATE_PACKAGE_BLOB = "a2db264a02663663d8169688962aa0c00541f540"
+EXPECTED_SIGNING_PACKAGE_BLOB = "30a88ef2b8459496650bfe3851df6b31cef5dc82"
+EXPECTED_VALIDATION_RUN = 35472816139
+EXPECTED_VALIDATION_RUN_NUMBER = 486
 
 
 def require(condition: bool, message: str) -> None:
@@ -62,6 +66,10 @@ def main() -> None:
         "provider_acceptance_gate": "tools/validate_provider_acceptance_gate.py",
         "state_provider_acceptance_schema": "contracts/privacy-shield.state-provider-acceptance.schema.json",
         "signing_provider_acceptance_schema": "contracts/privacy-shield.signing-key-provider-acceptance.schema.json",
+        "state_provider_candidate_evaluation": "evaluations/state-providers/foundationdb-self-hosted-multihost-production.json",
+        "signing_provider_candidate_evaluation": "evaluations/signing-key-providers/ovhcloud-kms-hsm-production.json",
+        "state_provider_candidate_evidence_package": "evidence/provider-evaluations/foundationdb-state-candidate-20260919.json",
+        "signing_provider_candidate_evidence_package": "evidence/provider-evaluations/ovhcloud-kms-hsm-signing-candidate-20260919.json",
         "producer_validation_workflow": ".github/workflows/validate.yml",
     }
     for key, expected in expected_paths.items():
@@ -73,6 +81,10 @@ def main() -> None:
         "provider_acceptance_gate_git_blob_sha": EXPECTED_PROVIDER_GATE_BLOB,
         "state_provider_acceptance_schema_git_blob_sha": EXPECTED_STATE_ACCEPTANCE_SCHEMA_BLOB,
         "signing_provider_acceptance_schema_git_blob_sha": EXPECTED_SIGNING_ACCEPTANCE_SCHEMA_BLOB,
+        "state_provider_candidate_evaluation_git_blob_sha": EXPECTED_STATE_CANDIDATE_BLOB,
+        "signing_provider_candidate_evaluation_git_blob_sha": EXPECTED_SIGNING_CANDIDATE_BLOB,
+        "state_provider_candidate_evidence_package_git_blob_sha": EXPECTED_STATE_PACKAGE_BLOB,
+        "signing_provider_candidate_evidence_package_git_blob_sha": EXPECTED_SIGNING_PACKAGE_BLOB,
         "producer_validation_workflow_git_blob_sha": EXPECTED_WORKFLOW_BLOB,
     }
     for key, expected in expected_blobs.items():
@@ -84,6 +96,12 @@ def main() -> None:
     require(details.get("producer_validation_conclusion") == "success", "producer validation must have succeeded")
     require(details.get("state_provider_production_acceptance_records") == 0, "source evidence must not invent state-provider production acceptance")
     require(details.get("signing_provider_production_acceptance_records") == 0, "source evidence must not invent signing-provider production acceptance")
+    require(details.get("state_provider_candidate_evaluation_records") == 1, "expected exactly one draft state-provider candidate evaluation")
+    require(details.get("signing_provider_candidate_evaluation_records") == 1, "expected exactly one draft signing-provider candidate evaluation")
+    require(details.get("complete_provider_candidate_evaluations") == 0, "source evidence must not invent complete provider evaluations")
+    require(details.get("provider_evidence_package_records") == 2, "expected exactly two captured provider evidence packages")
+    require(details.get("provider_evidence_review_attestation_records") == 0, "source evidence must not invent provider evidence review attestations")
+    require(details.get("approved_provider_selection_records") == 0, "source evidence must not invent approved provider selections")
 
     for key in (
         "full_record_status_validation_required",
