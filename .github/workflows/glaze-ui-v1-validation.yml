@@ -1,4 +1,4 @@
-name: Validate Security Center historical GLAZE UI V1.1 baseline
+name: Validate Security Center GLAZE UI V1.6 source adoption
 
 on:
   pull_request:
@@ -16,7 +16,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: security-center-glaze-v1-${{ github.workflow }}-${{ github.ref }}
+  group: security-center-glaze-v16-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -40,7 +40,7 @@ jobs:
         with:
           python-version: "3.13"
 
-      - name: Build and validate Security Center historical GLAZE UI V1.1 baseline
+      - name: Build and validate Security Center GLAZE UI V1.6 source adoption
         run: python3 website/validate.py
 
       - name: Validate responsive public-document layout

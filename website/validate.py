@@ -10,14 +10,15 @@ DIST = SITE / "dist"
 IDENTITY = ROOT / "contracts" / "wardveil.identity.json"
 VERSION = ROOT / "VERSION"
 ICON = ROOT / "branding" / "wardveil-security-icon.svg"
-ADOPTION = SITE / "GLAZE-UI-V1.1-ADOPTION.md"
-HISTORICAL_ADOPTION = SITE / "GLAZE-UI-2.1-ADOPTION.md"
+ADOPTION = SITE / "GLAZE-UI-V1.6-ADOPTION.md"
+HISTORICAL_V11_ADOPTION = SITE / "GLAZE-UI-V1.1-ADOPTION.md"
+HISTORICAL_V21_ADOPTION = SITE / "GLAZE-UI-2.1-ADOPTION.md"
 WORKFLOW = ROOT / ".github" / "workflows" / "glaze-ui-v1-validation.yml"
-GLAZE_VERSION = "1.1.0"
-GLAZE_PRODUCT = "GLAZE UI V1.1"
-GLAZE_REVISION = "15cc76d2bcd4065552dc31c77145b63f34d9e7b2"
-GLAZE_ASSET = "glaze-ui-v1.1.0.css"
-HISTORICAL_ASSET = "glaze-ui-2.1.0.css"
+GLAZE_VERSION = "1.6.0"
+GLAZE_PRODUCT = "GLAZE UI V1.6"
+GLAZE_RELEASE_SOURCE = "a7180679ea851389e0f3004515f9a25f420e716d"
+GLAZE_ASSET = "glaze-ui-v1.6.0.css"
+HISTORICAL_ASSETS = ("glaze-ui-v1.1.0.css", "glaze-ui-2.1.0.css")
 
 
 def require(condition: bool, message: str) -> None:
@@ -31,16 +32,17 @@ for name in (
     "site.css",
     "site.js",
     GLAZE_ASSET,
-    HISTORICAL_ASSET,
+    *HISTORICAL_ASSETS,
     "_headers",
     "build.py",
+    "GLAZE-UI-V1.6-ADOPTION.md",
     "GLAZE-UI-V1.1-ADOPTION.md",
     "GLAZE-UI-2.1-ADOPTION.md",
 ):
     require((SITE / name).is_file(), f"missing website source or retained history: {name}")
-require(WORKFLOW.is_file(), "missing Security Center GLAZE UI V1 validation workflow")
-require(HISTORICAL_ADOPTION.is_file(), "historical Glaze UI 2.1 adoption evidence must remain retained")
-require(not (SITE / "glaze-ui-2.0.0.css").exists(), "superseded Glaze UI 2.0 asset must not remain in active website source")
+require(WORKFLOW.is_file(), "missing Security Center GLAZE UI validation workflow")
+require(HISTORICAL_V11_ADOPTION.is_file(), "historical GLAZE UI V1.1 adoption evidence must remain retained")
+require(HISTORICAL_V21_ADOPTION.is_file(), "historical Glaze UI 2.1 adoption evidence must remain retained")
 
 subprocess.run([sys.executable, str(SITE / "build.py")], cwd=ROOT, check=True)
 
@@ -54,7 +56,8 @@ for name in (
     "assets/wardveil-security-icon.svg",
 ):
     require((DIST / name).is_file(), f"missing build artifact: {name}")
-require(not (DIST / "assets" / HISTORICAL_ASSET).exists(), "historical Glaze UI 2.1 asset must not ship in the active build")
+for historical in HISTORICAL_ASSETS:
+    require(not (DIST / "assets" / historical).exists(), f"historical Glaze asset must not ship: {historical}")
 
 identity = json.loads(IDENTITY.read_text(encoding="utf-8"))
 foundation_version = VERSION.read_text(encoding="utf-8").strip()
@@ -86,7 +89,8 @@ glaze_css = (DIST / "assets" / GLAZE_ASSET).read_text(encoding="utf-8")
 site_css = (DIST / "assets" / "site.css").read_text(encoding="utf-8")
 site_js = (DIST / "assets" / "site.js").read_text(encoding="utf-8")
 adoption = ADOPTION.read_text(encoding="utf-8")
-historical_adoption = HISTORICAL_ADOPTION.read_text(encoding="utf-8")
+historical_v11 = HISTORICAL_V11_ADOPTION.read_text(encoding="utf-8")
+historical_v21 = HISTORICAL_V21_ADOPTION.read_text(encoding="utf-8")
 workflow = WORKFLOW.read_text(encoding="utf-8")
 major_minor = ".".join(foundation_version.split(".")[:2])
 
@@ -103,51 +107,47 @@ for needle in (
     "production runtime remains unaccepted",
     "Protected by Wardveil",
     "security@goreecloud.com",
-    'name="goreecloud-glaze-ui" content="1.1.0"',
-    'data-glaze-ui="1.1.0"',
-    'data-glaze-version="1.1"',
-    'data-glaze-density-profile="standard"',
+    'name="goreecloud-glaze-ui" content="1.6.0"',
+    'data-glaze-ui="1.6.0"',
+    'data-glaze-version="1.6"',
+    'data-glaze-density="standard"',
     'data-glaze-performance="balanced"',
-    GLAZE_PRODUCT,
-    "historical GLAZE UI V1.1 / 1.1.0 baseline",
-    "current shared Stable consumer target is GLAZE UI V1.6 / 1.6.0",
-    "migration and independent consumer acceptance remain pending",
+    "GLAZE UI V1.6 source",
+    "current shared Stable GLAZE UI V1.6 / 1.6.0 presentation contract",
+    "source/build migration does not establish rendered",
 ):
     require(needle in html, f"required public content missing: {needle}")
 
 for document in (html, not_found):
     for stale in (
-        "Glaze UI 2.0",
-        "Glaze UI 2.1",
-        "Stable 2.0",
-        "Stable 2.1",
-        'content="2.0.0"',
+        'content="1.1.0"',
+        'data-glaze-ui="1.1.0"',
+        'data-glaze-version="1.1"',
+        "glaze-ui-v1.1.0.css",
         'content="2.1.0"',
-        'data-glaze-ui="2.0.0"',
         'data-glaze-ui="2.1.0"',
-        "glaze-ui-2.0.0.css",
         "glaze-ui-2.1.0.css",
     ):
-        require(stale not in document, f"stale pre-reset Glaze UI public content remains active: {stale}")
+        require(stale not in document, f"historical Glaze UI target remains active: {stale}")
 
 require(
     html.index(f'/assets/{GLAZE_ASSET}') < html.index('/assets/site.css'),
-    "GLAZE UI V1.1 Stable subset must load before Wardveil product styling",
+    "GLAZE UI V1.6 subset must load before Wardveil product styling",
 )
 require(
     not_found.index(f'/assets/{GLAZE_ASSET}') < not_found.index('/assets/site.css'),
-    "404 page must load GLAZE UI V1.1 Stable subset before Wardveil product styling",
+    "404 page must load GLAZE UI V1.6 subset before Wardveil product styling",
 )
 require(
     html.count('data-glaze-material-level="soft-glaze"') == 1,
-    "Security Center administration recipe must keep Soft Glaze bounded to one persistent chrome surface",
+    "Security Center must keep Soft Glaze bounded to one persistent chrome surface",
 )
 require(
     html.count('data-glaze-material-level="surface"') >= 8,
     "Security Center content must explicitly map primary content planes to solid Surface",
 )
 for forbidden_level in ('data-glaze-material-level="deep-glaze"', 'data-glaze-material-level="live-glaze"'):
-    require(forbidden_level not in html, f"Security Center site exceeds bounded administration material mapping: {forbidden_level}")
+    require(forbidden_level not in html, f"Security Center exceeds bounded material mapping: {forbidden_level}")
 
 for needle in (
     "Content-Security-Policy:",
@@ -160,12 +160,11 @@ for prohibited in ("google-analytics", "googletagmanager", "segment.com", "fonts
     require(prohibited not in html.lower(), f"prohibited public dependency detected: {prohibited}")
 
 for needle in (
-    GLAZE_REVISION,
-    'html[data-glaze-version="1.1"]',
-    "--glz11-target-min:48px",
+    GLAZE_RELEASE_SOURCE,
+    'html[data-glaze-version="1.6"]',
+    "--glaze-touch-min:48px",
+    "--glaze-touch-assistance-min:56px",
     'data-glz-touch-assistance="true"',
-    "--glz11-deep-teal:#0f6b6f",
-    "--glz11-soft-amber:#d9a35f",
     "prefers-reduced-transparency",
     "prefers-reduced-motion",
     "prefers-contrast:more",
@@ -174,35 +173,35 @@ for needle in (
     'data-glaze-performance="minimal"',
     "@supports not ((backdrop-filter:blur(1px))",
 ):
-    require(needle in glaze_css, f"GLAZE UI V1.1 Stable subset missing contract marker: {needle}")
+    require(needle in glaze_css, f"GLAZE UI V1.6 source subset missing contract marker: {needle}")
 require(
     ".glass-card{background:var(--surface-strong);" in site_css,
-    "Wardveil content cards must remain solid product surfaces under GLAZE UI V1.1",
+    "Wardveil content cards must remain solid product surfaces under GLAZE UI V1.6",
 )
 require(
     "dataset.glzAppearance" in site_js and "removeAttribute('data-glz-appearance')" in site_js,
-    "Wardveil appearance control must map to the GLAZE UI V1.1 appearance namespace",
+    "Wardveil appearance control must retain explicit local appearance mapping",
 )
-require("dataset.glazeAppearance" not in site_js, "obsolete pre-reset appearance namespace must not remain active")
 
 for needle in (
-    "Status: **Historical active-source baseline / migration required**",
-    "Current shared Stable consumer target: **GLAZE UI V1.6 / 1.6.0**",
-    GLAZE_REVISION,
-    "historical pre-reset evidence",
+    "Status: **Source Adoption Candidate / consumer acceptance pending**",
+    "Target: **GLAZE UI V1.6 / 1.6.0 Stable**",
+    GLAZE_RELEASE_SOURCE,
+    "Known-good rollback baseline: **1.5.1**",
     "48 px floor",
     "56 px floor",
     "Reduced Transparency",
     "Forced Colors",
-    "source-level Adoption Candidate evidence only",
+    "source/build migration evidence only",
+    "canonical Glaze consumer registry currently requires V1.6.0",
     "Wardveil Security remains the authority for security truth",
-    "Security Center must migrate directly to the current GLAZE UI V1.6 / 1.6.0 Stable consumer target",
 ):
-    require(needle in adoption, f"GLAZE UI V1.1 adoption record missing boundary: {needle}")
-require("Glaze UI 2.1 Adoption" in historical_adoption, "retained 2.1 adoption record must remain identifiable as historical evidence")
+    require(needle in adoption, f"GLAZE UI V1.6 adoption record missing boundary: {needle}")
+require("GLAZE UI V1.1 Adoption" in historical_v11, "retained V1.1 adoption record must remain identifiable")
+require("Glaze UI 2.1 Adoption" in historical_v21, "retained 2.1 adoption record must remain identifiable")
 
 for needle in (
-    "Validate Security Center historical GLAZE UI V1.1 baseline",
+    "Validate Security Center GLAZE UI V1.6 source adoption",
     "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
     "actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97",
     "persist-credentials: false",
@@ -211,10 +210,11 @@ for needle in (
     "python3 website/validate_responsive.py",
     "python3 website/browser_responsive_smoke.py",
 ):
-    require(needle in workflow, f"Security Center GLAZE UI V1 workflow missing invariant: {needle}")
+    require(needle in workflow, f"Security Center GLAZE UI workflow missing invariant: {needle}")
 
 print(
     "Wardveil Security public website validation passed for "
     f"foundation {foundation_version}, Sentinel Fold primary identity, and "
-    f"{GLAZE_PRODUCT} / {GLAZE_VERSION} historical source-baseline mapping with current 1.6.0 migration pending"
+    f"{GLAZE_PRODUCT} / {GLAZE_VERSION} source/build Adoption Candidate mapping; "
+    "rendered/deployment/production consumer acceptance remains pending"
 )

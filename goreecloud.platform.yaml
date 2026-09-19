@@ -48,12 +48,12 @@ platform_systems:
     notes: Wardveil now has source-validated single-host durable execution-state persistence and restart-safe replay/reconciliation semantics, while Everkeep remains the recovery authority and live Everkeep backup/restore integration and production acceptance remain incomplete.
   glaze_ui:
     result: applicable-migration-required
-    version: '1.1.0'
+    version: '1.6.0'
     evidence:
-      - website/GLAZE-UI-V1.1-ADOPTION.md
-      - website/glaze-ui-v1.1.0.css
+      - website/GLAZE-UI-V1.6-ADOPTION.md
+      - website/glaze-ui-v1.6.0.css
       - website/index.html
-    notes: Security Center's active repository-local source currently targets the historical post-reset GLAZE UI V1.1 / 1.1.0 contract; retained pre-reset 2.1.0 files are historical evidence only. The current shared consumer target is GLAZE UI V1.6 / 1.6.0. Wardveil-specific migration, exact-revision rendered review, accessibility, representative-target, rollback, release, and production acceptance remain required.
+    notes: Security Center source now targets the current GLAZE UI V1.6 / 1.6.0 Stable consumer contract through a bounded repository-local source mapping. Exact-revision rendered review, accessibility, representative-target/performance, rollback, deployed-byte/provenance, consumer-registry, release, and production acceptance remain required before conformance.
   mesh:
     result: applicable-migration-required
     version: null
@@ -189,7 +189,7 @@ conformance:
     - reference/wardveil_platform_registry_delivery.py
     - scripts/test_wardveil_sqlite_execution_state.py
     - scripts/test_wardveil_platform_registry_delivery.py
-    - website/GLAZE-UI-2.1-ADOPTION.md
+    - website/GLAZE-UI-V1.6-ADOPTION.md
   blockers:
     - Wardveil Foundation 0.9 remains in Active Development and overall production runtime acceptance remains unaccepted even though bounded Wardveil Scan runtime and consumer scopes have exact-environment evidence.
     - GoreeCloud Manager integration and acceptance for Wardveil service state are not established.
@@ -197,7 +197,7 @@ conformance:
     - Privacy Shield integration and production acceptance remain incomplete.
     - Single-host durable execution-state and restart-safe reconciliation are implemented and exact-head tested, but accepted Everkeep recovery, target-side readback, distributed/multi-host replay guarantees, and broader production durability remain incomplete.
     - Source-level Mesh evidence and Platform Registry clients are implemented and exact-head validated, but live producer identity, routing, publication, delivery, and end-to-end Mesh acceptance remain production-unaccepted.
-    - Security Center requires migration from its active historical GLAZE UI V1.1 / 1.1.0 source to the current GLAZE UI V1.6 / 1.6.0 target plus final human, rendered, accessibility, representative-target, rollback, deployment, provenance, and production consumer acceptance.
+    - Security Center source now targets GLAZE UI V1.6 / 1.6.0, but final human rendered review, accessibility, representative-target/performance, rollback, deployment, deployed-byte/provenance, consumer-registry, and production consumer acceptance remain open.
     - Authorized Quarantine execution, external target readback/idempotency, authoritative Audit/Security Center provenance, and broader protection-claim authority remain unaccepted.
     - GoreeCloud Policy integration remains blocked pending an accepted platform Policy runtime contract plus Wardveil-specific decision, distribution, enforcement-coordination, and evidence acceptance.
     - GoreeCloud Observability integration remains blocked pending an accepted platform Observability runtime contract plus Wardveil-specific health, telemetry, freshness, completeness, diagnostics, and operational-evidence acceptance.
