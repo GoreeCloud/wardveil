@@ -1,10 +1,10 @@
-schema_version: '0.2'
+schema_version: '0.4'
 
 component:
   type: service
   id: goreecloud-wardveil-security
   product_name: Wardveil Security
-  repository: GoreeCloud/goreecloud-wardveil-security
+  repository: GoreeCloud/goreecloud-wardveil
 
 lifecycle: development
 version: '0.9'
@@ -83,6 +83,21 @@ platform_systems:
       - reference/wardveil_platform_registry_delivery.py
     notes: Wardveil implements source-validated narrowly scoped credential-provider boundaries for Mesh evidence and Platform Registry publication, while GoreeCloud Identity remains authoritative for production service identity, issuance, signing keys, JWKS trust, rotation/revocation, approved cryptography, and key management; those deployed acceptance gates remain open.
 
+  policy:
+    result: applicable-blocked
+    version: null
+    evidence:
+      - POLICY-DECISION-AND-ENFORCEMENT-V2.md
+      - README.md
+    notes: Wardveil owns security-domain policy semantics within its authority, but GoreeCloud Policy is a separate Integral Platform System. No accepted GoreeCloud Policy runtime contract, decision exchange, distribution, enforcement-coordination integration, or component-specific acceptance is established for Wardveil.
+  observability:
+    result: applicable-blocked
+    version: null
+    evidence:
+      - AUDIT-EVIDENCE-LEDGER-V2.md
+      - README.md
+    notes: Wardveil produces security-domain audit and evidence records, but GoreeCloud Observability remains a separate Integral Platform System. No accepted Observability runtime integration, telemetry contract, operational-health correlation path, completeness/freshness acceptance, or component-specific production evidence is established for Wardveil.
+
 health:
   health_endpoint: null
   readiness_endpoint: null
@@ -119,10 +134,10 @@ external_dependencies:
     version_constraint: null
 
 compatibility:
-  platform_contract: '0.2'
+  platform_contract: '0.4'
   glaze_ui_required: '1.5.1'
   requires:
-    - goreecloud-platform-contract==0.2
+    - goreecloud-platform-contract==0.4
     - glaze-ui==1.5.1
   provides:
     - wardveil-security-foundation-0.9
@@ -183,4 +198,6 @@ conformance:
     - Source-level Mesh evidence and Platform Registry clients are implemented and exact-head validated, but live producer identity, routing, publication, delivery, and end-to-end Mesh acceptance remain production-unaccepted.
     - Security Center requires migration from its pre-reset Glaze UI 2.1.0 source to the current GLAZE UI V1.5 / 1.5.1 target plus final human, rendered, accessibility, representative-target, rollback, deployment, provenance, and production consumer acceptance.
     - Authorized Quarantine execution, external target readback/idempotency, authoritative Audit/Security Center provenance, and broader protection-claim authority remain unaccepted.
+    - GoreeCloud Policy integration remains blocked pending an accepted platform Policy runtime contract plus Wardveil-specific decision, distribution, enforcement-coordination, and evidence acceptance.
+    - GoreeCloud Observability integration remains blocked pending an accepted platform Observability runtime contract plus Wardveil-specific health, telemetry, freshness, completeness, diagnostics, and operational-evidence acceptance.
     - Any required multi-host capacity acceptance and final Stable qualification remain open.
