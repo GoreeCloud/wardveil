@@ -109,8 +109,9 @@ for needle in (
     'data-glaze-density-profile="standard"',
     'data-glaze-performance="balanced"',
     GLAZE_PRODUCT,
-    "GLAZE UI V1.1 / 1.1.0 is the current Stable site target",
-    "V1.2 Frosted Neutral remains a non-production Candidate",
+    "historical GLAZE UI V1.1 / 1.1.0 baseline",
+    "current shared Stable consumer target is GLAZE UI V1.6 / 1.6.0",
+    "migration and independent consumer acceptance remain pending",
 ):
     require(needle in html, f"required public content missing: {needle}")
 
@@ -185,8 +186,8 @@ require(
 require("dataset.glazeAppearance" not in site_js, "obsolete pre-reset appearance namespace must not remain active")
 
 for needle in (
-    "Status: **Adoption Candidate**",
-    "Target: **GLAZE UI V1.1 / 1.1.0 Stable**",
+    "Status: **Historical active-source baseline / migration required**",
+    "Current shared Stable consumer target: **GLAZE UI V1.6 / 1.6.0**",
     GLAZE_REVISION,
     "historical pre-reset evidence",
     "48 px floor",
@@ -195,13 +196,13 @@ for needle in (
     "Forced Colors",
     "source-level Adoption Candidate evidence only",
     "Wardveil Security remains the authority for security truth",
-    "GLAZE UI V1.2 Frosted Neutral remains Candidate-only",
+    "Security Center must migrate directly to the current GLAZE UI V1.6 / 1.6.0 Stable consumer target",
 ):
     require(needle in adoption, f"GLAZE UI V1.1 adoption record missing boundary: {needle}")
 require("Glaze UI 2.1 Adoption" in historical_adoption, "retained 2.1 adoption record must remain identifiable as historical evidence")
 
 for needle in (
-    "Validate Security Center GLAZE UI V1.1 Stable",
+    "Validate Security Center historical GLAZE UI V1.1 baseline",
     "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
     "actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97",
     "persist-credentials: false",
@@ -215,5 +216,5 @@ for needle in (
 print(
     "Wardveil Security public website validation passed for "
     f"foundation {foundation_version}, Sentinel Fold primary identity, and "
-    f"{GLAZE_PRODUCT} / {GLAZE_VERSION} Stable source-level Adoption Candidate mapping"
+    f"{GLAZE_PRODUCT} / {GLAZE_VERSION} historical source-baseline mapping with current 1.6.0 migration pending"
 )
