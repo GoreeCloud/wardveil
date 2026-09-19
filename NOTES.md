@@ -12,13 +12,13 @@ As of the September 19, 2026 stabilization line, authoritative `main` is based o
 
 Current repository configuration uses Platform Contract 0.4, evaluates exactly nine Integral Platform Systems, keeps GoreeCloud Sync separately governed, and requires Glaze UI 1.6.0 as the current shared consumer target.
 
-Security Center’s active repository-local source remains on historical Glaze UI 1.1.0 and is migration-required.
+Security Center source/build migration to Glaze UI 1.6.0 is integrated through PR #150. Human rendered review, representative accessibility/performance, rollback, deployed-byte/provenance, consumer-registry, deployment, runtime, and production acceptance remain open.
 
 ## Current runtime boundary
 
 Wardveil has validated Development/source contracts and selected bounded runtime evidence, including the Wardveil Scan line. This does not establish platform-wide production acceptance.
 
-Open production boundaries include production Identity/key custody and approved cryptography, live target execution/readback, Privacy Shield acceptance, Everkeep recovery acceptance, GoreeCloud Policy and Observability integration, Security Center 1.6 migration, deployment/rollback, monitoring, and Stable qualification.
+Open production boundaries include production Identity/key custody and approved cryptography, live target execution/readback, Privacy Shield acceptance, Everkeep recovery acceptance, GoreeCloud Policy and Observability integration, remaining Security Center 1.6 rendered/runtime/deployment acceptance, deployment/rollback, monitoring, and Stable qualification.
 
 ## Documentation authority
 
