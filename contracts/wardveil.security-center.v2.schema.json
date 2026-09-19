@@ -12,12 +12,13 @@
     "coverage_state",
     "claim_authority",
     "why_this_status",
+    "privacy_minimization",
     "areas",
     "presentation",
     "acceptance"
   ],
   "properties": {
-    "schema_version": {"const": "0.1.0"},
+    "schema_version": {"const": "0.2.0"},
     "generated_at": {"type": "string", "format": "date-time"},
     "resource_scope": {"type": "string", "minLength": 1, "maxLength": 256},
     "security_state": {
@@ -43,6 +44,28 @@
         "reconciliation_required": {"type": "boolean"},
         "summary": {"type": "string", "minLength": 1, "maxLength": 512},
         "next_action": {"type": "string", "minLength": 1, "maxLength": 512}
+      }
+    },
+    "privacy_minimization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "raw_private_content_included",
+        "raw_private_activity_included",
+        "reusable_credentials_included",
+        "recovery_material_included",
+        "unrestricted_diagnostic_payloads_included",
+        "identifier_scope",
+        "privacy_shield_review_required"
+      ],
+      "properties": {
+        "raw_private_content_included": {"const": false},
+        "raw_private_activity_included": {"const": false},
+        "reusable_credentials_included": {"const": false},
+        "recovery_material_included": {"const": false},
+        "unrestricted_diagnostic_payloads_included": {"const": false},
+        "identifier_scope": {"const": "necessary_bounded"},
+        "privacy_shield_review_required": {"const": true}
       }
     },
     "areas": {
