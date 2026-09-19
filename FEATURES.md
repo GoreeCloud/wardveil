@@ -2,7 +2,7 @@
 
 Wardveil Security is GoreeCloud’s platform-wide security, protection, trust, detection, policy, verification, and response system. It is a functional technical subsystem embedded throughout GoreeCloud rather than a security badge, visual theme, or marketing label. Wardveil protects GoreeCloud applications, services, infrastructure, identities, devices, sessions, communications, and data while providing evidence for the security decisions and protections it performs.
 
-This document defines the canonical feature scope for Wardveil Security Foundation 0.8. Implementation and production acceptance remain evidence-bound; inclusion here defines intended Wardveil capability, not proof that every listed feature is already operational in every GoreeCloud runtime.
+This document defines the maintained feature scope for Wardveil Security Foundation 0.9 and the planned Wardveil 2.0 direction. Implementation and production acceptance remain evidence-bound; inclusion here defines implemented or intended capability as qualified by current evidence, not proof that every listed feature is operational or production-accepted in every GoreeCloud runtime.
 
 ## Core Security Features
 
