@@ -9,14 +9,16 @@ ROOT = Path(__file__).resolve().parents[1]
 EVIDENCE = ROOT / "contracts" / "wardveil.privacy-shield.consumer-source-evidence.json"
 DOC = ROOT / "PRIVACY-SHIELD.md"
 
-EXPECTED_REVISION = "da783c2e48a279b5b5c1bb500d9a5511e50423be"
-EXPECTED_TREE = "f4a51c983c6a7627da9a8299c3341e0f4fc3a776"
+EXPECTED_REVISION = "4bc8e49a437f5e705481e07831b9ea84d1b38a77"
+EXPECTED_TREE = "612b028ba1561235622d5eada7d4c6ee5954e0e9"
 EXPECTED_STATUS_SCHEMA_BLOB = "f6b62576e68e19ad8b25ced5383f8a3df74716fb"
 EXPECTED_STATUS_VALIDATOR_BLOB = "22dd5fb95641a663f79822c66bc8f92422064741"
-EXPECTED_PROVIDER_GATE_BLOB = "c03beab340f9afad878e2cc7b7cdd68eeb11c2c2"
+EXPECTED_PROVIDER_GATE_BLOB = "23a53b5d40865159fe748348a0a178cd668dc9ff"
+EXPECTED_STATE_ACCEPTANCE_SCHEMA_BLOB = "b47891772ddec46e2bf522c6a6405423e426ec2a"
+EXPECTED_SIGNING_ACCEPTANCE_SCHEMA_BLOB = "4954b0ba76f8d250b2683b98c42df96eb6edf05e"
 EXPECTED_WORKFLOW_BLOB = "9b4df523e500b2352d1ad68469b2874e89f0203b"
-EXPECTED_VALIDATION_RUN = 35471000814
-EXPECTED_VALIDATION_RUN_NUMBER = 481
+EXPECTED_VALIDATION_RUN = 35471946193
+EXPECTED_VALIDATION_RUN_NUMBER = 484
 
 
 def require(condition: bool, message: str) -> None:
@@ -58,6 +60,8 @@ def main() -> None:
         "privacy_status_schema": "contracts/privacy-shield.status.schema.json",
         "privacy_status_validator": "src/privacy-status-record.mjs",
         "provider_acceptance_gate": "tools/validate_provider_acceptance_gate.py",
+        "state_provider_acceptance_schema": "contracts/privacy-shield.state-provider-acceptance.schema.json",
+        "signing_provider_acceptance_schema": "contracts/privacy-shield.signing-key-provider-acceptance.schema.json",
         "producer_validation_workflow": ".github/workflows/validate.yml",
     }
     for key, expected in expected_paths.items():
@@ -67,6 +71,8 @@ def main() -> None:
         "privacy_status_schema_git_blob_sha": EXPECTED_STATUS_SCHEMA_BLOB,
         "privacy_status_validator_git_blob_sha": EXPECTED_STATUS_VALIDATOR_BLOB,
         "provider_acceptance_gate_git_blob_sha": EXPECTED_PROVIDER_GATE_BLOB,
+        "state_provider_acceptance_schema_git_blob_sha": EXPECTED_STATE_ACCEPTANCE_SCHEMA_BLOB,
+        "signing_provider_acceptance_schema_git_blob_sha": EXPECTED_SIGNING_ACCEPTANCE_SCHEMA_BLOB,
         "producer_validation_workflow_git_blob_sha": EXPECTED_WORKFLOW_BLOB,
     }
     for key, expected in expected_blobs.items():
@@ -87,6 +93,7 @@ def main() -> None:
         "unsafe_privacy_status_fails_closed",
         "runtime_acceptance_required",
         "producer_authority_preserved",
+        "provider_acceptance_exact_selection_decision_binding_required",
     ):
         require(details.get(key) is True, f"missing required source invariant: {key}")
 

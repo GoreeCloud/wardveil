@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://goreecloud.com/schemas/wardveil.privacy-shield.runtime-acceptance.schema.json",
+  "title": "Wardveil Privacy Shield Runtime Acceptance Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "contract_id",
+    "record_id",
+    "privacy_shield",
+    "wardveil",
+    "transport",
+    "privacy",
+    "acceptance",
+    "evidence",
+    "limitations"
+  ],
+  "properties": {
+    "schema_version": {"type": "integer", "const": 1},
+    "contract_id": {"type": "string", "const": "goreecloud.wardveil.privacy-shield.runtime-acceptance.v1"},
+    "record_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$"},
+    "privacy_shield": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "producer_repository",
+        "producer_revision",
+        "producer_source_tree_sha",
+        "adapter_id",
+        "runtime_authority",
+        "status_schema_version",
+        "status_record_sha256",
+        "status_record_reference"
+      ],
+      "properties": {
+        "producer_repository": {"const": "GoreeCloud/goreecloud-privacy-shield"},
+        "producer_revision": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "producer_source_tree_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "adapter_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$"},
+        "runtime_authority": {"type": "string", "pattern": "^GoreeCloud/[A-Za-z0-9._-]+$"},
+        "status_schema_version": {"const": 1},
+        "status_record_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "status_record_reference": {"type": "string", "pattern": "^evidence\\+sha256:[0-9a-f]{64}:[^\\s]+$"}
+      }
+    },
+    "wardveil": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["consumer_repository", "consumer_revision", "consumer_source_tree_sha"],
+      "properties": {
+        "consumer_repository": {"const": "GoreeCloud/goreecloud-wardveil"},
+        "consumer_revision": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "consumer_source_tree_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"}
+      }
+    },
+    "transport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "authenticated",
+        "encrypted",
+        "producer_service_identity",
+        "identity_authority",
+        "evidence_reference"
+      ],
+      "properties": {
+        "authenticated": {"const": true},
+        "encrypted": {"const": true},
+        "producer_service_identity": {"const": "privacy-shield"},
+        "identity_authority": {"const": "GoreeCloud/goreecloud-identity"},
+        "evidence_reference": {"type": "string", "pattern": "^evidence\\+sha256:[0-9a-f]{64}:[^\\s]+$"}
+      }
+    },
+    "privacy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["raw_private_activity_included", "contains_credentials", "contains_identifiers"],
+      "properties": {
+        "raw_private_activity_included": {"const": false},
+        "contains_credentials": {"const": false},
+        "contains_identifiers": {"const": false}
+      }
+    },
+    "acceptance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "producer_runtime_status",
+        "producer_production_approved",
+        "wardveil_consumer_status",
+        "shared_interaction_status",
+        "observed_at",
+        "reviewed_at",
+        "valid_until",
+        "production_approved",
+        "authorization_effect",
+        "authority_transfer",
+        "protected_by_wardveil"
+      ],
+      "properties": {
+        "producer_runtime_status": {"const": "passed"},
+        "producer_production_approved": {"const": true},
+        "wardveil_consumer_status": {"const": "passed"},
+        "shared_interaction_status": {"const": "passed"},
+        "observed_at": {"type": "string", "format": "date-time"},
+        "reviewed_at": {"type": "string", "format": "date-time"},
+        "valid_until": {"type": "string", "format": "date-time"},
+        "production_approved": {"const": false},
+        "authorization_effect": {"const": false},
+        "authority_transfer": {"const": false},
+        "protected_by_wardveil": {"const": false}
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 30,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "category", "result", "reference"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$"},
+          "category": {
+            "enum": [
+              "producer-runtime",
+              "producer-provider-acceptance",
+              "authenticated-transport",
+              "target-environment",
+              "privacy-minimization",
+              "wardveil-consumer"
+            ]
+          },
+          "result": {"const": "passed"},
+          "reference": {"type": "string", "pattern": "^evidence\\+sha256:[0-9a-f]{64}:[^\\s]+$"}
+        }
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "maxItems": 30,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1, "maxLength": 500}
+    }
+  }
+}
