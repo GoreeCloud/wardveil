@@ -4,7 +4,7 @@
 
 **Name:** Wardveil Security by GoreeCloud  
 **Short name:** Wardveil  
-**Repository:** `GoreeCloud/goreecloud-wardveil`  
+**Repository:** `GoreeCloud/wardveil`  
 **Lifecycle:** Development  
 **Current architecture baseline:** Foundation 0.9  
 **Planned major target:** Wardveil 2.0 — Adaptive Security & Trust  
