@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "producer": "GoreeCloud Privacy Shield",
-  "producer_repository": "GoreeCloud/goreecloud-privacy-shield",
-  "producer_revision": "1ded1feeaa0feb438d8f05be0c5e152ae6d1ccfe",
-  "producer_source_tree_sha": "22289ab48eb701be764dee966cca98a4550fee76",
+  "producer_repository": "GoreeCloud/privacy-shield",
+  "producer_revision": "4e10e93881201e5bcab6b32d8670000bee37aa64",
+  "producer_source_tree_sha": "41c658ac5b0a330b58279ade53045bac32c47e37",
   "integration": "Wardveil read-only Privacy Shield status consumer",
   "source_integration_status": "implemented",
   "runtime_acceptance_status": "unaccepted",
@@ -17,8 +17,8 @@
     "provider_acceptance_gate_git_blob_sha": "23a53b5d40865159fe748348a0a178cd668dc9ff",
     "producer_validation_workflow": ".github/workflows/validate.yml",
     "producer_validation_workflow_git_blob_sha": "4f5fece3c321baf6733e9c2ca187bac4216bbe3a",
-    "producer_validation_run_id": 35480300540,
-    "producer_validation_run_number": 499,
+    "producer_validation_run_id": 35536884870,
+    "producer_validation_run_number": 501,
     "producer_validation_conclusion": "success",
     "state_provider_production_acceptance_records": 0,
     "signing_provider_production_acceptance_records": 0,
@@ -63,7 +63,12 @@
     "provider_access_control_assessment_schema": "contracts/privacy-shield.provider-access-control-assessment.schema.json",
     "provider_access_control_assessment_schema_git_blob_sha": "b1ddd9716a3a748b40ec9b7b665578f7bd068d59",
     "provider_access_control_assessment_records": 0,
-    "provider_access_control_assessment_is_production_acceptance": false
+    "provider_access_control_assessment_is_production_acceptance": false,
+    "provider_access_control_assessment_validator": "tools/validate_provider_access_control_assessments.py",
+    "provider_access_control_assessment_validator_git_blob_sha": "051dde00c2bc7edeb8f22872a107f876f59e517a",
+    "provider_access_control_assessment_future_dated_fails_closed": true,
+    "provider_access_control_assessment_filename_matches_identity_required": true,
+    "provider_access_control_assessment_duplicate_identity_fails_closed": true
   },
   "runtime_acceptance_requirements_remaining": [
     "real_privacy_shield_runtime_acceptance",
