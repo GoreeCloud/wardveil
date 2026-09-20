@@ -30,7 +30,8 @@ platform_systems:
     evidence:
       - README.md
       - contracts/wardveil.mesh-evidence-profile.json
-    notes: Wardveil source architecture preserves Privacy Shield as the separate privacy and data-use authority, but live Privacy Shield integration and production acceptance remain open.
+      - contracts/wardveil.privacy-shield.consumer-source-evidence.json
+    notes: Wardveil preserves Privacy Shield as the separate privacy and data-use authority and has current source-provenance integration for the read-only Privacy Shield consumer path. Independent Privacy Shield runtime acceptance, provider production acceptance, target-environment evidence, and overall production acceptance remain open.
   wardveil_security:
     result: not-applicable-justified
     version: '0.9'
