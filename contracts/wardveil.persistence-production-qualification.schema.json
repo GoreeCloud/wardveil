@@ -1,0 +1,282 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://goreecloud.com/schemas/wardveil.persistence-production-qualification.schema.json",
+  "title": "Wardveil Production Persistence Qualification",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "contract_id",
+    "qualification_id",
+    "candidate",
+    "controls",
+    "governance",
+    "privacy",
+    "limitations"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "contract_id": {
+      "type": "string",
+      "const": "goreecloud.wardveil.persistence-production-qualification.v1"
+    },
+    "qualification_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository",
+        "exact_source_revision",
+        "source_tree_sha",
+        "persistence_implementation",
+        "backend",
+        "backend_version",
+        "deployment"
+      ],
+      "properties": {
+        "repository": {
+          "type": "string",
+          "const": "GoreeCloud/wardveil"
+        },
+        "exact_source_revision": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "source_tree_sha": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "persistence_implementation": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 240
+        },
+        "backend": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "backend_version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "deployment": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "environment",
+            "boundary_id",
+            "topology"
+          ],
+          "properties": {
+            "environment": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9-]*$"
+            },
+            "boundary_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 240
+            },
+            "topology": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            }
+          }
+        }
+      }
+    },
+    "controls": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "durable_restart_recovery",
+        "transactional_atomicity",
+        "concurrent_writer_integrity",
+        "encryption_at_rest",
+        "credential_and_key_custody",
+        "retention_enforcement",
+        "backup_creation",
+        "restore_verification",
+        "migration_and_rollback",
+        "tamper_and_integrity_detection",
+        "storage_failure_behavior",
+        "access_control_isolation",
+        "privacy_safe_observability",
+        "operational_monitoring",
+        "everkeep_recovery_boundary"
+      ],
+      "properties": {
+        "durable_restart_recovery": {
+          "$ref": "#/$defs/criterion"
+        },
+        "transactional_atomicity": {
+          "$ref": "#/$defs/criterion"
+        },
+        "concurrent_writer_integrity": {
+          "$ref": "#/$defs/criterion"
+        },
+        "encryption_at_rest": {
+          "$ref": "#/$defs/criterion"
+        },
+        "credential_and_key_custody": {
+          "$ref": "#/$defs/criterion"
+        },
+        "retention_enforcement": {
+          "$ref": "#/$defs/criterion"
+        },
+        "backup_creation": {
+          "$ref": "#/$defs/criterion"
+        },
+        "restore_verification": {
+          "$ref": "#/$defs/criterion"
+        },
+        "migration_and_rollback": {
+          "$ref": "#/$defs/criterion"
+        },
+        "tamper_and_integrity_detection": {
+          "$ref": "#/$defs/criterion"
+        },
+        "storage_failure_behavior": {
+          "$ref": "#/$defs/criterion"
+        },
+        "access_control_isolation": {
+          "$ref": "#/$defs/criterion"
+        },
+        "privacy_safe_observability": {
+          "$ref": "#/$defs/criterion"
+        },
+        "operational_monitoring": {
+          "$ref": "#/$defs/criterion"
+        },
+        "everkeep_recovery_boundary": {
+          "$ref": "#/$defs/criterion"
+        }
+      }
+    },
+    "governance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "authorizing",
+        "production_acceptance_authorized",
+        "protected_claim_authorized",
+        "covered_claim_authorized",
+        "assessed_at",
+        "valid_until"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "complete",
+            "failed",
+            "superseded"
+          ]
+        },
+        "authorizing": {
+          "const": false
+        },
+        "production_acceptance_authorized": {
+          "const": false
+        },
+        "protected_claim_authorized": {
+          "const": false
+        },
+        "covered_claim_authorized": {
+          "const": false
+        },
+        "assessed_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "valid_until": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "privacy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reusable_credentials_in_record",
+        "secret_material_in_record",
+        "raw_private_content_in_record",
+        "full_authentication_tokens_in_record",
+        "raw_database_dumps_in_record"
+      ],
+      "properties": {
+        "reusable_credentials_in_record": {
+          "const": false
+        },
+        "secret_material_in_record": {
+          "const": false
+        },
+        "raw_private_content_in_record": {
+          "const": false
+        },
+        "full_authentication_tokens_in_record": {
+          "const": false
+        },
+        "raw_database_dumps_in_record": {
+          "const": false
+        }
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "uniqueItems": true,
+      "maxItems": 50,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 500
+      }
+    }
+  },
+  "$defs": {
+    "evidence_ref": {
+      "type": "string",
+      "minLength": 85,
+      "maxLength": 1200,
+      "pattern": "^evidence\\+sha256:[0-9a-f]{64}:(?:https://|github://|gdrive://|qualification-run:|artifact:)[^\\s]+$"
+    },
+    "criterion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "result",
+        "evidence_refs"
+      ],
+      "properties": {
+        "result": {
+          "type": "string",
+          "enum": [
+            "pending",
+            "passed",
+            "failed"
+          ]
+        },
+        "evidence_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "maxItems": 30,
+          "items": {
+            "$ref": "#/$defs/evidence_ref"
+          }
+        }
+      }
+    }
+  }
+}
