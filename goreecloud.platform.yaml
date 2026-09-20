@@ -4,7 +4,7 @@ component:
   type: service
   id: goreecloud-wardveil-security
   product_name: Wardveil Security
-  repository: GoreeCloud/goreecloud-wardveil
+  repository: GoreeCloud/wardveil
 
 lifecycle: development
 version: '0.9'
