@@ -44,3 +44,14 @@ Storage-health evidence can report transaction capability, integrity verificatio
 ## Acceptance boundary
 
 `reference/wardveil_persistence.py` is an in-memory conformance implementation. It does not establish a production database, Cloudflare Durable Object/D1 deployment, event broker, production key management, backup platform, disaster-recovery acceptance, or Stable qualification. A production adapter requires product-specific deployment, persistence, encryption, migration, backup, restore, retention, monitoring, and failure-mode evidence.
+
+## Production qualification boundary
+
+Production persistence qualification is governed by `contracts/wardveil.persistence-production-qualification.schema.json`, validated by `scripts/validate_wardveil_persistence_production_qualification.py`, and recorded only under `qualification/persistence-production/*.json`.
+
+This qualification layer is **non-authorizing** and is **not production acceptance**. A complete qualification must bind an exact Wardveil source revision and tree, persistence implementation, backend/version, deployment boundary, environment, and topology, then carry current content-addressed evidence for durability across restart/recovery, transaction atomicity, concurrent-writer integrity, encryption and key custody, retention enforcement, backup/restore, migration/rollback, tamper detection, storage-failure behavior, access-control isolation, privacy-safe observability, operational monitoring, and the Everkeep recovery boundary.
+
+Passing this qualification cannot by itself authorize deployment, production acceptance, a `Protected by Wardveil` claim, a `Covered` state, a release, or Stable qualification. Production runtime acceptance, target-system execution/readback, approved Identity/key custody, Everkeep recovery acceptance, monitoring, rollback, and the other applicable Integral Platform System gates remain separate.
+
+There are currently no production persistence qualification records. Existing in-memory, SQLite, and Cloudflare persistence references remain bounded to their separately verified source/runtime scopes.
+
