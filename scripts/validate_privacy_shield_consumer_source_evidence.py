@@ -9,26 +9,27 @@ ROOT = Path(__file__).resolve().parents[1]
 EVIDENCE = ROOT / "contracts" / "wardveil.privacy-shield.consumer-source-evidence.json"
 DOC = ROOT / "PRIVACY-SHIELD.md"
 
-EXPECTED_REVISION = "16a79378e719384501bd303c7b1211ffd8132147"
-EXPECTED_TREE = "e64a5b152543e5c77496e741f16a5fdf19277dca"
+EXPECTED_REVISION = "1ded1feeaa0feb438d8f05be0c5e152ae6d1ccfe"
+EXPECTED_TREE = "22289ab48eb701be764dee966cca98a4550fee76"
 EXPECTED_STATUS_SCHEMA_BLOB = "f6b62576e68e19ad8b25ced5383f8a3df74716fb"
 EXPECTED_STATUS_VALIDATOR_BLOB = "22dd5fb95641a663f79822c66bc8f92422064741"
 EXPECTED_PROVIDER_GATE_BLOB = "23a53b5d40865159fe748348a0a178cd668dc9ff"
 EXPECTED_STATE_ACCEPTANCE_SCHEMA_BLOB = "b47891772ddec46e2bf522c6a6405423e426ec2a"
 EXPECTED_SIGNING_ACCEPTANCE_SCHEMA_BLOB = "4954b0ba76f8d250b2683b98c42df96eb6edf05e"
-EXPECTED_WORKFLOW_BLOB = "9b4df523e500b2352d1ad68469b2874e89f0203b"
+EXPECTED_WORKFLOW_BLOB = "4f5fece3c321baf6733e9c2ca187bac4216bbe3a"
 EXPECTED_STATE_CANDIDATE_BLOB = "c041fda55efd4a29f7d1bf0fc1c8d5ac2281a0ae"
 EXPECTED_SIGNING_CANDIDATE_BLOB = "d3744c677f1c3111e5559c145e293931a236db5c"
 EXPECTED_STATE_PACKAGE_BLOB = "0eae49b84d63b78338b380f6de1e77d05d10352f"
 EXPECTED_SIGNING_PACKAGE_BLOB = "ccb916e142cc80d06328f8396dfc047fb218d040"
-EXPECTED_VALIDATION_RUN = 35479172162
-EXPECTED_VALIDATION_RUN_NUMBER = 493
+EXPECTED_VALIDATION_RUN = 35480300540
+EXPECTED_VALIDATION_RUN_NUMBER = 499
 EXPECTED_STATE_OPERATIONAL_PACKAGE_BLOB = "24c70733e0e0c3b2fe23e1f50323e239fb0b55c8"
 EXPECTED_SIGNING_LIFECYCLE_PACKAGE_BLOB = "db95c334efca5344add9dd0f8d9d847d0866eae0"
 EXPECTED_STATE_CAPABILITY_REVIEW_BLOB = "52f9296b3d4a2317eb03c9606327ad5eec58d433"
 EXPECTED_STATE_OPERATIONAL_REVIEW_BLOB = "af183c19c77659e7599e5d50c217a1efb73edc07"
 EXPECTED_SIGNING_CAPABILITY_REVIEW_BLOB = "6c2e5c6de05cf0ac3572eb805b476e45c3fe4b94"
 EXPECTED_SIGNING_LIFECYCLE_REVIEW_BLOB = "ea68b26817adb3ac59e55b7687d3bcb249360d05"
+EXPECTED_ACCESS_CONTROL_ASSESSMENT_SCHEMA_BLOB = "b1ddd9716a3a748b40ec9b7b665578f7bd068d59"
 
 
 def require(condition: bool, message: str) -> None:
@@ -82,6 +83,7 @@ def main() -> None:
         "state_provider_operational_review_attestation": "reviews/provider-evidence/foundationdb-operational-security-review-20260919.json",
         "signing_provider_capability_review_attestation": "reviews/provider-evidence/ovhcloud-kms-hsm-signing-docs-review-20260919.json",
         "signing_provider_lifecycle_review_attestation": "reviews/provider-evidence/ovhcloud-kms-signing-lifecycle-audit-review-20260919.json",
+        "provider_access_control_assessment_schema": "contracts/privacy-shield.provider-access-control-assessment.schema.json",
         "producer_validation_workflow": ".github/workflows/validate.yml",
     }
     for key, expected in expected_paths.items():
@@ -103,6 +105,7 @@ def main() -> None:
         "state_provider_operational_review_attestation_git_blob_sha": EXPECTED_STATE_OPERATIONAL_REVIEW_BLOB,
         "signing_provider_capability_review_attestation_git_blob_sha": EXPECTED_SIGNING_CAPABILITY_REVIEW_BLOB,
         "signing_provider_lifecycle_review_attestation_git_blob_sha": EXPECTED_SIGNING_LIFECYCLE_REVIEW_BLOB,
+        "provider_access_control_assessment_schema_git_blob_sha": EXPECTED_ACCESS_CONTROL_ASSESSMENT_SCHEMA_BLOB,
         "producer_validation_workflow_git_blob_sha": EXPECTED_WORKFLOW_BLOB,
     }
     for key, expected in expected_blobs.items():
@@ -120,6 +123,8 @@ def main() -> None:
     require(details.get("provider_evidence_package_records") == 4, "expected exactly four reviewed provider evidence packages")
     require(details.get("provider_evidence_review_attestation_records") == 4, "expected exactly four provider evidence review attestations")
     require(details.get("approved_provider_selection_records") == 0, "source evidence must not invent approved provider selections")
+    require(details.get("provider_access_control_assessment_records") == 0, "source evidence must not invent provider access-control assessments")
+    require(details.get("provider_access_control_assessment_is_production_acceptance") is False, "access-control assessment must not equal production acceptance")
 
     for key in (
         "full_record_status_validation_required",
