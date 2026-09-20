@@ -105,6 +105,7 @@ The Cloudflare deployment gate is defined by `.github/workflows/deploy-cloudflar
 - `contracts/wardveil.capabilities.json` — machine-readable capability and lifecycle contract.
 - `RUNTIME-AUTHORIZATION.md` and `contracts/wardveil.runtime-authorization.json` — cross-service execution authorization, exact binding, replay, idempotency, and production-acceptance boundary.
 - `EXECUTION-STATE.md` and `contracts/wardveil.execution-state.json` — durable authorization claims, uncertain-outcome handling, idempotency state, execution receipts, and deployment boundary.
+- `PERSISTENCE.md`, `contracts/wardveil.persistence-production-qualification.schema.json`, and `qualification/persistence-production/` — non-authorizing exact-candidate/deployment persistence qualification for durability, integrity, encryption/key custody, backup/restore, migration/rollback, access control, observability, monitoring, and Everkeep recovery evidence.
 - `SERVICE-IDENTITY.md` and `contracts/wardveil.service-identity.json` — service identities, capability binding, signing-key identity, rotation, revocation, and production key-management boundary.
 - `QUARANTINE-EXECUTOR.md`, `contracts/wardveil.quarantine-executor.json`, and `contracts/wardveil.quarantine-executor-deployment.json` — bounded high-impact quarantine execution, target idempotency/readback, deployment gating, reconciliation, Audit provenance, and Cloudflare acceptance boundaries.
 - `STATUS.md` and `contracts/wardveil.status.schema.json` — evidence-backed Wardveil status semantics.
@@ -162,6 +163,8 @@ python3 scripts/test_wardveil_service_identity.py
 python3 scripts/validate_wardveil_service_identity.py
 python3 scripts/test_wardveil_execution_state.py
 python3 scripts/validate_wardveil_execution_state.py
+python3 scripts/test_wardveil_persistence_production_qualification.py
+python3 scripts/validate_wardveil_persistence_production_qualification.py
 python3 scripts/test_wardveil_quarantine_executor.py
 python3 scripts/validate_wardveil_quarantine_executor.py
 python3 scripts/validate_cloudflare_quarantine_executor.py
@@ -175,7 +178,7 @@ python3 scripts/validate_wardveil_aggregation.py
 python3 scripts/validate_wardveil_privacy_shield.py
 ```
 
-CI validates the canonical capability set, lifecycle, version alignment, runtime authorization, service identity/key lifecycle, durable execution claims/receipts, bounded quarantine execution and target-readback semantics, the quarantine deployment gate and non-mutating service-binding probe, Audit/Security Center provenance, evidence boundaries, all Wardveil Cloudflare Worker source candidates, ClamAV protocol/runtime-health/deployment invariants, aggregation, Privacy Shield separation, repository governance, icon state, and public-site tooling against the exact source revision.
+CI validates the canonical capability set, lifecycle, version alignment, runtime authorization, service identity/key lifecycle, durable execution claims/receipts, the non-authorizing production-persistence qualification boundary, bounded quarantine execution and target-readback semantics, the quarantine deployment gate and non-mutating service-binding probe, Audit/Security Center provenance, evidence boundaries, all Wardveil Cloudflare Worker source candidates, ClamAV protocol/runtime-health/deployment invariants, aggregation, Privacy Shield separation, repository governance, icon state, and public-site tooling against the exact source revision.
 
 ## Release discipline
 
