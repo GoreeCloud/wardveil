@@ -9,8 +9,8 @@ ROOT = Path(__file__).resolve().parents[1]
 EVIDENCE = ROOT / "contracts" / "wardveil.privacy-shield.consumer-source-evidence.json"
 DOC = ROOT / "PRIVACY-SHIELD.md"
 
-EXPECTED_REVISION = "1ded1feeaa0feb438d8f05be0c5e152ae6d1ccfe"
-EXPECTED_TREE = "22289ab48eb701be764dee966cca98a4550fee76"
+EXPECTED_REVISION = "4e10e93881201e5bcab6b32d8670000bee37aa64"
+EXPECTED_TREE = "41c658ac5b0a330b58279ade53045bac32c47e37"
 EXPECTED_STATUS_SCHEMA_BLOB = "f6b62576e68e19ad8b25ced5383f8a3df74716fb"
 EXPECTED_STATUS_VALIDATOR_BLOB = "22dd5fb95641a663f79822c66bc8f92422064741"
 EXPECTED_PROVIDER_GATE_BLOB = "23a53b5d40865159fe748348a0a178cd668dc9ff"
@@ -21,8 +21,8 @@ EXPECTED_STATE_CANDIDATE_BLOB = "c041fda55efd4a29f7d1bf0fc1c8d5ac2281a0ae"
 EXPECTED_SIGNING_CANDIDATE_BLOB = "d3744c677f1c3111e5559c145e293931a236db5c"
 EXPECTED_STATE_PACKAGE_BLOB = "0eae49b84d63b78338b380f6de1e77d05d10352f"
 EXPECTED_SIGNING_PACKAGE_BLOB = "ccb916e142cc80d06328f8396dfc047fb218d040"
-EXPECTED_VALIDATION_RUN = 35480300540
-EXPECTED_VALIDATION_RUN_NUMBER = 499
+EXPECTED_VALIDATION_RUN = 35536884870
+EXPECTED_VALIDATION_RUN_NUMBER = 501
 EXPECTED_STATE_OPERATIONAL_PACKAGE_BLOB = "24c70733e0e0c3b2fe23e1f50323e239fb0b55c8"
 EXPECTED_SIGNING_LIFECYCLE_PACKAGE_BLOB = "db95c334efca5344add9dd0f8d9d847d0866eae0"
 EXPECTED_STATE_CAPABILITY_REVIEW_BLOB = "52f9296b3d4a2317eb03c9606327ad5eec58d433"
@@ -30,6 +30,7 @@ EXPECTED_STATE_OPERATIONAL_REVIEW_BLOB = "af183c19c77659e7599e5d50c217a1efb73edc
 EXPECTED_SIGNING_CAPABILITY_REVIEW_BLOB = "6c2e5c6de05cf0ac3572eb805b476e45c3fe4b94"
 EXPECTED_SIGNING_LIFECYCLE_REVIEW_BLOB = "ea68b26817adb3ac59e55b7687d3bcb249360d05"
 EXPECTED_ACCESS_CONTROL_ASSESSMENT_SCHEMA_BLOB = "b1ddd9716a3a748b40ec9b7b665578f7bd068d59"
+EXPECTED_ACCESS_CONTROL_ASSESSMENT_VALIDATOR_BLOB = "051dde00c2bc7edeb8f22872a107f876f59e517a"
 
 
 def require(condition: bool, message: str) -> None:
@@ -50,7 +51,7 @@ def main() -> None:
     expected_identity = {
         "schema_version": 1,
         "producer": "GoreeCloud Privacy Shield",
-        "producer_repository": "GoreeCloud/goreecloud-privacy-shield",
+        "producer_repository": "GoreeCloud/privacy-shield",
         "producer_revision": EXPECTED_REVISION,
         "producer_source_tree_sha": EXPECTED_TREE,
         "integration": "Wardveil read-only Privacy Shield status consumer",
@@ -84,6 +85,7 @@ def main() -> None:
         "signing_provider_capability_review_attestation": "reviews/provider-evidence/ovhcloud-kms-hsm-signing-docs-review-20260919.json",
         "signing_provider_lifecycle_review_attestation": "reviews/provider-evidence/ovhcloud-kms-signing-lifecycle-audit-review-20260919.json",
         "provider_access_control_assessment_schema": "contracts/privacy-shield.provider-access-control-assessment.schema.json",
+        "provider_access_control_assessment_validator": "tools/validate_provider_access_control_assessments.py",
         "producer_validation_workflow": ".github/workflows/validate.yml",
     }
     for key, expected in expected_paths.items():
@@ -106,6 +108,7 @@ def main() -> None:
         "signing_provider_capability_review_attestation_git_blob_sha": EXPECTED_SIGNING_CAPABILITY_REVIEW_BLOB,
         "signing_provider_lifecycle_review_attestation_git_blob_sha": EXPECTED_SIGNING_LIFECYCLE_REVIEW_BLOB,
         "provider_access_control_assessment_schema_git_blob_sha": EXPECTED_ACCESS_CONTROL_ASSESSMENT_SCHEMA_BLOB,
+        "provider_access_control_assessment_validator_git_blob_sha": EXPECTED_ACCESS_CONTROL_ASSESSMENT_VALIDATOR_BLOB,
         "producer_validation_workflow_git_blob_sha": EXPECTED_WORKFLOW_BLOB,
     }
     for key, expected in expected_blobs.items():
@@ -135,6 +138,9 @@ def main() -> None:
         "runtime_acceptance_required",
         "producer_authority_preserved",
         "provider_acceptance_exact_selection_decision_binding_required",
+        "provider_access_control_assessment_future_dated_fails_closed",
+        "provider_access_control_assessment_filename_matches_identity_required",
+        "provider_access_control_assessment_duplicate_identity_fails_closed",
     ):
         require(details.get(key) is True, f"missing required source invariant: {key}")
 
