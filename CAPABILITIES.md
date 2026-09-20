@@ -167,6 +167,8 @@ Production key custody, approved cryptography, live target execution, production
 
 Wardveil source provides single-host durable execution-state behavior and recovery-oriented contracts. Everkeep remains the resilience authority.
 
+The repository now also defines a fail-closed, non-authorizing production persistence qualification contract for exact-candidate and exact-deployment evidence. It requires durability, transactional/concurrency integrity, encryption and key custody, retention, backup/restore, migration/rollback, tamper detection, storage-failure behavior, access-control isolation, privacy-safe observability, operational monitoring, and Everkeep-boundary evidence. No production persistence qualification records currently exist, and this source boundary does not establish production acceptance.
+
 Production readiness still requires accepted backup/restore, replay-state preservation, incident/quarantine/audit recovery, target-state reconciliation, rollback, and post-restore Wardveil verification.
 
 ## Accessibility Capabilities
@@ -183,7 +185,7 @@ Validation is exact-revision evidence for the source scope tested. It is not a s
 
 Major open boundaries include:
 
-- persistent production security/trust/integrity/detection/containment/credential/incident engines;
+- persistent production security/trust/integrity/detection/containment/credential/incident engines and a complete exact-deployment persistence qualification record;
 - production Identity/key custody and approved cryptography;
 - live target-system execution and authoritative readback;
 - accepted Privacy Shield integration;
