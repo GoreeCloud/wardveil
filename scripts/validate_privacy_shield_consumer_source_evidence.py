@@ -9,20 +9,20 @@ ROOT = Path(__file__).resolve().parents[1]
 EVIDENCE = ROOT / "contracts" / "wardveil.privacy-shield.consumer-source-evidence.json"
 DOC = ROOT / "PRIVACY-SHIELD.md"
 
-EXPECTED_REVISION = "b7f2809733e5a2038c13366a9df635c0f11e0327"
-EXPECTED_TREE = "4d9a319c9c6cca5aef6ccb1fb5e5d31db485f886"
+EXPECTED_REVISION = "16a79378e719384501bd303c7b1211ffd8132147"
+EXPECTED_TREE = "e64a5b152543e5c77496e741f16a5fdf19277dca"
 EXPECTED_STATUS_SCHEMA_BLOB = "f6b62576e68e19ad8b25ced5383f8a3df74716fb"
 EXPECTED_STATUS_VALIDATOR_BLOB = "22dd5fb95641a663f79822c66bc8f92422064741"
 EXPECTED_PROVIDER_GATE_BLOB = "23a53b5d40865159fe748348a0a178cd668dc9ff"
 EXPECTED_STATE_ACCEPTANCE_SCHEMA_BLOB = "b47891772ddec46e2bf522c6a6405423e426ec2a"
 EXPECTED_SIGNING_ACCEPTANCE_SCHEMA_BLOB = "4954b0ba76f8d250b2683b98c42df96eb6edf05e"
 EXPECTED_WORKFLOW_BLOB = "9b4df523e500b2352d1ad68469b2874e89f0203b"
-EXPECTED_STATE_CANDIDATE_BLOB = "d23aaecc3650a6989a79fcf6998e8beb0ecaa1ec"
-EXPECTED_SIGNING_CANDIDATE_BLOB = "fb7f99b2a5c2e9d4c026d897df8faa8a853a3bf1"
+EXPECTED_STATE_CANDIDATE_BLOB = "c041fda55efd4a29f7d1bf0fc1c8d5ac2281a0ae"
+EXPECTED_SIGNING_CANDIDATE_BLOB = "d3744c677f1c3111e5559c145e293931a236db5c"
 EXPECTED_STATE_PACKAGE_BLOB = "0eae49b84d63b78338b380f6de1e77d05d10352f"
 EXPECTED_SIGNING_PACKAGE_BLOB = "ccb916e142cc80d06328f8396dfc047fb218d040"
-EXPECTED_VALIDATION_RUN = 35474865122
-EXPECTED_VALIDATION_RUN_NUMBER = 492
+EXPECTED_VALIDATION_RUN = 35479172162
+EXPECTED_VALIDATION_RUN_NUMBER = 493
 EXPECTED_STATE_OPERATIONAL_PACKAGE_BLOB = "24c70733e0e0c3b2fe23e1f50323e239fb0b55c8"
 EXPECTED_SIGNING_LIFECYCLE_PACKAGE_BLOB = "db95c334efca5344add9dd0f8d9d847d0866eae0"
 EXPECTED_STATE_CAPABILITY_REVIEW_BLOB = "52f9296b3d4a2317eb03c9606327ad5eec58d433"
@@ -114,7 +114,7 @@ def main() -> None:
     require(details.get("producer_validation_conclusion") == "success", "producer validation must have succeeded")
     require(details.get("state_provider_production_acceptance_records") == 0, "source evidence must not invent state-provider production acceptance")
     require(details.get("signing_provider_production_acceptance_records") == 0, "source evidence must not invent signing-provider production acceptance")
-    require(details.get("state_provider_candidate_evaluation_records") == 1, "expected exactly one draft state-provider candidate evaluation")
+    require(details.get("state_provider_candidate_evaluation_records") == 1, "expected exactly one state-provider candidate evaluation")
     require(details.get("signing_provider_candidate_evaluation_records") == 1, "expected exactly one draft signing-provider candidate evaluation")
     require(details.get("complete_provider_candidate_evaluations") == 0, "source evidence must not invent complete provider evaluations")
     require(details.get("provider_evidence_package_records") == 4, "expected exactly four reviewed provider evidence packages")
