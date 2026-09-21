@@ -18,6 +18,25 @@ README = ROOT / "README.md"
 VERSION = ROOT / "VERSION"
 RUNNER = "ubuntu-24.04"
 
+REQUIRED_ROOT_FILES = (
+    "README.md",
+    "SPECIFICATIONS.md",
+    "FEATURES.md",
+    "FEATURE-ROADMAP.md",
+    "BENEFITS.md",
+    "COMPETITIVE-OBJECTIVES.md",
+    "BRANDING.md",
+    "USER-MANUAL.md",
+    "PRIVACY POLICY.md",
+    "NOTES.md",
+    "SECURITY.md",
+    ".gitignore",
+    ".editorconfig",
+    "goreecloud.platform.yaml",
+)
+REQUIRED_REPOSITORY_CONTROLS = (".github/PULL_REQUEST_TEMPLATE.md",)
+MINIMUM_MEANINGFUL_CHARACTERS = 20
+
 ACTION_PIN_PATTERN = re.compile(
     r"uses:\s+(actions/(?:checkout|setup-python))@([0-9a-f]{40})\s+#\s+(v\d+\.\d+\.\d+)"
 )
@@ -91,6 +110,13 @@ def validate_readme_release_status(readme: str, version_text: str) -> None:
 
 
 def main() -> None:
+    for relative in (*REQUIRED_ROOT_FILES, *REQUIRED_REPOSITORY_CONTROLS):
+        text = read(ROOT / relative).strip()
+        if len(text) < MINIMUM_MEANINGFUL_CHARACTERS:
+            fail(f"required repository control is empty/placeholder-sized: {relative}")
+        if text.lower() in {"todo", "tbd", "placeholder", "coming soon"}:
+            fail(f"required repository control is a placeholder: {relative}")
+
     workflow = read(WORKFLOW)
     dependabot = read(DEPENDABOT)
     codeowners = read(CODEOWNERS)
@@ -123,6 +149,7 @@ def main() -> None:
         "* @GoreeCloud",
         ".github/ @GoreeCloud",
         "SECURITY.md @GoreeCloud",
+        "PRIVACY POLICY.md @GoreeCloud",
         "LICENSE @GoreeCloud",
         "REPOSITORY-GOVERNANCE.md @GoreeCloud",
         "contracts/ @GoreeCloud",
