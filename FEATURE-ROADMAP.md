@@ -1,7 +1,7 @@
 ---
 title: "Wardveil Security — Feature Roadmap"
 document_owner: "LaDamian Goree"
-version: "v0.5"
+version: "v0.6"
 status: "Active"
 created: "2026-09-08"
 last_updated: "2026-09-20"
@@ -33,7 +33,7 @@ No feature may be represented as complete, Protected, Covered, deployed, product
 
 **Current Glaze UI consumer target:** GLAZE UI V1.6 / 1.6.0 Stable. Security Center source migration was integrated through PR #150 / `01fe556f8c9f590edc04a1ccb566b482d5b1a0b0`; exact candidate `498d5be74ae42f0de4a6e5a637d8742e7edec820` passed Security Center V1.6 source-adoption run `35469328203`, Platform Contract run `35469328504`, Wardveil foundation run `35469328200`, Mesh evidence run `35469328213`, and authenticated Scan transport run `35469328214`. The repository remains `applicable-migration-required` until human rendered review, representative browser/device accessibility and performance acceptance, rollback, deployed-byte/provenance, consumer-registry, deployment, release, and production acceptance are complete. V1.5.1 remains the known-good Glaze rollback baseline.
 
-**Current source-reconciliation checkpoint:** authoritative Wardveil `main` is `e4808b8f843a158d6f7e81d95c2f042469845d6b` / tree `58f60218132bd01f5d1e98c5d3700db6a2642707` after PR #168. Wardveil's read-only Privacy Shield provenance is pinned to `GoreeCloud/privacy-shield` revision `35375db7596a8892ccb5b9b27fa7d3ad80353d66` / tree `29cd3d6a21d1bcf5a8b3b7415a0147920ab02791` and Privacy Shield Validation #503. Wardveil post-merge foundation #651, pinned Mesh evidence #263, and authenticated Scan #372 all succeeded on the exact merge commit. Privacy Shield runtime/provider production acceptance remains unaccepted; Wardveil deployment, production acceptance, Protected/Covered status, release, and Stable qualification remain open. This checkpoint does not promote any roadmap item.
+**Current implementation-bearing source checkpoint:** the latest verified Wardveil implementation-bearing source remains `e4808b8f843a158d6f7e81d95c2f042469845d6b` / tree `58f60218132bd01f5d1e98c5d3700db6a2642707` after PR #168. Roadmap-only synchronization PR #169 merged as `5fd1d92725be22a2dca91f87715aafca7421bea0` / tree `bf7adfd57c9c68410463ac5166b3a662b7854431` and changed only `FEATURE-ROADMAP.md`; its post-merge foundation #653, authenticated Scan #374, Mesh #265, trust posture #96, next-upgrade security state #169, and policy-execution bridge #104 all succeeded. Wardveil's read-only Privacy Shield provenance remains pinned to `GoreeCloud/privacy-shield` revision `35375db7596a8892ccb5b9b27fa7d3ad80353d66` / tree `29cd3d6a21d1bcf5a8b3b7415a0147920ab02791` and Privacy Shield Validation #503. Privacy Shield runtime/provider production acceptance remains unaccepted; Wardveil deployment, production acceptance, Protected/Covered status, release, and Stable qualification remain open. Documentation-only merges do not advance this implementation-bearing checkpoint and do not promote any roadmap item.
 
 ## Reconciliation Rule
 
@@ -136,7 +136,8 @@ Both task records must remain governed by their stated scope and completion rule
 
 | Version | Date | Status | Change |
 |---|---|---|---|
-| v0.5 | 2026-09-20 | Active | Corrected the canonical repository to `GoreeCloud/wardveil` and synchronized the repository roadmap's current source-reconciliation checkpoint through verified PR #168 / `e4808b8f843a158d6f7e81d95c2f042469845d6b`, current Privacy Shield provenance, and successful post-merge Wardveil validation without promoting runtime, production, Protected/Covered, release, or Stable state. |
+| v0.6 | 2026-09-20 | Active | Reframed the roadmap checkpoint as the latest verified implementation-bearing source rather than the repository's self-referential current main, and recorded documentation-only PR #169 / `5fd1d92725be22a2dca91f87715aafca7421bea0` plus its successful post-merge validation. This avoids docs-only merge churn while preserving exact implementation and acceptance boundaries. |
+| v0.5 | 2026-09-20 | Superseded | Corrected the canonical repository to `GoreeCloud/wardveil` and synchronized the repository roadmap's current source-reconciliation checkpoint through verified PR #168 / `e4808b8f843a158d6f7e81d95c2f042469845d6b`, current Privacy Shield provenance, and successful post-merge Wardveil validation without promoting runtime, production, Protected/Covered, release, or Stable state. |
 | v0.4 | 2026-09-19 | Superseded | Synchronized the repository roadmap with the verified Office-format Drive roadmap; preserved current FR-001 through FR-044 implementation states including the Security Center V1.6 migration evidence; added proposed future additions FR-045 through FR-066 without assigning release scope or priority; updated Drive and task-record references. |
 | v0.3 | 2026-09-19 | Superseded | Reconciled verified Security Center GLAZE UI V1.6 / 1.6.0 source/build migration through PR #150 / `01fe556f8c9f590edc04a1ccb566b482d5b1a0b0`, preserving rendered, accessibility/performance, rollback, deployment, consumer-registry, production, and Stable gates as open; corrected the implementation task reference to the authoritative DOCX record. |
 | v0.2 | 2026-09-16 | Superseded | Synchronized the repository roadmap with the Markdown Drive control; preserved existing Foundation/next-upgrade obligations; added Wardveil 2.0 Adaptive Security & Trust obligations FR-017 through FR-044; corrected the canonical repository reference; linked the dedicated implementation task authority. |
