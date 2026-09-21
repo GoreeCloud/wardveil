@@ -4,6 +4,7 @@
 # Security-sensitive repository governance and validation
 .github/ @GoreeCloud
 SECURITY.md @GoreeCloud
+PRIVACY POLICY.md @GoreeCloud
 LICENSE @GoreeCloud
 REPOSITORY-GOVERNANCE.md @GoreeCloud
 scripts/validate_*.py @GoreeCloud
