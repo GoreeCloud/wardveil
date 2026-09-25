@@ -2,7 +2,7 @@
 
 **Repository:** `GoreeCloud/wardveil`  
 **Project type:** First-party shared platform security system and service family  
-**Lifecycle:** Active Development — Foundation 0.9; overall production runtime acceptance remains unaccepted  
+**Repository lifecycle declaration (legacy Contract 0.4):** `development`; canonical Contract 2.0 lifecycle reclassification remains pending and must be evidence-backed; Foundation 0.9 overall production runtime acceptance remains unaccepted  
 **Version:** `0.9`  
 **Repository Platform Contract generation:** `0.4` — explicit evidence-backed migration to canonical Contract `2.0` remains required  
 **Current Glaze UI consumer target:** `1.6.0` Stable  
