@@ -239,6 +239,37 @@ def test_unknown_foundation_decision_stays_unknown() -> None:
     assert result["execution_authority"] is False
 
 
+def test_utc_conversion_overflow_fails_closed() -> None:
+    for timestamp in ("0001-01-01T00:00:00+01:00", "9999-12-31T23:59:59-01:00"):
+        for field in ("evaluated_at", "observed_at", "valid_until", "revoked_at"):
+            candidate = record()
+            evaluated_at = NOW
+            if field == "evaluated_at":
+                evaluated_at = timestamp
+                reason = "evaluation_time_invalid"
+            elif field == "revoked_at":
+                candidate["revocation"] = {
+                    "state": "revoked", "reason_code": "revoked", "revoked_at": timestamp,
+                }
+                reason = "revocation_time_invalid"
+            else:
+                candidate[field] = timestamp
+                reason = "decision_time_invalid"
+            result = evaluate_policy_decision(candidate, evaluated_at=evaluated_at)
+            assert result["decision_usable"] is False
+            assert result["enforcement_allowed"] is False
+            assert result["must_defer"] is True
+            assert result["execution_authority"] is False
+            assert reason in result["reason_codes"]
+
+
+def test_valid_offset_timestamps_preserve_decision() -> None:
+    candidate = record()
+    candidate["observed_at"] = "2026-09-11T18:59:00+01:00"
+    candidate["valid_until"] = "2026-09-11T19:04:00+01:00"
+    assert evaluate_policy_decision(candidate, evaluated_at=NOW)["decision_usable"] is True
+
+
 def main() -> None:
     tests = [value for name, value in globals().items() if name.startswith("test_") and callable(value)]
     for test in sorted(tests, key=lambda fn: fn.__name__):

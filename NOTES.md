@@ -2,6 +2,8 @@
 
 ## Current lifecycle
 
+September 25, 2026 Development candidate: policy-decision timestamp normalization converts UTC-range overflow into the existing invalid-time result rather than raising an unhandled exception. Evaluation time, observation time, expiry, and revocation time fail closed. Focused bounds and existing policy-decision tests cover the behavior. This does not mint execution authority or establish runtime/production acceptance. Repository protection (issue #34) and human review remain integration gates.
+
 Wardveil Security is in **Development**. Foundation 0.9 and next-upgrade source contracts/reference models are substantial, but overall production protection, release, Protected/Covered status, and Stable qualification remain independently gated.
 
 Do not use a single global “protected” state to summarize all Wardveil consumers or capabilities.
