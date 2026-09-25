@@ -4,7 +4,7 @@
 **Project type:** First-party shared platform security system and service family  
 **Lifecycle:** Active Development — Foundation 0.9; overall production runtime acceptance remains unaccepted  
 **Version:** `0.9`  
-**Platform Contract:** `0.4`  
+**Repository Platform Contract generation:** `0.4` — explicit evidence-backed migration to canonical Contract `2.0` remains required  
 **Current Glaze UI consumer target:** `1.6.0` Stable  
 **Migration baseline:** `9b41040ed48037451e660e860908316732384282`  
 **License:** MIT for the current repository source unless a separately governed record states otherwise  
@@ -289,7 +289,7 @@ Transport authenticity, evidence validity, authorization, execution authority, a
 
 ## 16. Integral Platform Systems
 
-Wardveil must evaluate all nine Integral Platform Systems under Platform Contract 0.4.
+Wardveil must evaluate all nine Integral Platform Systems. The repository currently retains Contract 0.4 semantics until an explicit evidence-backed migration to canonical Platform Contract 2.0 is completed; lifecycle values must not be mechanically translated.
 
 Current repository truth is recorded in `goreecloud.platform.yaml`. Source presence, a badge, or a declaration does not satisfy runtime acceptance.
 
