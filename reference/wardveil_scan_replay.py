@@ -17,10 +17,14 @@ DEFAULT_BUSY_TIMEOUT_SECONDS = 5
 
 
 def _epoch_microseconds(value: datetime) -> int:
-    if value.tzinfo is None:
+    if value.tzinfo is None or value.utcoffset() is None:
         raise ValueError("scan replay timestamps must be timezone-aware")
-    utc = value.astimezone(timezone.utc)
-    return int(utc.timestamp() * 1_000_000)
+    try:
+        utc = value.astimezone(timezone.utc)
+    except OverflowError as error:
+        raise ValueError("scan_replay_timestamp_out_of_supported_range") from error
+    epoch = datetime(1970, 1, 1, tzinfo=timezone.utc)
+    return int((utc - epoch).total_seconds() * 1_000_000)
 
 
 @dataclass(frozen=True)

@@ -37,11 +37,20 @@ def _parse_time(value: str | None) -> datetime | None:
         return None
     if parsed.tzinfo is None:
         return None
-    return parsed.astimezone(timezone.utc)
+    try:
+        return parsed.astimezone(timezone.utc)
+    except OverflowError:
+        return None
 
 
 def _now(value: datetime | None) -> datetime:
-    return (value or datetime.now(timezone.utc)).astimezone(timezone.utc)
+    observed = value or datetime.now(timezone.utc)
+    if observed.tzinfo is None or observed.utcoffset() is None:
+        raise ValueError("timestamp_must_be_timezone_aware")
+    try:
+        return observed.astimezone(timezone.utc)
+    except OverflowError as error:
+        raise ValueError("timestamp_out_of_supported_range") from error
 
 
 @dataclass(frozen=True)
@@ -185,8 +194,8 @@ class ReferenceSigningKeyring:
             raise ValueError("invalid_or_duplicate_signing_key_id")
         if not key_material:
             raise ValueError("signing_key_material_required")
-        start = not_before.astimezone(timezone.utc)
-        end = not_after.astimezone(timezone.utc)
+        start = _now(not_before)
+        end = _now(not_after)
         if end <= start:
             raise ValueError("invalid_signing_key_validity")
         metadata = SigningKeyMetadata(

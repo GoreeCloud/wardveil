@@ -21,7 +21,10 @@ STATUSES = {"received", "completed", "declined", "unavailable"}
 def _utc(value: datetime, field: str) -> datetime:
     if not isinstance(value, datetime) or value.tzinfo is None:
         raise ValueError(f"{field} must be a timezone-aware datetime")
-    return value.astimezone(timezone.utc)
+    try:
+        return value.astimezone(timezone.utc)
+    except OverflowError as error:
+        raise ValueError(f"{field} is outside the supported UTC range") from error
 
 
 def _parse(value: object, field: str) -> datetime:
@@ -44,7 +47,7 @@ def _bounded(value: object, field: str, maximum: int, *, required: bool = False)
 
 
 def _iso(value: datetime) -> str:
-    return value.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+    return _utc(value, "timestamp").isoformat().replace("+00:00", "Z")
 
 
 def create_mesh_evidence_refresh_response(

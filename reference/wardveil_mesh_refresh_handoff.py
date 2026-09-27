@@ -30,7 +30,10 @@ EVIDENCE_FIELDS = {
 def _utc(value: datetime, field: str) -> datetime:
     if not isinstance(value, datetime) or value.tzinfo is None:
         raise ValueError(f"{field} must be a timezone-aware datetime")
-    return value.astimezone(timezone.utc)
+    try:
+        return value.astimezone(timezone.utc)
+    except OverflowError as error:
+        raise ValueError(f"{field} is outside the supported UTC range") from error
 
 
 def _parse(value: object, field: str) -> datetime:
