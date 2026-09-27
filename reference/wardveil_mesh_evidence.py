@@ -375,7 +375,7 @@ def validate_mesh_evidence_refresh_intent(intent: dict, *, now: datetime | None 
     reason = intent.get("reason")
     if reason not in _REFRESH_REASONS:
         raise ValueError("invalid refresh reason")
-    evaluated_at = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
+    evaluated_at = _evaluation_time(now)
     requested_at = _parse_timestamp(intent.get("requested_at"), "requested_at")
     if requested_at > evaluated_at:
         raise ValueError("requested_at cannot be in the future")

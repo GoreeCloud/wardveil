@@ -291,7 +291,11 @@ def verify_execution_authorization(
     expires_at = _parse_time(authorization.expires_at)
     if issued_at is None or expires_at is None:
         return AuthorizationVerification(False, "invalid_authorization_time")
-    if issued_at > observed + clock_skew:
+    try:
+        latest_issued_at = observed + clock_skew
+    except OverflowError:
+        return AuthorizationVerification(False, "evaluation_time_out_of_supported_range")
+    if issued_at > latest_issued_at:
         return AuthorizationVerification(False, "future_dated_authorization")
     if expires_at <= observed:
         return AuthorizationVerification(False, "expired_authorization")
