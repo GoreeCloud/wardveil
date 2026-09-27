@@ -124,6 +124,9 @@ def main() -> None:
     assert verify(auth, overflow_policy).reason == "expired_or_missing_policy_validity"
     overflow_now = datetime.fromisoformat("0001-01-01T00:00:00+01:00")
     assert verify(auth, record, now=overflow_now).reason == "evaluation_time_out_of_supported_range"
+    near_max_now = datetime(9999, 12, 31, 23, 59, 45, tzinfo=timezone.utc)
+    near_max_policy = policy(valid_until=datetime(9999, 12, 31, 23, 59, 59, tzinfo=timezone.utc))
+    assert verify(auth, near_max_policy, now=near_max_now).reason == "evaluation_time_out_of_supported_range"
     expect_raises(
         "evaluation_time_out_of_supported_range",
         lambda: create_execution_authorization(
