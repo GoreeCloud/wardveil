@@ -63,7 +63,10 @@ def _parse_timestamp(value: object, field: str) -> datetime:
         raise ValueError(f"{field} must be RFC3339/ISO8601") from exc
     if parsed.tzinfo is None:
         raise ValueError(f"{field} must include timezone")
-    return parsed.astimezone(timezone.utc)
+    try:
+        return parsed.astimezone(timezone.utc)
+    except OverflowError as error:
+        raise ValueError(f"{field} is outside the supported UTC range") from error
 
 
 def _evaluation_time(value: datetime | None) -> datetime:
@@ -71,7 +74,10 @@ def _evaluation_time(value: datetime | None) -> datetime:
         return datetime.now(timezone.utc)
     if value.tzinfo is None:
         raise ValueError("evaluation time must include timezone")
-    return value.astimezone(timezone.utc)
+    try:
+        return value.astimezone(timezone.utc)
+    except OverflowError as error:
+        raise ValueError("evaluation time is outside the supported UTC range") from error
 
 
 def _require_string(value: object, field: str, *, maximum: int) -> str:
