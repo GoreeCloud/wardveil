@@ -51,6 +51,7 @@ permissions:
 
 jobs:
   validate:
+    name: Validate Wardveil policy execution bridge
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
