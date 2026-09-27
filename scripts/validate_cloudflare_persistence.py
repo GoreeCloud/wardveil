@@ -46,6 +46,9 @@ required_source = [
     'uncertain_outcome_behavior: "reconciliation_required"',
     "security_state_authority: false",
     "protection_claim_authority: false",
+    "function parseTime(value: unknown, reason: string)",
+    "value !== value.trim()",
+    "/(?:Z|[+-]\\d{2}:\\d{2})$/",
     'mutation_api: "service-binding-rpc-only"',
 ]
 for token in required_source:
