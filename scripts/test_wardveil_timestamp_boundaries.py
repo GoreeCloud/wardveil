@@ -3,7 +3,12 @@
 
 from __future__ import annotations
 
+import sys
 from datetime import datetime
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
 
 from reference.wardveil_audit_ledger_v2 import _utc as audit_utc
 from reference.wardveil_execution_reconciliation import _utc as reconciliation_utc
