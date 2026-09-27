@@ -54,9 +54,15 @@ As verified on September 27, 2026, GitHub reports `main` as protected and the Wa
 
 Branch metadata reports `Validate Wardveil foundation` as a required check enforced for everyone. Owner-side protection readback additionally verified strict/up-to-date checks, one required approval, stale-review dismissal, last-push approval, conversation resolution, administrator enforcement, and disabled force pushes and branch deletion.
 
-The September 27 public-safety audit found non-public producer provenance in the Privacy Shield interoperability documentation and evidence record. The current governance-hardening candidate removes that information from its tip and adds fail-closed validation to keep the public record minimized.
+The September 27 public-safety audit found over-detailed cross-repository Privacy Shield provenance in the interoperability documentation and evidence record: exact repository/source revisions and tree/blob identities, validation-run identifiers, provider-candidate records, and evidence/review paths that Wardveil does not need for public presentation. Privacy Shield's GitHub repository is currently public, so this is a data-minimization and authority-boundary finding rather than exposure of a currently private repository identity. The current governance-hardening candidate removes that detail from its tip and adds fail-closed validation to keep the Wardveil record minimized.
 
 This current-source remediation does **not** rewrite historical commits or stale branch tips. Any history sanitization is a separate controlled operation and must not be represented as completed by a normal forward commit.
+
+## Planned GoreeCloud Code transition
+
+GoreeCloud Code is planned as a public-facing repository-hosting service that supports both public and access-controlled private repositories. Wardveil Security and GoreeCloud Privacy Shield are planned to be private repositories in GoreeCloud Code.
+
+That is planned state, not current implementation. Until a governed migration is completed and authoritatively verified, GitHub remains the current source-control authority for these repositories and Wardveil's current GitHub public-safety controls remain in force. A future migration must preserve exact history and revision identity, access controls, branch protection/review requirements, integrations, and recovery while verifying the resulting private repository boundary.
 
 ## Dependency automation boundary
 

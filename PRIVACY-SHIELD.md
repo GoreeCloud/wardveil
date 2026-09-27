@@ -8,7 +8,7 @@ Privacy Shield remains the authoritative platform-wide GoreeCloud privacy capabi
 
 ## Source contract
 
-Wardveil consumes the public-safe interoperability boundary owned by GoreeCloud Privacy Shield. This public repository intentionally excludes restricted producer repository identity, exact producer source revisions, internal validation-run identifiers, provider-selection artifacts, internal evidence paths, and other non-public operational provenance.
+Wardveil consumes the public-safe interoperability boundary owned by GoreeCloud Privacy Shield. This public repository intentionally excludes exact producer repository/source-control provenance, source revisions, validation-run identifiers, provider-selection artifacts, evidence paths, and other source-operational provenance that Wardveil does not need to present the minimized interoperability contract.
 
 The public boundary is limited to the status schema version and the privacy and authority invariants required for fail-closed consumption.
 
@@ -16,7 +16,7 @@ Wardveil must not infer missing capabilities, repair malformed producer data, or
 
 ## Public producer-source evidence
 
-`contracts/wardveil.privacy-shield.consumer-source-evidence.json` is a public-safe interoperability record rather than a mirror of restricted producer source-control or operational records.
+`contracts/wardveil.privacy-shield.consumer-source-evidence.json` is a public-safe interoperability record rather than a mirror of the producer's source-control and operational records.
 
 It records only:
 
@@ -29,7 +29,7 @@ It records only:
 - current runtime and provider-production acceptance state;
 - remaining high-level acceptance gates.
 
-Exact restricted producer-source provenance remains controlled by the producer authority and is deliberately excluded from this public repository. Public Wardveil source therefore does not claim to independently prove a restricted producer commit, source tree, workflow run, provider candidate, or internal topology.
+Exact producer-source provenance remains controlled by the producer authority and is deliberately excluded from this minimized Wardveil record. At this checkpoint, the Privacy Shield GitHub repository is also public; this omission is a data-minimization and authority-boundary choice rather than a claim that its current repository identity is secret. It also keeps Wardveil's public interoperability contract compatible with the planned future migration of Privacy Shield to a private repository in public-facing GoreeCloud Code. Public Wardveil source therefore does not claim to independently prove a producer commit, source tree, workflow run, provider candidate, or internal topology.
 
 Source evidence does not establish runtime acceptance. Provider production acceptance remains unaccepted. A material public interoperability-contract change must be reviewed before Wardveil updates this consumer boundary.
 
@@ -86,7 +86,7 @@ A product may present Privacy Shield beside Wardveil security controls, but it m
 
 A Wardveil presentation must preserve enough public-safe attribution to identify Privacy Shield as the producer, the record generation time, the normalized presentation state, declared capability states, producer production-approval state, and the fact that Wardveil is a read-only presenter.
 
-Restricted source-control provenance and non-public operational evidence are not part of the public presentation contract.
+Exact source-control provenance and operational evidence not required for public presentation are not part of the minimized Wardveil presentation contract.
 
 ## Failure behavior
 
