@@ -13,6 +13,7 @@ The repository must retain:
 - a pull-request template that records validation, security, authority, and rollback boundaries;
 - a security reporting policy that keeps protected information out of public issue and source surfaces;
 - deterministic validation for Wardveil identity, status, aggregation, Privacy Shield interoperability, repository governance, branding, and public-site source.
+- a first-party retained-public-history audit that fetches public branch, tag, and pull-request heads, scans reachable Git blobs for credential-shaped secrets, suppresses matched values from logs, and fails closed on findings or skipped oversized blobs.
 
 ## Required GitHub repository setting
 
@@ -57,6 +58,8 @@ Branch metadata reports `Validate Wardveil foundation` as a required check enfor
 The September 27 public-safety audit found over-detailed cross-repository Privacy Shield provenance in the interoperability documentation and evidence record: exact repository/source revisions and tree/blob identities, validation-run identifiers, provider-candidate records, and evidence/review paths that Wardveil does not need for public presentation. Privacy Shield's GitHub repository is currently public, so this is a data-minimization and authority-boundary finding rather than exposure of a currently private repository identity. The current governance-hardening candidate removes that detail from its tip and adds fail-closed validation to keep the Wardveil record minimized.
 
 This current-source remediation does **not** rewrite historical commits or stale branch tips. Any history sanitization is a separate controlled operation and must not be represented as completed by a normal forward commit.
+
+The foundation workflow also performs a first-party retained-public-history credential scan. The scanner is a detection control, not historical erasure: a passing scan means the fetched retained refs contained no recognized credential-shaped secret under the enforced detector set; it does not make previously published restricted non-secret provenance disappear.
 
 ## Planned GoreeCloud Code transition
 
