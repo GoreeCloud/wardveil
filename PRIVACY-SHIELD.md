@@ -4,7 +4,7 @@
 
 This contract defines how Wardveil may present minimized GoreeCloud Privacy Shield status without absorbing Privacy Shield authority, inventing evidence, or collecting private activity.
 
-Privacy Shield remains the authoritative privacy capability. Wardveil is a separate security capability and may only present the producer's minimized status as contextual information.
+Privacy Shield remains the authoritative platform-wide GoreeCloud privacy capability. Wardveil is the separate platform-wide security capability and may only present the producer's minimized status as contextual information.
 
 ## Source contract
 
