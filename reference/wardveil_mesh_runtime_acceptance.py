@@ -72,7 +72,7 @@ def _parse_timestamp(value: object, field: str) -> datetime:
 def _evaluation_time(value: datetime | None) -> datetime:
     if value is None:
         return datetime.now(timezone.utc)
-    if value.tzinfo is None:
+    if value.tzinfo is None or value.utcoffset() is None:
         raise ValueError("evaluation time must include timezone")
     try:
         return value.astimezone(timezone.utc)
