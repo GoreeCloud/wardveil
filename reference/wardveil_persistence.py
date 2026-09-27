@@ -16,7 +16,7 @@ def _canonical(value: object) -> bytes:
 
 def _utc(value: datetime | None = None) -> datetime:
     value = value or datetime.now(timezone.utc)
-    if value.tzinfo is None:
+    if value.tzinfo is None or value.utcoffset() is None:
         raise ValueError("timestamp_must_be_timezone_aware")
     try:
         return value.astimezone(timezone.utc)
