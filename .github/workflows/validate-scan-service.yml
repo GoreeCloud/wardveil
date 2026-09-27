@@ -15,6 +15,7 @@ concurrency:
 
 jobs:
   validate:
+    name: Validate authenticated Wardveil Scan transport
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
