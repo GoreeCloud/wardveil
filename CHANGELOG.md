@@ -33,6 +33,8 @@ All notable source-controlled changes to the Wardveil Security foundation are re
 
 ### Changed
 
+- Hardened repository-governance enforcement for `main`: GitHub now reports the branch protected; `Validate Wardveil foundation` is the required GitHub Actions check with strict/up-to-date enforcement; one pull-request approval is required with stale-review dismissal and last-push approval; conversation resolution is required; administrator enforcement is enabled; and force pushes and branch deletion are disabled. The affected pull-request workflows now emit unique check names so required-check enforcement is unambiguous. This repository-governance state does not establish runtime, production, release, Protected/Covered, or Stable acceptance.
+
 - Advanced the Wardveil Security foundation to 0.9.0.
 - Strengthened the capability contract so high-impact cross-service Protect execution requires bound runtime authorization and a Wardveil Policy decision is explicitly not execution authority by itself.
 - Strengthened architecture, compatibility, integration, threat-model, and adoption guidance around executor identity, target authority, replay resistance, idempotency, expiry, and production key-management boundaries.
