@@ -2,7 +2,7 @@
 
 ## Current lifecycle
 
-September 25, 2026 Development candidate: policy-decision timestamp normalization converts UTC-range overflow into the existing invalid-time result rather than raising an unhandled exception. Evaluation time, observation time, expiry, and revocation time fail closed. Focused bounds and existing policy-decision tests cover the behavior. This does not mint execution authority or establish runtime/production acceptance. Repository protection (issue #34) and human review remain integration gates.
+September 27, 2026 Development candidate: Wardveil timestamp handling is hardened across policy decisions, runtime authorization, durable execution state, Identity/key lifecycle evidence, Trust posture evidence, and deployable Cloudflare authorization/execution/persistence paths. Unsupported UTC normalization ranges fail closed instead of escaping as unhandled overflow; Cloudflare authority-bearing timestamps must be trimmed, timezone-qualified strings before parsing so JavaScript coercion or timezone-less input cannot become valid security time. Focused regression/static validation covers the affected paths. This does not mint execution authority or establish runtime/production acceptance. Repository protection (issue #34) and independent human review remain integration gates.
 
 Wardveil Security is in **Development**. Foundation 0.9 and next-upgrade source contracts/reference models are substantial, but overall production protection, release, Protected/Covered status, and Stable qualification remain independently gated.
 
