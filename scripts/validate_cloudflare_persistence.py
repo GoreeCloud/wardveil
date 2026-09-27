@@ -49,6 +49,8 @@ required_source = [
     "function parseTime(value: unknown, reason: string)",
     "value !== value.trim()",
     "/(?:Z|[+-]\\d{2}:\\d{2})$/",
+    "function addBoundedMilliseconds(value: number, delta: number, reason: string)",
+    'addBoundedMilliseconds(retentionBase, EXECUTION_CLAIM_RETENTION_MS, "invalid_authorization_time")',
     'mutation_api: "service-binding-rpc-only"',
 ]
 for token in required_source:
