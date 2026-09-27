@@ -58,6 +58,9 @@ def main() -> None:
         "authorization_outlives_policy",
         "crypto.subtle.importKey",
         "crypto.subtle.sign",
+        "function parseTime(value: unknown, reason: string)",
+        "value !== value.trim()",
+        "/(?:Z|[+-]\\d{2}:\\d{2})$/",
     ):
         require(token in source, f"source missing required boundary: {token}")
 
