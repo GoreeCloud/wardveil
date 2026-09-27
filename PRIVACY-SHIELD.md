@@ -49,6 +49,8 @@ No runtime acceptance record exists merely because the acceptance directory exis
 
 A Privacy Shield status record is eligible for normal Wardveil presentation only when it explicitly declares that raw private activity is excluded, credentials are excluded, identifiers are excluded, and runtime acceptance remains required.
 
+At the schema boundary, this means `raw_private_activity_included=false`, `contains_credentials=false`, `contains_identifiers=false`, and `runtime_acceptance_required=true`. These field-level invariants are part of the public interoperability contract and fail closed if weakened or omitted.
+
 If a required guarantee is absent, malformed, expired, future-dated, or weakened, Wardveil must fail closed to an unknown or unavailable presentation state.
 
 Wardveil must not request raw browsing, network, authentication, account, device, or user activity merely to populate a status summary.
