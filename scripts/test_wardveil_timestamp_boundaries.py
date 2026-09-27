@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 import sys
-from datetime import datetime
+from datetime import datetime, tzinfo
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -39,6 +39,14 @@ LOW_TEXT = "0001-01-01T00:00:00+01:00"
 HIGH_TEXT = "9999-12-31T23:59:59-01:00"
 
 
+class PseudoAwareTimezone(tzinfo):
+    def utcoffset(self, value):
+        return None
+
+
+PSEUDO_AWARE = datetime(2026, 9, 27, 12, 0, tzinfo=PseudoAwareTimezone())
+
+
 def expect_value_error(label: str, function) -> None:
     try:
         function()
@@ -64,6 +72,14 @@ def main() -> int:
         ("mesh refresh handoff", lambda: refresh_handoff_utc(LOW, "requested_at")),
         ("mesh refresh response", lambda: refresh_response_utc(HIGH, "responded_at")),
         ("scan replay", lambda: _epoch_microseconds(LOW)),
+    ):
+        expect_value_error(label, function)
+
+    for label, function in (
+        ("mesh evidence pseudo-aware", lambda: mesh_evaluation_time(PSEUDO_AWARE)),
+        ("mesh runtime pseudo-aware", lambda: mesh_runtime_evaluation_time(PSEUDO_AWARE)),
+        ("mesh refresh handoff pseudo-aware", lambda: refresh_handoff_utc(PSEUDO_AWARE, "requested_at")),
+        ("mesh refresh response pseudo-aware", lambda: refresh_response_utc(PSEUDO_AWARE, "responded_at")),
     ):
         expect_value_error(label, function)
 
