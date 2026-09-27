@@ -45,7 +45,7 @@ on:
       - "IDENTITY-KEY-LIFECYCLE-V1.md"
       - "PLATFORM-ADOPTION-AND-REPOSITORY-GOVERNANCE-V1.md"
       - "POLICY-DECISION-AND-ENFORCEMENT-V2.md"
-      - "FEATURE-ROADMAP.md"
+      - "PLANNED-FEATURES.md"
       - ".github/workflows/validate-next-upgrade-security-state.yml"
   push:
     branches:
@@ -93,7 +93,7 @@ on:
       - "IDENTITY-KEY-LIFECYCLE-V1.md"
       - "PLATFORM-ADOPTION-AND-REPOSITORY-GOVERNANCE-V1.md"
       - "POLICY-DECISION-AND-ENFORCEMENT-V2.md"
-      - "FEATURE-ROADMAP.md"
+      - "PLANNED-FEATURES.md"
 
 permissions:
   contents: read
