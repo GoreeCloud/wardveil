@@ -6,6 +6,8 @@ All notable source-controlled changes to the Wardveil Security foundation are re
 
 ### Added
 
+- Added `scripts/audit_public_git_history.py` and required foundation-workflow integration to fetch retained public branch, tag, and pull-request heads and scan reachable Git blobs for credential-shaped secrets without printing matched values. The audit fails closed on findings and on oversized blobs that would otherwise escape inspection.
+
 - Added `RUNTIME-AUTHORIZATION.md` and `contracts/wardveil.runtime-authorization.json` as the canonical cross-service execution-authorization contract between Wardveil Policy and Wardveil Protect.
 - Added `reference/wardveil_runtime_authorization.py` with exact policy-digest, action, scope, executor, correlation, expiry, nonce, and idempotency binding.
 - Added constant-time HMAC verification in the dependency-free reference path, explicitly labeled `HMAC-SHA256-reference-only` so source conformance cannot be mistaken for production key-management acceptance.
