@@ -141,23 +141,21 @@ PR #171, **Enforce Wardveil repository stabilization baseline**, merged as curre
 
 No runtime, provider-production, Protected/Covered, release, Stable, or identity-candidate state changed in those documentation/governance integrations.
 
-## Current repository-protection gap
+## Current repository-protection state
 
-Wardveil repository governance requires protected `main`, PR-only integration, required exact-head Wardveil validation, current-head review, force-push/deletion restrictions, and bounded bypass.
+Wardveil repository governance requires protected `main`, pull-request integration, required exact-head Wardveil validation, current-head review, force-push/deletion restrictions, and bounded bypass.
 
-At this migration baseline, GitHub reports `main` unprotected.
+GitHub now reports `main` protected and requires the `Validate Wardveil foundation` status context. Issue #34 remains open until the pending governance reconciliation is accepted through that protected path and the resulting default-branch state is read back.
 
-GitHub issue #34 tracks the repository-protection remediation. Source-controlled validators, CODEOWNERS, immutable Action pins, and review workflows reduce risk but do not substitute for live enforcement.
+Source-controlled validators, CODEOWNERS, immutable Action pins, and review workflows remain complementary controls and do not substitute for live enforcement.
 
-## Current open source candidate — PR #172
+## Current public-governance reconciliation — PR #175
 
-PR #172, **Repin validated Privacy Shield producer source for Wardveil status consumer**, is a separate open candidate based on the migration baseline.
+PR #175, **Harden Wardveil public repository governance**, is the current forward reconciliation candidate at exact head `8c076bbee7725870681baeaceb5b173fc53a38ec`.
 
-Its exact head is `eefc49774446106cd8f67f30266e568901fa6b17`.
+Its exact-head validation is green, but no submitted independent approval exists. The candidate is therefore not yet part of accepted Wardveil `main`.
 
-The candidate repins the read-only Privacy Shield producer source to current Privacy Shield `main` while preserving provider-evaluation counts, fail-closed semantics, runtime/production non-acceptance, and `protected_by_wardveil=false`.
-
-PR #172 is not part of accepted Wardveil `main` until separately reviewed and integrated. The project-document migration must not silently absorb that unmerged source state.
+Former PR #172, **Repin validated Privacy Shield producer source for Wardveil status consumer**, was closed as superseded after its entire three-file delta was confirmed to be intentionally replaced by PR #175's minimized public interoperability boundary. Its historical record remains evidence; it is not a pending integration candidate.
 
 ## Current production-acceptance boundary
 
