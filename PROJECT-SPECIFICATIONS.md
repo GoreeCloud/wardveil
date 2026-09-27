@@ -398,7 +398,7 @@ The target model requires pull-request integration, required Wardveil validation
 
 Source-controlled safeguards do not substitute for live GitHub enforcement.
 
-At this migration baseline, GitHub reports `main` unprotected. Issue #34 tracks remediation.
+GitHub now reports `main` protected and requires the `Validate Wardveil foundation` status context. Issue #34 remains open until the pending governance reconciliation is accepted through the protected path and the resulting state is authoritatively read back.
 
 ## 23. Current accepted implementation boundary
 
@@ -408,7 +408,7 @@ The independently accepted deployed Wardveil Scan component remains distinct fro
 
 This evidence does **not** establish platform-wide production protection, general Protected/Covered authority, production Identity/key custody, accepted distributed persistence, accepted production quarantine execution/readback, accepted Privacy Shield provider/runtime state, accepted Everkeep production recovery, final Security Center application acceptance, release publication, or Stable qualification.
 
-Open PR #172 is a separate source-provenance repin candidate and is not part of this migration baseline until separately accepted.
+PR #175 is the current public-governance reconciliation candidate and is not part of accepted `main` until the protected review/merge gate is satisfied. Former PR #172 was closed as superseded and is not a pending source-provenance integration.
 
 ## 24. Longer-term direction
 
