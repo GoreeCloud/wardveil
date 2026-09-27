@@ -122,6 +122,14 @@ function parseTime(value: unknown, reason: string): number {
   return parsed;
 }
 
+function addBoundedMilliseconds(value: number, delta: number, reason: string): number {
+  const result = value + delta;
+  if (!Number.isSafeInteger(result) || !Number.isFinite(new Date(result).getTime())) {
+    throw new Error(reason);
+  }
+  return result;
+}
+
 function requireExecutionAuthorizationClaim(claim: ExecutionAuthorizationClaim): void {
   if (!claim || typeof claim !== "object") throw new Error("invalid_execution_authorization_claim");
   for (const value of [
@@ -315,7 +323,10 @@ export class WardveilPersistenceDO extends DurableObject<Bindings> {
   async claimExecutionAuthorization(claim: ExecutionAuthorizationClaim): Promise<ExecutionClaimDecision> {
     requireExecutionAuthorizationClaim(claim);
     const now = new Date();
-    const retentionUntil = new Date(Math.max(parseTime(claim.expires_at, "invalid_authorization_time"), now.getTime()) + EXECUTION_CLAIM_RETENTION_MS).toISOString();
+    const retentionBase = Math.max(parseTime(claim.expires_at, "invalid_authorization_time"), now.getTime());
+    const retentionUntil = new Date(
+      addBoundedMilliseconds(retentionBase, EXECUTION_CLAIM_RETENTION_MS, "invalid_authorization_time"),
+    ).toISOString();
     const scopeJson = canonical(claim.scope);
 
     return this.ctx.storage.transactionSync(() => {
