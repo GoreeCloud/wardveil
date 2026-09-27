@@ -48,7 +48,10 @@ def _parse_time(value: Any, name: str) -> datetime:
     parsed = datetime.fromisoformat(normalized)
     if parsed.tzinfo is None:
         raise ValueError(f"{name} must be timezone-aware")
-    return parsed.astimezone(timezone.utc)
+    try:
+        return parsed.astimezone(timezone.utc)
+    except OverflowError as error:
+        raise ValueError(f"{name} is outside the supported UTC range") from error
 
 
 def _bool(record: Mapping[str, Any], name: str) -> bool:
@@ -157,10 +160,9 @@ def evaluate_identity_key_lifecycle(
     else:
         reasons.append("identity_profile_not_supported")
 
-    now_with_skew = evaluated.timestamp() + MESH_CLOCK_SKEW_SECONDS
-    if issued_at.timestamp() > now_with_skew:
+    if (issued_at - evaluated).total_seconds() > MESH_CLOCK_SKEW_SECONDS:
         reasons.append("credential_issued_in_future")
-    if evaluated.timestamp() >= expires_at.timestamp() + MESH_CLOCK_SKEW_SECONDS:
+    if (evaluated - expires_at).total_seconds() >= MESH_CLOCK_SKEW_SECONDS:
         reasons.append("credential_expired")
 
     verification_checks = (

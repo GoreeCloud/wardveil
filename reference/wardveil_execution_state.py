@@ -34,7 +34,10 @@ def _utc(value: datetime | None = None) -> datetime:
     value = value or datetime.now(timezone.utc)
     if value.tzinfo is None:
         raise ValueError("timestamp_must_be_timezone_aware")
-    return value.astimezone(timezone.utc)
+    try:
+        return value.astimezone(timezone.utc)
+    except OverflowError as error:
+        raise ValueError("timestamp_out_of_supported_range") from error
 
 
 def _parse_time(value: object) -> datetime | None:
@@ -46,7 +49,10 @@ def _parse_time(value: object) -> datetime | None:
         return None
     if parsed.tzinfo is None:
         return None
-    return parsed.astimezone(timezone.utc)
+    try:
+        return parsed.astimezone(timezone.utc)
+    except OverflowError:
+        return None
 
 
 def authorization_digest(authorization: dict) -> str:

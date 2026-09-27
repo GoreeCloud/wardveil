@@ -55,14 +55,20 @@ def _parse_time(value: object) -> datetime | None:
         return None
     if parsed.tzinfo is None or parsed.utcoffset() is None:
         return None
-    return parsed.astimezone(timezone.utc)
+    try:
+        return parsed.astimezone(timezone.utc)
+    except OverflowError:
+        return None
 
 
 def _evaluation_time(now: datetime | None) -> datetime:
     observed = now if now is not None else datetime.now(timezone.utc)
     if not isinstance(observed, datetime) or observed.tzinfo is None or observed.utcoffset() is None:
         raise ValueError("evaluation_time_must_be_timezone_aware")
-    return observed.astimezone(timezone.utc)
+    try:
+        return observed.astimezone(timezone.utc)
+    except OverflowError as error:
+        raise ValueError("evaluation_time_out_of_supported_range") from error
 
 
 def _policy_error(policy_record: object, now: datetime) -> str | None:
@@ -198,7 +204,11 @@ def create_execution_authorization(
 
     policy_valid_until = _parse_time(policy_record["valid_until"])
     assert policy_valid_until is not None
-    expires = min(observed + ttl, policy_valid_until)
+    try:
+        requested_expiry = observed + ttl
+    except OverflowError as error:
+        raise ValueError("authorization_time_out_of_supported_range") from error
+    expires = min(requested_expiry, policy_valid_until)
     if expires <= observed:
         raise ValueError("authorization_would_be_expired")
 
