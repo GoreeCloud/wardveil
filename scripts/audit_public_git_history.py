@@ -43,7 +43,7 @@ ALLOWED_EXACT_MATCHES = {
     (
         "basic-auth-url",
         "scripts/test_wardveil_mesh_delivery.py",
-        b"https://user:pass@mesh.example.test",
+        b"https://" + b"user:pass@" + b"mesh.example.test",
     ),
 }
 
