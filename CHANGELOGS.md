@@ -2,11 +2,13 @@
 
 Repository-native change history. Development source evidence does not establish deployment, Protected/Covered status, or production acceptance.
 
-## 2026-09-25 — Policy timestamp failure containment
+## 2026-09-25 — Security timestamp failure containment
 
-- Translate UTC conversion overflow into invalid-time validation results for evaluation, observation, expiry, and revocation timestamps.
-- Add eight overflow regression cases and a valid-offset control to the policy-decision bounds suite.
-- Preserve execution_authority=false and fail-closed decision usability. Human security review and repository protection remain required before integration.
+- Translate UTC conversion overflow into fail-closed validation across policy decisions, runtime execution authorization, durable execution state, Identity/key lifecycle evidence, and Trust posture evidence.
+- Remove platform-dependent epoch conversion from Identity/key lifecycle clock-skew checks and keep unsupported timestamp ranges non-authorizing.
+- Require deployable Cloudflare authorization-issuer, quarantine-executor, and persistence claim timestamps to be non-empty, trimmed, timezone-qualified strings before Date parsing, preventing JavaScript coercion or timezone-less input from becoming authority-bearing time.
+- Add focused regression coverage to the affected Python security boundaries and pin the Cloudflare canonical timestamp requirement in repository validators.
+- Preserve execution_authority=false and all production/runtime acceptance boundaries. Independent security review and repository protection remain required before integration.
 
 ## Preserved historical changelog
 
