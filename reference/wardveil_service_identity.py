@@ -310,7 +310,11 @@ class ReferenceSigningKeyring:
             raise ValueError(current_resolution.reason)
         old_end = _parse_time(current.not_after)
         assert old_end is not None
-        overlap_end = min(old_end, observed + verification_overlap)
+        try:
+            requested_overlap_end = observed + verification_overlap
+        except OverflowError as error:
+            raise ValueError("timestamp_out_of_supported_range") from error
+        overlap_end = min(old_end, requested_overlap_end)
         retired = replace(
             current,
             status="retired",
