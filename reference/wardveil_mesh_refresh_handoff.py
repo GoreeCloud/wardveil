@@ -28,7 +28,7 @@ EVIDENCE_FIELDS = {
 
 
 def _utc(value: datetime, field: str) -> datetime:
-    if not isinstance(value, datetime) or value.tzinfo is None:
+    if not isinstance(value, datetime) or value.tzinfo is None or value.utcoffset() is None:
         raise ValueError(f"{field} must be a timezone-aware datetime")
     try:
         return value.astimezone(timezone.utc)
