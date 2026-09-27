@@ -38,13 +38,17 @@ DETECTORS = (
     Detector("basic-auth-url", re.compile(rb"https?://[^/\s:@]+:[^@\s/]+@")),
 )
 
-# Deliberate negative-test fixture proving embedded basic-auth URLs are rejected.
+# Deliberate validation fixtures. Construct the matched byte strings in pieces so
+# this scanner's current source does not itself contain a detector match.
+BASIC_AUTH_FIXTURE_PREFIX = b"https://" + b"user:" + b"pass@"
+PRIVATE_KEY_MARKER = b"-----BEGIN " + b"PRIVATE KEY-----"
+RSA_PRIVATE_KEY_MARKER = b"-----BEGIN RSA " + b"PRIVATE KEY-----"
+
 ALLOWED_EXACT_MATCHES = {
-    (
-        "basic-auth-url",
-        "scripts/test_wardveil_mesh_delivery.py",
-        b"https://" + b"user:pass@" + b"mesh.example.test",
-    ),
+    ("basic-auth-url", "scripts/test_wardveil_mesh_delivery.py", BASIC_AUTH_FIXTURE_PREFIX),
+    ("basic-auth-url", "scripts/audit_public_git_history.py", BASIC_AUTH_FIXTURE_PREFIX),
+    ("private-key", "scripts/validate_wardveil.py", PRIVATE_KEY_MARKER),
+    ("private-key", "scripts/validate_wardveil.py", RSA_PRIVATE_KEY_MARKER),
 }
 
 
