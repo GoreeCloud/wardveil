@@ -17,10 +17,15 @@ DEFAULT_BUSY_TIMEOUT_SECONDS = 5
 
 
 def _epoch_microseconds(value: datetime) -> int:
-    if value.tzinfo is None:
+    if value.tzinfo is None or value.utcoffset() is None:
         raise ValueError("scan replay timestamps must be timezone-aware")
-    utc = value.astimezone(timezone.utc)
-    return int(utc.timestamp() * 1_000_000)
+    try:
+        utc = value.astimezone(timezone.utc)
+    except OverflowError as error:
+        raise ValueError("scan_replay_timestamp_out_of_supported_range") from error
+    epoch = datetime(1970, 1, 1, tzinfo=timezone.utc)
+    delta = utc - epoch
+    return ((delta.days * 86_400 + delta.seconds) * 1_000_000) + delta.microseconds
 
 
 @dataclass(frozen=True)
@@ -136,7 +141,11 @@ class SQLiteReplayLedger:
         now: datetime,
     ) -> tuple[str, dict | None]:
         now_us = _epoch_microseconds(now)
-        expires_at_us = _epoch_microseconds(now + self.ttl)
+        try:
+            expires_at = now + self.ttl
+        except OverflowError as error:
+            raise ValueError("scan_replay_timestamp_out_of_supported_range") from error
+        expires_at_us = _epoch_microseconds(expires_at)
         key = self._key(request)
         connection: sqlite3.Connection | None = None
         try:

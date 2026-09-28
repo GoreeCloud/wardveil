@@ -162,6 +162,28 @@ def test_required_scopes_reject_surrounding_whitespace() -> None:
         raise AssertionError("padded required scope was accepted")
 
 
+def test_utc_conversion_overflow_is_rejected() -> None:
+    for field, timestamp in (
+        ("issued_at", "0001-01-01T00:00:00+01:00"),
+        ("expires_at", "9999-12-31T23:59:59-01:00"),
+    ):
+        candidate = record()
+        candidate["credential_verification"][field] = timestamp
+        try:
+            evaluate_identity_key_lifecycle(candidate, evaluated_at=NOW)
+        except ValueError as exc:
+            assert "outside the supported UTC range" in str(exc)
+        else:
+            raise AssertionError(f"{field} UTC conversion overflow was accepted")
+
+    try:
+        evaluate_identity_key_lifecycle(record(), evaluated_at="0001-01-01T00:00:00+01:00")
+    except ValueError as exc:
+        assert "outside the supported UTC range" in str(exc)
+    else:
+        raise AssertionError("evaluated_at UTC conversion overflow was accepted")
+
+
 def test_production_requires_every_external_gate() -> None:
     candidate = record()
     candidate["acceptance_evidence"]["request_production_acceptance"] = True

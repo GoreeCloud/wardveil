@@ -2,6 +2,8 @@
 
 ## Current lifecycle
 
+September 27, 2026 Development candidate: Wardveil timestamp handling is hardened across policy decisions, runtime authorization, durable execution/reconciliation, Identity/key lifecycle evidence, Trust posture, Audit, Incident, Mesh evidence/runtime/refresh paths, persistence, platform-adoption governance, Protect, Quarantine, Security Center, service identity/key validity, Scan replay, and deployable Cloudflare authorization/execution/persistence paths. Unsupported UTC normalization ranges fail closed instead of escaping as unhandled overflow; Cloudflare authority-bearing timestamps must be trimmed, timezone-qualified strings before parsing so JavaScript coercion or timezone-less input cannot become valid security time. A dedicated exact-head timestamp-boundary regression sweep plus the existing focused tests/static validators covers the reviewed class. This does not mint execution authority or establish runtime/production acceptance. Repository protection (issue #34) and independent human review remain integration gates.
+
 Wardveil Security is in **Development**. Foundation 0.9 and next-upgrade source contracts/reference models are substantial, but overall production protection, release, Protected/Covered status, and Stable qualification remain independently gated.
 
 Do not use a single global “protected” state to summarize all Wardveil consumers or capabilities.

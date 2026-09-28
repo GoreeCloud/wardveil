@@ -53,7 +53,10 @@ def _parse_time(value: Any, name: str) -> datetime:
     parsed = datetime.fromisoformat(normalized)
     if parsed.tzinfo is None:
         raise ValueError(f"{name} must be timezone-aware")
-    return parsed.astimezone(timezone.utc)
+    try:
+        return parsed.astimezone(timezone.utc)
+    except OverflowError as error:
+        raise ValueError(f"{name} is outside the supported UTC range") from error
 
 
 def _closed(record: Mapping[str, Any], allowed: set[str], name: str) -> None:

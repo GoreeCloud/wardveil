@@ -151,7 +151,10 @@ def _parse_time(value: object) -> datetime | None:
         return None
     if parsed.tzinfo is None:
         return None
-    return parsed.astimezone(timezone.utc)
+    try:
+        return parsed.astimezone(timezone.utc)
+    except OverflowError:
+        return None
 
 
 def _rejected(

@@ -63,6 +63,9 @@ def main() -> None:
         "target_quarantine_readback_unverified",
         "source_candidate_must_remain_unaccepted",
         "quarantine_target_not_configured",
+        "function parseTime(value: unknown, reason: string)",
+        "value !== value.trim()",
+        "/(?:Z|[+-]\\d{2}:\\d{2})$/",
     ):
         require(token in source, f"missing Cloudflare quarantine executor invariant: {token}")
 

@@ -170,6 +170,16 @@ def main() -> None:
     expired = auth(nonce="nonce-expired", idem="idem-expired")
     assert expired_store.claim(expired.as_dict(), now=NOW + timedelta(minutes=3)).status == "expired_authorization"
 
+    overflow_store = InMemoryExecutionStateStore()
+    overflow_auth = auth(nonce="nonce-overflow", idem="idem-overflow").as_dict()
+    overflow_auth["expires_at"] = "9999-12-31T23:59:59-01:00"
+    assert overflow_store.claim(overflow_auth, now=NOW).status == "expired_authorization"
+    overflow_now = datetime.fromisoformat("0001-01-01T00:00:00+01:00")
+    expect_raises(
+        "timestamp_out_of_supported_range",
+        lambda: overflow_store.claim(auth(nonce="nonce-overflow-now", idem="idem-overflow-now").as_dict(), now=overflow_now),
+    )
+
     calls = {"count": 0}
     coordinated_store = InMemoryExecutionStateStore()
     authority = ExecutorAuthority(EXECUTOR, frozenset({"block"}), frozenset({"file"}))

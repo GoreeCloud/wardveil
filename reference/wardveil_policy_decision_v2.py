@@ -83,7 +83,10 @@ def _parse_time(value: str) -> datetime:
     parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
     if parsed.tzinfo is None:
         raise ValueError("timestamp must include timezone")
-    return parsed.astimezone(timezone.utc)
+    try:
+        return parsed.astimezone(timezone.utc)
+    except OverflowError as error:
+        raise ValueError("timestamp is outside the supported UTC range") from error
 
 
 def _nonempty(value: Any) -> bool:

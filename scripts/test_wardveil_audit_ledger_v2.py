@@ -329,6 +329,34 @@ def main() -> None:
     else:
         raise AssertionError("audit ledger accepted a transport URL as incident_ref")
 
+    near_max_ledger = AuditLedger()
+    try:
+        near_max_ledger.append(
+            audit_event_id="audit-retention-overflow",
+            correlation_id="corr-retention-overflow",
+            event_category="security_observation",
+            producer_id="wardveil-audit",
+            authority_domain="security",
+            actor_id="operator-1",
+            target_authority="wardveil",
+            resource_type="service",
+            resource_id="wardveil-audit",
+            requested_action="observe",
+            outcome="requested",
+            evidence_refs=("evidence:retention-overflow",),
+            source_record_refs=("record:retention-overflow",),
+            reason_code="retention_boundary_test",
+            summary="Retention arithmetic must fail closed at the supported datetime boundary.",
+            now=datetime(9999, 12, 31, 23, 59, 59, tzinfo=timezone.utc),
+        )
+    except ValueError as exc:
+        check(
+            str(exc) == "timestamp_out_of_supported_range",
+            "audit retention overflow must use the bounded timestamp error",
+        )
+    else:
+        raise AssertionError("audit ledger accepted a retention timestamp outside the supported range")
+
     check(ledger.verify_chain(), "complete audit chain must verify")
     tampered = replace(ledger.events[-1], summary="Tampered summary.")
     original = ledger._events[-1]

@@ -8,7 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SCHEMA = ROOT / "contracts" / "wardveil.security-center.v2.schema.json"
 DOC = ROOT / "SECURITY-CENTER-V2.md"
 REFERENCE = ROOT / "reference" / "wardveil_security_center_v2.py"
-ROADMAP = ROOT / "PLANNED-FEATURES.md"
+ROADMAP = ROOT / "FEATURE-ROADMAP.md"
 
 
 def require(condition: bool, message: str) -> None:

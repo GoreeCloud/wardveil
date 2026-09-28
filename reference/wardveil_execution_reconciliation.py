@@ -25,9 +25,12 @@ def _canonical(value: object) -> bytes:
 
 def _utc(value: datetime | None = None) -> datetime:
     value = value or datetime.now(timezone.utc)
-    if value.tzinfo is None:
+    if value.tzinfo is None or value.utcoffset() is None:
         raise ValueError("timestamp_must_be_timezone_aware")
-    return value.astimezone(timezone.utc)
+    try:
+        return value.astimezone(timezone.utc)
+    except OverflowError as error:
+        raise ValueError("timestamp_out_of_supported_range") from error
 
 
 @dataclass(frozen=True)

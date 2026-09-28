@@ -140,6 +140,16 @@ def main() -> int:
     control_character["inputs"][0]["authority"] = "goreecloud-identity\ntrusted"
     assert_rejected(control_character, "control characters")
 
+    overflow_observation = fixture()
+    overflow_observation["observed_at"] = "0001-01-01T00:00:00+01:00"
+    assert_rejected(overflow_observation, "outside the supported UTC range")
+    try:
+        evaluate_trust_posture(fixture(), evaluated_at="9999-12-31T23:59:59-01:00")
+    except ValueError as exc:
+        assert "outside the supported UTC range" in str(exc)
+    else:
+        raise AssertionError("evaluated_at UTC conversion overflow was accepted")
+
     print("Wardveil trust posture tests passed")
     return 0
 

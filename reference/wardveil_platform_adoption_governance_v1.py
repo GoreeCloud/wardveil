@@ -21,7 +21,10 @@ def _timestamp(value: Any, name: str) -> datetime:
     parsed = datetime.fromisoformat(normalized)
     if parsed.tzinfo is None:
         raise ValueError(f"{name} must be timezone-aware")
-    return parsed.astimezone(timezone.utc)
+    try:
+        return parsed.astimezone(timezone.utc)
+    except OverflowError as error:
+        raise ValueError(f"{name} is outside the supported UTC range") from error
 
 
 def _bool(record: Mapping[str, Any], name: str) -> bool:

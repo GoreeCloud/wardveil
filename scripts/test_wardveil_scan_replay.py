@@ -16,7 +16,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from reference.wardveil_scan_replay import SQLiteReplayLedger  # noqa: E402
+from reference.wardveil_scan_replay import SQLiteReplayLedger, _epoch_microseconds  # noqa: E402
 from reference.wardveil_scan_service import (  # noqa: E402
     ScanServiceRequest,
     ScanServiceRequestError,
@@ -149,6 +149,24 @@ def test_corrupt_cached_response_fails_closed() -> None:
         )
 
 
+def test_epoch_microseconds_preserves_far_range_precision() -> None:
+    far = datetime(3000, 1, 1, tzinfo=timezone.utc)
+    assert _epoch_microseconds(far + timedelta(microseconds=1)) - _epoch_microseconds(far) == 1
+
+
+def test_claim_rejects_expiry_overflow() -> None:
+    with tempfile.TemporaryDirectory() as directory:
+        path = Path(directory) / "replay.sqlite3"
+        store = ledger(path, ttl_seconds=180)
+        near_max = datetime(9999, 12, 31, 23, 59, tzinfo=timezone.utc)
+        try:
+            store.claim(request(nonce="nonce-overflow"), "3" * 64, now=near_max)
+        except ValueError as exc:
+            assert str(exc) == "scan_replay_timestamp_out_of_supported_range"
+        else:
+            raise AssertionError("replay expiry overflow must fail closed")
+
+
 def test_ledger_rejects_unsafe_paths() -> None:
     with tempfile.TemporaryDirectory() as directory:
         root = Path(directory)
@@ -189,6 +207,8 @@ def main() -> int:
     test_capacity_and_expiry_are_transactional_across_instances()
     test_second_instance_observes_finalized_response()
     test_corrupt_cached_response_fails_closed()
+    test_epoch_microseconds_preserves_far_range_precision()
+    test_claim_rejects_expiry_overflow()
     test_ledger_rejects_unsafe_paths()
     print("Wardveil durable Scan replay ledger tests passed.")
     return 0

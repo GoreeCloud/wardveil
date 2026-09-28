@@ -91,15 +91,21 @@ def _parse_timestamp(value: object, field: str) -> datetime:
         raise ValueError(f"{field} must be RFC3339/ISO8601") from exc
     if parsed.tzinfo is None:
         raise ValueError(f"{field} must include timezone")
-    return parsed.astimezone(timezone.utc)
+    try:
+        return parsed.astimezone(timezone.utc)
+    except OverflowError as error:
+        raise ValueError(f"{field} is outside the supported UTC range") from error
 
 
 def _evaluation_time(value: datetime | None) -> datetime:
     if value is None:
         return datetime.now(timezone.utc)
-    if value.tzinfo is None:
+    if value.tzinfo is None or value.utcoffset() is None:
         raise ValueError("observed_at override must include timezone")
-    return value.astimezone(timezone.utc)
+    try:
+        return value.astimezone(timezone.utc)
+    except OverflowError as error:
+        raise ValueError("observed_at override is outside the supported UTC range") from error
 
 
 def _require_string(value: object, field: str, *, maximum: int | None = None) -> str:
@@ -369,7 +375,7 @@ def validate_mesh_evidence_refresh_intent(intent: dict, *, now: datetime | None 
     reason = intent.get("reason")
     if reason not in _REFRESH_REASONS:
         raise ValueError("invalid refresh reason")
-    evaluated_at = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
+    evaluated_at = _evaluation_time(now)
     requested_at = _parse_timestamp(intent.get("requested_at"), "requested_at")
     if requested_at > evaluated_at:
         raise ValueError("requested_at cannot be in the future")
