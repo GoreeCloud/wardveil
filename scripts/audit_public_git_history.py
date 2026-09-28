@@ -3,7 +3,7 @@
 
 The scanner reports only category/object/path metadata. It never prints a matched
 secret value. It scans every blob reachable from refs present in the local clone;
-CI is responsible for fetching public heads, tags, and pull-request heads first.
+CI is responsible for fetching retained public branch and tag heads first. Untrusted external pull-request refs are deliberately excluded from this required check.
 """
 
 from __future__ import annotations

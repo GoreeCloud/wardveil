@@ -13,7 +13,7 @@ The repository must retain:
 - a pull-request template that records validation, security, authority, and rollback boundaries;
 - a security reporting policy that keeps protected information out of public issue and source surfaces;
 - deterministic validation for Wardveil identity, status, aggregation, Privacy Shield interoperability, repository governance, branding, and public-site source.
-- a first-party retained-public-history audit that fetches public branch, tag, and pull-request heads, scans reachable Git blobs for credential-shaped secrets, suppresses matched values from logs, and fails closed on findings or skipped oversized blobs.
+- a first-party retained-public-history audit that fetches retained public branch and tag heads, scans reachable Git blobs for credential-shaped secrets, suppresses matched values from logs, and fails closed on findings or skipped oversized blobs. Untrusted external pull-request refs are excluded from the required check so an outside contributor cannot deny service to protected-branch CI by injecting a detector-shaped fixture.
 
 ## Required GitHub repository setting
 

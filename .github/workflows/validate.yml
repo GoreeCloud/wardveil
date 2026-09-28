@@ -38,7 +38,6 @@ jobs:
           set -euo pipefail
           git remote set-url origin https://github.com/GoreeCloud/wardveil.git
           git fetch --force --prune --no-tags origin '+refs/heads/*:refs/remotes/origin/*'
-          git fetch --force --prune --no-tags origin '+refs/pull/*/head:refs/remotes/pull/*/head'
           git fetch --force --tags origin '+refs/tags/*:refs/tags/*'
           test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
 
