@@ -17,6 +17,10 @@ The repository README identifies **Foundation 0.9 active** and currently documen
 
 A bounded reference correlation layer now preserves exact resource scope, evidence provenance, freshness, explainability, and a non-authorizing incident-candidate boundary. It remains Development source only; runtime integration and production acceptance are separate gates.
 
+## Incident Center V1 — Development review-intake foundation
+
+A bounded Detection Engine → Incident Center review layer now converts fresh single-resource `incident_candidate` assessments into deterministic, explainable `review_required` cases. It rejects authority contamination and mixed-resource input, excludes stale/future/non-candidate assessments, and fixes incident, execution, containment, and production authority to false. Real incident creation and response continue through the existing authorized Incident/Response path.
+
 ## Acceptance boundary
 
 Production cryptography, key management, authenticated runtime transport, production executor evidence, production deployment, cross-system runtime acceptance, Covered/Protected claims, and Stable status remain separate evidence-gated work. A Wardveil policy decision is not automatically execution authority, and branding or documentation alone is never protection evidence.

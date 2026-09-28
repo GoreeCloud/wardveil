@@ -1,5 +1,13 @@
 # Wardveil Security — Changelogs
 
+## 2026-09-28 — Incident Center V1 development review intake
+
+- Added a bounded Detection Engine → Incident Center review-case reference, machine-readable schema, tests, documentation, and foundation-CI validation.
+- Fresh incident candidates can become only `review_required`; mixed-resource input, authority contamination, and stale/future/non-candidate evidence fail closed or remain unknown.
+- Real incident creation, containment, response execution, Protected/Covered status, deployment, and production acceptance remain separately governed.
+
+
+
 Repository-native change history. Development source evidence does not establish deployment, Protected/Covered status, or production acceptance.
 
 ## 2026-09-28 — Detection Engine V1 development source

@@ -1,0 +1,169 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://goreecloud.com/contracts/wardveil.incident-center.v1.schema.json",
+  "title": "Wardveil Incident Center V1 Review Case",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "record_type",
+    "case_id",
+    "resource",
+    "status",
+    "review_priority",
+    "assessment_count",
+    "correlated_assessment_count",
+    "dispositions",
+    "signal_categories",
+    "producer_ids",
+    "evidence_refs",
+    "reason_codes",
+    "observed_at",
+    "valid_until",
+    "incident_established",
+    "execution_authority",
+    "containment_authority",
+    "production_accepted"
+  ],
+  "properties": {
+    "contract_version": {
+      "const": "0.1.0"
+    },
+    "record_type": {
+      "const": "incident_review_case"
+    },
+    "case_id": {
+      "type": "string",
+      "pattern": "^wicv1-[0-9a-f]{24}$"
+    },
+    "resource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "id"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      }
+    },
+    "status": {
+      "enum": [
+        "unknown",
+        "review_required"
+      ]
+    },
+    "review_priority": {
+      "enum": [
+        "routine",
+        "attention",
+        "high",
+        "critical"
+      ]
+    },
+    "assessment_count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 64
+    },
+    "correlated_assessment_count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 64
+    },
+    "dispositions": {
+      "type": "array",
+      "uniqueItems": true,
+      "maxItems": 4,
+      "items": {
+        "enum": [
+          "unknown",
+          "informational",
+          "suspicious",
+          "likely_malicious"
+        ]
+      }
+    },
+    "signal_categories": {
+      "type": "array",
+      "uniqueItems": true,
+      "maxItems": 12,
+      "items": {
+        "enum": [
+          "privilege_escalation",
+          "credential_harvesting",
+          "suspicious_process_spawn",
+          "mass_file_encryption",
+          "persistence_attempt",
+          "unauthorized_system_modification",
+          "anomalous_network_activity",
+          "sensitive_file_access",
+          "abnormal_background_activity",
+          "administrative_anomaly",
+          "rapid_permission_change",
+          "post_update_behavior_change"
+        ]
+      }
+    },
+    "producer_ids": {
+      "type": "array",
+      "uniqueItems": true,
+      "maxItems": 64,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "uniqueItems": true,
+      "maxItems": 128,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      }
+    },
+    "reason_codes": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "maxItems": 64,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      }
+    },
+    "observed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "valid_until": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "incident_established": {
+      "const": false
+    },
+    "execution_authority": {
+      "const": false
+    },
+    "containment_authority": {
+      "const": false
+    },
+    "production_accepted": {
+      "const": false
+    }
+  }
+}
