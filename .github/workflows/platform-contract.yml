@@ -18,6 +18,7 @@ permissions:
 
 jobs:
   validate:
+    name: Platform Contract
     uses: GoreeCloud/GoreeCloud/.github/workflows/reusable-platform-manifest.yml@e49b9afdea094c96a36a0457b1603f2fa8e8fa6b
     with:
       manifest-path: goreecloud.platform.yaml
