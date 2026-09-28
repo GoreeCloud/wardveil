@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://goreecloud.com/contracts/wardveil.detection-engine.v1.schema.json",
+  "title": "Wardveil Behavioral Detection Engine V1 Assessment",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "record_type",
+    "resource",
+    "disposition",
+    "severity",
+    "confidence",
+    "correlated",
+    "signal_categories",
+    "producer_ids",
+    "evidence_refs",
+    "reason_codes",
+    "observed_at",
+    "valid_until",
+    "incident_candidate",
+    "execution_authority"
+  ],
+  "properties": {
+    "contract_version": {
+      "const": "0.1.0"
+    },
+    "record_type": {
+      "const": "detection_assessment"
+    },
+    "resource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "id"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      }
+    },
+    "disposition": {
+      "enum": ["unknown", "informational", "suspicious", "likely_malicious"]
+    },
+    "severity": {
+      "enum": ["informational", "low", "medium", "high", "critical"]
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "correlated": {
+      "type": "boolean"
+    },
+    "signal_categories": {
+      "type": "array",
+      "uniqueItems": true,
+      "maxItems": 12,
+      "items": {
+        "enum": [
+          "privilege_escalation",
+          "credential_harvesting",
+          "suspicious_process_spawn",
+          "mass_file_encryption",
+          "persistence_attempt",
+          "unauthorized_system_modification",
+          "anomalous_network_activity",
+          "sensitive_file_access",
+          "abnormal_background_activity",
+          "administrative_anomaly",
+          "rapid_permission_change",
+          "post_update_behavior_change"
+        ]
+      }
+    },
+    "producer_ids": {
+      "type": "array",
+      "uniqueItems": true,
+      "maxItems": 32,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "uniqueItems": true,
+      "maxItems": 32,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      }
+    },
+    "reason_codes": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "maxItems": 16,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      }
+    },
+    "observed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "valid_until": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "incident_candidate": {
+      "type": "boolean"
+    },
+    "execution_authority": {
+      "const": false
+    }
+  }
+}

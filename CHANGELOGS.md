@@ -2,6 +2,11 @@
 
 Repository-native change history. Development source evidence does not establish deployment, Protected/Covered status, or production acceptance.
 
+## 2026-09-28 — Detection Engine V1 development source
+
+- Added a bounded Development correlation reference, schema, tests, documentation, and foundation-CI coverage.
+- Runtime integration and production acceptance remain separate gates.
+
 ## 2026-09-28 — Repository-local project governance migration
 
 - Added canonical `PROJECT-SPECIFICATIONS.md` and `PROJECT-RECORD.md` reconciled to protected main `2ddcf03b24b65e8e8112ba6cd18f9a9c56bb0a89`.
