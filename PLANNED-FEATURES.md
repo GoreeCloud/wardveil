@@ -5,8 +5,8 @@
 
 Planned Upgrade, Features, Capabilities, and Long-Term Security Operations Direction
 Purpose and Authority
-This document consolidates the repository-native Wardveil planned-feature record with the expanded planned upgrade, capability, architecture, and security-operations direction supplied for documentation. It preserves the current roadmap control obligations and the distinction between verified development evidence and future planned work. It supersedes the prior active Drive Markdown roadmap and the separate Wardveil 2.0 Markdown planning source as the Office-format planning authority once stored and verified in the authoritative Wardveil roadmap location.
-The authoritative Project Specification — Wardveil Security and the live GoreeCloud/wardveil repository remain responsible for verified current architecture and implementation state. Wardveil policy and security authority boundaries continue to control what the product may claim or execute.
+This file is the repository-native Wardveil planned-feature authority migrated from the richer Drive planning source. It preserves roadmap obligations and the distinction between verified Development evidence and future planned work. The former Drive roadmap and separate Wardveil 2.0 planning source are historical migration provenance and must not compete with this repository record.
+`PROJECT-SPECIFICATIONS.md` governs long-lived project requirements, while verified repository/runtime evidence governs current implementation state. Wardveil policy and security authority boundaries continue to control what the product may claim or execute.
 Current Roadmap Control and Verified Development Foundation
 The following obligations and states are carried forward from the existing Wardveil feature roadmap. They are not inferred from the new planning text. Any Source Validated or source-implemented wording remains bounded to the exact development evidence previously recorded and does not establish runtime, production, Covered, Protected, or Stable status.
 Planned Upgrade, Features, Capabilities, and Roadmap
@@ -1024,18 +1024,21 @@ It should become the adaptive protection, trust, policy, containment, incident-r
 Implementation and Verification Rule
 Nothing in this roadmap should be represented as implemented, deployed, Protected, Covered, production-accepted, or Stable simply because it is described here.
 Each capability must progress through the applicable implementation, validation, runtime, deployment, security, evidence, and production-acceptance requirements before Wardveil presents that capability as operational.
-Document Relationships
-Project Specification — Wardveil Security — verified current architecture and implementation-state authority.
-Policy — Wardveil Security — mandatory security, evidence, authority, and fail-closed requirements.
-Wardveil Security — 2.0 Implementation Task List.docx — active implementation, integration, validation, deployment, and acceptance work for the established 2.0 target.
+Repository and Task Relationships
+PROJECT-SPECIFICATIONS.md — long-lived repository project requirements.
+PROJECT-RECORD.md — significant architecture, governance, integration, and lifecycle history.
+IMPLEMENTED-FEATURES.md — repository-native implemented-source authority.
+PLANNED-FEATURES.md — this repository-native planned-feature authority.
+Wardveil Security — 2.0 Implementation Task List.docx — active task authority for implementation, integration, validation, deployment, and acceptance work for the established 2.0 target.
 Wardveil Security — Future Roadmap Implementation Task List.docx — active task tracking for proposed additions 29–50 without treating them as implemented or automatically assigning them to the 2.0 release.
-GoreeCloud/wardveil/FEATURE-ROADMAP.md — repository-side roadmap control that must remain materially synchronized with this Drive roadmap.
-Change History
-Current implementation-bearing source checkpoint — September 20, 2026: the latest verified Wardveil implementation-bearing source remains e4808b8f843a158d6f7e81d95c2f042469845d6b / tree 58f60218132bd01f5d1e98c5d3700db6a2642707 after PR #168. Roadmap-only PR #169 merged as 5fd1d92725be22a2dca91f87715aafca7421bea0 / tree bf7adfd57c9c68410463ac5166b3a662b7854431 and passed post-merge foundation #653, authenticated Scan #374, Mesh #265, trust posture #96, next-upgrade security state #169, and policy-execution bridge #104. Roadmap-semantics PR #170 then merged as b7fdfe670632a75cae7ecc184e89ab2e9ea2c2cb / tree bb001b2438d97be92293f0e0e43e03951f0f0ec2 from exact head 20f3e4d3d3f6325418e682d1f96a2553f991c3bd; it changed only FEATURE-ROADMAP.md and formalized that documentation-only merges do not advance the implementation-bearing checkpoint. Its exact merge commit passed post-merge foundation #655, authenticated Scan #376, Mesh #267, trust posture #98, next-upgrade security state #171, and policy-execution bridge #106. Wardveil’s read-only Privacy Shield producer provenance remains 35375db7596a8892ccb5b9b27fa7d3ad80353d66 / tree 29cd3d6a21d1bcf5a8b3b7415a0147920ab02791 / Validation #503. Zero provider access-control assessments, zero production provider acceptances, unaccepted runtime/provider production acceptance, and all Wardveil deployment, Protected/Covered, release, and Stable blockers remain unchanged. Documentation-only merges do not promote roadmap implementation state.
+Former GoreeCloud/wardveil/FEATURE-ROADMAP.md — retired historical repository control; it must not return as active authority.
+Preserved Historical Change History
+Historical implementation-bearing source checkpoint — September 20, 2026 (migration provenance; not current): the latest verified Wardveil implementation-bearing source remains e4808b8f843a158d6f7e81d95c2f042469845d6b / tree 58f60218132bd01f5d1e98c5d3700db6a2642707 after PR #168. Roadmap-only PR #169 merged as 5fd1d92725be22a2dca91f87715aafca7421bea0 / tree bf7adfd57c9c68410463ac5166b3a662b7854431 and passed post-merge foundation #653, authenticated Scan #374, Mesh #265, trust posture #96, next-upgrade security state #169, and policy-execution bridge #104. Roadmap-semantics PR #170 then merged as b7fdfe670632a75cae7ecc184e89ab2e9ea2c2cb / tree bb001b2438d97be92293f0e0e43e03951f0f0ec2 from exact head 20f3e4d3d3f6325418e682d1f96a2553f991c3bd; it changed only FEATURE-ROADMAP.md and formalized that documentation-only merges do not advance the implementation-bearing checkpoint. Its exact merge commit passed post-merge foundation #655, authenticated Scan #376, Mesh #267, trust posture #98, next-upgrade security state #171, and policy-execution bridge #106. Wardveil’s read-only Privacy Shield producer provenance remains 35375db7596a8892ccb5b9b27fa7d3ad80353d66 / tree 29cd3d6a21d1bcf5a8b3b7415a0147920ab02791 / Validation #503. Zero provider access-control assessments, zero production provider acceptances, unaccepted runtime/provider production acceptance, and all Wardveil deployment, Protected/Covered, release, and Stable blockers remain unchanged. Documentation-only merges do not promote roadmap implementation state.
+Preserved source metadata below is historical migration provenance and does not override current repository-native authority.
 Document Type
 Feature Roadmap / Planned Security Architecture and Capability Direction
 Status
-Active roadmap control; planned/proposed capability content
+Historical migrated source metadata; current repository planning authority is PLANNED-FEATURES.md
 Version
 v0.10
 Last Updated
@@ -1044,7 +1047,7 @@ Classification
 Internal
 Project
 Wardveil Security
-Authoritative Scope
+Historical Source Scope
 Wardveil planned roadmap and target direction only
 Implementation Authority
 No — verified current implementation remains controlled by authoritative repository, project specification, runtime/deployment evidence, and production acceptance
