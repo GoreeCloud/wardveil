@@ -402,7 +402,7 @@ GitHub reports `main` protected and requires the `Validate Wardveil foundation` 
 
 ## 23. Current accepted implementation boundary
 
-Accepted `main` at `2ddcf03b24b65e8e8112ba6cd18f9a9c56bb0a89` contains substantial Foundation 0.9 source/reference contracts, exact-revision validation, deployed Scan integration records, single-host durable execution/replay behavior, current Security Center Glaze UI 1.6.0 source mapping, minimized Privacy Shield interoperability/provenance contracts, production-persistence qualification contracts, public-repository governance hardening, fail-closed authority-bearing timestamp handling, and repository-native implemented/planned feature authority.
+The pre-project-migration accepted implementation baseline at `2ddcf03b24b65e8e8112ba6cd18f9a9c56bb0a89` contains substantial Foundation 0.9 source/reference contracts, exact-revision validation, deployed Scan integration records, single-host durable execution/replay behavior, current Security Center Glaze UI 1.6.0 source mapping, minimized Privacy Shield interoperability/provenance contracts, production-persistence qualification contracts, public-repository governance hardening, fail-closed authority-bearing timestamp handling, and repository-native implemented/planned feature authority. This documentation migration does not itself change those runtime/source capability claims.
 
 The independently accepted deployed Wardveil Scan component remains distinct from repository `main`; the active Drive specification records deployed Scan runtime revision `95e2d8cae5d317e7dfd96e74ca6ef7fcdddf28d4` and ClamAV scanner revision `1f267f3bf7024dcc8b99988b3a452d8eaed9550b`.
 
