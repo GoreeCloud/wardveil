@@ -9,6 +9,8 @@ This file is the repository-native Wardveil planned-feature authority migrated f
 `PROJECT-SPECIFICATIONS.md` governs long-lived project requirements, while verified repository/runtime evidence governs current implementation state. Wardveil policy and security authority boundaries continue to control what the product may claim or execute.
 Current Roadmap Control and Verified Development Foundation
 The following obligations and states are carried forward from the existing Wardveil feature roadmap. They are not inferred from the new planning text. Any Source Validated or source-implemented wording remains bounded to the exact development evidence previously recorded and does not establish runtime, production, Covered, Protected, or Stable status.
+Development progress note — Detection Engine V1 now has a bounded source-level correlation and explainability foundation. The broader Behavioral Threat Detection roadmap remains open for approved runtime signal producers, authenticated delivery, durable operations, target-environment validation, incident integration, and production acceptance.
+
 Planned Upgrade, Features, Capabilities, and Roadmap
 Overview
 Wardveil is planned to evolve from a security presentation and protection layer into the adaptive security, integrity, containment, trust, incident-response, and security-operations foundation for the GoreeCloud ecosystem.
