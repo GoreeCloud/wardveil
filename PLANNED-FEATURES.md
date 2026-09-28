@@ -5,8 +5,8 @@
 
 Planned Upgrade, Features, Capabilities, and Long-Term Security Operations Direction
 Purpose and Authority
-This document consolidates the repository-native Wardveil planned-feature record with the expanded planned upgrade, capability, architecture, and security-operations direction supplied for documentation. It preserves the current roadmap control obligations and the distinction between verified development evidence and future planned work. It supersedes the prior active Drive Markdown roadmap and the separate Wardveil 2.0 Markdown planning source as the Office-format planning authority once stored and verified in the authoritative Wardveil roadmap location.
-The authoritative Project Specification — Wardveil Security and the live GoreeCloud/wardveil repository remain responsible for verified current architecture and implementation state. Wardveil policy and security authority boundaries continue to control what the product may claim or execute.
+This file is the repository-native Wardveil planned-feature authority migrated from the richer Drive planning source. It preserves roadmap obligations and the distinction between verified Development evidence and future planned work. The former Drive roadmap and separate Wardveil 2.0 planning source are historical migration provenance and must not compete with this repository record.
+`PROJECT-SPECIFICATIONS.md` governs long-lived project requirements, while verified repository/runtime evidence governs current implementation state. Wardveil policy and security authority boundaries continue to control what the product may claim or execute.
 Current Roadmap Control and Verified Development Foundation
 The following obligations and states are carried forward from the existing Wardveil feature roadmap. They are not inferred from the new planning text. Any Source Validated or source-implemented wording remains bounded to the exact development evidence previously recorded and does not establish runtime, production, Covered, Protected, or Stable status.
 Planned Upgrade, Features, Capabilities, and Roadmap
