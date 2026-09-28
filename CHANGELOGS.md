@@ -2,6 +2,15 @@
 
 Repository-native change history. Development source evidence does not establish deployment, Protected/Covered status, or production acceptance.
 
+## 2026-09-28 — Repository-local project governance migration
+
+- Added canonical `PROJECT-SPECIFICATIONS.md` and `PROJECT-RECORD.md` reconciled to protected main `2ddcf03b24b65e8e8112ba6cd18f9a9c56bb0a89`.
+- Retired the competing root `SPECIFICATIONS.md` summary after incorporating its durable requirements.
+- Updated README navigation and repository-governance validation so canonical project records are mandatory and both `SPECIFICATIONS.md` and retired `FEATURE-ROADMAP.md` fail closed if reintroduced.
+- Reconciled project history to integrated PR #175 public-governance hardening, PR #174 fail-closed timestamp handling, and PR #179 repository-native feature tracking.
+- Clarified that `PLANNED-FEATURES.md` is repository-native authority while the former Drive roadmap is migration provenance.
+- The Drive project specification remains migration provenance until post-merge readback and governed source-retirement checks are complete; no production, Protected/Covered, release, or lifecycle promotion is implied.
+
 ## 2026-09-27 — Drive feature-roadmap migration
 
 - Replaced the shorter repository roadmap with the materially richer current Drive planning source in `PLANNED-FEATURES.md`.
