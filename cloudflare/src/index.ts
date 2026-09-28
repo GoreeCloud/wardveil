@@ -110,6 +110,26 @@ function requireRecord(record: WardveilRecord): void {
   if (!record.scope?.resource_type || !record.scope?.resource_id) throw new Error("invalid_scope");
 }
 
+function parseTime(value: unknown, reason: string): number {
+  if (
+    typeof value !== "string"
+    || !value
+    || value !== value.trim()
+    || !/(?:Z|[+-]\d{2}:\d{2})$/.test(value)
+  ) throw new Error(reason);
+  const parsed = Date.parse(value);
+  if (!Number.isFinite(parsed)) throw new Error(reason);
+  return parsed;
+}
+
+function addBoundedMilliseconds(value: number, delta: number, reason: string): number {
+  const result = value + delta;
+  if (!Number.isSafeInteger(result) || !Number.isFinite(new Date(result).getTime())) {
+    throw new Error(reason);
+  }
+  return result;
+}
+
 function requireExecutionAuthorizationClaim(claim: ExecutionAuthorizationClaim): void {
   if (!claim || typeof claim !== "object") throw new Error("invalid_execution_authorization_claim");
   for (const value of [
@@ -124,9 +144,8 @@ function requireExecutionAuthorizationClaim(claim: ExecutionAuthorizationClaim):
   if (!claim.scope?.resource_type || !claim.scope?.resource_id) throw new Error("invalid_execution_scope");
 
   const now = Date.now();
-  const issuedAt = Date.parse(claim.issued_at);
-  const expiresAt = Date.parse(claim.expires_at);
-  if (!Number.isFinite(issuedAt) || !Number.isFinite(expiresAt)) throw new Error("invalid_authorization_time");
+  const issuedAt = parseTime(claim.issued_at, "invalid_authorization_time");
+  const expiresAt = parseTime(claim.expires_at, "invalid_authorization_time");
   if (issuedAt > now + AUTHORIZATION_CLOCK_SKEW_MS) throw new Error("future_dated_authorization");
   if (expiresAt <= now) throw new Error("expired_authorization");
   if (expiresAt <= issuedAt || expiresAt - issuedAt > MAX_AUTHORIZATION_TTL_MS) throw new Error("invalid_authorization_validity_window");
@@ -304,7 +323,10 @@ export class WardveilPersistenceDO extends DurableObject<Bindings> {
   async claimExecutionAuthorization(claim: ExecutionAuthorizationClaim): Promise<ExecutionClaimDecision> {
     requireExecutionAuthorizationClaim(claim);
     const now = new Date();
-    const retentionUntil = new Date(Math.max(Date.parse(claim.expires_at), now.getTime()) + EXECUTION_CLAIM_RETENTION_MS).toISOString();
+    const retentionBase = Math.max(parseTime(claim.expires_at, "invalid_authorization_time"), now.getTime());
+    const retentionUntil = new Date(
+      addBoundedMilliseconds(retentionBase, EXECUTION_CLAIM_RETENTION_MS, "invalid_authorization_time"),
+    ).toISOString();
     const scopeJson = canonical(claim.scope);
 
     return this.ctx.storage.transactionSync(() => {

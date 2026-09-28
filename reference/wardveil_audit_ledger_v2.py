@@ -70,7 +70,10 @@ def _utc(value: datetime | None = None) -> datetime:
     value = value or datetime.now(timezone.utc)
     if value.tzinfo is None or value.utcoffset() is None:
         raise ValueError("timestamp_must_be_timezone_aware")
-    return value.astimezone(timezone.utc)
+    try:
+        return value.astimezone(timezone.utc)
+    except OverflowError as error:
+        raise ValueError("timestamp_out_of_supported_range") from error
 
 
 def _text(
@@ -395,7 +398,10 @@ class AuditLedger:
             raise ValueError("reconciliation_fields_only_allowed_on_reconciliation_events")
 
         previous_hash = self._events[-1].event_hash if self._events else None
-        expires_at = observed_at + timedelta(days=RETENTION_DAYS)
+        try:
+            expires_at = observed_at + timedelta(days=RETENTION_DAYS)
+        except OverflowError as error:
+            raise ValueError("timestamp_out_of_supported_range") from error
 
         event = AuditEvent(
             sequence=len(self._events) + 1,

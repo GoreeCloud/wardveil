@@ -50,7 +50,10 @@ def _parse_time(value: str) -> datetime:
     parsed = datetime.fromisoformat(normalized)
     if parsed.tzinfo is None:
         raise ValueError("timestamp must be timezone-aware")
-    return parsed.astimezone(timezone.utc)
+    try:
+        return parsed.astimezone(timezone.utc)
+    except OverflowError as error:
+        raise ValueError("timestamp is outside the supported UTC range") from error
 
 
 def _bounded_text(value: Any, name: str, limit: int) -> str:

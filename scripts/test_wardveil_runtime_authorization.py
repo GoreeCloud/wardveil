@@ -118,6 +118,27 @@ def main() -> None:
     )
     assert verify(auth, record, now=naive_now).reason == "evaluation_time_must_be_timezone_aware"
 
+    overflow_issued = replace(auth, issued_at="0001-01-01T00:00:00+01:00")
+    assert verify(overflow_issued, record).reason == "invalid_authorization_time"
+    overflow_policy = {**record, "valid_until": "9999-12-31T23:59:59-01:00"}
+    assert verify(auth, overflow_policy).reason == "expired_or_missing_policy_validity"
+    overflow_now = datetime.fromisoformat("0001-01-01T00:00:00+01:00")
+    assert verify(auth, record, now=overflow_now).reason == "evaluation_time_out_of_supported_range"
+    near_max_now = datetime(9999, 12, 31, 23, 59, 45, tzinfo=timezone.utc)
+    near_max_policy = policy(valid_until=datetime(9999, 12, 31, 23, 59, 59, tzinfo=timezone.utc))
+    assert verify(auth, near_max_policy, now=near_max_now).reason == "evaluation_time_out_of_supported_range"
+    expect_raises(
+        "evaluation_time_out_of_supported_range",
+        lambda: create_execution_authorization(
+            record,
+            signing_key=KEY,
+            executor_id=EXECUTOR,
+            idempotency_key="overflow-create",
+            nonce="overflow-create",
+            now=overflow_now,
+        ),
+    )
+
     expect_raises(
         "invalid_authorization_ttl",
         lambda: create_execution_authorization(record, signing_key=KEY, executor_id=EXECUTOR, idempotency_key="x", nonce="x", now=NOW, ttl=timedelta(minutes=6)),

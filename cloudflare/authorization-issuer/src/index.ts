@@ -93,7 +93,13 @@ function requireString(value: unknown, reason: string, max = 256): asserts value
   if (typeof value !== "string" || !value || value.length > max) throw new Error(reason);
 }
 
-function parseTime(value: string, reason: string): number {
+function parseTime(value: unknown, reason: string): number {
+  if (
+    typeof value !== "string"
+    || !value
+    || value !== value.trim()
+    || !/(?:Z|[+-]\d{2}:\d{2})$/.test(value)
+  ) throw new Error(reason);
   const parsed = Date.parse(value);
   if (!Number.isFinite(parsed)) throw new Error(reason);
   return parsed;
