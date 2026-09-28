@@ -2,6 +2,14 @@
 
 Repository-native change history. Development source evidence does not establish deployment, Protected/Covered status, or production acceptance.
 
+## 2026-09-27 — Drive feature-roadmap migration
+
+- Replaced the shorter repository roadmap with the materially richer current Drive planning source in `PLANNED-FEATURES.md`.
+- Established `IMPLEMENTED-FEATURES.md` from the repository's explicit Foundation 0.9 source-state claims without promoting production/runtime acceptance.
+- Preserved the raw Drive planning source under `docs/history/drive-feature-roadmap-source-2026-09-27.md`.
+- Retired `FEATURE-ROADMAP.md` as a repository control.
+- No production, Covered, Protected, release, or Stable promotion is implied.
+
 ## 2026-09-25 — Security timestamp failure containment
 
 - Translate UTC conversion overflow into fail-closed validation across policy decisions, runtime execution authorization, durable execution/reconciliation, Identity/key lifecycle, Trust posture, Audit, Incident, Mesh evidence/runtime/refresh handling, persistence, platform-adoption governance, Protect, Quarantine, Security Center, service identity/key validity, and Scan replay.
