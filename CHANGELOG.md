@@ -6,6 +6,8 @@ All notable source-controlled changes to the Wardveil Security foundation are re
 
 ### Added
 
+- Added `scripts/audit_public_git_history.py` and required foundation-workflow integration to fetch retained public branch and tag heads and scan reachable Git blobs for credential-shaped secrets without printing matched values. The audit fails closed on findings and on oversized blobs that would otherwise escape inspection, while excluding untrusted external pull-request refs from the required check to prevent contributor-controlled CI denial of service.
+
 - Added `RUNTIME-AUTHORIZATION.md` and `contracts/wardveil.runtime-authorization.json` as the canonical cross-service execution-authorization contract between Wardveil Policy and Wardveil Protect.
 - Added `reference/wardveil_runtime_authorization.py` with exact policy-digest, action, scope, executor, correlation, expiry, nonce, and idempotency binding.
 - Added constant-time HMAC verification in the dependency-free reference path, explicitly labeled `HMAC-SHA256-reference-only` so source conformance cannot be mistaken for production key-management acceptance.
@@ -32,6 +34,9 @@ All notable source-controlled changes to the Wardveil Security foundation are re
 - Added deployment validation that requires a pre-existing target Worker and persistence Worker, an explicit resource-type subset, a pre-provisioned encrypted verification secret, disabled Workers.dev/preview URLs, ephemeral generated configuration, revision-bound evidence, and continued `unaccepted` runtime status.
 
 ### Changed
+
+- Hardened public-source safety by removing restricted Privacy Shield producer-source and operational provenance from Wardveil's public interoperability record and adding fail-closed allowlist validation. This forward remediation does not rewrite historical commits or stale branch tips.
+- Hardened repository-governance enforcement for `main`: GitHub now reports the branch protected; `Validate Wardveil foundation` is the required GitHub Actions check with strict/up-to-date enforcement; one pull-request approval is required with stale-review dismissal and last-push approval; conversation resolution is required; administrator enforcement is enabled; and force pushes and branch deletion are disabled. The affected pull-request workflows now emit unique check names so required-check enforcement is unambiguous. This repository-governance state does not establish runtime, production, release, Protected/Covered, or Stable acceptance.
 
 - Advanced the Wardveil Security foundation to 0.9.0.
 - Strengthened the capability contract so high-impact cross-service Protect execution requires bound runtime authorization and a Wardveil Policy decision is explicitly not execution authority by itself.

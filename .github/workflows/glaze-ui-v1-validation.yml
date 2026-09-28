@@ -21,6 +21,7 @@ concurrency:
 
 jobs:
   validate:
+    name: Validate Security Center GLAZE UI V1.6 source adoption
     runs-on: ubuntu-24.04
     timeout-minutes: 8
     steps:
