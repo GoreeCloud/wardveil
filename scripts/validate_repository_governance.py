@@ -162,11 +162,13 @@ def main() -> None:
 
     for phrase in (
         "must be protected by GitHub branch protection or an equivalent repository ruleset",
-        "require changes to reach `main` through a pull request",
-        "require the Wardveil validation workflow to pass before merge",
-        "GitHub reports `main` as unprotected",
-        "do not substitute for branch protection",
-        "Issue #34",
+        "material changes reach `main` through pull requests",
+        "Validate Wardveil foundation",
+        "Wardveil is intentionally public",
+        "private GoreeCloud repository inventory",
+        "restricted operational evidence",
+        "GitHub reports `main` as protected",
+        "current-source remediation does **not** rewrite historical commits",
         "full immutable commit SHA",
         "human review",
     ):
