@@ -98,6 +98,15 @@ Audit can hash-bind nonsecret `authorization_id`, `issuer_id`, `executor_id`, `s
 
 The Cloudflare deployment gate is defined by `.github/workflows/deploy-cloudflare-quarantine-executor.yml` and `contracts/wardveil.quarantine-executor-deployment.json`. A manual production dispatch must identify an already deployed target Worker and an explicit least-privilege resource-type subset. The workflow verifies target and persistence Worker existence, requires the verification secret to be pre-provisioned without reading its value, generates an ephemeral configuration, keeps Workers.dev and preview URLs disabled, deploys the executor, and runs a local-only non-mutating remote service-binding probe. The probe can prove internal executor reachability and that the deployment placeholder was replaced; it cannot prove a quarantine mutation or authorize production acceptance.
 
+## Project governance
+
+The authoritative project requirements and significant project history are repository-local:
+
+- [PROJECT-SPECIFICATIONS.md](PROJECT-SPECIFICATIONS.md)
+- [PROJECT-RECORD.md](PROJECT-RECORD.md)
+
+[FEATURES.md](FEATURES.md) retains durable feature-scope documentation. Current implemented and planned feature state is authoritative in [IMPLEMENTED-FEATURES.md](IMPLEMENTED-FEATURES.md) and [PLANNED-FEATURES.md](PLANNED-FEATURES.md), with repository change history in [CHANGELOGS.md](CHANGELOGS.md). The active Drive project specification remains migration provenance only until this repository migration is accepted and its source-retirement gate is satisfied.
+
 ## Shared contracts and specifications
 
 - `ARCHITECTURE.md` — canonical first-party security architecture and responsibility boundaries.
