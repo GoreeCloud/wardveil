@@ -20,7 +20,8 @@ RUNNER = "ubuntu-24.04"
 
 REQUIRED_ROOT_FILES = (
     "README.md",
-    "SPECIFICATIONS.md",
+    "PROJECT-SPECIFICATIONS.md",
+    "PROJECT-RECORD.md",
     "FEATURES.md",
     "IMPLEMENTED-FEATURES.md",
     "PLANNED-FEATURES.md",
@@ -37,6 +38,7 @@ REQUIRED_ROOT_FILES = (
     "goreecloud.platform.yaml",
 )
 REQUIRED_REPOSITORY_CONTROLS = (".github/PULL_REQUEST_TEMPLATE.md",)
+RETIRED_ROOT_FILES = ("SPECIFICATIONS.md", "FEATURE-ROADMAP.md")
 MINIMUM_MEANINGFUL_CHARACTERS = 20
 
 ACTION_PIN_PATTERN = re.compile(
@@ -118,6 +120,11 @@ def main() -> None:
             fail(f"required repository control is empty/placeholder-sized: {relative}")
         if text.lower() in {"todo", "tbd", "placeholder", "coming soon"}:
             fail(f"required repository control is a placeholder: {relative}")
+
+    for relative in RETIRED_ROOT_FILES:
+        path = ROOT / relative
+        if path.exists() or path.is_symlink():
+            fail(f"retired competing repository control must not exist: {relative}")
 
     workflow = read(WORKFLOW)
     dependabot = read(DEPENDABOT)
