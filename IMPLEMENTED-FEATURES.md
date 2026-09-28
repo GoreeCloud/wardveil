@@ -13,6 +13,10 @@ The repository README identifies **Foundation 0.9 active** and currently documen
 - an exact-revision Cloudflare deployment gate preserving explicit target authority and least privilege;
 - Wardveil-native trust, policy, protection, detection, scan, quarantine, response, audit, and Security Center contracts/semantics as scoped by the repository.
 
+## Detection Engine V1 — Development source foundation
+
+A bounded reference correlation layer now preserves exact resource scope, evidence provenance, freshness, explainability, and a non-authorizing incident-candidate boundary. It remains Development source only; runtime integration and production acceptance are separate gates.
+
 ## Acceptance boundary
 
 Production cryptography, key management, authenticated runtime transport, production executor evidence, production deployment, cross-system runtime acceptance, Covered/Protected claims, and Stable status remain separate evidence-gated work. A Wardveil policy decision is not automatically execution authority, and branding or documentation alone is never protection evidence.
