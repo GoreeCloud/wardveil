@@ -155,7 +155,7 @@ PR #175, **Harden Wardveil public repository governance**, merged through protec
 
 PR #174, **Fail closed on unsupported security timestamps across Wardveil**, then merged through protected main as `8f372f26a49f0d3448dbae56acff02c124c31c6d`. All seven post-merge checks succeeded on that exact revision. The change hardens authority-bearing timestamp handling across policy, authorization, execution state, identity/key lifecycle, Trust, Audit, Incident, Mesh, persistence, Protect, Quarantine, Security Center, service identity, Scan replay, and deployable Cloudflare boundaries.
 
-PR #179, **Migrate Wardveil feature tracking from Drive**, superseded the stale reconstruction in PR #178 and merged through protected main as current migration baseline `2ddcf03b24b65e8e8112ba6cd18f9a9c56bb0a89`. Its exact-head 6/6 check matrix and post-merge 6/6 check matrix succeeded. Repository feature lifecycle authority now resides in `IMPLEMENTED-FEATURES.md`, `PLANNED-FEATURES.md`, and `CHANGELOGS.md`; `FEATURE-ROADMAP.md` is retired.
+PR #179, **Migrate Wardveil feature tracking from Drive**, superseded the stale reconstruction in PR #178 and merged through protected main as the pre-project-migration implementation baseline `2ddcf03b24b65e8e8112ba6cd18f9a9c56bb0a89`. Its exact-head 6/6 check matrix and post-merge 6/6 check matrix succeeded. Repository feature lifecycle authority now resides in `IMPLEMENTED-FEATURES.md`, `PLANNED-FEATURES.md`, and `CHANGELOGS.md`; `FEATURE-ROADMAP.md` is retired.
 
 Former PR #172, **Repin validated Privacy Shield producer source for Wardveil status consumer**, was closed as superseded after its three-file delta was intentionally replaced by the minimized public interoperability boundary integrated through PR #175.
 
@@ -197,7 +197,7 @@ This migration:
 **Drive file ID:** `1dxtkxQtMd1K0sQniMdAl9X04ptzB4KKL`  
 **Drive deletion status:** **Blocked.** The source must remain until the migration is reviewed as required, accepted on the default branch, read back from authoritative `main`, verified complete, and free of unresolved reconciliation discrepancies.
 
-The active Drive **Feature Roadmap — Wardveil Security.docx** is a separate feature-governance source and is not deleted or superseded by this project-record migration.
+The Drive **Feature Roadmap — Wardveil Security.docx** is historical migration provenance after the repository-native feature migration. It is not current feature authority and any Drive retirement/deletion remains separately governed from this project-record migration.
 
 ## Ongoing maintenance
 
