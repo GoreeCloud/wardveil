@@ -8,7 +8,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMA = ROOT / "contracts" / "wardveil.policy-decision.v2.schema.json"
 REFERENCE = ROOT / "reference" / "wardveil_policy_decision_v2.py"
-DOC = ROOT / "POLICY-DECISION-AND-ENFORCEMENT-V2.md"
+DOC = ROOT / "docs/POLICY-DECISION-AND-ENFORCEMENT-V2.md"
 
 
 def require(condition: bool, message: str) -> None:

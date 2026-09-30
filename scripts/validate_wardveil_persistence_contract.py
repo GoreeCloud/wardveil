@@ -1,7 +1,7 @@
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
-doc=(ROOT/"PERSISTENCE.md").read_text()
+doc=(ROOT/"docs/PERSISTENCE.md").read_text()
 source=(ROOT/"reference/wardveil_persistence.py").read_text()
 required_doc=[
     "storage health", "does not", "encryption at rest", "backup", "checkpoint", "schema",

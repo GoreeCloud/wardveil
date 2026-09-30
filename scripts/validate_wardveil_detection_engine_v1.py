@@ -6,7 +6,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMA = ROOT / "contracts" / "wardveil.detection-engine.v1.schema.json"
-DOC = ROOT / "DETECTION-ENGINE-V1.md"
+DOC = ROOT / "docs/DETECTION-ENGINE-V1.md"
 REFERENCE = ROOT / "reference" / "wardveil_detection_engine_v1.py"
 
 

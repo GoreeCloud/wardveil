@@ -11,8 +11,8 @@ ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / ".github/workflows/validate.yml"
 DEPENDABOT = ROOT / ".github/dependabot.yml"
 CODEOWNERS = ROOT / ".github/CODEOWNERS"
-GOVERNANCE = ROOT / "REPOSITORY-GOVERNANCE.md"
-SECURITY = ROOT / "SECURITY.md"
+GOVERNANCE = ROOT / "docs/REPOSITORY-GOVERNANCE.md"
+SECURITY = ROOT / "docs/SECURITY.md"
 LICENSE = ROOT / "LICENSE"
 README = ROOT / "README.md"
 VERSION = ROOT / "VERSION"
@@ -20,25 +20,97 @@ RUNNER = "ubuntu-24.04"
 
 REQUIRED_ROOT_FILES = (
     "README.md",
-    "PROJECT-SPECIFICATIONS.md",
-    "PROJECT-RECORD.md",
-    "FEATURES.md",
-    "IMPLEMENTED-FEATURES.md",
-    "PLANNED-FEATURES.md",
-    "CHANGELOGS.md",
-    "BENEFITS.md",
-    "COMPETITIVE-OBJECTIVES.md",
-    "BRANDING.md",
-    "USER-MANUAL.md",
-    "PRIVACY POLICY.md",
-    "NOTES.md",
-    "SECURITY.md",
+    "docs/PROJECT-SPECIFICATIONS.md",
+    "docs/PROJECT-RECORD.md",
+    "docs/FEATURES.md",
+    "docs/IMPLEMENTED-FEATURES.md",
+    "docs/PLANNED-FEATURES.md",
+    "docs/CHANGELOGS.md",
+    "docs/BENEFITS.md",
+    "docs/COMPETITIVE-OBJECTIVES.md",
+    "docs/BRANDING.md",
+    "docs/USER-MANUAL.md",
+    "docs/PRIVACY POLICY.md",
+    "docs/NOTES.md",
+    "docs/SECURITY.md",
     ".gitignore",
     ".editorconfig",
     "goreecloud.platform.yaml",
 )
 REQUIRED_REPOSITORY_CONTROLS = (".github/PULL_REQUEST_TEMPLATE.md",)
 RETIRED_ROOT_FILES = ("SPECIFICATIONS.md", "FEATURE-ROADMAP.md")
+PROHIBITED_ROOT_DOCUMENTS = (
+    "ADOPTION.md",
+    "AGGREGATION.md",
+    "ARCHITECTURE.md",
+    "AUDIT-EVIDENCE-LEDGER-V2.md",
+    "BENEFITS.md",
+    "BRANDING.md",
+    "CAPABILITIES.md",
+    "CHANGELOG.md",
+    "CHANGELOGS.md",
+    "CLAMAV-INTEGRATION.md",
+    "CLOUDFLARE-ACCEPTANCE-PROBE.md",
+    "CLOUDFLARE-DEPLOYMENT.md",
+    "CLOUDFLARE-PERSISTENCE.md",
+    "CLOUDFLARE-RUNTIME-EVIDENCE-COLLECTION.md",
+    "CLOUDFLARE-RUNTIME-OPERATIONS.md",
+    "COMPATIBILITY.md",
+    "COMPETITIVE-OBJECTIVES.md",
+    "CONFORMANCE.md",
+    "DETECT-SCAN-SDK.md",
+    "DETECTION-ENGINE-V1.md",
+    "DURABLE-RECORDS.md",
+    "EVERKEEP-RESTORE-VERIFICATION.md",
+    "EXECUTION-RECONCILIATION.md",
+    "EXECUTION-STATE.md",
+    "FEATURES.md",
+    "ICON-REVIEW.md",
+    "ICON.md",
+    "IDENTITY-KEY-LIFECYCLE-V1.md",
+    "IDENTITY.md",
+    "IMPLEMENTED-FEATURES.md",
+    "INCIDENT-CENTER-V1.md",
+    "INCIDENT-CONTROL.md",
+    "INCIDENT-PLANE-V2.md",
+    "INTEGRATION-PIPELINE.md",
+    "INTEGRATION.md",
+    "MANAGER-INTEGRATION.md",
+    "MESH-EVIDENCE.md",
+    "MESH-TRANSPORT.md",
+    "NOTES.md",
+    "OBSERVABILITY-INTEGRATION.md",
+    "PERSISTENCE.md",
+    "PLANNED-FEATURES.md",
+    "PLATFORM-ADOPTION-AND-REPOSITORY-GOVERNANCE-V1.md",
+    "PLATFORM-API.md",
+    "PLATFORM-POLICY-INTEGRATION.md",
+    "POLICY-DECISION-AND-ENFORCEMENT-V2.md",
+    "POLICY-EXECUTION-BRIDGE-V1.md",
+    "PRIVACY POLICY.md",
+    "PRIVACY-SHIELD.md",
+    "PROJECT-RECORD.md",
+    "PROJECT-SPECIFICATIONS.md",
+    "PROTECT-SDK.md",
+    "PROTECTION-COVERAGE-REGISTRY.md",
+    "QUARANTINE-EXECUTOR.md",
+    "QUARANTINE-OBJECT-V2.md",
+    "REPOSITORY-GOVERNANCE.md",
+    "RUNTIME-ACCEPTANCE-EVIDENCE.md",
+    "RUNTIME-AUTHORIZATION.md",
+    "RUNTIME-CONTRACTS.md",
+    "SECURITY-CENTER-V2.md",
+    "SECURITY-CENTER.md",
+    "SECURITY-STATE-V2.md",
+    "SECURITY.md",
+    "SEMANTIC-COLOR.md",
+    "SERVICE-IDENTITY.md",
+    "STATUS.md",
+    "THREAT-MODEL.md",
+    "TRUST-POLICY-SDK.md",
+    "TRUST-SESSION-DEVICE-POSTURE-V2.md",
+    "USER-MANUAL.md",
+)
 MINIMUM_MEANINGFUL_CHARACTERS = 20
 
 ACTION_PIN_PATTERN = re.compile(
@@ -126,6 +198,11 @@ def main() -> None:
         if text.lower() in {"todo", "tbd", "placeholder", "coming soon"}:
             fail(f"required repository control is a placeholder: {relative}")
 
+    for relative in PROHIBITED_ROOT_DOCUMENTS:
+        path = ROOT / relative
+        if path.exists() or path.is_symlink():
+            fail(f"human-readable repository documentation must live under docs/: {relative}")
+
     for relative in RETIRED_ROOT_FILES:
         path = ROOT / relative
         if path.exists() or path.is_symlink():
@@ -162,10 +239,10 @@ def main() -> None:
     for ownership_rule in (
         "* @GoreeCloud",
         ".github/ @GoreeCloud",
-        "SECURITY.md @GoreeCloud",
-        "PRIVACY POLICY.md @GoreeCloud",
+        "docs/SECURITY.md @GoreeCloud",
+        "docs/PRIVACY POLICY.md @GoreeCloud",
         "LICENSE @GoreeCloud",
-        "REPOSITORY-GOVERNANCE.md @GoreeCloud",
+        "docs/REPOSITORY-GOVERNANCE.md @GoreeCloud",
         "contracts/ @GoreeCloud",
         "branding/ @GoreeCloud",
         "website/ @GoreeCloud",

@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 RUNTIME = ROOT / "contracts" / "wardveil.cloudflare.runtime-acceptance.json"
 SCHEMA = ROOT / "contracts" / "wardveil.cloudflare.acceptance-evidence.schema.json"
 TEMPLATE = ROOT / "evidence" / "wardveil.cloudflare.production.template.json"
-DOC = ROOT / "RUNTIME-ACCEPTANCE-EVIDENCE.md"
+DOC = ROOT / "docs/RUNTIME-ACCEPTANCE-EVIDENCE.md"
 
 
 def load(path: Path):

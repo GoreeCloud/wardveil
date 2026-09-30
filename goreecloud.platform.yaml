@@ -18,8 +18,8 @@ lifecycle_metadata:
   candidate_identity: null
   last_transition: null
   evidence:
-    - PROJECT-RECORD.md
-    - PLANNED-FEATURES.md
+    - docs/PROJECT-RECORD.md
+    - docs/PLANNED-FEATURES.md
     - README.md
 version: '0.9'
 
@@ -40,7 +40,7 @@ platform_systems:
     result: applicable-migration-required
     version: null
     evidence:
-      - MANAGER-INTEGRATION.md
+      - docs/MANAGER-INTEGRATION.md
       - contracts/wardveil.security-state.v2.schema.json
       - reference/wardveil_security_state_v2.py
       - scripts/test_wardveil_security_state_v2.py
@@ -64,7 +64,7 @@ platform_systems:
     result: applicable-migration-required
     version: null
     evidence:
-      - EVERKEEP-RESTORE-VERIFICATION.md
+      - docs/EVERKEEP-RESTORE-VERIFICATION.md
       - contracts/wardveil.everkeep.restore-verification.json
       - scripts/validate_everkeep_restore_verification_consumer.py
       - contracts/wardveil.mesh-evidence-profile.json
@@ -112,7 +112,7 @@ platform_systems:
     result: applicable-migration-required
     version: null
     evidence:
-      - PLATFORM-POLICY-INTEGRATION.md
+      - docs/PLATFORM-POLICY-INTEGRATION.md
       - reference/wardveil_platform_policy_v1.py
       - scripts/test_wardveil_platform_policy_v1.py
     notes: Wardveil now implements a bounded source adapter pinned to the authoritative GoreeCloud Policy v1 request and decision contracts. Shared Policy evidence does not become Wardveil execution authorization or replace Wardveil security-domain semantics. Live caller identity, authenticated decision exchange, distribution, freshness/expiry policy, obligations coordination, target-environment evidence, and production acceptance remain required.
@@ -120,7 +120,7 @@ platform_systems:
     result: applicable-migration-required
     version: null
     evidence:
-      - OBSERVABILITY-INTEGRATION.md
+      - docs/OBSERVABILITY-INTEGRATION.md
       - reference/wardveil_observability_v1.py
       - scripts/test_wardveil_observability_v1.py
     notes: Wardveil now implements privacy-minimized source construction for the authoritative GoreeCloud Observability v1 operational-signal contract while preserving explicit unknown and incomplete states. Live producer authentication, publication/collection, freshness/completeness policy, retention/deletion, diagnostics/alerting, target-environment evidence, and production acceptance remain required.
@@ -203,10 +203,10 @@ conformance:
   validated_at: null
   evidence:
     - README.md
-    - SECURITY.md
-    - RUNTIME-AUTHORIZATION.md
-    - EXECUTION-STATE.md
-    - SERVICE-IDENTITY.md
+    - docs/SECURITY.md
+    - docs/RUNTIME-AUTHORIZATION.md
+    - docs/EXECUTION-STATE.md
+    - docs/SERVICE-IDENTITY.md
     - contracts/wardveil.capabilities.json
     - contracts/wardveil.execution-state.json
     - contracts/wardveil.mesh-evidence-profile.json

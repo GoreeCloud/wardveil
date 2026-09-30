@@ -1,5 +1,13 @@
 # Wardveil Security — Changelogs
 
+## 2026-09-29 — Repository root documentation migration
+
+- Moved Wardveil human-readable repository documentation from root into the canonical `docs/` tree under the GoreeCloud repository-root cleanliness standard.
+- Added `docs/README.md` as the documentation index and reconciled README navigation, validators, workflows, Platform Contract evidence, Seal-readiness evidence, CODEOWNERS, and machine-readable contract-document paths.
+- Repository governance now fails closed if migrated human documentation is reintroduced at root.
+- This organization change does not grant runtime/provider acceptance, Protected by Wardveil status, Seal, Anchor, release, or production authorization.
+
+
 ## 2026-09-29 — Capability and lifecycle documentation reconciliation
 
 - Reconciled `CAPABILITIES.md`, `PROJECT-RECORD.md`, and `README.md` with the authoritative Platform Contract 2.0 **Weave** lifecycle, Foundation 0.9 source/runtime line, development deployment state, blocked qualification state, and Seal next gate.

@@ -4,7 +4,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 contract = json.loads((ROOT / "contracts/wardveil.cloudflare.runtime-acceptance.json").read_text())
-doc = (ROOT / "CLOUDFLARE-DEPLOYMENT.md").read_text()
+doc = (ROOT / "docs/CLOUDFLARE-DEPLOYMENT.md").read_text()
 wrangler = (ROOT / "cloudflare/wrangler.jsonc").read_text()
 source = (ROOT / "cloudflare/src/index.ts").read_text()
 

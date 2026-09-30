@@ -14,7 +14,7 @@ REFERENCE = ROOT / "reference" / "wardveil_security_state_v2.py"
 REGISTRY_REFERENCE = ROOT / "reference" / "wardveil_protection_coverage_registry.py"
 TEST = ROOT / "scripts" / "test_wardveil_security_state_v2.py"
 REGISTRY_TEST = ROOT / "scripts" / "test_wardveil_protection_coverage_registry.py"
-COVERAGE_GUIDE = ROOT / "PROTECTION-COVERAGE-REGISTRY.md"
+COVERAGE_GUIDE = ROOT / "docs/PROTECTION-COVERAGE-REGISTRY.md"
 
 EXPECTED_STATES = {
     "protected",

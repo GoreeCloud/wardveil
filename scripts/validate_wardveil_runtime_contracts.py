@@ -9,7 +9,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMA_PATH = ROOT / "contracts" / "wardveil.runtime.schema.json"
-DOC_PATH = ROOT / "RUNTIME-CONTRACTS.md"
+DOC_PATH = ROOT / "docs/RUNTIME-CONTRACTS.md"
 EXPECTED_ID = "urn:goreecloud:wardveil:runtime:0.1.0"
 EXPECTED_RECORD_TYPES = {
     "trust_decision",

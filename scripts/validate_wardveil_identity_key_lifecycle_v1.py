@@ -9,7 +9,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMA = ROOT / "contracts" / "wardveil.identity-key-lifecycle.v1.schema.json"
 REFERENCE = ROOT / "reference" / "wardveil_identity_key_lifecycle_v1.py"
-DOC = ROOT / "IDENTITY-KEY-LIFECYCLE-V1.md"
+DOC = ROOT / "docs/IDENTITY-KEY-LIFECYCLE-V1.md"
 
 EXPECTED_IDENTITY_REVISION = "4ce7d193ff251ce3e7c39b8a19712317dd013c5d"
 

@@ -6,8 +6,8 @@ import re
 ROOT = Path(__file__).resolve().parents[1]
 config_text = (ROOT / "cloudflare" / "wrangler.jsonc").read_text()
 source = (ROOT / "cloudflare" / "src" / "index.ts").read_text()
-doc = (ROOT / "CLOUDFLARE-PERSISTENCE.md").read_text()
-execution_doc = (ROOT / "EXECUTION-STATE.md").read_text()
+doc = (ROOT / "docs/CLOUDFLARE-PERSISTENCE.md").read_text()
+execution_doc = (ROOT / "docs/EXECUTION-STATE.md").read_text()
 execution_contract = json.loads((ROOT / "contracts" / "wardveil.execution-state.json").read_text())
 package = json.loads((ROOT / "cloudflare" / "package.json").read_text())
 

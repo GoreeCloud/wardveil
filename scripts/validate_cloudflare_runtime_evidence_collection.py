@@ -7,7 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 workflow = (ROOT / ".github/workflows/deploy-cloudflare-persistence.yml").read_text()
 runner_config_text = (ROOT / "cloudflare" / "acceptance-runner" / "wrangler.jsonc").read_text()
 runner_source = (ROOT / "cloudflare" / "acceptance-runner" / "src" / "index.ts").read_text()
-doc = (ROOT / "CLOUDFLARE-RUNTIME-EVIDENCE-COLLECTION.md").read_text()
+doc = (ROOT / "docs/CLOUDFLARE-RUNTIME-EVIDENCE-COLLECTION.md").read_text()
 runtime_contract = json.loads((ROOT / "contracts" / "wardveil.cloudflare.runtime-acceptance.json").read_text())
 
 runner_config = json.loads(re.sub(r"//.*", "", runner_config_text))

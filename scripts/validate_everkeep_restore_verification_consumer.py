@@ -6,7 +6,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 CONTRACT = ROOT / "contracts" / "wardveil.everkeep.restore-verification.json"
-DOC = ROOT / "EVERKEEP-RESTORE-VERIFICATION.md"
+DOC = ROOT / "docs/EVERKEEP-RESTORE-VERIFICATION.md"
 RUNTIME = ROOT / "contracts" / "wardveil.cloudflare.runtime-acceptance.json"
 REVISION_RE = re.compile(r"^[0-9a-f]{40}$")
 

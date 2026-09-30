@@ -19,7 +19,7 @@
     "transport_expiry_separate_from_evidence_validity": true
   },
   "event_transport": {
-    "contract": "MESH-TRANSPORT.md",
+    "contract": "docs/MESH-TRANSPORT.md",
     "reference_implementation": "reference/wardveil_mesh_transport.py",
     "envelope_version": "0.1.0",
     "signed_envelopes_required": true,

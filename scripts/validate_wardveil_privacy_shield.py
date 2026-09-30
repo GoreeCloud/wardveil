@@ -12,7 +12,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 VECTORS = ROOT / "contracts" / "wardveil.privacy-shield.vectors.json"
-DOC = ROOT / "PRIVACY-SHIELD.md"
+DOC = ROOT / "docs/PRIVACY-SHIELD.md"
 
 ALLOWED_SOURCE_STATES = {"protected", "partial", "attention", "unavailable", "development"}
 ALLOWED_CAPABILITY_STATES = {"active", "inactive", "pending-acceptance", "unavailable"}
@@ -173,7 +173,7 @@ def map_record(record: Any, *, observed_at: str) -> tuple[str, bool]:
 
 def main() -> None:
     if not DOC.is_file():
-        fail("missing PRIVACY-SHIELD.md")
+        fail("missing docs/PRIVACY-SHIELD.md")
     text = DOC.read_text(encoding="utf-8").lower()
     for phrase in (
         "platform-wide goreecloud privacy",

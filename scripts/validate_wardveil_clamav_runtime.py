@@ -18,7 +18,7 @@ RUNTIME = ROOT / "reference" / "wardveil_clamav_runtime.py"
 DEPLOYMENT = ROOT / "deployment" / "clamav" / "compose.yaml"
 ENV_EXAMPLE = ROOT / "deployment" / "clamav" / ".env.example"
 DEPLOYMENT_DOC = ROOT / "deployment" / "clamav" / "README.md"
-INTEGRATION_DOC = ROOT / "CLAMAV-INTEGRATION.md"
+INTEGRATION_DOC = ROOT / "docs/CLAMAV-INTEGRATION.md"
 ACCEPTANCE_COLLECTOR = ROOT / "scripts" / "collect_wardveil_clamav_acceptance.py"
 DEPLOYMENT_WORKFLOW = ROOT / ".github" / "workflows" / "deploy-clamav-production.yml"
 

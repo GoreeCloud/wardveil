@@ -13,11 +13,11 @@ from reference.wardveil_detection_engine_v1 import BehavioralSignal, assess_beha
 from reference.wardveil_incident_center_v1 import build_incident_review_case
 
 schema = json.loads((ROOT / "contracts/wardveil.incident-center.v1.schema.json").read_text())
-doc = (ROOT / "INCIDENT-CENTER-V1.md").read_text()
+doc = (ROOT / "docs/INCIDENT-CENTER-V1.md").read_text()
 workflow = (ROOT / ".github/workflows/validate.yml").read_text()
-implemented = (ROOT / "IMPLEMENTED-FEATURES.md").read_text()
-planned = (ROOT / "PLANNED-FEATURES.md").read_text()
-changelog = (ROOT / "CHANGELOGS.md").read_text()
+implemented = (ROOT / "docs/IMPLEMENTED-FEATURES.md").read_text()
+planned = (ROOT / "docs/PLANNED-FEATURES.md").read_text()
+changelog = (ROOT / "docs/CHANGELOGS.md").read_text()
 
 assert schema["additionalProperties"] is False
 properties = schema["properties"]

@@ -18,7 +18,7 @@ Wardveil Security is the umbrella system for nine cooperating capabilities:
 - **Wardveil Response** — incident containment, remediation, escalation, and recovery coordination.
 - **Wardveil Security Center** — unified user and administrator protection experience.
 
-These are substantive first-party security capabilities, not decorative labels. Their canonical responsibility and authority boundaries are defined in `ARCHITECTURE.md` and `contracts/wardveil.capabilities.json`. Their detailed intended feature scope is defined in `FEATURES.md`.
+These are substantive first-party security capabilities, not decorative labels. Their canonical responsibility and authority boundaries are defined in `docs/ARCHITECTURE.md` and `contracts/wardveil.capabilities.json`. Their detailed intended feature scope is defined in `docs/FEATURES.md`.
 
 ## Security lifecycle
 
@@ -48,7 +48,7 @@ Branding alone is never evidence of protection or integration.
 
 ## Runtime execution authorization
 
-Foundation 0.9 introduces `contracts/wardveil.runtime-authorization.json`, `RUNTIME-AUTHORIZATION.md`, and `reference/wardveil_runtime_authorization.py`.
+Foundation 0.9 introduces `contracts/wardveil.runtime-authorization.json`, `docs/RUNTIME-AUTHORIZATION.md`, and `reference/wardveil_runtime_authorization.py`.
 
 The reference flow is:
 
@@ -60,7 +60,7 @@ The source reference uses `HMAC-SHA256-reference-only` solely for dependency-fre
 
 ## Durable execution state
 
-`EXECUTION-STATE.md`, `contracts/wardveil.execution-state.json`, and `reference/wardveil_execution_state.py` define the next Foundation 0.9 safety layer.
+`docs/EXECUTION-STATE.md`, `contracts/wardveil.execution-state.json`, and `reference/wardveil_execution_state.py` define the next Foundation 0.9 safety layer.
 
 The guarded sequence is:
 
@@ -74,7 +74,7 @@ A durable claim cannot make a non-idempotent external API exactly-once. Every pr
 
 ## Service identity and signing keys
 
-`SERVICE-IDENTITY.md`, `contracts/wardveil.service-identity.json`, and `reference/wardveil_service_identity.py` define explicit first-party issuer/executor identities and signing-key lifecycle. Active identities require their declared capability. Suspended, revoked, expired, unknown, or capability-mismatched identities fail closed.
+`docs/SERVICE-IDENTITY.md`, `contracts/wardveil.service-identity.json`, and `reference/wardveil_service_identity.py` define explicit first-party issuer/executor identities and signing-key lifecycle. Active identities require their declared capability. Suspended, revoked, expired, unknown, or capability-mismatched identities fail closed.
 
 Execution authorization carries a nonsecret signed `signing_key_id`. Active keys may sign, retired keys may verify only through a bounded rotation overlap, and revoked keys fail immediately. Signing material remains outside authorization envelopes, shared security records, durable execution state, application source, and CI logs.
 
@@ -82,7 +82,7 @@ Execution authorization carries a nonsecret signed `signing_key_id`. Active keys
 
 ## Quarantine executor transport
 
-`QUARANTINE-EXECUTOR.md`, `contracts/wardveil.quarantine-executor.json`, and `reference/wardveil_quarantine_executor.py` define the first bounded high-impact Protect executor implementation path.
+`docs/QUARANTINE-EXECUTOR.md`, `contracts/wardveil.quarantine-executor.json`, and `reference/wardveil_quarantine_executor.py` define the first bounded high-impact Protect executor implementation path.
 
 The guarded sequence is:
 
@@ -102,32 +102,33 @@ The Cloudflare deployment gate is defined by `.github/workflows/deploy-cloudflar
 
 The authoritative project requirements and significant project history are repository-local:
 
-- [PROJECT-SPECIFICATIONS.md](PROJECT-SPECIFICATIONS.md)
-- [PROJECT-RECORD.md](PROJECT-RECORD.md)
+- [Documentation index](docs/README.md)
+- [docs/PROJECT-SPECIFICATIONS.md](docs/PROJECT-SPECIFICATIONS.md)
+- [docs/PROJECT-RECORD.md](docs/PROJECT-RECORD.md)
 
-[FEATURES.md](FEATURES.md) retains durable feature-scope documentation. Current implemented and planned feature state is authoritative in [IMPLEMENTED-FEATURES.md](IMPLEMENTED-FEATURES.md) and [PLANNED-FEATURES.md](PLANNED-FEATURES.md), with repository change history in [CHANGELOGS.md](CHANGELOGS.md). The active Drive project specification remains migration provenance only until this repository migration is accepted and its source-retirement gate is satisfied.
+[docs/FEATURES.md](docs/FEATURES.md) retains durable feature-scope documentation. Current implemented and planned feature state is authoritative in [docs/IMPLEMENTED-FEATURES.md](docs/IMPLEMENTED-FEATURES.md) and [docs/PLANNED-FEATURES.md](docs/PLANNED-FEATURES.md), with repository change history in [docs/CHANGELOGS.md](docs/CHANGELOGS.md). The active Drive project specification remains migration provenance only until this repository migration is accepted and its source-retirement gate is satisfied.
 
 ## Shared contracts and specifications
 
-- `ARCHITECTURE.md` — canonical first-party security architecture and responsibility boundaries.
-- `FEATURES.md` — canonical detailed feature specification across Wardveil services, applications, infrastructure, Security Center, evidence, and platform integrations.
+- `docs/ARCHITECTURE.md` — canonical first-party security architecture and responsibility boundaries.
+- `docs/FEATURES.md` — canonical detailed feature specification across Wardveil services, applications, infrastructure, Security Center, evidence, and platform integrations.
 - `contracts/wardveil.capabilities.json` — machine-readable capability and lifecycle contract.
-- `RUNTIME-AUTHORIZATION.md` and `contracts/wardveil.runtime-authorization.json` — cross-service execution authorization, exact binding, replay, idempotency, and production-acceptance boundary.
-- `EXECUTION-STATE.md` and `contracts/wardveil.execution-state.json` — durable authorization claims, uncertain-outcome handling, idempotency state, execution receipts, and deployment boundary.
-- `PERSISTENCE.md`, `contracts/wardveil.persistence-production-qualification.schema.json`, and `qualification/persistence-production/` — non-authorizing exact-candidate/deployment persistence qualification for durability, integrity, encryption/key custody, backup/restore, migration/rollback, access control, observability, monitoring, and Everkeep recovery evidence.
-- `PLATFORM-API.md` and `contracts/wardveil.platform-api.v1.json` — bounded private `wardveil-persistence-rpc/v1` service-binding API declaration for supported first-party persistence/execution-state integration, with production API acceptance explicitly unaccepted.
-- `SERVICE-IDENTITY.md` and `contracts/wardveil.service-identity.json` — service identities, capability binding, signing-key identity, rotation, revocation, and production key-management boundary.
-- `QUARANTINE-EXECUTOR.md`, `contracts/wardveil.quarantine-executor.json`, and `contracts/wardveil.quarantine-executor-deployment.json` — bounded high-impact quarantine execution, target idempotency/readback, deployment gating, reconciliation, Audit provenance, and Cloudflare acceptance boundaries.
-- `STATUS.md` and `contracts/wardveil.status.schema.json` — evidence-backed Wardveil status semantics.
-- `AGGREGATION.md` and `contracts/wardveil.aggregation.vectors.json` — conservative multi-record aggregation.
-- `PRIVACY-SHIELD.md` and `contracts/wardveil.privacy-shield.vectors.json` — privacy-safe read-only Privacy Shield presentation boundary.
-- `THREAT-MODEL.md` — trust boundaries and misuse cases.
-- `ADOPTION.md` — minimum integration and acceptance requirements.
-- `CLAMAV-INTEGRATION.md` — replaceable malware-engine, runtime-health, deployment, and acceptance architecture beneath Wardveil Scan.
+- `docs/RUNTIME-AUTHORIZATION.md` and `contracts/wardveil.runtime-authorization.json` — cross-service execution authorization, exact binding, replay, idempotency, and production-acceptance boundary.
+- `docs/EXECUTION-STATE.md` and `contracts/wardveil.execution-state.json` — durable authorization claims, uncertain-outcome handling, idempotency state, execution receipts, and deployment boundary.
+- `docs/PERSISTENCE.md`, `contracts/wardveil.persistence-production-qualification.schema.json`, and `qualification/persistence-production/` — non-authorizing exact-candidate/deployment persistence qualification for durability, integrity, encryption/key custody, backup/restore, migration/rollback, access control, observability, monitoring, and Everkeep recovery evidence.
+- `docs/PLATFORM-API.md` and `contracts/wardveil.platform-api.v1.json` — bounded private `wardveil-persistence-rpc/v1` service-binding API declaration for supported first-party persistence/execution-state integration, with production API acceptance explicitly unaccepted.
+- `docs/SERVICE-IDENTITY.md` and `contracts/wardveil.service-identity.json` — service identities, capability binding, signing-key identity, rotation, revocation, and production key-management boundary.
+- `docs/QUARANTINE-EXECUTOR.md`, `contracts/wardveil.quarantine-executor.json`, and `contracts/wardveil.quarantine-executor-deployment.json` — bounded high-impact quarantine execution, target idempotency/readback, deployment gating, reconciliation, Audit provenance, and Cloudflare acceptance boundaries.
+- `docs/STATUS.md` and `contracts/wardveil.status.schema.json` — evidence-backed Wardveil status semantics.
+- `docs/AGGREGATION.md` and `contracts/wardveil.aggregation.vectors.json` — conservative multi-record aggregation.
+- `docs/PRIVACY-SHIELD.md` and `contracts/wardveil.privacy-shield.vectors.json` — privacy-safe read-only Privacy Shield presentation boundary.
+- `docs/THREAT-MODEL.md` — trust boundaries and misuse cases.
+- `docs/ADOPTION.md` — minimum integration and acceptance requirements.
+- `docs/CLAMAV-INTEGRATION.md` — replaceable malware-engine, runtime-health, deployment, and acceptance architecture beneath Wardveil Scan.
 - `contracts/wardveil.clamav.health.schema.json` — data-minimized ClamAV component-health evidence.
 - `contracts/wardveil.clamav.runtime-acceptance.json` — production acceptance requirements for the deployed ClamAV runtime.
-- `SECURITY.md` — repository security and sensitive-information boundaries.
-- `ICON.md` — canonical visual-identity contract.
+- `docs/SECURITY.md` — repository security and sensitive-information boundaries.
+- `docs/ICON.md` — canonical visual-identity contract.
 
 The normalized status states remain `protected`, `attention`, `degraded`, `unknown`, and `not_applicable`.
 
@@ -144,7 +145,7 @@ GoreeCloud applications should consume Wardveil first-party security services ra
 
 An integration should map authoritative producers, request or consume Wardveil decisions, require bound runtime authorization for supported high-impact cross-service actions, preserve local executor authority, use durable execution state for high-impact cross-service mutation, respect quarantine state, emit security-relevant audit events, exclude prohibited sensitive material, and expose only evidence-backed Wardveil status.
 
-Detailed application scopes for Browser, Mail, Drive, Vault, AI, Messenger, Identity, Search, Gateway, Network, infrastructure, and other authorized services are maintained in `FEATURES.md`.
+Detailed application scopes for Browser, Mail, Drive, Vault, AI, Messenger, Identity, Search, Gateway, Network, infrastructure, and other authorized services are maintained in `docs/FEATURES.md`.
 
 ## Malware protection engine
 
@@ -192,4 +193,4 @@ CI validates the canonical capability set, lifecycle, version alignment, runtime
 
 ## Release discipline
 
-Foundation releases keep `VERSION`, `contracts/wardveil.identity.json`, `contracts/wardveil.capabilities.json`, runtime-authorization, service-identity, execution-state, quarantine-executor/deployment metadata, `CHANGELOG.md`, compatibility metadata, validator expectations, and the README current-status declaration synchronized. Product-specific and runtime-specific production acceptance remains separate from Wardveil foundation acceptance.
+Foundation releases keep `VERSION`, `contracts/wardveil.identity.json`, `contracts/wardveil.capabilities.json`, runtime-authorization, service-identity, execution-state, quarantine-executor/deployment metadata, `docs/CHANGELOG.md`, compatibility metadata, validator expectations, and the README current-status declaration synchronized. Product-specific and runtime-specific production acceptance remains separate from Wardveil foundation acceptance.

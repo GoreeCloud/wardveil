@@ -5,7 +5,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CONFIG = ROOT / "cloudflare" / "acceptance-probe" / "wrangler.jsonc"
 SOURCE = ROOT / "cloudflare" / "acceptance-probe" / "src" / "index.ts"
 PERSISTENCE = ROOT / "cloudflare" / "src" / "index.ts"
-DOC = ROOT / "CLOUDFLARE-ACCEPTANCE-PROBE.md"
+DOC = ROOT / "docs/CLOUDFLARE-ACCEPTANCE-PROBE.md"
 RUNTIME = ROOT / "contracts" / "wardveil.cloudflare.runtime-acceptance.json"
 
 

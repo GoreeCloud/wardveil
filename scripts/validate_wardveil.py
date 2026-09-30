@@ -20,10 +20,10 @@ STATUS_SCHEMA_ID = "urn:goreecloud:wardveil:status:0.1.0"
 LEGAL_STATUS = "original-goreecloud-identity-no-known-conflict-formal-clearance-optional-future-due-diligence"
 
 REQUIRED_FILES = (
-    ".gitignore", "CHANGELOG.md", "README.md", "ARCHITECTURE.md", "IDENTITY.md", "ICON.md",
-    "INTEGRATION.md", "STATUS.md", "CONFORMANCE.md", "COMPATIBILITY.md", "SECURITY.md",
-    "THREAT-MODEL.md", "ADOPTION.md", "AGGREGATION.md", "PRIVACY-SHIELD.md", "RUNTIME-AUTHORIZATION.md",
-    "EXECUTION-STATE.md", "VERSION",
+    ".gitignore", "docs/CHANGELOG.md", "README.md", "docs/ARCHITECTURE.md", "docs/IDENTITY.md", "docs/ICON.md",
+    "docs/INTEGRATION.md", "docs/STATUS.md", "docs/CONFORMANCE.md", "docs/COMPATIBILITY.md", "docs/SECURITY.md",
+    "docs/THREAT-MODEL.md", "docs/ADOPTION.md", "docs/AGGREGATION.md", "docs/PRIVACY-SHIELD.md", "docs/RUNTIME-AUTHORIZATION.md",
+    "docs/EXECUTION-STATE.md", "VERSION",
     "contracts/wardveil.identity.json", "contracts/wardveil.capabilities.json",
     "contracts/wardveil.runtime-authorization.json", "contracts/wardveil.execution-state.json",
     "contracts/wardveil.status.schema.json", "contracts/wardveil.aggregation.vectors.json",
@@ -101,7 +101,7 @@ def main() -> None:
     version = read_text("VERSION").strip()
     if version != FOUNDATION_VERSION: fail(f"unexpected foundation version: {version!r}")
 
-    combined = "\n".join(read_text(path) for path in ("README.md", "ARCHITECTURE.md", "IDENTITY.md", "INTEGRATION.md", "CONFORMANCE.md", "RUNTIME-AUTHORIZATION.md", "EXECUTION-STATE.md"))
+    combined = "\n".join(read_text(path) for path in ("README.md", "docs/ARCHITECTURE.md", "docs/IDENTITY.md", "docs/INTEGRATION.md", "docs/CONFORMANCE.md", "docs/RUNTIME-AUTHORIZATION.md", "docs/EXECUTION-STATE.md"))
     for name in APPROVED_NAMES:
         if name not in combined: fail(f"approved Wardveil name missing from canonical documentation: {name}")
 
@@ -159,7 +159,7 @@ def main() -> None:
     if compatibility_metadata.get("runtime_authorization_contract_version") != RUNTIME_AUTHORIZATION_CONTRACT_VERSION: fail("identity compatibility metadata advertises the wrong runtime authorization version")
     if compatibility_metadata.get("execution_state_contract_version") != EXECUTION_STATE_CONTRACT_VERSION: fail("identity compatibility metadata advertises the wrong execution-state version")
 
-    threat_model, adoption, aggregation, compatibility, privacy_shield, architecture_doc, runtime_doc, execution_doc = (read_text(p) for p in ("THREAT-MODEL.md", "ADOPTION.md", "AGGREGATION.md", "COMPATIBILITY.md", "PRIVACY-SHIELD.md", "ARCHITECTURE.md", "RUNTIME-AUTHORIZATION.md", "EXECUTION-STATE.md"))
+    threat_model, adoption, aggregation, compatibility, privacy_shield, architecture_doc, runtime_doc, execution_doc = (read_text(p) for p in ("docs/THREAT-MODEL.md", "docs/ADOPTION.md", "docs/AGGREGATION.md", "docs/COMPATIBILITY.md", "docs/PRIVACY-SHIELD.md", "docs/ARCHITECTURE.md", "docs/RUNTIME-AUTHORIZATION.md", "docs/EXECUTION-STATE.md"))
     for phrase in ("authoritative producer", "fail closed", "Aggregation rule", "read-only"):
         if phrase.lower() not in threat_model.lower(): fail(f"threat model missing required security concept: {phrase}")
     for phrase in ("authoritative producer", "stale or missing evidence", "accessible", "exact-revision"):

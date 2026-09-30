@@ -3,7 +3,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 source = (ROOT / "reference/wardveil_platform_policy_v1.py").read_text()
-doc = (ROOT / "PLATFORM-POLICY-INTEGRATION.md").read_text()
+doc = (ROOT / "docs/PLATFORM-POLICY-INTEGRATION.md").read_text()
 workflow = (ROOT / ".github/workflows/validate.yml").read_text()
 
 required = [

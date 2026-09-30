@@ -8,7 +8,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 CONTRACT = ROOT / "contracts" / "wardveil.execution-state.json"
-DOC = ROOT / "EXECUTION-STATE.md"
+DOC = ROOT / "docs/EXECUTION-STATE.md"
 REFERENCE = ROOT / "reference" / "wardveil_execution_state.py"
 
 

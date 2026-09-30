@@ -12,7 +12,7 @@ SOURCE = BASE / "src" / "index.ts"
 PACKAGE = BASE / "package.json"
 TSCONFIG = BASE / "tsconfig.json"
 CONTRACT = ROOT / "contracts" / "wardveil.service-identity.json"
-DOC = ROOT / "SERVICE-IDENTITY.md"
+DOC = ROOT / "docs/SERVICE-IDENTITY.md"
 
 
 def require(condition: bool, message: str) -> None:

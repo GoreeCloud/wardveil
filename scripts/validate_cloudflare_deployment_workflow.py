@@ -4,7 +4,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 workflow = (ROOT / ".github/workflows/deploy-cloudflare-persistence.yml").read_text()
-ops = (ROOT / "CLOUDFLARE-RUNTIME-OPERATIONS.md").read_text()
+ops = (ROOT / "docs/CLOUDFLARE-RUNTIME-OPERATIONS.md").read_text()
 contract = json.loads((ROOT / "contracts/wardveil.cloudflare.deployment.json").read_text())
 acceptance = json.loads((ROOT / "contracts/wardveil.cloudflare.runtime-acceptance.json").read_text())
 wrangler = (ROOT / "cloudflare/wrangler.jsonc").read_text()
