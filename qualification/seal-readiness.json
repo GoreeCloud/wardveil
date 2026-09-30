@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "component": "Wardveil Security",
+  "lifecycle": "weave",
+  "next_gate": "seal",
+  "seal_candidate_declared": false,
+  "promotion_authorized": false,
+  "gates": [
+    {
+      "id": "platform-system-acceptance",
+      "state": "blocked",
+      "evidence": [
+        "goreecloud.platform.yaml"
+      ],
+      "reason": "Eight external Integral Platform Systems remain migration-required."
+    },
+    {
+      "id": "production-identity-key-custody",
+      "state": "blocked",
+      "evidence": [
+        "SERVICE-IDENTITY.md",
+        "goreecloud.platform.yaml"
+      ],
+      "reason": "Production GoreeCloud Identity issuance, JWKS trust, signing-key custody, rotation/revocation, and approved cryptography remain unaccepted."
+    },
+    {
+      "id": "cloudflare-runtime-acceptance",
+      "state": "blocked",
+      "evidence": [
+        "contracts/wardveil.cloudflare.runtime-acceptance.json",
+        "evidence/wardveil.cloudflare.production.template.json"
+      ],
+      "reason": "Runtime acceptance is unaccepted and exact deployed liveness/readiness/service-binding evidence is not yet collected."
+    },
+    {
+      "id": "everkeep-restore",
+      "state": "blocked",
+      "evidence": [
+        "EVERKEEP-RESTORE-VERIFICATION.md",
+        "contracts/wardveil.everkeep.restore-verification.json"
+      ],
+      "reason": "No fresh authoritative restore exercise is bound to the exact deployed Wardveil revision."
+    },
+    {
+      "id": "quarantine-target-readback",
+      "state": "blocked",
+      "evidence": [
+        "QUARANTINE-EXECUTOR.md",
+        "goreecloud.platform.yaml"
+      ],
+      "reason": "Production target authorization, mutation/readback, idempotency, and uncertain-outcome reconciliation remain unaccepted."
+    },
+    {
+      "id": "observability-monitoring-alerting",
+      "state": "blocked",
+      "evidence": [
+        "OBSERVABILITY-INTEGRATION.md",
+        "goreecloud.platform.yaml"
+      ],
+      "reason": "Live publication, completeness/freshness, diagnostics, monitoring, and alert routing remain unaccepted."
+    },
+    {
+      "id": "security-center-glaze-acceptance",
+      "state": "blocked",
+      "evidence": [
+        "website/GLAZE-UI-V1.6-ADOPTION.md",
+        "goreecloud.platform.yaml"
+      ],
+      "reason": "Rendered, accessibility, performance, rollback, deployed-byte, and production consumer acceptance remain open."
+    },
+    {
+      "id": "release-provenance-rollback",
+      "state": "blocked",
+      "evidence": [
+        "goreecloud.platform.yaml"
+      ],
+      "reason": "No exact published release evidence, artifact identity, SBOM/signing provenance, or accepted rollback target is declared."
+    }
+  ]
+}
