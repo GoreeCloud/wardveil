@@ -107,6 +107,29 @@ class IncidentCenterV1Tests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "must_not_claim_execution_authority"):
             build_incident_review_case((contaminated,), now=NOW)
 
+    def test_duplicate_detection_assessment_is_rejected(self) -> None:
+        candidate = correlated_candidate()
+        with self.assertRaisesRegex(ValueError, "duplicate_detection_assessment"):
+            build_incident_review_case((candidate, candidate), now=NOW)
+
+    def test_inconsistent_candidate_and_correlation_claims_are_rejected(self) -> None:
+        candidate = correlated_candidate()
+        with self.assertRaisesRegex(ValueError, "inconsistent_detection_incident_candidate_claim"):
+            build_incident_review_case((replace(candidate, disposition="unknown"),), now=NOW)
+
+        single = assess_behavioral_signals(
+            (signal("single-integrity", "suspicious_process_spawn", severity="medium", confidence=0.75),),
+            now=NOW,
+        )
+        self.assertFalse(single.correlated)
+        with self.assertRaisesRegex(ValueError, "inconsistent_detection_correlation_claim"):
+            build_incident_review_case((replace(single, correlated=True),), now=NOW)
+
+    def test_invalid_detection_confidence_is_rejected(self) -> None:
+        candidate = correlated_candidate()
+        with self.assertRaisesRegex(ValueError, "confidence_out_of_range"):
+            build_incident_review_case((replace(candidate, confidence=float("nan")),), now=NOW)
+
     def test_case_identity_and_evidence_are_deterministic(self) -> None:
         candidate = correlated_candidate()
         first = build_incident_review_case((candidate,), now=NOW)
