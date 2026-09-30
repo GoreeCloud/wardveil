@@ -13,12 +13,14 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from hashlib import sha256
 import json
+from math import isfinite
 from typing import Iterable
 
 from reference.wardveil_detection_engine_v1 import (
     DISPOSITIONS,
     SEVERITIES,
     SEVERITY_RANK,
+    SIGNAL_CATEGORIES,
     DetectionAssessment,
 )
 
@@ -166,15 +168,41 @@ def build_incident_review_case(
 
     normalized: list[tuple[DetectionAssessment, datetime, datetime]] = []
     resources: set[tuple[str, str]] = set()
+    seen_assessments: set[DetectionAssessment] = set()
     for assessment in values:
         if not isinstance(assessment, DetectionAssessment):
             raise TypeError("incident_center_requires_detection_assessments")
+        if assessment in seen_assessments:
+            raise ValueError("duplicate_detection_assessment")
+        seen_assessments.add(assessment)
         if assessment.execution_authority is not False:
             raise ValueError("detection_assessment_must_not_claim_execution_authority")
+        try:
+            confidence = float(assessment.confidence)
+        except (TypeError, ValueError) as error:
+            raise ValueError("detection_assessment_confidence_invalid") from error
+        if not isfinite(confidence) or not 0.0 <= confidence <= 1.0:
+            raise ValueError("detection_assessment_confidence_out_of_range")
         if assessment.disposition not in DISPOSITIONS:
             raise ValueError("unsupported_detection_disposition")
         if assessment.severity not in SEVERITIES:
             raise ValueError("unsupported_detection_severity")
+        categories = _bounded_unique(assessment.signal_categories, "signal_category", 12, 128)
+        if any(category not in SIGNAL_CATEGORIES for category in categories):
+            raise ValueError("unsupported_detection_signal_category")
+        producers = _bounded_unique(assessment.producer_ids, "producer_id", 64, 128)
+        evidence = _bounded_unique(assessment.evidence_refs, "evidence_ref", 128, 256)
+        expected_correlated = len(categories) >= 2 and len(evidence) >= 2
+        if assessment.correlated is not expected_correlated:
+            raise ValueError("inconsistent_detection_correlation_claim")
+        expected_candidate = (
+            assessment.disposition in {"suspicious", "likely_malicious"}
+            and SEVERITY_RANK[assessment.severity] >= SEVERITY_RANK["medium"]
+        )
+        if assessment.incident_candidate is not expected_candidate:
+            raise ValueError("inconsistent_detection_incident_candidate_claim")
+        if assessment.incident_candidate and (not categories or not producers or not evidence):
+            raise ValueError("incident_candidate_requires_detection_provenance")
         resource_type = _text(assessment.resource_type, "resource_type", 128)
         resource_id = _text(assessment.resource_id, "resource_id", 256)
         resources.add((resource_type, resource_id))

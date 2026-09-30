@@ -1,5 +1,11 @@
 # Wardveil Security — Changelogs
 
+## 2026-09-29 — Incident Center V1 assessment-integrity hardening
+
+- Reject duplicate Detection Engine assessments before they can inflate review-case counts or corroboration presentation.
+- Revalidate bounded confidence, supported signal categories, candidate provenance, and Detection Engine correlation/candidate invariants at the Incident Center trust boundary instead of trusting directly constructed dataclass values.
+- Preserve the non-authorizing boundary: this hardening still creates only `unknown` or `review_required` intake state and grants no incident, containment, execution, Protected/Covered, deployment, or production authority.
+
 ## 2026-09-28 — Incident Center V1 development review intake
 
 - Added a bounded Detection Engine → Incident Center review-case reference, machine-readable schema, tests, documentation, and foundation-CI validation.

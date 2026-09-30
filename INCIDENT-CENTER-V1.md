@@ -13,6 +13,8 @@ The review case is triage evidence only. It does not call `create_incident`, tra
 - Inputs must be Wardveil Detection Engine V1 `DetectionAssessment` values.
 - Inputs for different resources must be partitioned before review.
 - Any input claiming execution authority is rejected.
+- Duplicate assessments, invalid confidence values, unsupported signal categories, and internally inconsistent correlation or incident-candidate claims are rejected rather than counted as corroboration.
+- Candidate assessments must retain bounded category, producer, and evidence provenance consistent with Detection Engine V1 output semantics.
 - Only fresh, currently valid assessments with `incident_candidate=true` contribute to a review case.
 - Candidate assessments must retain evidence references and supported Detection Engine severity/disposition values.
 - Stale, future-dated, expired, or non-candidate assessments are excluded rather than promoted.
