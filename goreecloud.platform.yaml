@@ -1,4 +1,4 @@
-schema_version: '0.4'
+schema_version: '2.0'
 
 component:
   type: service
@@ -6,7 +6,21 @@ component:
   product_name: Wardveil Security
   repository: GoreeCloud/wardveil
 
-lifecycle: development
+lifecycle: weave
+lifecycle_metadata:
+  flags:
+    - blocked
+    - recovery-hold
+    - migration-required
+  deployment_state: development
+  qualification_state: blocked
+  next_gate: seal
+  candidate_identity: null
+  last_transition: null
+  evidence:
+    - PROJECT-RECORD.md
+    - PLANNED-FEATURES.md
+    - README.md
 version: '0.9'
 
 supported_platforms:
@@ -54,7 +68,7 @@ platform_systems:
       - website/GLAZE-UI-V1.6-ADOPTION.md
       - website/glaze-ui-v1.6.0.css
       - website/index.html
-    notes: Security Center source now targets the current GLAZE UI V1.6 / 1.6.0 Stable consumer contract through a bounded repository-local source mapping. Exact-revision rendered review, accessibility, representative-target/performance, rollback, deployed-byte/provenance, consumer-registry, release, and production acceptance remain required before conformance.
+    notes: Security Center source now targets the current GLAZE UI V1.6 / 1.6.0 Anchor consumer contract (with Stable compatibility naming retained by Glaze UI) through a bounded repository-local source mapping. Exact-revision rendered review, accessibility, representative-target/performance, rollback, deployed-byte/provenance, consumer-registry, release, and production acceptance remain required before conformance.
   mesh:
     result: applicable-migration-required
     version: null
@@ -136,10 +150,10 @@ external_dependencies:
     version_constraint: null
 
 compatibility:
-  platform_contract: '0.4'
+  platform_contract: '2.0'
   glaze_ui_required: '1.6.0'
   requires:
-    - goreecloud-platform-contract==0.4
+    - goreecloud-platform-contract==2.0
     - glaze-ui==1.6.0
   provides:
     - wardveil-security-foundation-0.9
@@ -192,7 +206,7 @@ conformance:
     - scripts/test_wardveil_platform_registry_delivery.py
     - website/GLAZE-UI-V1.6-ADOPTION.md
   blockers:
-    - Wardveil Foundation 0.9 remains in Active Development and overall production runtime acceptance remains unaccepted even though bounded Wardveil Scan runtime and consumer scopes have exact-environment evidence.
+    - "Wardveil Foundation 0.9 is classified Weave: the core security architecture substantially exists, while overall production runtime acceptance and release convergence remain blocked even though bounded Wardveil Scan runtime and consumer scopes have exact-environment evidence."
     - GoreeCloud Manager integration and acceptance for Wardveil service state are not established.
     - Source-scoped GoreeCloud Identity credential boundaries are implemented, but production service identity, issuance, signing-key lifecycle, deployed JWKS trust, credential rotation/revocation, approved cryptography, and key management remain incomplete.
     - Privacy Shield integration and production acceptance remain incomplete.
@@ -202,4 +216,4 @@ conformance:
     - Authorized Quarantine execution, external target readback/idempotency, authoritative Audit/Security Center provenance, and broader protection-claim authority remain unaccepted.
     - GoreeCloud Policy integration remains blocked pending an accepted platform Policy runtime contract plus Wardveil-specific decision, distribution, enforcement-coordination, and evidence acceptance.
     - GoreeCloud Observability integration remains blocked pending an accepted platform Observability runtime contract plus Wardveil-specific health, telemetry, freshness, completeness, diagnostics, and operational-evidence acceptance.
-    - Any required multi-host capacity acceptance and final Stable qualification remain open.
+    - Any required multi-host capacity acceptance, Seal candidate identity, and final Anchor qualification remain open.

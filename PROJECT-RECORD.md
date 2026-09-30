@@ -1,7 +1,7 @@
 # Wardveil Security — Project Record
 
 **Repository:** `GoreeCloud/wardveil`  
-**Lifecycle:** Active Development — Foundation 0.9; overall production runtime acceptance remains unaccepted  
+**Lifecycle:** Weave — Foundation 0.9; release convergence is active and overall production runtime acceptance remains unaccepted  
 **Migration baseline:** `2ddcf03b24b65e8e8112ba6cd18f9a9c56bb0a89`  
 **Record purpose:** Significant architecture, runtime, security, governance, integration, lifecycle, and project-document migration history  
 **Canonical authority:** This file becomes the repository-local project record once accepted on the default branch.
@@ -94,7 +94,7 @@ Security Center source passed through multiple design-system generations during 
 
 Older Glaze UI 1.0/2.1-era checkpoints remain historical evidence only.
 
-Current accepted repository source targets the official Stable Glaze UI 1.6.0 contract through repository-local source/build mappings.
+Current accepted repository source targets the official Anchor Glaze UI 1.6.0 contract through repository-local source/build mappings.
 
 Final rendered review, accessibility, representative performance/target behavior, rollback, deployed-byte/provenance, consumer registration, runtime deployment, and production acceptance remain open.
 
@@ -161,7 +161,7 @@ Former PR #172, **Repin validated Privacy Shield producer source for Wardveil st
 
 ## Current production-acceptance boundary
 
-Wardveil remains Active Development.
+Wardveil is classified **Weave** under Platform Contract 2.0 because the core security architecture and primary source/runtime foundations substantially exist, while remaining work is dominated by integration, recovery, target-environment acceptance, qualification, and release convergence. This classification does not establish Seal or Anchor.
 
 Broad production acceptance remains blocked on applicable evidence for:
 - production GoreeCloud Identity/service identity and signing-key custody;
@@ -177,9 +177,15 @@ Broad production acceptance remains blocked on applicable evidence for:
 - final Security Center Glaze UI application acceptance;
 - deployment/monitoring/rollback/recovery evidence;
 - exact release identity;
-- Stable qualification.
+- exact Seal candidate identity and Anchor qualification.
 
 A deployed Scan component or validated consumer scope does not authorize a platform-wide Protected by Wardveil claim.
+
+## September 29, 2026 — Platform Contract 2.0 Weave migration
+
+Wardveil is explicitly migrated from legacy Platform Contract 0.4 `development` semantics to Platform Contract 2.0 `weave` based on verified present maturity. Core security architecture, first-party contracts, Scan runtime evidence, execution/reconciliation foundations, Identity/Mesh source boundaries, Security Center source, and repository governance substantially exist; the dominant remaining work is integration, recovery, production/runtime acceptance, platform conformance, exact release qualification, and operational convergence.
+
+The migration keeps qualification **blocked**, deployment state **development**, and next gate **Seal**. No Seal candidate is declared because Wardveil does not yet have the complete exact release identity or production-readiness evidence required for candidate freeze. Anchor remains blocked by the unresolved Platform Contract, production Identity/key custody, Privacy Shield, Everkeep recovery, Mesh, Manager, Policy, Observability, Security Center application acceptance, external target/readback, monitoring, rollback, recovery, and broader production gates recorded in `goreecloud.platform.yaml` and `PLANNED-FEATURES.md`.
 
 ## September 28, 2026 — Project specifications/project record migration candidate
 
@@ -201,6 +207,6 @@ The Drive **Feature Roadmap — Wardveil Security.docx** is historical migration
 
 ## Ongoing maintenance
 
-Update this record for significant architecture, runtime deployment, production acceptance, identity/key custody, security incidents, privacy/recovery boundaries, major application consumers, platform integrations, repository governance, lifecycle promotion, release, Stable qualification, or eventual retirement.
+Update this record for significant architecture, runtime deployment, production acceptance, identity/key custody, security incidents, privacy/recovery boundaries, major application consumers, platform integrations, repository governance, lifecycle promotion, release, Seal/Anchor qualification, or eventual retirement.
 
 Routine implementation chronology remains in `CHANGELOGS.md`. `FEATURES.md` retains durable feature-scope documentation, while current implemented and planned feature state is authoritative in `IMPLEMENTED-FEATURES.md` and `PLANNED-FEATURES.md`. The retired `FEATURE-ROADMAP.md` must not return as an active repository control.
