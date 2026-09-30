@@ -214,6 +214,7 @@ export default class WardveilAcceptanceProbe extends WorkerEntrypoint<Bindings> 
     for (const requirement of [
       "deployed_revision_match",
       "health_endpoint",
+      "readiness_endpoint",
       "restore_verification_exercise",
       "observability_failure_evidence",
       "public_mutation_surface_absent",
