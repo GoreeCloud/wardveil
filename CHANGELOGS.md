@@ -1,5 +1,12 @@
 # Wardveil Security — Changelogs
 
+## 2026-09-29 — Fail-closed Seal readiness guard
+
+- Added a machine-readable Wardveil Seal-readiness record covering the eight release-critical gate groups still blocking candidate freeze.
+- Added CI validation that keeps lifecycle at Weave with `candidate_identity: null`, requires all eight external platform-system relationships to remain migration-required until accepted, and rejects Seal/Anchor promotion while runtime/recovery/release evidence remains blocked.
+- Bound the guard to the current unaccepted Cloudflare runtime contract, pending liveness/readiness/restore evidence template, canonical Everkeep restore consumer, and empty release evidence.
+- This guard does not create a Seal candidate; it prevents lifecycle metadata from outrunning real acceptance evidence.
+
 ## 2026-09-29 — Canonical Everkeep restore-verification provenance
 
 - Re-pinned Wardveil's restore-verification consumer from the predecessor Everkeep repository identity to canonical `GoreeCloud/everkeep`.
