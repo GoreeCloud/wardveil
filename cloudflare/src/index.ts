@@ -637,8 +637,8 @@ export default class WardveilPersistenceWorker extends WorkerEntrypoint<Bindings
     }
     if (request.method === "GET" && url.pathname === "/readyz") {
       try {
-        const dependency = await this.stub(READINESS_TENANT_ID).health();
-        const ready = dependency.status === "operational";
+        const dependency = await this.stub(READINESS_TENANT_ID).health() as Record<string, unknown>;
+        const ready = dependency["status"] === "operational";
         return Response.json(
           {
             service: "goreecloud-wardveil-persistence",
