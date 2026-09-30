@@ -1,5 +1,12 @@
 # Wardveil Security — Changelogs
 
+## 2026-09-29 — Canonical Everkeep restore-verification provenance
+
+- Re-pinned Wardveil's restore-verification consumer from the predecessor Everkeep repository identity to canonical `GoreeCloud/everkeep`.
+- Verified Everkeep restore-verification v1.1 is byte-identical between introduction revision `4de9a3425215bbee5595eb929c1eb94d94d6f7b2` and current canonical main `f69e369e4d8627280fac728b7f7bcb02c43b5edd` (blob `158f2afe001be211d91ebfaa3e33c475849d53f9`).
+- Added canonical source revision/blob provenance to the consumer contract and Platform Contract evidence.
+- This source correction does not create a live restore exercise or production recovery acceptance.
+
 ## 2026-09-29 — Cloudflare liveness/readiness source gate
 
 - Added a public `/readyz` endpoint to the Wardveil Cloudflare persistence Worker that exercises the Durable Object binding and bounded schema/storage health path through a dedicated non-authorizing readiness tenant.
