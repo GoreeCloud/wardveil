@@ -1,5 +1,12 @@
 # Wardveil Security — Changelogs
 
+## 2026-09-29 — Platform Contract 2.0 Weave migration
+
+- Migrated the authoritative platform manifest from Contract 0.4 to Contract 2.0 and reclassified Foundation 0.9 from legacy Development to **Weave** based on verified convergence maturity.
+- Added separate lifecycle metadata with development deployment state, blocked qualification, migration/recovery flags, next gate Seal, and no fabricated candidate identity.
+- Repinned Platform Contract validation to the current Contract 2.0 evaluator revision while preserving all unresolved Manager, Privacy Shield, Everkeep, Glaze UI consumer, Mesh, Identity, Policy, Observability, runtime, recovery, and production blockers.
+- This lifecycle correction does not establish Seal, Anchor, Protected/Covered status, or broad production acceptance.
+
 ## 2026-09-29 — Incident Center V1 assessment-integrity hardening
 
 - Reject duplicate Detection Engine assessments before they can inflate review-case counts or corroboration presentation.
