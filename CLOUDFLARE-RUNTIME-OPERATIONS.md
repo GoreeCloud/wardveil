@@ -8,7 +8,7 @@ Source acceptance, deployment evidence, storage health, and Wardveil security-st
 
 - A successful GitHub Actions deployment proves only that the approved source revision was submitted to Cloudflare successfully and that the workflow's post-deployment checks passed.
 - Storage health does not create or upgrade a `Protected by Wardveil` claim.
-- A successful `/healthz` response does not prove service-binding authorization, durable-record correctness, retention enforcement, PITR recovery, or incident recovery.
+- A successful `/healthz` response proves only Worker liveness. A successful `/readyz` response additionally proves the Worker can reach its Durable Object binding and that the bounded schema/storage health path reports operational; neither proves service-binding authorization, durable-record correctness, retention enforcement, PITR recovery, incident recovery, or protection authority.
 - Cloudflare does not become authoritative for Wardveil Trust, Policy, Protect, Detect, Scan, Quarantine, Response, Audit, or Security Center semantics merely by hosting persistence.
 - Everkeep remains GoreeCloud's resilience and recovery authority. PITR availability is not restore verification.
 
@@ -41,7 +41,8 @@ The workflow installs the exact Wrangler release declared by the deployment cont
 The deployment workflow performs two bounded public checks:
 
 1. `/healthz` must answer successfully and identify `goreecloud-wardveil-persistence`.
-2. a generic public `POST /records` mutation attempt must remain unavailable and return HTTP 404 or 405.
+2. `/readyz` must answer successfully and report `ready` after exercising the Durable Object/storage/schema path.
+3. a generic public `POST /records` mutation attempt must remain unavailable and return HTTP 404 or 405.
 
 These checks verify the public exposure boundary only. They do not exercise privileged service-binding/RPC methods.
 
@@ -53,6 +54,7 @@ Full production runtime acceptance requires independent evidence for:
 
 - deployed revision match;
 - health endpoint;
+- readiness endpoint;
 - authorized append/read through the intended service-binding identity;
 - duplicate-record rejection;
 - consumer-checkpoint non-regression;
