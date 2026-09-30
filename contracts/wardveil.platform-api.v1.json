@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "contract_id": "goreecloud.wardveil.platform-api.v1",
+  "api_version": "wardveil-persistence-rpc/v1",
+  "component_id": "goreecloud-wardveil-security",
+  "implementation": "cloudflare/src/index.ts",
+  "transport": "cloudflare-worker-service-binding-rpc",
+  "service_name": "goreecloud-wardveil-persistence",
+  "endpoint_reference": "service-binding://goreecloud-wardveil-persistence",
+  "public_http_surface": [
+    "/healthz",
+    "/readyz"
+  ],
+  "application_rpc_methods": [
+    "append",
+    "readAfter",
+    "checkpoint",
+    "getCheckpoint",
+    "claimExecutionAuthorization",
+    "finalizeExecutionAuthorization",
+    "getExecutionReceipt",
+    "health",
+    "maintenanceEvidence"
+  ],
+  "acceptance_only_rpc_methods": [
+    "scheduleAcceptanceRetentionAlarm",
+    "emitAcceptanceObservabilityFailure"
+  ],
+  "authority": {
+    "authenticated_service_binding_required_for_privileged_operations": true,
+    "public_mutation_api_allowed": false,
+    "persistence_is_security_state_authority": false,
+    "api_use_is_execution_authority": false,
+    "api_use_is_protection_claim": false,
+    "authority_transfer": false
+  },
+  "production_acceptance_status": "unaccepted"
+}
