@@ -75,12 +75,18 @@ jobs:
           --var EXPECTED_REVISION:$GITHUB_SHA
           --var ACCEPTANCE_TENANT:wardveil-runtime-acceptance
 
-      - name: Verify public health endpoint
+      - name: Verify public health and readiness endpoints
         run: |
           set -euo pipefail
-          response="$(curl --fail-with-body --silent --show-error --location "$WARDVEIL_HEALTH_URL")"
-          printf '%s\n' "$response"
-          printf '%s' "$response" | grep -q 'goreecloud-wardveil-persistence'
+          health_response="$(curl --fail-with-body --silent --show-error --location "$WARDVEIL_HEALTH_URL")"
+          printf '%s\n' "$health_response"
+          printf '%s' "$health_response" | grep -q 'goreecloud-wardveil-persistence'
+          printf '%s' "$health_response" | grep -q '"status":"alive"'
+          origin="${WARDVEIL_HEALTH_URL%/healthz}"
+          readiness_response="$(curl --fail-with-body --silent --show-error --location "$origin/readyz")"
+          printf '%s\n' "$readiness_response"
+          printf '%s' "$readiness_response" | grep -q '"status":"ready"'
+          printf '%s' "$readiness_response" | grep -q '"dependency":"durable-object-sqlite"'
 
       - name: Verify generic public mutation surface remains absent
         run: |
@@ -208,7 +214,8 @@ jobs:
 
           checks = {
               'deployed_revision_match': passed(f'Deployed workflow and probe are bound to exact revision {sha}.'),
-              'health_endpoint': passed('Canonical HTTPS persistence /healthz check passed.'),
+              'health_endpoint': passed('Canonical HTTPS persistence /healthz liveness check passed.'),
+              'readiness_endpoint': passed('Canonical HTTPS persistence /readyz exercised the Durable Object/storage/schema readiness path.'),
               'authorized_append_read': passed('Internal service-binding append/read probe passed.', by_requirement['authorized_append_read']['observed_at']),
               'duplicate_record_rejection': passed('Duplicate record ID rejection probe passed.', by_requirement['duplicate_record_rejection']['observed_at']),
               'checkpoint_non_regression': passed('Consumer checkpoint regression was rejected.', by_requirement['checkpoint_non_regression']['observed_at']),
@@ -253,6 +260,7 @@ jobs:
             echo '- PITR capability evidence: passed'
             echo '- Bounded observability failure path: passed through Cloudflare Worker tail evidence'
             echo '- Public health endpoint: passed'
+            echo '- Public readiness endpoint: passed through Durable Object/storage/schema path'
             echo '- Generic public mutation endpoint: absent (404/405)'
             echo '- Producer-declared evidence validity: one hour from manifest collection time'
             echo '- Remaining pending acceptance evidence: Everkeep-governed restore verification'

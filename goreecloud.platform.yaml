@@ -120,8 +120,8 @@ platform_systems:
     notes: Wardveil now implements privacy-minimized source construction for the authoritative GoreeCloud Observability v1 operational-signal contract while preserving explicit unknown and incomplete states. Live producer authentication, publication/collection, freshness/completeness policy, retention/deletion, diagnostics/alerting, target-environment evidence, and production acceptance remain required.
 
 health:
-  health_endpoint: null
-  readiness_endpoint: null
+  health_endpoint: /healthz
+  readiness_endpoint: /readyz
 
 continuity:
   backup:
@@ -221,4 +221,4 @@ conformance:
     - Authorized Quarantine execution, external target readback/idempotency, authoritative Audit/Security Center provenance, and broader protection-claim authority remain unaccepted.
     - GoreeCloud Policy v1 source adoption is implemented, but live caller identity, authenticated decision exchange, distribution, freshness/expiry handling, obligations coordination, target-environment evidence, and production acceptance remain migration-required.
     - GoreeCloud Observability v1 source adoption is implemented for privacy-minimized operational signals, but live producer identity, authenticated publication/collection, freshness/completeness, retention/deletion, diagnostics/alerting, target-environment evidence, and production acceptance remain migration-required.
-    - Any required multi-host capacity acceptance, Seal candidate identity, and final Anchor qualification remain open.
+    - Source-level liveness/readiness interfaces now exist for the Cloudflare persistence runtime, but deployed readiness evidence, monitoring/alerting acceptance, recovery, Seal candidate identity, and final Anchor qualification remain open.

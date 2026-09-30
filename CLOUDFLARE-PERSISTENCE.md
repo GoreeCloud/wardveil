@@ -6,7 +6,7 @@ This directory contains Wardveil Security's deployment-oriented persistence adap
 
 Each bounded Wardveil tenant/security domain is routed deterministically to one `WardveilPersistenceDO` instance. The Durable Object owns ordered SQLite persistence, consumer checkpoints, runtime execution-authorization claims, execution receipts, retention maintenance evidence, schema metadata, and point-in-time-recovery health evidence for that coordination atom.
 
-The outer Worker is service-binding/RPC-first. Public HTTP exposes only `/healthz`; record mutation, record reading, checkpoint mutation, execution-state mutation, execution-receipt reading, and tenant storage health are RPC methods intended for explicitly authorized GoreeCloud service bindings. The adapter does not create a public generic security-record or execution mutation API.
+The outer Worker is service-binding/RPC-first. Public HTTP exposes only `/healthz` and `/readyz`; record mutation, record reading, checkpoint mutation, execution-state mutation, execution-receipt reading, and tenant storage health are RPC methods intended for explicitly authorized GoreeCloud service bindings. The adapter does not create a public generic security-record or execution mutation API.
 
 ## Storage behavior
 
@@ -54,6 +54,8 @@ Recovery of execution state must preserve the distinction between finalized and 
 Persistence is not a security-state authority. The adapter may preserve and deliver authoritative Wardveil records but may not manufacture, upgrade, extend, repair, or reinterpret Trust, Policy, Protect, Detect, Scan, Quarantine, Response, Audit, or Security Center state.
 
 `storage operational` is not equivalent to `Protected by Wardveil`.
+
+`/healthz` is a liveness signal only. `/readyz` exercises the Worker-to-Durable-Object binding and validates the Durable Object schema/storage health path through a dedicated non-authorizing readiness tenant. Neither endpoint grants security-state, execution, or protection authority.
 
 A successful write or execution-state claim proves only that the persistence boundary accepted that state. It does not prove that the underlying protection action executed, that a finding is true, or that an incident is resolved. A finalized execution receipt represents the authoritative Protect result it contains but does not grant the executor authority or prove unrelated controls succeeded.
 

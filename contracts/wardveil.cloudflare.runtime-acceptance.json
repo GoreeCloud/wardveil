@@ -5,12 +5,16 @@
   "durable_object_binding": "WARDVEIL_PERSISTENCE",
   "durable_object_class": "WardveilPersistenceDO",
   "storage_engine": "sqlite-backed durable object",
-  "public_http_surface": ["/healthz"],
+  "public_http_surface": [
+    "/healthz",
+    "/readyz"
+  ],
   "mutation_surface": "authenticated service binding / RPC",
   "evidence_validity_seconds": 3600,
   "required_acceptance_evidence": [
     "deployed_revision_match",
     "health_endpoint",
+    "readiness_endpoint",
     "authorized_append_read",
     "duplicate_record_rejection",
     "checkpoint_non_regression",

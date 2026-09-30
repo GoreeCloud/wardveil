@@ -175,6 +175,14 @@ GoreeCloud Manager already contains a bounded read-only Wardveil Security State 
 
 Wardveil therefore advances Manager from source-blocked to migration-required without creating a second status format. Live authenticated producer identity, protected delivery, refresh/freshness, target-environment validation, Manager operational evidence, production acceptance, Seal, and Anchor remain separate gates.
 
+## September 29, 2026 — Cloudflare liveness and readiness source gate
+
+Wardveil's deployable Cloudflare persistence runtime now exposes separate liveness and readiness semantics. `/healthz` proves only Worker liveness. `/readyz` exercises the Worker-to-Durable-Object binding and evaluates the bounded schema/storage health path using a dedicated non-authorizing readiness tenant.
+
+The deployment and runtime-acceptance contracts now require both probes for the exact deployed revision, and `goreecloud.platform.yaml` declares the real source paths instead of null health interfaces.
+
+This closes a source-level production-readiness gap only. No deployed `/readyz` evidence has been collected for the new candidate yet; production runtime status remains unaccepted, recovery remains pending, and no Seal or Anchor promotion is implied.
+
 ## Current production-acceptance boundary
 
 Wardveil is classified **Weave** under Platform Contract 2.0 because the core security architecture and primary source/runtime foundations substantially exist, while remaining work is dominated by integration, recovery, target-environment acceptance, qualification, and release convergence. This classification does not establish Seal or Anchor.

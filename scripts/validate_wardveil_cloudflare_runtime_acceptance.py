@@ -25,11 +25,11 @@ for key, expected in required.items():
     if contract.get(key) != expected:
         raise SystemExit(f"Cloudflare acceptance contract mismatch: {key}")
 
-if contract.get("public_http_surface") != ["/healthz"]:
-    raise SystemExit("Public HTTP surface must remain health-only")
+if contract.get("public_http_surface") != ["/healthz", "/readyz"]:
+    raise SystemExit("Public HTTP surface must remain bounded to liveness/readiness only")
 
 expected_evidence = {
-    "deployed_revision_match", "health_endpoint", "authorized_append_read",
+    "deployed_revision_match", "health_endpoint", "readiness_endpoint", "authorized_append_read",
     "duplicate_record_rejection", "checkpoint_non_regression",
     "retention_alarm_evidence", "payload_digest_verification",
     "pitr_availability", "restore_verification_exercise",
@@ -48,8 +48,8 @@ for token in [
     if token not in wrangler:
         raise SystemExit(f"Wrangler deployment contract missing: {token}")
 
-if "/healthz" not in source:
-    raise SystemExit("Cloudflare Worker must retain /healthz")
+if "/healthz" not in source or "/readyz" not in source:
+    raise SystemExit("Cloudflare Worker must retain /healthz and /readyz")
 
 for phrase in [
     "storage health",
