@@ -1,5 +1,13 @@
 # Wardveil Security — Changelogs
 
+## 2026-09-29 — Versioned persistence service-binding RPC API
+
+- Formalized the existing private Cloudflare persistence service-binding surface as `wardveil-persistence-rpc/v1`.
+- Added a machine-readable API contract covering bounded record persistence, checkpoints, execution authorization claims/receipts, maintenance evidence, health, and acceptance-only qualification operations.
+- Declared the private service-binding API in Platform Contract 2.0 while keeping public HTTP limited to non-mutating liveness/readiness.
+- Added foundation validation that the declared API, runtime methods, public-surface boundary, and non-transfer of security/protection/recovery authority remain synchronized.
+- This source declaration does not establish deployed service-binding configuration, production API acceptance, Seal, Anchor, or protection authority.
+
 ## 2026-09-29 — Cloudflare liveness/readiness source gate
 
 - Added a public `/readyz` endpoint to the Wardveil Cloudflare persistence Worker that exercises the Durable Object binding and bounded schema/storage health path through a dedicated non-authorizing readiness tenant.
