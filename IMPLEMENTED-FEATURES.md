@@ -19,7 +19,7 @@ A bounded reference correlation layer now preserves exact resource scope, eviden
 
 ## Incident Center V1 — Development review-intake foundation
 
-A bounded Detection Engine → Incident Center review layer now converts fresh single-resource `incident_candidate` assessments into deterministic, explainable `review_required` cases. It rejects authority contamination and mixed-resource input, excludes stale/future/non-candidate assessments, and fixes incident, execution, containment, and production authority to false. Real incident creation and response continue through the existing authorized Incident/Response path.
+A bounded Detection Engine → Incident Center review layer now converts fresh single-resource `incident_candidate` assessments into deterministic, explainable `review_required` cases. It rejects authority contamination, mixed-resource input, duplicate assessments, invalid confidence, unsupported categories, and inconsistent candidate/correlation claims; excludes stale/future/non-candidate assessments; and fixes incident, execution, containment, and production authority to false. Real incident creation and response continue through the existing authorized Incident/Response path.
 
 ## Acceptance boundary
 
