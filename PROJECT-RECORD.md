@@ -169,6 +169,12 @@ The Observability adapter is pinned to `GoreeCloud/observability` revision `a7f6
 
 These integrations advance the Contract 2.0 Policy and Observability results from source-blocked to migration-required. They do not establish live authenticated exchange/publication, obligations execution, monitoring completeness, retention/deletion acceptance, alerting, target-environment evidence, production acceptance, Seal, or Anchor.
 
+## September 29, 2026 — GoreeCloud Manager Security State v2 source compatibility
+
+GoreeCloud Manager already contains a bounded read-only Wardveil Security State v2 consumer. Manager main `ebf5ea526c14a198ebaabf76fe923e82bddd2ad6` pins Wardveil contract revision `9b41040ed48037451e660e860908316732384282`; that pinned schema blob is byte-identical to the current Wardveil `contracts/wardveil.security-state.v2.schema.json` blob.
+
+Wardveil therefore advances Manager from source-blocked to migration-required without creating a second status format. Live authenticated producer identity, protected delivery, refresh/freshness, target-environment validation, Manager operational evidence, production acceptance, Seal, and Anchor remain separate gates.
+
 ## Current production-acceptance boundary
 
 Wardveil is classified **Weave** under Platform Contract 2.0 because the core security architecture and primary source/runtime foundations substantially exist, while remaining work is dominated by integration, recovery, target-environment acceptance, qualification, and release convergence. This classification does not establish Seal or Anchor.
