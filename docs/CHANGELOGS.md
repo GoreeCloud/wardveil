@@ -1,5 +1,12 @@
 # Wardveil Security — Changelogs
 
+## 2026-09-30 — Retained public-ref inventory classification
+
+- Extended the retained public Git history audit to classify fetched public branches and tags after the required all-branch/all-tag fetch.
+- The audit now reports duplicate-tip branch groups, non-main branches whose tips are fully contained in current `main`, and non-main branches that genuinely diverge from `main`.
+- Divergence reporting is evidence only: it does not delete refs, authorize branch retirement, rewrite history, or classify restricted non-secret content as safe.
+- The credential-shaped secret scan remains fail closed and unchanged.
+
 ## 2026-09-30 — Status visual-identity authority reconciliation
 
 - Reconciled `docs/STATUS.md` with the already-approved Wardveil Security **Sentinel Fold** identity and canonical GoreeCloud branding authority.
