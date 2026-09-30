@@ -2,7 +2,7 @@
 
 Wardveil Security does not own backup, restore, or recovery verification. Everkeep is GoreeCloud's resilience and recovery authority. Wardveil may consume a bounded Everkeep restore-verification evidence record only to satisfy the `restore_verification_exercise` requirement in Wardveil's Cloudflare persistence runtime acceptance contract.
 
-The machine-readable Wardveil consumer contract is `contracts/wardveil.everkeep.restore-verification.json`. Its accepted provider contract is Everkeep's `https://goreecloud.dev/everkeep/contracts/everkeep.restore-verification.v1.1.schema.json` version 1.1. Wardveil adopted that version only after the additive v1.1 contract became authoritative on Everkeep `main`; Everkeep's preserved v1.0 schema remains a provider compatibility artifact but no longer satisfies this Wardveil consumer gate.
+The machine-readable Wardveil consumer contract is `contracts/wardveil.everkeep.restore-verification.json`. Its accepted provider contract is Everkeep's `https://goreecloud.dev/everkeep/contracts/everkeep.restore-verification.v1.1.schema.json` version 1.1 from canonical repository `GoreeCloud/everkeep`. Wardveil adopted that version at Everkeep revision `4de9a3425215bbee5595eb929c1eb94d94d6f7b2`; the schema blob remains byte-identical (`158f2afe001be211d91ebfaa3e33c475849d53f9`) on verified canonical Everkeep main `f69e369e4d8627280fac728b7f7bcb02c43b5edd`. Everkeep's preserved v1.0 schema remains a provider compatibility artifact but no longer satisfies this Wardveil consumer gate.
 
 ## Required binding
 
