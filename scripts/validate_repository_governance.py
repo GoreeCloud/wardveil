@@ -209,6 +209,19 @@ def main() -> None:
         if path.exists() or path.is_symlink():
             fail(f"retired competing repository control must not exist: {relative}")
 
+    for relative in (
+        ".github/workflows/validate-policy-execution-bridge-v1.yml",
+        ".github/workflows/validate-trust-posture-v2.yml",
+    ):
+        feature_workflow = read(ROOT / relative)
+        if '"FEATURE-ROADMAP.md"' in feature_workflow:
+            fail(f"{relative} still watches retired FEATURE-ROADMAP.md")
+        for canonical_feature_record in (
+            '"docs/IMPLEMENTED-FEATURES.md"',
+            '"docs/PLANNED-FEATURES.md"',
+        ):
+            require(feature_workflow, canonical_feature_record, relative)
+
     workflow = read(WORKFLOW)
     dependabot = read(DEPENDABOT)
     codeowners = read(CODEOWNERS)
