@@ -189,6 +189,12 @@ Wardveil's bounded Everkeep restore-verification consumer now names canonical re
 
 This closes a provider-provenance defect only. Wardveil still requires a fresh authoritative Everkeep restore-verification record bound to the exact deployed Wardveil revision before the Cloudflare persistence recovery check can pass. PITR capability, source compatibility, or schema identity do not substitute for the recovery exercise.
 
+## September 29, 2026 — Fail-closed Seal readiness guard
+
+Wardveil now carries `qualification/seal-readiness.json` plus an exact-head CI validator that explicitly blocks candidate freeze while eight release-critical gate groups remain unresolved: nine-system runtime acceptance, production Identity/key custody, Cloudflare runtime acceptance, Everkeep restore, Quarantine target readback/reconciliation, Observability/monitoring/alerting, Security Center Glaze acceptance, and release provenance/rollback.
+
+The guard requires current Weave lifecycle, `candidate_identity: null`, unaccepted runtime evidence, pending deployed readiness/recovery evidence, canonical Everkeep provenance, and no release evidence. Any attempted Seal or Anchor declaration before those boundaries are replaced by accepted evidence now fails Wardveil foundation CI.
+
 ## Current production-acceptance boundary
 
 Wardveil is classified **Weave** under Platform Contract 2.0 because the core security architecture and primary source/runtime foundations substantially exist, while remaining work is dominated by integration, recovery, target-environment acceptance, qualification, and release convergence. This classification does not establish Seal or Anchor.
