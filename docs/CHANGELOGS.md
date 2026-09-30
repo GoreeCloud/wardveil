@@ -1,5 +1,13 @@
 # Wardveil Security — Changelogs
 
+## 2026-09-30 — Foundation 0.9 Seal candidate
+
+- Promoted the current release line from Weave to **Seal** under Platform Contract 2.0 by freezing exact candidate `wardveil-0.9.0-seal.1` at implementation source `cc493530c02925a4404c54d2767c15d9fbfa0835` / tree `b835d305c3b21d72cd00645dac3d1945626c6d8b`.
+- Added `qualification/seal-candidate.json` with exact-source validation identities and a non-authorizing candidate boundary.
+- Reclassified the existing nine gate groups as blocked **Anchor qualification** gates rather than reasons to withhold exact Seal identity.
+- Updated Platform Contract lifecycle metadata, repository-governance validation, Seal/Anchor readiness validation, README, project record, and planned-feature authority while preserving development deployment, blocked qualification, migration/recovery flags, unaccepted production runtime, and empty published-release evidence.
+- Any material release-critical implementation/configuration change invalidates `seal.1` and requires a new Seal candidate; this transition grants no production, protection, or Anchor authority.
+
 ## 2026-09-30 — Retained public-ref inventory classification
 
 - Extended the retained public Git history audit to classify fetched public branches and tags after the required all-branch/all-tag fetch.
