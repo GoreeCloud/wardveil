@@ -159,6 +159,16 @@ PR #179, **Migrate Wardveil feature tracking from Drive**, superseded the stale 
 
 Former PR #172, **Repin validated Privacy Shield producer source for Wardveil status consumer**, was closed as superseded after its three-file delta was intentionally replaced by the minimized public interoperability boundary integrated through PR #175.
 
+## September 29, 2026 — GoreeCloud Policy and Observability source adoption
+
+Wardveil added bounded source adapters for the authoritative GoreeCloud Policy v1 and GoreeCloud Observability v1 contracts.
+
+The Policy adapter is pinned to `GoreeCloud/policy` revision `46071886da37a6566b69cc923005eef64cce2bcc`. It constructs exact evaluation requests, validates exact decision evidence, binds provenance where requested, rejects obvious secret/private-content context, requires timezone-qualified decision timestamps, and keeps a Policy `allow` non-authorizing for Wardveil execution or protection claims.
+
+The Observability adapter is pinned to `GoreeCloud/observability` revision `a7f6a65f442d3e517baddbe7b6ce7c250d142c8c`. It constructs privacy-minimized operational signals, preserves all nine shared states and explicit collection gaps, rejects sensitive attributes, and prevents contradictory healthy-with-gaps evidence.
+
+These integrations advance the Contract 2.0 Policy and Observability results from source-blocked to migration-required. They do not establish live authenticated exchange/publication, obligations execution, monitoring completeness, retention/deletion acceptance, alerting, target-environment evidence, production acceptance, Seal, or Anchor.
+
 ## Current production-acceptance boundary
 
 Wardveil is classified **Weave** under Platform Contract 2.0 because the core security architecture and primary source/runtime foundations substantially exist, while remaining work is dominated by integration, recovery, target-environment acceptance, qualification, and release convergence. This classification does not establish Seal or Anchor.

@@ -1,5 +1,12 @@
 # Wardveil Security — Changelogs
 
+## 2026-09-29 — GoreeCloud Policy and Observability v1 source adoption
+
+- Added a bounded GoreeCloud Policy v1 request/decision adapter pinned to authoritative Policy revision `46071886da37a6566b69cc923005eef64cce2bcc`.
+- Added a privacy-minimized GoreeCloud Observability v1 signal adapter pinned to authoritative Observability revision `a7f6a65f442d3e517baddbe7b6ce7c250d142c8c`.
+- Added fail-closed tests and source validators for sensitive context/attributes, provenance mismatch, stale Policy evidence, ambiguous timestamps, evidence ordering, collection gaps, and non-authorizing semantics.
+- Reclassified Policy and Observability Platform Contract results from source-blocked to migration-required only; live runtime/production acceptance remains open.
+
 ## 2026-09-29 — Platform Contract 2.0 Weave migration
 
 - Migrated the authoritative platform manifest from Contract 0.4 to Contract 2.0 and reclassified Foundation 0.9 from legacy Development to **Weave** based on verified convergence maturity.
