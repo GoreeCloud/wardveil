@@ -195,6 +195,14 @@ Wardveil now carries `qualification/seal-readiness.json` plus an exact-head CI v
 
 The guard requires current Weave lifecycle, `candidate_identity: null`, unaccepted runtime evidence, pending deployed readiness/recovery evidence, canonical Everkeep provenance, no release evidence, and continued recognition that issue #176 remains open for the already-published restricted non-secret provenance. The first-party history scanner now covers fetched retained public refs for credential-shaped secrets and passes on protected heads, but this is not a historical-erasure claim or an accepted disposition of the non-secret exposure. Any attempted Seal or Anchor declaration before those boundaries are replaced by accepted evidence now fails Wardveil foundation CI.
 
+## September 29, 2026 — Bounded Wardveil Platform API V1 declaration
+
+Wardveil now declares a source-validated private Platform API corresponding to the Cloudflare persistence Worker service-binding/RPC surface already present in the repository. The supported version is `wardveil-persistence-rpc/v1`, represented symbolically as `service-binding://goreecloud-wardveil-persistence`.
+
+The machine-readable contract distinguishes ordinary application RPC methods from acceptance-only retention/observability probes, preserves public HTTP as non-mutating `/healthz` and `/readyz`, and keeps persistence non-authoritative for security semantics. Platform Contract 2.0 now records the private API version and endpoint instead of leaving the API section empty.
+
+This closes a source-declaration gap only. Production API acceptance remains unaccepted until an exact deployed runtime has accepted service identity, authenticated private transport, dependency/readiness behavior, failure/retry semantics, observability, recovery, and release qualification. No public mutation API, execution authority, protection claim, Seal, or Anchor is created by this declaration.
+
 ## Current production-acceptance boundary
 
 Wardveil is classified **Weave** under Platform Contract 2.0 because the core security architecture and primary source/runtime foundations substantially exist, while remaining work is dominated by integration, recovery, target-environment acceptance, qualification, and release convergence. This classification does not establish Seal or Anchor.
