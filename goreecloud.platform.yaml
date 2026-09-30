@@ -206,7 +206,7 @@ conformance:
     - scripts/test_wardveil_platform_registry_delivery.py
     - website/GLAZE-UI-V1.6-ADOPTION.md
   blockers:
-    - Wardveil Foundation 0.9 is classified Weave: the core security architecture substantially exists, while overall production runtime acceptance and release convergence remain blocked even though bounded Wardveil Scan runtime and consumer scopes have exact-environment evidence.
+    - "Wardveil Foundation 0.9 is classified Weave: the core security architecture substantially exists, while overall production runtime acceptance and release convergence remain blocked even though bounded Wardveil Scan runtime and consumer scopes have exact-environment evidence."
     - GoreeCloud Manager integration and acceptance for Wardveil service state are not established.
     - Source-scoped GoreeCloud Identity credential boundaries are implemented, but production service identity, issuance, signing-key lifecycle, deployed JWKS trust, credential rotation/revocation, approved cryptography, and key management remain incomplete.
     - Privacy Shield integration and production acceptance remain incomplete.
