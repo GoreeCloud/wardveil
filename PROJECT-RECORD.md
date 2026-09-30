@@ -183,6 +183,12 @@ The deployment and runtime-acceptance contracts now require both probes for the 
 
 This closes a source-level production-readiness gap only. No deployed `/readyz` evidence has been collected for the new candidate yet; production runtime status remains unaccepted, recovery remains pending, and no Seal or Anchor promotion is implied.
 
+## September 29, 2026 — Canonical Everkeep restore-verification provenance
+
+Wardveil's bounded Everkeep restore-verification consumer now names canonical repository `GoreeCloud/everkeep`. The accepted v1.1 schema introduced at Everkeep revision `4de9a3425215bbee5595eb929c1eb94d94d6f7b2` remains byte-identical on verified canonical Everkeep main `f69e369e4d8627280fac728b7f7bcb02c43b5edd`, with blob SHA `158f2afe001be211d91ebfaa3e33c475849d53f9`.
+
+This closes a provider-provenance defect only. Wardveil still requires a fresh authoritative Everkeep restore-verification record bound to the exact deployed Wardveil revision before the Cloudflare persistence recovery check can pass. PITR capability, source compatibility, or schema identity do not substitute for the recovery exercise.
+
 ## Current production-acceptance boundary
 
 Wardveil is classified **Weave** under Platform Contract 2.0 because the core security architecture and primary source/runtime foundations substantially exist, while remaining work is dominated by integration, recovery, target-environment acceptance, qualification, and release convergence. This classification does not establish Seal or Anchor.
