@@ -177,11 +177,12 @@ def validate_readme_release_status(readme: str, version_text: str) -> None:
 
     require(
         readme,
-        "> **Current status:** Weave under Platform Contract 2.0;",
+        "> **Current status:** Seal under Platform Contract 2.0.",
         "README lifecycle status",
     )
-    release_line = f"Foundation {match.group(1)}.{match.group(2)} is the active source/runtime line."
-    require(readme, release_line, "README release status")
+    candidate_line = f"wardveil-{version}-seal.1"
+    require(readme, candidate_line, "README Seal candidate identity")
+    require(readme, f"Foundation {match.group(1)}.{match.group(2)} implementation source", "README release status")
 
     if re.search(r"> \*\*Current status:\*\* Foundation \d+\.\d+ development\.", readme):
         fail("README release status still identifies an accepted foundation as development")
