@@ -36,7 +36,8 @@ The controlled failure does not mutate production records, grant remediation aut
 The following still require a different authority or observation path:
 
 - deployed revision match from the deployment control plane;
-- canonical public `/healthz` response;
+- canonical public `/healthz` liveness response;
+- canonical public `/readyz` readiness response exercising the Durable Object/storage/schema path;
 - an Everkeep-governed restore verification exercise;
 - independent Cloudflare tail observation of the bounded failure marker;
 - confirmation that the public mutation surface remains absent.
