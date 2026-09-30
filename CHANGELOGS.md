@@ -5,6 +5,7 @@
 - Reconciled `CAPABILITIES.md`, `PROJECT-RECORD.md`, and `README.md` with the authoritative Platform Contract 2.0 **Weave** lifecycle, Foundation 0.9 source/runtime line, development deployment state, blocked qualification state, and Seal next gate.
 - Reconciled Manager, Policy, Observability, current Glaze UI V1.6, and private `wardveil-persistence-rpc/v1` source integration state while preserving every live runtime, recovery, deployment, protection-claim, Seal, and Anchor acceptance gate.
 - Replaced an accidental literal escaped newline in the existing Seal-readiness changelog entry with real Markdown line breaks; no validation threshold or authority changed.
+- Updated the repository-governance validator to bind the README to the authoritative Platform Contract 2.0 Weave lifecycle and the VERSION-derived active Foundation source/runtime line.
 
 ## 2026-09-29 — Bounded Wardveil Platform API V1 declaration
 
