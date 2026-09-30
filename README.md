@@ -68,7 +68,7 @@ The guarded sequence is:
 
 A nonce conflict or executor/idempotency conflict fails closed. An exact retry after a finalized outcome returns the original receipt without invoking the handler again. A claim that exists without a finalized receipt becomes `execution_reconciliation_required`; Wardveil prohibits automatic blind re-execution because the external side effect may already have occurred.
 
-The existing Cloudflare Durable Object persistence adapter contains source-level service-binding RPC support for execution claims and receipts. It retains the public `/healthz`-only HTTP boundary. This is deployable source, not proof that durable execution state is currently deployed or production-accepted.
+The existing Cloudflare Durable Object persistence adapter contains source-level service-binding RPC support for bounded record persistence, checkpoints, execution claims/receipts, maintenance evidence, and health. The interface is versioned as `wardveil-persistence-rpc/v1` in `PERSISTENCE-RPC-API.md` and remains private to authenticated service bindings. Public HTTP is bounded to `/healthz` liveness and `/readyz` readiness. This is deployable source, not proof that durable execution state or the RPC API is currently deployed or production-accepted.
 
 A durable claim cannot make a non-idempotent external API exactly-once. Every production executor still requires idempotency or an authoritative state-reconciliation mechanism in the system that owns the side effect.
 
@@ -114,7 +114,7 @@ The authoritative project requirements and significant project history are repos
 - `contracts/wardveil.capabilities.json` — machine-readable capability and lifecycle contract.
 - `RUNTIME-AUTHORIZATION.md` and `contracts/wardveil.runtime-authorization.json` — cross-service execution authorization, exact binding, replay, idempotency, and production-acceptance boundary.
 - `EXECUTION-STATE.md` and `contracts/wardveil.execution-state.json` — durable authorization claims, uncertain-outcome handling, idempotency state, execution receipts, and deployment boundary.
-- `PERSISTENCE.md`, `contracts/wardveil.persistence-production-qualification.schema.json`, and `qualification/persistence-production/` — non-authorizing exact-candidate/deployment persistence qualification for durability, integrity, encryption/key custody, backup/restore, migration/rollback, access control, observability, monitoring, and Everkeep recovery evidence.
+- `PERSISTENCE.md`, `PERSISTENCE-RPC-API.md`, `contracts/wardveil.persistence-rpc.v1.json`, `contracts/wardveil.persistence-production-qualification.schema.json`, and `qualification/persistence-production/` — versioned private persistence/execution-state RPC plus non-authorizing exact-candidate/deployment persistence qualification for durability, integrity, encryption/key custody, backup/restore, migration/rollback, access control, observability, monitoring, and Everkeep recovery evidence.
 - `SERVICE-IDENTITY.md` and `contracts/wardveil.service-identity.json` — service identities, capability binding, signing-key identity, rotation, revocation, and production key-management boundary.
 - `QUARANTINE-EXECUTOR.md`, `contracts/wardveil.quarantine-executor.json`, and `contracts/wardveil.quarantine-executor-deployment.json` — bounded high-impact quarantine execution, target idempotency/readback, deployment gating, reconciliation, Audit provenance, and Cloudflare acceptance boundaries.
 - `STATUS.md` and `contracts/wardveil.status.schema.json` — evidence-backed Wardveil status semantics.
