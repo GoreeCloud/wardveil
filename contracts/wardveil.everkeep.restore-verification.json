@@ -2,7 +2,7 @@
   "schema_version": 1,
   "consumer": "Wardveil Security",
   "provider": "Everkeep",
-  "provider_repository": "GoreeCloud/goreecloud-everkeep",
+  "provider_repository": "GoreeCloud/everkeep",
   "provider_contract_id": "https://goreecloud.dev/everkeep/contracts/everkeep.restore-verification.v1.1.schema.json",
   "provider_contract_version": "1.1",
   "provider_contract_introduced_in_revision": "4de9a3425215bbee5595eb929c1eb94d94d6f7b2",
@@ -32,5 +32,7 @@
   "everkeep_recovery_authority_preserved": true,
   "security_state_authority_transferred": false,
   "protection_claim_authority_transferred": false,
-  "accepted_restore_evidence_creates_protected_by_wardveil_claim": false
+  "accepted_restore_evidence_creates_protected_by_wardveil_claim": false,
+  "provider_contract_current_verified_revision": "f69e369e4d8627280fac728b7f7bcb02c43b5edd",
+  "provider_contract_blob_sha": "158f2afe001be211d91ebfaa3e33c475849d53f9"
 }

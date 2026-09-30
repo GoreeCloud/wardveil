@@ -60,10 +60,12 @@ platform_systems:
     result: applicable-migration-required
     version: null
     evidence:
-      - README.md
+      - EVERKEEP-RESTORE-VERIFICATION.md
+      - contracts/wardveil.everkeep.restore-verification.json
+      - scripts/validate_everkeep_restore_verification_consumer.py
       - contracts/wardveil.mesh-evidence-profile.json
       - reference/wardveil_sqlite_execution_state.py
-    notes: Wardveil now has source-validated single-host durable execution-state persistence and restart-safe replay/reconciliation semantics, while Everkeep remains the recovery authority and live Everkeep backup/restore integration and production acceptance remain incomplete.
+    notes: Wardveil has a bounded restore-verification consumer pinned to canonical GoreeCloud/everkeep v1.1 evidence plus source-validated single-host durable execution-state/restart-safe reconciliation. The v1.1 schema is byte-identical between its introduction revision and current verified canonical Everkeep main. Live Everkeep backup/restore execution and exact deployed-revision production recovery acceptance remain migration-required.
   glaze_ui:
     result: applicable-migration-required
     version: '1.6.0'
@@ -215,7 +217,7 @@ conformance:
     - GoreeCloud Manager Security State v2 producer/consumer source compatibility is established, but live authenticated producer identity, delivery/refresh, target-environment validation, operational evidence, and production acceptance remain migration-required.
     - Source-scoped GoreeCloud Identity credential boundaries are implemented, but production service identity, issuance, signing-key lifecycle, deployed JWKS trust, credential rotation/revocation, approved cryptography, and key management remain incomplete.
     - Privacy Shield integration and production acceptance remain incomplete.
-    - Single-host durable execution-state and restart-safe reconciliation are implemented and exact-head tested, but accepted Everkeep recovery, target-side readback, distributed/multi-host replay guarantees, and broader production durability remain incomplete.
+    - Canonical Everkeep v1.1 restore-verification consumption is source-validated and single-host durable execution/reconciliation is exact-head tested, but no fresh authoritative restore exercise exists for an exact deployed Wardveil revision; target-side readback, distributed/multi-host replay guarantees, and broader production durability remain incomplete.
     - Source-level Mesh evidence and Platform Registry clients are implemented and exact-head validated, but live producer identity, routing, publication, delivery, and end-to-end Mesh acceptance remain production-unaccepted.
     - Security Center source now targets GLAZE UI V1.6 / 1.6.0, but final human rendered review, accessibility, representative-target/performance, rollback, deployment, deployed-byte/provenance, consumer-registry, and production consumer acceptance remain open.
     - Authorized Quarantine execution, external target readback/idempotency, authoritative Audit/Security Center provenance, and broader protection-claim authority remain unaccepted.
