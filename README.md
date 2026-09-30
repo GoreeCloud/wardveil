@@ -2,7 +2,7 @@
 
 Wardveil Security is GoreeCloud's platform-wide first-party security system and shared security plane. It coordinates evidence-backed trust, policy, protection, detection, scanning, quarantine, incident response, audit, and security-center experiences across GoreeCloud.
 
-> **Current status:** Foundation 0.9 active. Wardveil adds replay-resistant runtime execution authorization, durable execution-state/reconciliation, service identity and signing-key lifecycle, a bounded source-level Quarantine executor, and an exact-revision Cloudflare deployment gate that preserves explicit target authority and least privilege. Production runtime acceptance remains separate and fail closed.
+> **Current status:** Weave under Platform Contract 2.0; Foundation 0.9 is the active source/runtime line. Deployment remains development, qualification remains blocked, and the next lifecycle gate is Seal. Wardveil adds replay-resistant runtime execution authorization, durable execution-state/reconciliation, service identity and signing-key lifecycle, a bounded source-level Quarantine executor, and an exact-revision Cloudflare deployment gate that preserves explicit target authority and least privilege. Production runtime acceptance remains separate and fail closed.
 
 ## First-party security capabilities
 
@@ -68,7 +68,7 @@ The guarded sequence is:
 
 A nonce conflict or executor/idempotency conflict fails closed. An exact retry after a finalized outcome returns the original receipt without invoking the handler again. A claim that exists without a finalized receipt becomes `execution_reconciliation_required`; Wardveil prohibits automatic blind re-execution because the external side effect may already have occurred.
 
-The existing Cloudflare Durable Object persistence adapter contains source-level service-binding RPC support for execution claims and receipts. Its public HTTP boundary is limited to non-mutating `/healthz` liveness and `/readyz` dependency readiness; application mutation remains private service-binding/RPC only. This is deployable source, not proof that durable execution state or the private API is currently deployed or production-accepted.
+The existing Cloudflare Durable Object persistence adapter exposes the versioned private `wardveil-persistence-rpc/v1` service-binding API for bounded record persistence, checkpoints, execution claims/receipts, maintenance evidence, and health. Its public HTTP boundary is limited to non-mutating `/healthz` liveness and `/readyz` dependency readiness; application mutation remains private service-binding/RPC only. This is deployable source, not proof that durable execution state or the private API is currently deployed or production-accepted.
 
 A durable claim cannot make a non-idempotent external API exactly-once. Every production executor still requires idempotency or an authoritative state-reconciliation mechanism in the system that owns the side effect.
 
