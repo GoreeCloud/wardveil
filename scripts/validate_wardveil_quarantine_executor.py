@@ -6,7 +6,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 CONTRACT = ROOT / "contracts" / "wardveil.quarantine-executor.json"
-DOC = ROOT / "QUARANTINE-EXECUTOR.md"
+DOC = ROOT / "docs/QUARANTINE-EXECUTOR.md"
 REFERENCE = ROOT / "reference" / "wardveil_quarantine_executor.py"
 
 

@@ -14,7 +14,7 @@ SCHEMA = ROOT / "contracts" / "wardveil.persistence-production-qualification.sch
 QUALIFICATION_DIR = ROOT / "qualification" / "persistence-production"
 README = QUALIFICATION_DIR / "README.md"
 EXECUTION_STATE = ROOT / "contracts" / "wardveil.execution-state.json"
-PERSISTENCE_DOC = ROOT / "PERSISTENCE.md"
+PERSISTENCE_DOC = ROOT / "docs/PERSISTENCE.md"
 
 CONTRACT_ID = "goreecloud.wardveil.persistence-production-qualification.v1"
 SHA40 = re.compile(r"^[0-9a-f]{40}$")
@@ -279,7 +279,7 @@ def validate_source_boundaries() -> None:
         "not production acceptance",
         "everkeep",
     ):
-        require(marker in persistence_text, f"PERSISTENCE.md missing qualification boundary marker: {marker}")
+        require(marker in persistence_text, f"docs/PERSISTENCE.md missing qualification boundary marker: {marker}")
 
 
 def main() -> None:

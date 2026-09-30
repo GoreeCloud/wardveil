@@ -254,3 +254,10 @@ The Drive **Feature Roadmap — Wardveil Security.docx** is historical migration
 Update this record for significant architecture, runtime deployment, production acceptance, identity/key custody, security incidents, privacy/recovery boundaries, major application consumers, platform integrations, repository governance, lifecycle promotion, release, Seal/Anchor qualification, or eventual retirement.
 
 Routine implementation chronology remains in `CHANGELOGS.md`. `FEATURES.md` retains durable feature-scope documentation, while current implemented and planned feature state is authoritative in `IMPLEMENTED-FEATURES.md` and `PLANNED-FEATURES.md`. The retired `FEATURE-ROADMAP.md` must not return as an active repository control.
+
+
+## September 29, 2026 — Canonical docs/ root-cleanliness migration
+
+Wardveil migrated its human-readable repository documentation into the canonical `docs/` tree. The change preserves document content and Git history, retains `README.md`, `LICENSE`, `VERSION`, source-control controls, `goreecloud.platform.yaml`, and implementation directories at root for entry-point or technical purposes, and updates path-sensitive validators, workflows, contracts, evidence records, and ownership controls.
+
+Repository governance now rejects migrated human-readable documentation at root. This is a repository-organization and maintainability change only; it does not alter Wardveil runtime/provider acceptance, protection claims, Seal, Anchor, release, or production authority.

@@ -3,7 +3,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 source = (ROOT / "reference/wardveil_observability_v1.py").read_text()
-doc = (ROOT / "OBSERVABILITY-INTEGRATION.md").read_text()
+doc = (ROOT / "docs/OBSERVABILITY-INTEGRATION.md").read_text()
 workflow = (ROOT / ".github/workflows/validate.yml").read_text()
 
 for item in [

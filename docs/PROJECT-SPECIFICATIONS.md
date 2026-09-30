@@ -430,7 +430,7 @@ Unaccepted capabilities must remain visibly unaccepted.
 
 ## Related repository documentation
 
-- [README.md](README.md)
+- [README.md](../README.md)
 - [PROJECT-RECORD.md](PROJECT-RECORD.md)
 - [ARCHITECTURE.md](ARCHITECTURE.md)
 - [CAPABILITIES.md](CAPABILITIES.md)
@@ -441,4 +441,4 @@ Unaccepted capabilities must remain visibly unaccepted.
 - [SECURITY.md](SECURITY.md)
 - [PRIVACY POLICY.md](PRIVACY%20POLICY.md)
 - [CHANGELOGS.md](CHANGELOGS.md)
-- [goreecloud.platform.yaml](goreecloud.platform.yaml)
+- [goreecloud.platform.yaml](../goreecloud.platform.yaml)

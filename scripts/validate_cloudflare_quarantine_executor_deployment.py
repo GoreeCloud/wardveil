@@ -10,7 +10,7 @@ WORKFLOW = ROOT / ".github" / "workflows" / "deploy-cloudflare-quarantine-execut
 EXECUTOR_CONFIG = ROOT / "cloudflare" / "quarantine-executor" / "wrangler.jsonc"
 RUNNER_CONFIG = ROOT / "cloudflare" / "quarantine-executor-acceptance-runner" / "wrangler.jsonc"
 RUNNER_SOURCE = ROOT / "cloudflare" / "quarantine-executor-acceptance-runner" / "src" / "index.ts"
-DOC = ROOT / "QUARANTINE-EXECUTOR.md"
+DOC = ROOT / "docs/QUARANTINE-EXECUTOR.md"
 
 
 def require(condition: bool, message: str) -> None:

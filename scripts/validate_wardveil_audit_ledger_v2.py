@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SCHEMA = ROOT / "contracts" / "wardveil.audit-event.v1.schema.json"
 REFERENCE = ROOT / "reference" / "wardveil_audit_ledger_v2.py"
 TEST = ROOT / "scripts" / "test_wardveil_audit_ledger_v2.py"
-DOC = ROOT / "AUDIT-EVIDENCE-LEDGER-V2.md"
+DOC = ROOT / "docs/AUDIT-EVIDENCE-LEDGER-V2.md"
 
 EXPECTED_CATEGORIES = {
     "security_decision",

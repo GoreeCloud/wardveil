@@ -6,7 +6,7 @@ ROOT = Path(__file__).resolve().parents[1]
 contract = json.loads((ROOT / "contracts" / "wardveil.platform-api.v1.json").read_text())
 source = (ROOT / "cloudflare" / "src" / "index.ts").read_text()
 manifest = (ROOT / "goreecloud.platform.yaml").read_text()
-doc = (ROOT / "PLATFORM-API.md").read_text()
+doc = (ROOT / "docs/PLATFORM-API.md").read_text()
 
 expected_methods = [
     "append", "readAfter", "checkpoint", "getCheckpoint",

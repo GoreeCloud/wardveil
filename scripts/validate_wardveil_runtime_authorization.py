@@ -8,7 +8,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 CONTRACT = ROOT / "contracts" / "wardveil.runtime-authorization.json"
 REFERENCE = ROOT / "reference" / "wardveil_runtime_authorization.py"
-DOC = ROOT / "RUNTIME-AUTHORIZATION.md"
+DOC = ROOT / "docs/RUNTIME-AUTHORIZATION.md"
 VERSION = ROOT / "VERSION"
 IDENTITY = ROOT / "contracts" / "wardveil.identity.json"
 CAPABILITIES = ROOT / "contracts" / "wardveil.capabilities.json"

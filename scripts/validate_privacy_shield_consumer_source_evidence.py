@@ -6,7 +6,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 EVIDENCE = ROOT / "contracts" / "wardveil.privacy-shield.consumer-source-evidence.json"
-DOC = ROOT / "PRIVACY-SHIELD.md"
+DOC = ROOT / "docs/PRIVACY-SHIELD.md"
 
 
 def require(condition: bool, message: str) -> None:
@@ -18,7 +18,7 @@ def require(condition: bool, message: str) -> None:
 
 def main() -> None:
     require(EVIDENCE.is_file(), "missing public producer-source evidence record")
-    require(DOC.is_file(), "missing PRIVACY-SHIELD.md")
+    require(DOC.is_file(), "missing docs/PRIVACY-SHIELD.md")
 
     record = json.loads(EVIDENCE.read_text(encoding="utf-8"))
 

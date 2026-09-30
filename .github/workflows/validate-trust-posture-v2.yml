@@ -7,7 +7,7 @@ on:
       - "contracts/wardveil.trust-posture.v1.schema.json"
       - "scripts/test_wardveil_trust_posture_v2.py"
       - "scripts/validate_wardveil_trust_posture_v2.py"
-      - "TRUST-SESSION-DEVICE-POSTURE-V2.md"
+      - "docs/TRUST-SESSION-DEVICE-POSTURE-V2.md"
       - "FEATURE-ROADMAP.md"
       - ".github/workflows/validate-trust-posture-v2.yml"
   push:
@@ -18,7 +18,7 @@ on:
       - "contracts/wardveil.trust-posture.v1.schema.json"
       - "scripts/test_wardveil_trust_posture_v2.py"
       - "scripts/validate_wardveil_trust_posture_v2.py"
-      - "TRUST-SESSION-DEVICE-POSTURE-V2.md"
+      - "docs/TRUST-SESSION-DEVICE-POSTURE-V2.md"
       - "FEATURE-ROADMAP.md"
 
 permissions:

@@ -18,7 +18,7 @@
       "id": "production-identity-key-custody",
       "state": "blocked",
       "evidence": [
-        "SERVICE-IDENTITY.md",
+        "docs/SERVICE-IDENTITY.md",
         "goreecloud.platform.yaml"
       ],
       "reason": "Production GoreeCloud Identity issuance, JWKS trust, signing-key custody, rotation/revocation, and approved cryptography remain unaccepted."
@@ -36,7 +36,7 @@
       "id": "everkeep-restore",
       "state": "blocked",
       "evidence": [
-        "EVERKEEP-RESTORE-VERIFICATION.md",
+        "docs/EVERKEEP-RESTORE-VERIFICATION.md",
         "contracts/wardveil.everkeep.restore-verification.json"
       ],
       "reason": "No fresh authoritative restore exercise is bound to the exact deployed Wardveil revision."
@@ -45,7 +45,7 @@
       "id": "quarantine-target-readback",
       "state": "blocked",
       "evidence": [
-        "QUARANTINE-EXECUTOR.md",
+        "docs/QUARANTINE-EXECUTOR.md",
         "goreecloud.platform.yaml"
       ],
       "reason": "Production target authorization, mutation/readback, idempotency, and uncertain-outcome reconciliation remain unaccepted."
@@ -54,7 +54,7 @@
       "id": "observability-monitoring-alerting",
       "state": "blocked",
       "evidence": [
-        "OBSERVABILITY-INTEGRATION.md",
+        "docs/OBSERVABILITY-INTEGRATION.md",
         "goreecloud.platform.yaml"
       ],
       "reason": "Live publication, completeness/freshness, diagnostics, monitoring, and alert routing remain unaccepted."
@@ -81,7 +81,7 @@
       "state": "blocked",
       "evidence": [
         "scripts/audit_public_git_history.py",
-        "PROJECT-RECORD.md"
+        "docs/PROJECT-RECORD.md"
       ],
       "reason": "Credential-shaped retained-ref scanning is automated and green, but issue #176 still lacks a governed disposition for restricted non-secret provenance already published in reachable history and retained public refs."
     }
