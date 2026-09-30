@@ -20,6 +20,7 @@ RUNNER = "ubuntu-24.04"
 
 REQUIRED_ROOT_FILES = (
     "README.md",
+    "docs/README.md",
     "docs/PROJECT-SPECIFICATIONS.md",
     "docs/PROJECT-RECORD.md",
     "docs/FEATURES.md",

@@ -103,10 +103,10 @@ The Cloudflare deployment gate is defined by `.github/workflows/deploy-cloudflar
 The authoritative project requirements and significant project history are repository-local:
 
 - [Documentation index](docs/README.md)
-- [docs/PROJECT-SPECIFICATIONS.md](docs/PROJECT-SPECIFICATIONS.md)
-- [docs/PROJECT-RECORD.md](docs/PROJECT-RECORD.md)
+- [Project specifications](docs/PROJECT-SPECIFICATIONS.md)
+- [Project record](docs/PROJECT-RECORD.md)
 
-[docs/FEATURES.md](docs/FEATURES.md) retains durable feature-scope documentation. Current implemented and planned feature state is authoritative in [docs/IMPLEMENTED-FEATURES.md](docs/IMPLEMENTED-FEATURES.md) and [docs/PLANNED-FEATURES.md](docs/PLANNED-FEATURES.md), with repository change history in [docs/CHANGELOGS.md](docs/CHANGELOGS.md). The active Drive project specification remains migration provenance only until this repository migration is accepted and its source-retirement gate is satisfied.
+[Features](docs/FEATURES.md) retains durable feature-scope documentation. Current implemented and planned feature state is authoritative in [Implemented features](docs/IMPLEMENTED-FEATURES.md) and [Planned features](docs/PLANNED-FEATURES.md), with repository change history in [Changelogs](docs/CHANGELOGS.md). The active Drive project specification remains migration provenance only until this repository migration is accepted and its source-retirement gate is satisfied.
 
 ## Shared contracts and specifications
 
