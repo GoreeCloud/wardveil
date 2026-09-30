@@ -191,9 +191,9 @@ This closes a provider-provenance defect only. Wardveil still requires a fresh a
 
 ## September 29, 2026 — Fail-closed Seal readiness guard
 
-Wardveil now carries `qualification/seal-readiness.json` plus an exact-head CI validator that explicitly blocks candidate freeze while eight release-critical gate groups remain unresolved: nine-system runtime acceptance, production Identity/key custody, Cloudflare runtime acceptance, Everkeep restore, Quarantine target readback/reconciliation, Observability/monitoring/alerting, Security Center Glaze acceptance, and release provenance/rollback.
+Wardveil now carries `qualification/seal-readiness.json` plus an exact-head CI validator that explicitly blocks candidate freeze while nine release-critical gate groups remain unresolved: nine-system runtime acceptance, production Identity/key custody, Cloudflare runtime acceptance, Everkeep restore, Quarantine target readback/reconciliation, Observability/monitoring/alerting, Security Center Glaze acceptance, release provenance/rollback, and public-history safety disposition.
 
-The guard requires current Weave lifecycle, `candidate_identity: null`, unaccepted runtime evidence, pending deployed readiness/recovery evidence, canonical Everkeep provenance, and no release evidence. Any attempted Seal or Anchor declaration before those boundaries are replaced by accepted evidence now fails Wardveil foundation CI.
+The guard requires current Weave lifecycle, `candidate_identity: null`, unaccepted runtime evidence, pending deployed readiness/recovery evidence, canonical Everkeep provenance, no release evidence, and continued recognition that issue #176 remains open for the already-published restricted non-secret provenance. The first-party history scanner now covers fetched retained public refs for credential-shaped secrets and passes on protected heads, but this is not a historical-erasure claim or an accepted disposition of the non-secret exposure. Any attempted Seal or Anchor declaration before those boundaries are replaced by accepted evidence now fails Wardveil foundation CI.
 
 ## Current production-acceptance boundary
 
