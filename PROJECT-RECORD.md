@@ -1,7 +1,7 @@
 # Wardveil Security — Project Record
 
 **Repository:** `GoreeCloud/wardveil`  
-**Lifecycle:** Weave — Foundation 0.9; release convergence is active and overall production runtime acceptance remains unaccepted  
+**Lifecycle:** Weave — Platform Contract 2.0; Foundation 0.9 is the active source/runtime line; deployment remains development, qualification remains blocked, next gate is Seal, and overall production runtime acceptance remains unaccepted  
 **Migration baseline:** `2ddcf03b24b65e8e8112ba6cd18f9a9c56bb0a89`  
 **Record purpose:** Significant architecture, runtime, security, governance, integration, lifecycle, and project-document migration history  
 **Canonical authority:** This file becomes the repository-local project record once accepted on the default branch.

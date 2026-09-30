@@ -100,7 +100,12 @@ def validate_readme_release_status(readme: str, version_text: str) -> None:
     if not match:
         fail("VERSION must contain exactly one semantic version")
 
-    release_line = f"> **Current status:** Foundation {match.group(1)}.{match.group(2)} active."
+    require(
+        readme,
+        "> **Current status:** Weave under Platform Contract 2.0;",
+        "README lifecycle status",
+    )
+    release_line = f"Foundation {match.group(1)}.{match.group(2)} is the active source/runtime line."
     require(readme, release_line, "README release status")
 
     if re.search(r"> \*\*Current status:\*\* Foundation \d+\.\d+ development\.", readme):
