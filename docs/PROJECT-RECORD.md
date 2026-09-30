@@ -1,7 +1,7 @@
 # Wardveil Security — Project Record
 
 **Repository:** `GoreeCloud/wardveil`  
-**Lifecycle:** Weave — Platform Contract 2.0; Foundation 0.9 is the active source/runtime line; deployment remains development, qualification remains blocked, next gate is Seal, and overall production runtime acceptance remains unaccepted  
+**Lifecycle:** Seal — Platform Contract 2.0; exact candidate `wardveil-0.9.0-seal.1` freezes Foundation 0.9 implementation source at `cc493530c02925a4404c54d2767c15d9fbfa0835`; deployment remains development, Anchor qualification remains blocked, and overall production runtime acceptance remains unaccepted  
 **Migration baseline:** `2ddcf03b24b65e8e8112ba6cd18f9a9c56bb0a89`  
 **Record purpose:** Significant architecture, runtime, security, governance, integration, lifecycle, and project-document migration history  
 **Canonical authority:** This file becomes the repository-local project record once accepted on the default branch.
@@ -205,7 +205,7 @@ This closes a source-declaration gap only. Production API acceptance remains una
 
 ## Current production-acceptance boundary
 
-Wardveil is classified **Weave** under Platform Contract 2.0 because the core security architecture and primary source/runtime foundations substantially exist, while remaining work is dominated by integration, recovery, target-environment acceptance, qualification, and release convergence. This classification does not establish Seal or Anchor.
+Wardveil is classified **Seal** under Platform Contract 2.0. Exact candidate `wardveil-0.9.0-seal.1` freezes implementation source revision `cc493530c02925a4404c54d2767c15d9fbfa0835` (tree `b835d305c3b21d72cd00645dac3d1945626c6d8b`) for Anchor qualification. Deployment remains development and qualification remains blocked. Seal establishes exact candidate identity only; it does not establish production acceptance, a `Protected by Wardveil` claim, or Anchor.
 
 Broad production acceptance remains blocked on applicable evidence for:
 - production GoreeCloud Identity/service identity and signing-key custody;
@@ -221,9 +221,17 @@ Broad production acceptance remains blocked on applicable evidence for:
 - final Security Center Glaze UI application acceptance;
 - deployment/monitoring/rollback/recovery evidence;
 - exact release identity;
-- exact Seal candidate identity and Anchor qualification.
+- Anchor qualification against the exact Seal candidate.
 
 A deployed Scan component or validated consumer scope does not authorize a platform-wide Protected by Wardveil claim.
+
+## September 30, 2026 — Exact Seal candidate transition
+
+Wardveil entered **Seal** under Platform Contract 2.0 with candidate `wardveil-0.9.0-seal.1`. The frozen implementation source is `cc493530c02925a4404c54d2767c15d9fbfa0835` with tree `b835d305c3b21d72cd00645dac3d1945626c6d8b`; its exact-source foundation, authenticated Scan transport, and pinned Mesh evidence workflows were successful before the transition.
+
+This lifecycle transition corrects the earlier repository-local Seal-readiness guard to match higher-authority GoreeCloud lifecycle governance: Seal requires an exact frozen candidate, while production readiness, all-nine-system conformance, release publication, recovery, target-runtime acceptance, and the remaining security/operational evidence are **Anchor qualification** gates. The nine current gate groups remain blocked and `anchor_promotion_authorized` remains false.
+
+The candidate is non-authorizing and non-production. Any material runtime, dependency, security, recovery, supported-platform, or release-critical configuration change invalidates `seal.1` and requires a new Seal candidate.
 
 ## September 29, 2026 — Platform Contract 2.0 Weave migration
 
