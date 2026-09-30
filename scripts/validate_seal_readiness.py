@@ -23,6 +23,7 @@ EXPECTED_GATES = {
     "observability-monitoring-alerting",
     "security-center-glaze-acceptance",
     "release-provenance-rollback",
+    "public-history-safety",
 }
 
 
@@ -90,7 +91,7 @@ def main() -> None:
     if lifecycle in {"seal", "anchor"}:
         fail("promotion is prohibited while this readiness record remains blocked")
 
-    print("Wardveil Seal readiness guard passed: Weave remains fail-closed with 8 blocked release-critical gates.")
+    print("Wardveil Seal readiness guard passed: Weave remains fail-closed with 9 blocked release-critical gates.")
 
 
 if __name__ == "__main__":
