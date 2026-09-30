@@ -21,6 +21,14 @@ A bounded reference correlation layer now preserves exact resource scope, eviden
 
 A bounded Detection Engine → Incident Center review layer now converts fresh single-resource `incident_candidate` assessments into deterministic, explainable `review_required` cases. It rejects authority contamination, mixed-resource input, duplicate assessments, invalid confidence, unsupported categories, and inconsistent candidate/correlation claims; excludes stale/future/non-candidate assessments; and fixes incident, execution, containment, and production authority to false. Real incident creation and response continue through the existing authorized Incident/Response path.
 
+## GoreeCloud Policy v1 — bounded source adoption
+
+Wardveil now has a pure source adapter pinned to GoreeCloud Policy revision `46071886da37a6566b69cc923005eef64cce2bcc`. It constructs exact Policy v1 evaluation requests, validates complete decision evidence and provenance, rejects sensitive context recursively, treats stale decisions as unusable, and fixes execution/protection/production authority to false. Live Policy transport, caller identity, distribution, obligations coordination, target-environment evidence, and production acceptance remain separate gates.
+
+## GoreeCloud Observability v1 — bounded source adoption
+
+Wardveil now has a privacy-minimized operational-signal constructor pinned to GoreeCloud Observability revision `a7f6a65f442d3e517baddbe7b6ce7c250d142c8c`. It preserves all nine Observability states, explicit collection gaps, timezone-qualified evidence ordering, TTL bounds, and fail-closed privacy minimization without publishing telemetry or manufacturing healthy state. Live publication, producer authentication, retention/deletion, diagnostics/alerting, target-environment evidence, and production acceptance remain separate gates.
+
 ## Acceptance boundary
 
 Production cryptography, key management, authenticated runtime transport, production executor evidence, production deployment, cross-system runtime acceptance, Covered/Protected claims, and Stable status remain separate evidence-gated work. A Wardveil policy decision is not automatically execution authority, and branding or documentation alone is never protection evidence.
