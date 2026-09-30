@@ -183,6 +183,12 @@ The deployment and runtime-acceptance contracts now require both probes for the 
 
 This closes a source-level production-readiness gap only. No deployed `/readyz` evidence has been collected for the new candidate yet; production runtime status remains unaccepted, recovery remains pending, and no Seal or Anchor promotion is implied.
 
+## September 29, 2026 — Versioned persistence RPC API declaration
+
+Wardveil formalized the existing Cloudflare private service-binding persistence interface as `wardveil-persistence-rpc/v1`. The machine-readable contract binds the canonical `WARDVEIL_PERSISTENCE` service binding, existing persistence/checkpoint/execution-state/maintenance/health operations, and acceptance-only qualification operations while prohibiting a public mutation surface and preserving target, security-state, protection-claim, and Everkeep recovery authority boundaries.
+
+Platform Contract 2.0 now declares the actual private API rather than an empty API set. This closes a source-level API documentation/versioning gap only. Deployed service-binding configuration, caller identity, production capacity, recovery, monitoring, and exact release acceptance remain open.
+
 ## Current production-acceptance boundary
 
 Wardveil is classified **Weave** under Platform Contract 2.0 because the core security architecture and primary source/runtime foundations substantially exist, while remaining work is dominated by integration, recovery, target-environment acceptance, qualification, and release convergence. This classification does not establish Seal or Anchor.
