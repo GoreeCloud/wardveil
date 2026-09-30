@@ -3,6 +3,7 @@ import { DurableObject, WorkerEntrypoint } from "cloudflare:workers";
 const SCHEMA_VERSION = 1;
 const EXECUTION_STATE_SCHEMA_VERSION = 1;
 const ACCEPTANCE_TENANT_ID = "wardveil-runtime-acceptance";
+const READINESS_TENANT_ID = "wardveil-readiness";
 const RETENTION_MS: Record<string, number> = {
   transient: 24 * 60 * 60 * 1000,
   security_event: 30 * 24 * 60 * 60 * 1000,
@@ -629,7 +630,33 @@ export default class WardveilPersistenceWorker extends WorkerEntrypoint<Bindings
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
     if (request.method === "GET" && url.pathname === "/healthz") {
-      return Response.json({ service: "wardveil-persistence", status: "reachable", mutation_api: "service-binding-rpc-only" });
+      return Response.json(
+        { service: "goreecloud-wardveil-persistence", status: "alive", mutation_api: "service-binding-rpc-only" },
+        { headers: { "Cache-Control": "no-store" } },
+      );
+    }
+    if (request.method === "GET" && url.pathname === "/readyz") {
+      try {
+        const dependency = await this.stub(READINESS_TENANT_ID).health();
+        const ready = dependency.status === "operational";
+        return Response.json(
+          {
+            service: "goreecloud-wardveil-persistence",
+            status: ready ? "ready" : "not_ready",
+            dependency: "durable-object-sqlite",
+          },
+          { status: ready ? 200 : 503, headers: { "Cache-Control": "no-store" } },
+        );
+      } catch {
+        return Response.json(
+          {
+            service: "goreecloud-wardveil-persistence",
+            status: "not_ready",
+            dependency: "durable-object-sqlite",
+          },
+          { status: 503, headers: { "Cache-Control": "no-store" } },
+        );
+      }
     }
     return new Response("Not Found", { status: 404 });
   }
