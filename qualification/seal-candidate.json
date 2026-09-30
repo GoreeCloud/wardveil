@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "component": "Wardveil Security",
+  "candidate_id": "wardveil-0.9.0-seal.1",
+  "lifecycle": "seal",
+  "candidate_version": "0.9.0",
+  "source_revision": "cc493530c02925a4404c54d2767c15d9fbfa0835",
+  "source_tree": "b835d305c3b21d72cd00645dac3d1945626c6d8b",
+  "source_validation": [
+    {
+      "workflow": "Validate Wardveil foundation",
+      "run_id": 36782370142,
+      "result": "success"
+    },
+    {
+      "workflow": "Validate authenticated Wardveil Scan transport",
+      "run_id": 36782370127,
+      "result": "success"
+    },
+    {
+      "workflow": "Validate pinned Wardveil Mesh evidence contract source",
+      "run_id": 36782370123,
+      "result": "success"
+    }
+  ],
+  "configuration_boundary": "Provider-neutral Foundation 0.9 source candidate. Production deployment/provider identities remain qualification evidence and must bind to this source candidate; any material runtime, dependency, security, recovery, supported-platform, or release-critical configuration change supersedes this candidate.",
+  "dependency_state": "Anchor qualification remains blocked on the nine gate groups in qualification/seal-readiness.json; blocked qualification does not revoke the exact Seal identity.",
+  "previous_known_good": "Weave source baseline cc493530c02925a4404c54d2767c15d9fbfa0835",
+  "rollback_target": "cc493530c02925a4404c54d2767c15d9fbfa0835",
+  "anchor_qualification_status": "blocked",
+  "production_approved": false,
+  "authority_effect": "none"
+}

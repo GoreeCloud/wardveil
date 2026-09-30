@@ -6,7 +6,7 @@ component:
   product_name: Wardveil Security
   repository: GoreeCloud/wardveil
 
-lifecycle: weave
+lifecycle: seal
 lifecycle_metadata:
   flags:
     - blocked
@@ -14,10 +14,25 @@ lifecycle_metadata:
     - migration-required
   deployment_state: development
   qualification_state: blocked
-  next_gate: seal
-  candidate_identity: null
+  next_gate: anchor
+  candidate_identity:
+    source_revision: cc493530c02925a4404c54d2767c15d9fbfa0835
+    review_identity: null
+    build_identity: "GitHub Actions: foundation 36782370142; Scan transport 36782370127; Mesh evidence 36782370123"
+    artifact_name: null
+    artifact_digest: null
+    container_digest: null
+    package_identity: null
+    sbom_identity: null
+    schema_migration_identity: null
+    configuration_boundary: "Provider-neutral Foundation 0.9 source candidate; qualification evidence must bind production deployment/provider state to this candidate, and any material runtime/dependency/security/recovery/platform/configuration change supersedes it."
+    dependency_state: "Anchor qualification blocked on qualification/seal-readiness.json; unresolved qualification dependencies do not expand candidate authority."
+    previous_known_good: "Weave source baseline cc493530c02925a4404c54d2767c15d9fbfa0835"
+    rollback_target: "cc493530c02925a4404c54d2767c15d9fbfa0835"
   last_transition: null
   evidence:
+    - qualification/seal-candidate.json
+    - qualification/seal-readiness.json
     - docs/PROJECT-RECORD.md
     - docs/PLANNED-FEATURES.md
     - README.md
