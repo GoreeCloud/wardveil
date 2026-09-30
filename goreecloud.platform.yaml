@@ -28,8 +28,12 @@ supported_platforms:
   - web
 
 api:
-  versions: []
-  endpoints: []
+  versions:
+    - wardveil-persistence-rpc/v1
+  endpoints:
+    - name: Wardveil persistence private service binding
+      url: service-binding://goreecloud-wardveil-persistence
+      purpose: Authenticated internal Worker service-binding/RPC access for bounded Wardveil persistence and execution-state operations; production API acceptance remains separate.
 
 platform_systems:
   manager:
