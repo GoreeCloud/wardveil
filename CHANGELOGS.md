@@ -1,5 +1,12 @@
 # Wardveil Security — Changelogs
 
+## 2026-09-29 — Cloudflare liveness/readiness source gate
+
+- Added a public `/readyz` endpoint to the Wardveil Cloudflare persistence Worker that exercises the Durable Object binding and bounded schema/storage health path through a dedicated non-authorizing readiness tenant.
+- Kept `/healthz` as liveness-only and bounded both public endpoints to privacy-safe, non-mutating status.
+- Extended the runtime-acceptance and deployment contracts so deployed readiness is a required exact-revision evidence item alongside liveness.
+- Updated Platform Contract health/readiness declarations from null to `/healthz` and `/readyz` without changing production runtime status from unaccepted.
+
 ## 2026-09-29 — Manager Security State v2 source compatibility
 
 - Reconciled the existing Wardveil Security State v2 producer with GoreeCloud Manager's bounded read-only consumer rather than creating a duplicate status contract.
