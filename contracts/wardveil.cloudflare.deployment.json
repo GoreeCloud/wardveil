@@ -23,5 +23,6 @@
   "deployment_success_is_runtime_acceptance": false,
   "health_success_is_protection_claim": false,
   "storage_health_is_protection_claim": false,
-  "production_runtime_status_source": "contracts/wardveil.cloudflare.runtime-acceptance.json"
+  "production_runtime_status_source": "contracts/wardveil.cloudflare.runtime-acceptance.json",
+  "public_readiness_path": "/readyz"
 }
