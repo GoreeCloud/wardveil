@@ -1,5 +1,11 @@
 # Wardveil Security — Changelogs
 
+## 2026-09-29 — Capability and lifecycle documentation reconciliation
+
+- Reconciled `CAPABILITIES.md`, `PROJECT-RECORD.md`, and `README.md` with the authoritative Platform Contract 2.0 **Weave** lifecycle, Foundation 0.9 source/runtime line, development deployment state, blocked qualification state, and Seal next gate.
+- Reconciled Manager, Policy, Observability, current Glaze UI V1.6, and private `wardveil-persistence-rpc/v1` source integration state while preserving every live runtime, recovery, deployment, protection-claim, Seal, and Anchor acceptance gate.
+- Replaced an accidental literal escaped newline in the existing Seal-readiness changelog entry with real Markdown line breaks; no validation threshold or authority changed.
+
 ## 2026-09-29 — Bounded Wardveil Platform API V1 declaration
 
 - Added a machine-readable private API contract for the already-implemented Cloudflare persistence Worker service-binding/RPC surface.
@@ -13,7 +19,8 @@
 - Added a machine-readable Wardveil Seal-readiness record covering the release-critical gate groups still blocking candidate freeze; the current guard now includes a ninth public-history safety gate.
 - Added CI validation that keeps lifecycle at Weave with `candidate_identity: null`, requires all eight external platform-system relationships to remain migration-required until accepted, and rejects Seal/Anchor promotion while runtime/recovery/release evidence remains blocked.
 - Bound the guard to the current unaccepted Cloudflare runtime contract, pending liveness/readiness/restore evidence template, canonical Everkeep restore consumer, and empty release evidence.
-- Added the unresolved public-history safety disposition from issue #176 to the same promotion boundary: retained-ref credential-shaped scanning is automated/green, but restricted non-secret provenance already published in reachable history has no accepted final disposition.\n- This guard does not create a Seal candidate; it prevents lifecycle metadata from outrunning real acceptance evidence.
+- Added the unresolved public-history safety disposition from issue #176 to the same promotion boundary: retained-ref credential-shaped scanning is automated/green, but restricted non-secret provenance already published in reachable history has no accepted final disposition.
+- This guard does not create a Seal candidate; it prevents lifecycle metadata from outrunning real acceptance evidence.
 
 ## 2026-09-29 — Canonical Everkeep restore-verification provenance
 
