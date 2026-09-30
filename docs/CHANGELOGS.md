@@ -1,5 +1,11 @@
 # Wardveil Security — Changelogs
 
+## 2026-09-30 — Documentation-trigger stabilization
+
+- Replaced two stale workflow path filters that still watched retired root `FEATURE-ROADMAP.md` with the canonical `docs/IMPLEMENTED-FEATURES.md` and `docs/PLANNED-FEATURES.md` records.
+- Extended repository-governance validation so the policy-execution and trust-posture workflows fail closed if the retired roadmap path returns or either canonical feature-state path is omitted.
+- This CI/documentation stabilization does not change runtime behavior, protection claims, provider acceptance, Seal, Anchor, release, or production authority.
+
 ## 2026-09-29 — Repository root documentation migration
 
 - Moved Wardveil human-readable repository documentation from root into the canonical `docs/` tree under the GoreeCloud repository-root cleanliness standard.

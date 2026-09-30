@@ -20,7 +20,8 @@ on:
       - "docs/POLICY-DECISION-AND-ENFORCEMENT-V2.md"
       - "docs/RUNTIME-AUTHORIZATION.md"
       - "docs/EXECUTION-STATE.md"
-      - "FEATURE-ROADMAP.md"
+      - "docs/IMPLEMENTED-FEATURES.md"
+      - "docs/PLANNED-FEATURES.md"
       - ".github/workflows/validate-policy-execution-bridge-v1.yml"
   push:
     branches:
@@ -43,7 +44,8 @@ on:
       - "docs/POLICY-DECISION-AND-ENFORCEMENT-V2.md"
       - "docs/RUNTIME-AUTHORIZATION.md"
       - "docs/EXECUTION-STATE.md"
-      - "FEATURE-ROADMAP.md"
+      - "docs/IMPLEMENTED-FEATURES.md"
+      - "docs/PLANNED-FEATURES.md"
       - ".github/workflows/validate-policy-execution-bridge-v1.yml"
 
 permissions:
