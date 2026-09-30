@@ -28,8 +28,12 @@ supported_platforms:
   - web
 
 api:
-  versions: []
-  endpoints: []
+  versions:
+    - wardveil-persistence-rpc/v1
+  endpoints:
+    - name: wardveil-persistence-service
+      url: service-binding:WARDVEIL_PERSISTENCE
+      purpose: Private authenticated Wardveil persistence and execution-state RPC; public mutation is prohibited and target/security/recovery authority does not transfer.
 
 platform_systems:
   manager:
@@ -221,4 +225,4 @@ conformance:
     - Authorized Quarantine execution, external target readback/idempotency, authoritative Audit/Security Center provenance, and broader protection-claim authority remain unaccepted.
     - GoreeCloud Policy v1 source adoption is implemented, but live caller identity, authenticated decision exchange, distribution, freshness/expiry handling, obligations coordination, target-environment evidence, and production acceptance remain migration-required.
     - GoreeCloud Observability v1 source adoption is implemented for privacy-minimized operational signals, but live producer identity, authenticated publication/collection, freshness/completeness, retention/deletion, diagnostics/alerting, target-environment evidence, and production acceptance remain migration-required.
-    - Source-level liveness/readiness interfaces now exist for the Cloudflare persistence runtime, but deployed readiness evidence, monitoring/alerting acceptance, recovery, Seal candidate identity, and final Anchor qualification remain open.
+    - Source-level liveness/readiness interfaces and a versioned private persistence RPC API now exist for the Cloudflare runtime, but deployed API/service-binding acceptance, readiness evidence, monitoring/alerting acceptance, recovery, Seal candidate identity, and final Anchor qualification remain open.
