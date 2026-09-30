@@ -4,7 +4,7 @@
 
 Wardveil Security is GoreeCloud’s platform-wide security, protection, trust, detection, verification, policy, response, and security-evidence authority.
 
-This record describes the current verified repository capability state. Wardveil remains **Development**. Source implementation, contracts, reference engines, validators, and exact-revision tests do not by themselves establish deployed protection coverage, production acceptance, Protected/Covered status, release status, or Stable qualification.
+This record describes the current verified repository capability state. Wardveil is classified **Weave** under Platform Contract 2.0, with Foundation 0.9 as the active source/runtime line. Its `deployment_state` remains `development`, its `qualification_state` remains `blocked`, and its next lifecycle gate is Seal. Source implementation, contracts, reference engines, validators, and exact-revision tests do not by themselves establish deployed protection coverage, production acceptance, Protected/Covered status, release status, Seal, or Anchor qualification.
 
 ## Core Capabilities
 
@@ -48,7 +48,8 @@ Wardveil source defines:
 - uncertain-outcome reconciliation;
 - target-state verification boundaries;
 - single-host SQLite execution-state persistence;
-- source-level Cloudflare Durable Object persistence adapters.
+- source-level Cloudflare Durable Object persistence adapters;
+- the versioned private `wardveil-persistence-rpc/v1` service-binding API for bounded persistence, checkpoints, execution state, maintenance evidence, and health, with public HTTP limited to non-mutating liveness/readiness.
 
 An execution claim is not proof of an external side effect. Uncertain external outcomes require reconciliation rather than blind re-execution.
 
@@ -122,17 +123,17 @@ These controls support governed review and administration. They do not self-gran
 
 ## Platform Integrations
 
-The repository manifest uses Platform Contract 0.4 and evaluates all nine GoreeCloud Integral Platform Systems. GoreeCloud Sync remains separately governed.
+The repository manifest uses Platform Contract 2.0 and evaluates all nine GoreeCloud Integral Platform Systems. GoreeCloud Sync remains separately governed.
 
-- **GoreeCloud Manager:** applicable blocked; current accepted Manager integration is not established.
+- **GoreeCloud Manager:** applicable migration required; Wardveil already produces the Security State v2 contract consumed read-only by Manager, while live authenticated delivery/refresh, target-environment validation, operational evidence, and production acceptance remain open.
 - **Privacy Shield:** applicable migration required; authority boundaries are preserved but live production Privacy Shield integration remains incomplete.
 - **Wardveil Security:** not applicable as a separate consumer because this repository implements the Wardveil authority.
 - **Everkeep:** applicable migration required; source-level durable state exists, but accepted Everkeep backup/restore and recovery integration remains incomplete.
-- **Glaze UI:** applicable migration required; Security Center source now targets current Stable 1.6.0, while rendered/accessibility/performance, rollback, deployed-byte/provenance, consumer-registry, deployment, and production acceptance remain open.
+- **Glaze UI:** applicable migration required; Security Center source now targets the current GLAZE UI V1.6 / `1.6.0` Anchor consumer contract (with retained Stable compatibility naming), while rendered/accessibility/performance, rollback, deployed-byte/provenance, consumer-registry, deployment, and production acceptance remain open.
 - **GoreeCloud Mesh:** applicable migration required; minimized security-evidence delivery exists at source level, while live routing, producer identity, registry publication, and production acceptance remain open.
 - **GoreeCloud Identity:** applicable migration required; production issuance/JWKS/key custody and acceptance remain open.
-- **GoreeCloud Policy:** applicable blocked pending accepted central Policy runtime integration.
-- **GoreeCloud Observability:** applicable blocked pending accepted operational-health, telemetry, freshness, completeness, and evidence integration.
+- **GoreeCloud Policy:** applicable migration required; the Policy v1 source adapter is implemented, while live caller identity, authenticated decision exchange, distribution/freshness, obligations coordination, target-environment evidence, and production acceptance remain open.
+- **GoreeCloud Observability:** applicable migration required; the privacy-minimized Observability v1 source adapter is implemented, while live producer authentication, publication/collection, freshness/completeness, retention/deletion, diagnostics/alerting, target-environment evidence, and production acceptance remain open.
 
 ## Data and Interoperability
 
