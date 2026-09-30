@@ -70,4 +70,6 @@ The repository validator checks both examples, the canonical state vocabulary, p
 
 ## Visual identity boundary
 
-This status contract may be implemented before Wardveil's canonical icon is approved. Until the canonical icon gate in `ICON.md` passes, applications may use text-based Wardveil integration but must not present temporary artwork as the official Wardveil identity.
+Wardveil Security's canonical **Sentinel Fold** icon is approved. Branding authority remains in `GoreeCloud/goreecloud-branding-assets` at `systems/wardveil-security/wardveil-security-icon.svg`; `branding/wardveil-security-icon.svg` is the synchronized repository-local derivative used by Wardveil surfaces.
+
+Applications that present Wardveil identity must use an approved, traceable derivative of that canonical source and must not substitute temporary, generic, independently redrawn, or unrelated artwork. Visual identity does not create or upgrade technical protection evidence: `Protected by Wardveil` remains governed by the status/evidence rules in this contract.

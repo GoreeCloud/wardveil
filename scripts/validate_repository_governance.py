@@ -13,6 +13,8 @@ DEPENDABOT = ROOT / ".github/dependabot.yml"
 CODEOWNERS = ROOT / ".github/CODEOWNERS"
 GOVERNANCE = ROOT / "docs/REPOSITORY-GOVERNANCE.md"
 SECURITY = ROOT / "docs/SECURITY.md"
+STATUS = ROOT / "docs/STATUS.md"
+ICON = ROOT / "docs/ICON.md"
 LICENSE = ROOT / "LICENSE"
 README = ROOT / "README.md"
 VERSION = ROOT / "VERSION"
@@ -227,6 +229,8 @@ def main() -> None:
     codeowners = read(CODEOWNERS)
     governance = read(GOVERNANCE)
     security = read(SECURITY)
+    status = read(STATUS)
+    icon = read(ICON)
     license_text = read(LICENSE)
     readme = read(README)
     version_text = read(VERSION)
@@ -285,6 +289,14 @@ def main() -> None:
     ):
         if phrase.lower() not in security.lower():
             fail(f"security policy missing required repository boundary: {phrase}")
+
+    require(icon, "The Wardveil Security icon is **approved**", "Wardveil icon authority")
+    require(icon, "Sentinel Fold", "Wardveil icon authority")
+    require(status, "Wardveil Security's canonical **Sentinel Fold** icon is approved.", "Wardveil status identity boundary")
+    require(status, "GoreeCloud/goreecloud-branding-assets", "Wardveil status identity boundary")
+    require(status, "Protected by Wardveil", "Wardveil status identity boundary")
+    if "Until the canonical icon gate" in status or "before Wardveil's canonical icon is approved" in status:
+        fail("Wardveil status contract still contains pre-approval icon language")
 
     validate_license(license_text)
     validate_readme_release_status(readme, version_text)

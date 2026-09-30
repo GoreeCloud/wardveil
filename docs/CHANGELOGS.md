@@ -1,5 +1,12 @@
 # Wardveil Security — Changelogs
 
+## 2026-09-30 — Status visual-identity authority reconciliation
+
+- Reconciled `docs/STATUS.md` with the already-approved Wardveil Security **Sentinel Fold** identity and canonical GoreeCloud branding authority.
+- Kept visual identity separate from technical protection evidence: approved artwork does not create or upgrade a `Protected by Wardveil` claim.
+- Extended repository-governance validation to fail if pre-approval icon language returns or the status contract loses the approved canonical identity boundary.
+- This documentation/governance correction does not change runtime behavior, protection acceptance, Seal, Anchor, release, or production authority.
+
 ## 2026-09-30 — Documentation-trigger stabilization
 
 - Replaced two stale workflow path filters that still watched retired root `FEATURE-ROADMAP.md` with the canonical `docs/IMPLEMENTED-FEATURES.md` and `docs/PLANNED-FEATURES.md` records.
