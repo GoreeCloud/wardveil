@@ -1,14 +1,15 @@
 # Wardveil Security — Planned Features
 
 > **Authority:** Repository-native planned-feature record migrated from the richer Drive planning source on 2026-09-27.  
-> **Boundary:** Verified Development/source wording below remains bounded to cited evidence. Planned Wardveil 2.0 direction does not establish production runtime acceptance, Covered/Protected state, or Stable status.
+> **Boundary:** Current lifecycle is Weave under Platform Contract 2.0. Historical Development/source wording below remains bounded to its original evidence. Planned Wardveil 2.0 direction does not establish production runtime acceptance, Covered/Protected state, Seal, or Anchor.
 
 Planned Upgrade, Features, Capabilities, and Long-Term Security Operations Direction
 Purpose and Authority
 This file is the repository-native Wardveil planned-feature authority migrated from the richer Drive planning source. It preserves roadmap obligations and the distinction between verified Development evidence and future planned work. The former Drive roadmap and separate Wardveil 2.0 planning source are historical migration provenance and must not compete with this repository record.
 `PROJECT-SPECIFICATIONS.md` governs long-lived project requirements, while verified repository/runtime evidence governs current implementation state. Wardveil policy and security authority boundaries continue to control what the product may claim or execute.
-Current Roadmap Control and Verified Development Foundation
+Current Roadmap Control and Verified Weave Foundation
 The following obligations and states are carried forward from the existing Wardveil feature roadmap. They are not inferred from the new planning text. Any Source Validated or source-implemented wording remains bounded to the exact development evidence previously recorded and does not establish runtime, production, Covered, Protected, or Stable status.
+Weave convergence note — Platform Contract 2.0 classifies the current Foundation 0.9 line as Weave: core product architecture substantially exists, while remaining P0 work is dominated by platform integration, production identity/key custody, recovery, target-environment validation, Security Center acceptance, operational evidence, exact Seal identity, and Anchor qualification. Qualification remains blocked and no Seal candidate has been declared.
 Development progress note — Detection Engine V1 now has a bounded source-level correlation and explainability foundation. The broader Behavioral Threat Detection roadmap remains open for approved runtime signal producers, authenticated delivery, durable operations, target-environment validation, incident integration, and production acceptance.
 Development progress note — Incident Center V1 now has a bounded source-level Detection Engine review-intake foundation. It creates only non-authorizing review cases for fresh single-resource candidates. Durable multi-resource incident correlation, authenticated runtime ingestion, production incident creation, response orchestration, target-environment validation, and production acceptance remain open.
 
