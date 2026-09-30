@@ -1,5 +1,11 @@
 # Wardveil Security — Changelogs
 
+## 2026-09-29 — Manager Security State v2 source compatibility
+
+- Reconciled the existing Wardveil Security State v2 producer with GoreeCloud Manager's bounded read-only consumer rather than creating a duplicate status contract.
+- Verified Manager's pinned Wardveil Security State v2 schema blob is byte-identical to the current Wardveil schema.
+- Moved Manager from source-blocked to migration-required in Platform Contract 2.0 while preserving live producer authentication, delivery/freshness, target-environment, operational, and production acceptance gates.
+
 ## 2026-09-29 — GoreeCloud Policy and Observability v1 source adoption
 
 - Added a bounded GoreeCloud Policy v1 request/decision adapter pinned to authoritative Policy revision `46071886da37a6566b69cc923005eef64cce2bcc`.
