@@ -1,5 +1,13 @@
 # Wardveil Security — Changelogs
 
+## 2026-09-29 — Bounded Wardveil Platform API V1 declaration
+
+- Added a machine-readable private API contract for the already-implemented Cloudflare persistence Worker service-binding/RPC surface.
+- Declared supported API version `wardveil-persistence-rpc/v1` and symbolic endpoint `service-binding://goreecloud-wardveil-persistence` in Platform Contract 2.0.
+- Separated supported application RPC methods from acceptance-only retention/observability probe methods, preserved public HTTP as non-mutating `/healthz` and `/readyz`, and added exact-source CI validation.
+- Corrected stale README wording that still described the public runtime boundary as `/healthz`-only.
+- Production API acceptance remains unaccepted; this creates no public mutation API, deployment, Seal, Anchor, or execution/protection authority.
+
 ## 2026-09-29 — Fail-closed Seal readiness guard
 
 - Added a machine-readable Wardveil Seal-readiness record covering the release-critical gate groups still blocking candidate freeze; the current guard now includes a ninth public-history safety gate.

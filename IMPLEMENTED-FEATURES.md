@@ -33,6 +33,10 @@ Wardveil now has a privacy-minimized operational-signal constructor pinned to Go
 
 Wardveil's existing Security State v2 producer is source-compatible with GoreeCloud Manager's bounded read-only consumer. Manager pins Wardveil revision `9b41040ed48037451e660e860908316732384282`, and the pinned schema blob is byte-identical to the current Wardveil Security State v2 schema. This establishes source compatibility only; live producer authentication, delivery/refresh, target-environment evidence, and production acceptance remain open.
 
+## Wardveil Platform API V1 — bounded private source contract
+
+Wardveil now declares supported API version `wardveil-persistence-rpc/v1` through symbolic private service-binding endpoint `service-binding://goreecloud-wardveil-persistence`. The application surface is limited to the implemented persistence, checkpoint, execution-claim/receipt, health, and maintenance-evidence RPC methods. Acceptance-only observability/retention probe methods are excluded from the general application API. There is no generic public mutation API, and production API acceptance remains unaccepted pending deployed service identity, authenticated private transport, target-environment behavior, observability, recovery, and release evidence.
+
 ## Cloudflare liveness and readiness source interfaces
 
 The deployable Wardveil persistence Worker exposes `/healthz` for liveness and `/readyz` for readiness. The readiness path exercises the Durable Object binding and bounded schema/storage health path rather than treating process reachability as readiness. Both endpoints are non-mutating, return privacy-safe bounded status, and do not create Wardveil protection or execution authority.
