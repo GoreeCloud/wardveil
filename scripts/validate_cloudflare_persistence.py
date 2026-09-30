@@ -52,6 +52,10 @@ required_source = [
     "function addBoundedMilliseconds(value: number, delta: number, reason: string)",
     'addBoundedMilliseconds(retentionBase, EXECUTION_CLAIM_RETENTION_MS, "invalid_authorization_time")',
     'mutation_api: "service-binding-rpc-only"',
+    'const READINESS_TENANT_ID = "wardveil-readiness"',
+    'url.pathname === "/readyz"',
+    'dependency: "durable-object-sqlite"',
+    '"Cache-Control": "no-store"',
 ]
 for token in required_source:
     assert token in source, f"missing Cloudflare persistence invariant: {token}"
@@ -68,6 +72,7 @@ for forbidden_public_auth in (
 ):
     assert forbidden_public_auth not in source, "public bearer-token mutation surface must not be introduced by this adapter"
 assert 'url.pathname === "/healthz"' in source
+assert 'url.pathname === "/readyz"' in source
 assert 'return new Response("Not Found", { status: 404 })' in source
 
 for phrase in [
