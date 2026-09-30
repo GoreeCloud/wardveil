@@ -29,6 +29,10 @@ Wardveil now has a pure source adapter pinned to GoreeCloud Policy revision `460
 
 Wardveil now has a privacy-minimized operational-signal constructor pinned to GoreeCloud Observability revision `a7f6a65f442d3e517baddbe7b6ce7c250d142c8c`. It preserves all nine Observability states, explicit collection gaps, timezone-qualified evidence ordering, TTL bounds, and fail-closed privacy minimization without publishing telemetry or manufacturing healthy state. Live publication, producer authentication, retention/deletion, diagnostics/alerting, target-environment evidence, and production acceptance remain separate gates.
 
+## GoreeCloud Manager — Security State v2 source compatibility
+
+Wardveil's existing Security State v2 producer is source-compatible with GoreeCloud Manager's bounded read-only consumer. Manager pins Wardveil revision `9b41040ed48037451e660e860908316732384282`, and the pinned schema blob is byte-identical to the current Wardveil Security State v2 schema. This establishes source compatibility only; live producer authentication, delivery/refresh, target-environment evidence, and production acceptance remain open.
+
 ## Acceptance boundary
 
 Production cryptography, key management, authenticated runtime transport, production executor evidence, production deployment, cross-system runtime acceptance, Covered/Protected claims, and Stable status remain separate evidence-gated work. A Wardveil policy decision is not automatically execution authority, and branding or documentation alone is never protection evidence.
