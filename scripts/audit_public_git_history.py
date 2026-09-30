@@ -100,6 +100,88 @@ def is_allowed(detector: str, path: str, matched: bytes) -> bool:
     return (detector, path, matched) in ALLOWED_EXACT_MATCHES
 
 
+def git_ref_map(prefix: str) -> dict[str, str]:
+    raw = run(
+        "git",
+        "for-each-ref",
+        "--format=%(refname) %(objectname)",
+        prefix,
+    ).decode("utf-8", errors="replace")
+    refs: dict[str, str] = {}
+    for line in raw.splitlines():
+        refname, _, sha = line.partition(" ")
+        if refname and sha:
+            refs[refname] = sha
+    return refs
+
+
+def is_ancestor(ancestor: str, descendant: str) -> bool:
+    completed = subprocess.run(
+        ("git", "merge-base", "--is-ancestor", ancestor, descendant),
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    if completed.returncode == 0:
+        return True
+    if completed.returncode == 1:
+        return False
+    stderr = completed.stderr.decode("utf-8", errors="replace").strip()
+    raise SystemExit(
+        f"history audit ancestry check failed: {ancestor} -> {descendant}: {stderr}"
+    )
+
+
+def report_public_ref_inventory() -> None:
+    remote_prefix = "refs/remotes/origin/"
+    branch_refs = {
+        ref: sha
+        for ref, sha in git_ref_map("refs/remotes/origin").items()
+        if ref != "refs/remotes/origin/HEAD"
+    }
+    tag_refs = git_ref_map("refs/tags")
+    main_ref = "refs/remotes/origin/main"
+    main_sha = branch_refs.get(main_ref)
+    if not main_sha:
+        raise SystemExit(
+            "history audit cannot classify public refs: refs/remotes/origin/main is missing"
+        )
+
+    non_main = {ref: sha for ref, sha in branch_refs.items() if ref != main_ref}
+    by_tip: dict[str, list[str]] = {}
+    for ref, sha in branch_refs.items():
+        by_tip.setdefault(sha, []).append(ref)
+    duplicate_groups = [
+        (sha, sorted(refs))
+        for sha, refs in by_tip.items()
+        if len(refs) > 1
+    ]
+
+    merged: list[tuple[str, str]] = []
+    diverged: list[tuple[str, str]] = []
+    for ref, sha in sorted(non_main.items()):
+        if is_ancestor(sha, main_sha):
+            merged.append((ref, sha))
+        else:
+            diverged.append((ref, sha))
+
+    print(
+        "Wardveil public ref inventory: "
+        f"{len(branch_refs)} branches, {len(tag_refs)} tags, "
+        f"{len(duplicate_groups)} duplicate-tip groups, "
+        f"{len(merged)} non-main branches fully contained in main, "
+        f"{len(diverged)} non-main branches diverged from main."
+    )
+    for sha, refs in sorted(duplicate_groups):
+        names = ",".join(ref.removeprefix(remote_prefix) for ref in refs)
+        print(f"duplicate-tip tip={sha} branches={names}")
+    for ref, sha in diverged:
+        print(
+            "diverged-branch "
+            f"ref={ref.removeprefix(remote_prefix)} tip={sha}"
+        )
+
+
 def scan() -> int:
     paths, metadata = object_inventory()
     findings: list[tuple[str, str, str]] = []
@@ -132,6 +214,7 @@ def scan() -> int:
         "Wardveil public Git history audit: "
         f"{len(refs)} refs, {blobs_scanned} blobs, {bytes_scanned} bytes scanned."
     )
+    report_public_ref_inventory()
 
     if oversized_blobs:
         print("History audit cannot claim completeness: oversized blobs were skipped.", file=sys.stderr)
