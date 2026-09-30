@@ -75,6 +75,15 @@
         "goreecloud.platform.yaml"
       ],
       "reason": "No exact published release evidence, artifact identity, SBOM/signing provenance, or accepted rollback target is declared."
+    },
+    {
+      "id": "public-history-safety",
+      "state": "blocked",
+      "evidence": [
+        "scripts/audit_public_git_history.py",
+        "PROJECT-RECORD.md"
+      ],
+      "reason": "Credential-shaped retained-ref scanning is automated and green, but issue #176 still lacks a governed disposition for restricted non-secret provenance already published in reachable history and retained public refs."
     }
   ]
 }
