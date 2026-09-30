@@ -212,6 +212,8 @@ conformance:
     - scripts/test_wardveil_sqlite_execution_state.py
     - scripts/test_wardveil_platform_registry_delivery.py
     - website/GLAZE-UI-V1.6-ADOPTION.md
+    - qualification/seal-readiness.json
+    - scripts/audit_public_git_history.py
   blockers:
     - "Wardveil Foundation 0.9 is classified Weave: the core security architecture substantially exists, while overall production runtime acceptance and release convergence remain blocked even though bounded Wardveil Scan runtime and consumer scopes have exact-environment evidence."
     - GoreeCloud Manager Security State v2 producer/consumer source compatibility is established, but live authenticated producer identity, delivery/refresh, target-environment validation, operational evidence, and production acceptance remain migration-required.
@@ -224,3 +226,4 @@ conformance:
     - GoreeCloud Policy v1 source adoption is implemented, but live caller identity, authenticated decision exchange, distribution, freshness/expiry handling, obligations coordination, target-environment evidence, and production acceptance remain migration-required.
     - GoreeCloud Observability v1 source adoption is implemented for privacy-minimized operational signals, but live producer identity, authenticated publication/collection, freshness/completeness, retention/deletion, diagnostics/alerting, target-environment evidence, and production acceptance remain migration-required.
     - Source-level liveness/readiness interfaces now exist for the Cloudflare persistence runtime, but deployed readiness evidence, monitoring/alerting acceptance, recovery, Seal candidate identity, and final Anchor qualification remain open.
+    - Public-history credential-shaped retained-ref scanning is automated and green, but GitHub issue #176 still lacks a governed disposition for restricted non-secret producer/operational provenance already published in reachable history and retained public refs; no historical-erasure claim is made.
