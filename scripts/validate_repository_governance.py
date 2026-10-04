@@ -181,7 +181,7 @@ def validate_readme_release_status(readme: str, version_text: str) -> None:
         "README lifecycle status",
     )
     manifest = read(ROOT / "goreecloud.platform.yaml")
-    release_match = re.search(r"(?m)^version:\\s*['\"]?(\\d+\\.\\d+\\.\\d+)['\"]?\\s*$", manifest)
+    release_match = re.search(r"(?m)^version:\s*['"]?(\d+\.\d+\.\d+)['"]?\s*$", manifest)
     if not release_match:
         fail("platform manifest must declare a semantic release version")
     candidate_line = f"wardveil-{release_match.group(1)}-seal.1"
