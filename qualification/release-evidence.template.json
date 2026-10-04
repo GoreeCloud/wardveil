@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "component": "Wardveil Security",
+  "version": "2.0.0",
+  "candidate_id": "wardveil-2.0.0-seal.1",
+  "candidate_source_revision": "cc493530c02925a4404c54d2767c15d9fbfa0835",
+  "status": "pending",
+  "published_release": {
+    "status": "pending",
+    "tag": null,
+    "release_url": null,
+    "published_at": null
+  },
+  "artifact": {
+    "status": "pending",
+    "name": null,
+    "digest_sha256": null,
+    "package_identity": null
+  },
+  "provenance": {
+    "status": "pending",
+    "sbom": {
+      "status": "pending",
+      "identity": null,
+      "digest_sha256": null
+    },
+    "signing": {
+      "status": "pending",
+      "identity": null,
+      "digest_sha256": null
+    },
+    "source_attestation": {
+      "status": "pending",
+      "identity": null,
+      "digest_sha256": null
+    }
+  },
+  "deployment": {
+    "status": "pending",
+    "revision": null,
+    "identity": null,
+    "environment": null,
+    "observed_at": null
+  },
+  "rollback": {
+    "status": "pending",
+    "target_source_revision": "cc493530c02925a4404c54d2767c15d9fbfa0835",
+    "target_artifact_digest_sha256": null,
+    "exercise_status": "pending",
+    "observed_at": null
+  },
+  "verification": {
+    "status": "pending",
+    "canonical_readback_status": "pending",
+    "post_release_checks": []
+  },
+  "production_approved": false,
+  "authority_effect": "none"
+}
