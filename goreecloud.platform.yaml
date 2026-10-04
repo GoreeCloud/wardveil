@@ -89,9 +89,9 @@ platform_systems:
     result: applicable-migration-required
     version: '1.7.0'
     evidence:
-      - docs/SECURITY-CENTER-GLAZE-V1.7.md
+      - docs/integrations/security-center-static-site.md
       - website/README.md
-    notes: The canonical Security Center source in GoreeCloud/static-websites now targets Glaze V1.7 / 1.7.0 at revision 531744f2a82133caca8ddde00fa782415d1a42e1, with successful repository/main-site validation, isolated-artifact validation, responsive browser smoke including /security/, and a successful Cloudflare Pages deployment check. Migration remains required because canonical-origin readback, downstream rendered/accessibility/performance/resilience/rollback acceptance, final consumer approval, and legacy security.goreecloud.com source/deployment retirement or cutover remain incomplete. The repository-local website/ directory remains a historical V1.6 legacy/transitional deployment copy rather than current source authority.
+    notes: The canonical Security Center source in GoreeCloud/static-websites targets Glaze V1.7 / 1.7.0. Exact deployed/readback candidate 17303b6c7381faaa0e89ce6175ce24048fb56a12 passed repository/main-site, isolated-artifact, responsive/interaction, privacy/security, and canonical production readback evidence; all eleven HTML routes matched exact source bytes and /security/ matched blob f3d6cac2b16954e0879298de0724bfe16b916715. Current static-websites main 9ae21cf12e276ea7e553fcf2573318602886428e retains the same public Security bytes. Migration remains required because owner visual/keyboard/assistive-technology review, representative performance/resilience, final consumer approval, and legacy security.goreecloud.com retirement/cutover remain incomplete. The repository-local website/ directory remains a historical V1.6 legacy/transitional deployment copy rather than current source authority.
   mesh:
     result: applicable-migration-required
     version: null
@@ -229,7 +229,7 @@ conformance:
     - reference/wardveil_platform_registry_delivery.py
     - scripts/test_wardveil_sqlite_execution_state.py
     - scripts/test_wardveil_platform_registry_delivery.py
-    - docs/SECURITY-CENTER-GLAZE-V1.7.md
+    - docs/integrations/security-center-static-site.md
     - qualification/seal-readiness.json
     - scripts/audit_public_git_history.py
   blockers:
@@ -239,7 +239,7 @@ conformance:
     - Privacy Shield integration and production acceptance remain incomplete.
     - Canonical Everkeep v1.1 restore-verification consumption is source-validated and single-host durable execution/reconciliation is exact-head tested, but no fresh authoritative restore exercise exists for an exact deployed Wardveil revision; target-side readback, distributed/multi-host replay guarantees, and broader production durability remain incomplete.
     - Source-level Mesh evidence and Platform Registry clients are implemented and exact-head validated, but live producer identity, routing, publication, delivery, and end-to-end Mesh acceptance remain production-unaccepted.
-    - Canonical Security Center source now targets Glaze V1.7 / 1.7.0 at GoreeCloud/static-websites revision 531744f2a82133caca8ddde00fa782415d1a42e1 with successful repository/main-site validation, isolated-artifact validation, browser smoke, and a successful Cloudflare Pages deployment check. Canonical-origin readback, human rendered/accessibility/performance/resilience review, rollback, final consumer acceptance, and legacy security.goreecloud.com retirement/cutover remain open.
+    - Canonical Security Center Glaze V1.7 source, exact machine validation, deployment, and canonical readback are complete for static-websites candidate 17303b6c7381faaa0e89ce6175ce24048fb56a12; current main 9ae21cf12e276ea7e553fcf2573318602886428e preserves the same public Security bytes. The shared website remains pending-human-acceptance, so owner visual/keyboard/assistive-technology review, representative performance/resilience, final consumer approval, and legacy security.goreecloud.com retirement/cutover remain open.
     - Authorized Quarantine execution, external target readback/idempotency, authoritative Audit/Security Center provenance, and broader protection-claim authority remain unaccepted.
     - GoreeCloud Policy v1 source adoption is implemented, but live caller identity, authenticated decision exchange, distribution, freshness/expiry handling, obligations coordination, target-environment evidence, and production acceptance remain migration-required.
     - GoreeCloud Observability v1 source adoption is implemented for privacy-minimized operational signals, but live producer identity, authenticated publication/collection, freshness/completeness, retention/deletion, diagnostics/alerting, target-environment evidence, and production acceptance remain migration-required.
