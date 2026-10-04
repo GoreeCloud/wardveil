@@ -229,7 +229,7 @@ conformance:
     - reference/wardveil_platform_registry_delivery.py
     - scripts/test_wardveil_sqlite_execution_state.py
     - scripts/test_wardveil_platform_registry_delivery.py
-    - website/GLAZE-UI-V1.6-ADOPTION.md
+    - docs/SECURITY-CENTER-GLAZE-V1.7.md
     - qualification/seal-readiness.json
     - scripts/audit_public_git_history.py
   blockers:
