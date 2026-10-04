@@ -36,7 +36,7 @@ lifecycle_metadata:
     - docs/PROJECT-RECORD.md
     - docs/PLANNED-FEATURES.md
     - README.md
-version: '0.9'
+version: '2.0.0'
 
 supported_platforms:
   - linux
@@ -70,7 +70,7 @@ platform_systems:
     notes: Wardveil preserves Privacy Shield as the separate privacy and data-use authority and has current source-provenance integration for the read-only Privacy Shield consumer path. Independent Privacy Shield runtime acceptance, provider production acceptance, target-environment evidence, and overall production acceptance remain open.
   wardveil_security:
     result: not-applicable-justified
-    version: '0.9'
+    version: '2.0.0'
     evidence:
       - README.md
       - contracts/wardveil.capabilities.json
@@ -182,7 +182,7 @@ compatibility:
     - goreecloud-platform-contract==2.0
     - glaze-ui==1.6.0
   provides:
-    - wardveil-security-foundation-0.9
+    - wardveil-security-2.0
     - wardveil-mesh-evidence-profile-v1
     - wardveil-scan
     - wardveil-durable-execution-state-single-host
