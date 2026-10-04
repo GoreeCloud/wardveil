@@ -1,5 +1,5 @@
 {
-  "contract_version": "0.1.0",
+  "contract_version": "0.2.0",
   "foundation_version": "0.9.0",
   "component": "Wardveil Quarantine Executor Cloudflare Deployment Gate",
   "purpose": "deploy the bounded quarantine executor only after explicit target selection and least-privilege runtime preconditions are verified, while preserving unaccepted production status until real mutation, cryptography, identity, failure, privacy, and recovery evidence exists",
@@ -11,7 +11,15 @@
     "pinned_wrangler_version": "4.37.0",
     "generated_production_config_is_ephemeral": true,
     "source_placeholder_may_be_deployed": false,
-    "production_runtime_status_after_workflow": "unaccepted"
+    "production_runtime_status_after_workflow": "unaccepted",
+    "declared_seal_candidate_source_required": true,
+    "candidate_metadata_source": "qualification/seal-candidate.json",
+    "candidate_source_must_be_ancestor_of_workflow_control_revision": true,
+    "workflow_control_revision_separate_from_deployed_revision": true,
+    "deployment_source_binding": "qualification/seal-candidate.json#source_revision",
+    "workflow_control_revision_recorded": true,
+    "workflow_control_revision_is_deployed_revision": false,
+    "candidate_must_be_ancestor_of_workflow_control_revision": true
   },
   "target_authority": {
     "target_worker_name_required_at_dispatch": true,
@@ -69,7 +77,8 @@
     "privacy_shield_acceptance_required": true,
     "everkeep_acceptance_required_when_applicable": true,
     "workflow_can_set_acceptance_status_accepted": false,
-    "workflow_can_authorize_protected_by_wardveil_claim": false
+    "workflow_can_authorize_protected_by_wardveil_claim": false,
+    "workflow_control_revision_recorded_separately": true
   },
   "privacy": {
     "raw_resource_content_required": false,

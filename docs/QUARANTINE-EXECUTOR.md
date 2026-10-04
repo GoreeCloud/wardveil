@@ -51,7 +51,7 @@ The current HMAC verification secret exists only to preserve conformance compati
 
 ## Cloudflare deployment gate
 
-`.github/workflows/deploy-cloudflare-quarantine-executor.yml` and `contracts/wardveil.quarantine-executor-deployment.json` define the controlled deployment gate for the source candidate. This workflow is manual, main-branch-only, exact-revision-bound, and attached to the `wardveil-production` GitHub environment. It does not make deployment equivalent to production acceptance.
+`.github/workflows/deploy-cloudflare-quarantine-executor.yml` and `contracts/wardveil.quarantine-executor-deployment.json` define the controlled deployment gate for the source candidate. This workflow is manual, main-branch-only, Seal-source-bound, and attached to the `wardveil-production` GitHub environment. Authoritative `main` controls the workflow, while `qualification/seal-candidate.json#source_revision` controls the exact source bytes deployed. The workflow records the workflow-control revision separately and refuses to treat it as the deployed revision. Deployment does not become production acceptance.
 
 A dispatch must provide a real existing target Worker and an explicit least-privilege subset of `mail_attachment`, `drive_file`, `browser_download`, and `ai_artifact`. The workflow rejects `REPLACE_AT_DEPLOYMENT`, rejects Wardveil control-plane Workers as target resource authorities, rejects empty/duplicate/unknown resource types, and verifies both the selected target Worker and `goreecloud-wardveil-persistence` already exist before the executor is deployed. This follows the Cloudflare service-binding requirement that a downstream Worker exist before a Worker that binds to it is deployed.
 
@@ -61,7 +61,7 @@ The generated production Wrangler configuration is ephemeral. It replaces only t
 
 After deployment, `cloudflare/quarantine-executor-acceptance-runner/` starts only on loopback and calls the deployed executor through a remote Cloudflare service binding. Its probe is intentionally non-mutating: it submits a deliberately invalid policy and requires the exact `invalid_policy_record` rejection. Because the executor checks its deployment target before policy parsing, this proves that internal RPC reaches a deployed executor whose source placeholder has been replaced, without creating a valid execution authorization or invoking the target quarantine adapter.
 
-The deployment evidence manifest stays `unaccepted`. A successful deployment and non-mutating transport probe still do not prove the selected target implements the required idempotency/readback interface, that a quarantine side effect succeeded, that production cryptography/key lifecycle is accepted, or that Privacy Shield/Everkeep requirements are satisfied.
+The deployment evidence manifest records both the exact Seal source/deployed revision and the separate governing workflow-control revision, and stays `unaccepted`. A successful deployment and non-mutating transport probe still do not prove the selected target implements the required idempotency/readback interface, that a quarantine side effect succeeded, that production cryptography/key lifecycle is accepted, or that Privacy Shield/Everkeep requirements are satisfied.
 
 ## GoreeCloud Drive target source milestone
 

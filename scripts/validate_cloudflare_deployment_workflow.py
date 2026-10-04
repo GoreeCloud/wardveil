@@ -10,7 +10,7 @@ acceptance = json.loads((ROOT / "contracts/wardveil.cloudflare.runtime-acceptanc
 wrangler = (ROOT / "cloudflare/wrangler.jsonc").read_text()
 
 required = {
-    "schema_version": 2,
+    "schema_version": 3,
     "worker_name": "goreecloud-wardveil-persistence",
     "acceptance_probe_worker_name": "goreecloud-wardveil-acceptance-probe",
     "wrangler_version": "4.37.0",
@@ -29,6 +29,10 @@ required = {
     "health_success_is_protection_claim": False,
     "storage_health_is_protection_claim": False,
     "production_runtime_status_source": "contracts/wardveil.cloudflare.runtime-acceptance.json",
+    "deployment_source_binding": "qualification/seal-candidate.json#source_revision",
+    "workflow_control_revision_recorded": True,
+    "candidate_must_be_ancestor_of_workflow_control_revision": True,
+    "workflow_control_revision_is_deployed_revision": False,
 }
 for key, expected in required.items():
     if contract.get(key) != expected:
@@ -50,12 +54,14 @@ for token in [
     "WARDVEIL_HEALTH_URL: ${{ secrets.WARDVEIL_HEALTH_URL }}",
     "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
     "persist-credentials: false",
-    'test "$GITHUB_SHA" = "$EXPECTED_SHA"',
-    'test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"',
+    'test "$GITHUB_REF" = "refs/heads/main"',
+    'expected_sha does not match the declared Seal candidate source',
+    'git merge-base --is-ancestor "$WARDVEIL_CANDIDATE_SHA" "$GITHUB_SHA"',
+    'test "$(git rev-parse HEAD)" = "$WARDVEIL_CANDIDATE_SHA"',
     "wrangler@4.37.0",
     "npx wrangler deploy --config wrangler.jsonc",
     "Deploy internal Wardveil acceptance probe",
-    "--var EXPECTED_REVISION:$GITHUB_SHA",
+    "--var EXPECTED_REVISION:$WARDVEIL_CANDIDATE_SHA",
     "acceptance-runner/wrangler.jsonc",
     "Collect privileged service-binding and retention evidence",
     "Collect bounded observability failure evidence",
@@ -65,6 +71,7 @@ for token in [
     '"dependency":"durable-object-sqlite"',
     "POST \"$origin/records\"",
     "404|405",
+    "'workflow_control_revision': workflow_control_sha",
     "Remaining pending acceptance evidence: Everkeep-governed restore verification",
     "Runtime acceptance status: **unaccepted**",
 ]:

@@ -13,7 +13,9 @@ This document defines the deployment and acceptance boundary for the Wardveil Se
 
 ## Required deployment properties
 
-A production candidate must preserve the repository `cloudflare/wrangler.jsonc` configuration or an explicitly reviewed environment-specific derivative, including the SQLite Durable Object migration, service-binding-first mutation boundary, explicit compatibility date, observability configuration, and absence of secrets in source control.
+Production dispatch is controlled from authoritative `main`, but the deployed bytes are not inferred from the workflow-control commit. The workflow requires `expected_sha` to exactly match `qualification/seal-candidate.json#source_revision`, proves that candidate is an ancestor of the governing `main` revision, then checks out and deploys that exact Seal source. Runtime evidence records both the Seal source/deployed revision and the separate workflow-control revision.
+
+A production candidate must preserve the repository `cloudflare/wrangler.jsonc` configuration or an explicitly reviewed environment-specific derivative from that declared Seal source, including the SQLite Durable Object migration, service-binding-first mutation boundary, explicit compatibility date, observability configuration, and absence of secrets in source control.
 
 Production acceptance requires evidence that: the deployed Worker revision matches an accepted repository revision; `/healthz` reports the expected schema and bounded storage-health state; authorized internal RPC can append/read records; duplicate IDs fail safely; consumer checkpoints cannot regress; retention alarms create maintenance evidence without rewriting surviving records; payload digests verify after readback; PITR availability is distinguished from restore verification; observability captures Worker/Durable Object failures; and no public endpoint grants generic write, checkpoint, retention, migration, or recovery authority.
 
@@ -29,4 +31,4 @@ PITR availability is not restore verification. Recovery acceptance requires an e
 
 ## Production acceptance state
 
-Source validation and Cloudflare Pages preview success do not prove that the Worker/Durable Object backend has been deployed or accepted in production. Until live Worker evidence is collected, production runtime status remains **unaccepted**.
+Source validation and Cloudflare Pages preview success do not prove that the Worker/Durable Object backend has been deployed or accepted in production. A newer workflow-control commit also does not silently replace the frozen Seal source being qualified. Until live exact-candidate Worker evidence is collected, production runtime status remains **unaccepted**.

@@ -311,3 +311,11 @@ The shared website consumer remains `pending-human-acceptance`. Wardveil Version
 
 This reconciliation also repairs stale Platform Contract evidence paths to the canonical `docs/integrations/security-center-static-site.md` record. No protection, runtime, production, Anchor, or Stable authority is created.
 
+## October 4, 2026 — Seal-bound production deployment control
+
+The Wardveil production deployment workflows were corrected so authoritative `main` controls the workflow while the declared Seal candidate controls the exact source bytes deployed. A dispatch must now provide an exact SHA equal to `qualification/seal-candidate.json#source_revision`; the workflow verifies that identity against the governing main checkout, requires the candidate to be an ancestor of the workflow-control revision, then checks out and deploys the exact Seal source.
+
+Runtime evidence now distinguishes the exact Seal source/deployed revision from the separate workflow-control revision. This prevents later governance, evidence, validator, or workflow-maintenance commits on `main` from silently replacing the frozen candidate being qualified.
+
+The change does not promote Wardveil, does not mark Cloudflare runtime acceptance complete, and does not create a protection claim. Live exact-candidate deployment, liveness/readiness, privileged service-binding evidence, failure evidence, Everkeep restore verification, and other remaining Version 2.0 gates still require authoritative runtime evidence.
+

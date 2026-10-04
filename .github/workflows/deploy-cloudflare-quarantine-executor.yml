@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       expected_sha:
-        description: Exact main commit SHA approved for deployment
+        description: Exact declared Seal candidate source SHA approved for deployment
         required: true
         type: string
       quarantine_target_service:
@@ -35,22 +35,50 @@ jobs:
       QUARANTINE_TARGET_SERVICE: ${{ inputs.quarantine_target_service }}
       QUARANTINE_RESOURCE_TYPES: ${{ inputs.authorized_resource_types }}
       GENERATED_CONFIG: quarantine-executor/wrangler.production.generated.jsonc
+      WARDVEIL_CANDIDATE_SHA: ${{ inputs.expected_sha }}
     steps:
-      - name: Check out exact source revision
+      - name: Check out governing main revision
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          fetch-depth: 0
           ref: ${{ github.sha }}
 
-      - name: Verify approved main revision
-        env:
-          EXPECTED_SHA: ${{ inputs.expected_sha }}
+      - name: Verify declared Seal candidate source
         run: |
           set -euo pipefail
-          test -n "$EXPECTED_SHA"
-          test "$GITHUB_SHA" = "$EXPECTED_SHA"
-          test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
           test "$GITHUB_REF" = "refs/heads/main"
+          test -n "$WARDVEIL_CANDIDATE_SHA"
+          python3 - <<'PY'
+          import json
+          import os
+          import re
+          from pathlib import Path
+
+          expected = os.environ["WARDVEIL_CANDIDATE_SHA"]
+          if not re.fullmatch(r"[0-9a-f]{40}", expected):
+              raise SystemExit("expected_sha must be an exact lowercase commit SHA")
+          candidate = json.loads(Path("qualification/seal-candidate.json").read_text())
+          if candidate.get("lifecycle") != "seal":
+              raise SystemExit("deployment requires a declared Seal candidate")
+          if candidate.get("source_revision") != expected:
+              raise SystemExit("expected_sha does not match the declared Seal candidate source")
+          if candidate.get("production_approved") is not False or candidate.get("authority_effect") != "none":
+              raise SystemExit("Seal candidate metadata must remain non-authorizing before qualification")
+          PY
+          git merge-base --is-ancestor "$WARDVEIL_CANDIDATE_SHA" "$GITHUB_SHA"
+
+      - name: Check out exact Seal candidate source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+          ref: ${{ inputs.expected_sha }}
+
+      - name: Verify exact candidate checkout
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$WARDVEIL_CANDIDATE_SHA"
 
       - name: Validate deployment scope
         run: |
@@ -198,7 +226,7 @@ jobs:
           source = Path('quarantine-executor-acceptance-runner/wrangler.jsonc')
           config = json.loads(source.read_text())
           config['main'] = str((source.parent / 'src/index.ts').resolve())
-          config['vars']['EXPECTED_REVISION'] = os.environ['GITHUB_SHA']
+          config['vars']['EXPECTED_REVISION'] = os.environ['WARDVEIL_CANDIDATE_SHA']
           Path('/tmp/wardveil-runner.jsonc').write_text(json.dumps(config, indent=2) + '\n')
           PY
           npx wrangler dev --config /tmp/wardveil-runner.jsonc --ip 127.0.0.1 --port 8791 > /tmp/wardveil-quarantine-runner.log 2>&1 &
@@ -218,7 +246,7 @@ jobs:
           code="$(curl --silent --show-error --output /tmp/wardveil-quarantine-transport.json --write-out '%{http_code}' \
             --request POST \
             --header 'content-type: application/json' \
-            --data "{\"revision\":\"$GITHUB_SHA\"}" \
+            --data "{\"revision\":\"$WARDVEIL_CANDIDATE_SHA\"}" \
             http://127.0.0.1:8791/probe)"
           cat /tmp/wardveil-quarantine-transport.json
           test "$code" = "200"
@@ -253,7 +281,8 @@ jobs:
               'schema_version': 1,
               'component': 'Wardveil quarantine executor deployment',
               'environment': 'production-candidate',
-              'deployed_revision': os.environ['GITHUB_SHA'],
+              'deployed_revision': os.environ['WARDVEIL_CANDIDATE_SHA'],
+              'workflow_control_revision': os.environ['GITHUB_SHA'],
               'collected_at': now,
               'source': os.environ['EVIDENCE_SOURCE'],
               'quarantine_target_service': os.environ['QUARANTINE_TARGET_SERVICE'],
@@ -290,7 +319,7 @@ jobs:
           {
             echo '## Wardveil quarantine executor deployment evidence'
             echo
-            echo "- Exact deployed revision: \`$GITHUB_SHA\`"
+            echo "- Exact Seal source/deployed revision: \`$WARDVEIL_CANDIDATE_SHA\`"
             echo "- Target Worker: \`$QUARANTINE_TARGET_SERVICE\`"
             echo "- Authorized resource types: \`$QUARANTINE_RESOURCE_TYPES\`"
             echo '- Downstream target and persistence Workers existed before deployment'
