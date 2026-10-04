@@ -29,7 +29,7 @@ def main() -> None:
     runner_source = RUNNER_SOURCE.read_text()
     doc = DOC.read_text()
 
-    require(contract.get("contract_version") == "0.1.0", "unexpected quarantine deployment contract version")
+    require(contract.get("contract_version") == "0.2.0", "unexpected quarantine deployment contract version")
     require(contract.get("foundation_version") == "0.9.0", "deployment gate must target Foundation 0.9")
     require(contract.get("production_runtime_status") == "unaccepted", "deployment source must remain unaccepted")
 
@@ -49,6 +49,9 @@ def main() -> None:
     require(deployment.get("workflow_control_revision_recorded") is True, "workflow-control revision must be recorded separately")
     require(deployment.get("workflow_control_revision_is_deployed_revision") is False, "workflow-control revision must not be mislabeled as deployed source")
     require(deployment.get("candidate_must_be_ancestor_of_workflow_control_revision") is True, "candidate ancestry guard must remain enabled")
+    require(deployment.get("candidate_metadata_source") == "qualification/seal-candidate.json", "candidate metadata source drifted")
+    require(deployment.get("candidate_source_must_be_ancestor_of_workflow_control_revision") is True, "candidate source ancestry contract drifted")
+    require(deployment.get("workflow_control_revision_separate_from_deployed_revision") is True, "workflow-control/deployed revision separation drifted")
 
     target = contract.get("target_authority") or {}
     for key in (
@@ -106,6 +109,7 @@ def main() -> None:
         require(evidence.get(key) is True, f"missing runtime evidence requirement: {key}")
     require(evidence.get("workflow_can_set_acceptance_status_accepted") is False, "deployment workflow must not self-accept")
     require(evidence.get("workflow_can_authorize_protected_by_wardveil_claim") is False, "deployment workflow must not authorize protection claim")
+    require(evidence.get("workflow_control_revision_recorded_separately") is True, "runtime evidence must preserve workflow-control revision separately")
 
     require(executor.get("workers_dev") is False and executor.get("preview_urls") is False, "executor public routes must remain disabled")
     require(executor.get("vars", {}).get("WARDVEIL_QUARANTINE_TARGET_SERVICE") == "REPLACE_AT_DEPLOYMENT", "source target placeholder must remain canonical")
