@@ -56,6 +56,7 @@ This directory is the canonical documentation tree for **Wardveil Security by Go
 - [Security Center](SECURITY-CENTER.md)
 - [Security Center Glaze V1.7 evidence](SECURITY-CENTER-GLAZE-V1.7.md)
 - [Security Center V2](SECURITY-CENTER-V2.md)
+- [Security Center static-site and Glaze authority](integrations/security-center-static-site.md)
 
 ## Platform integrations and operations
 
