@@ -54,6 +54,7 @@ This directory is the canonical documentation tree for **Wardveil Security by Go
 - [Audit Evidence Ledger V2](AUDIT-EVIDENCE-LEDGER-V2.md)
 - [Security state V2](SECURITY-STATE-V2.md)
 - [Security Center](SECURITY-CENTER.md)
+- [Security Center Glaze V1.7 evidence](SECURITY-CENTER-GLAZE-V1.7.md)
 - [Security Center V2](SECURITY-CENTER-V2.md)
 
 ## Platform integrations and operations
