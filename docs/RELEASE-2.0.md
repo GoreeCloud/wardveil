@@ -19,7 +19,7 @@ The authoritative current implemented scope is `docs/IMPLEMENTED-FEATURES.md`. H
 
 ## Non-deferrable 2.0 Anchor gates
 
-The nine gate groups in `qualification/seal-readiness.json` remain attached to Version 2.0. They may not be moved to 2.0.1 merely to obtain a Stable label. Anchor/Stable promotion requires those gates to pass for the exact 2.0 candidate, including applicable production identity/key custody, platform-system acceptance, target-runtime evidence, Everkeep recovery, consequential-execution readback, observability/monitoring, current Glaze acceptance for shipped UI, release provenance/rollback, and public-history safety.
+All nine gate groups in `qualification/seal-readiness.json` remain attached to Version 2.0; `public-history-safety` has passed and the other eight remain blocked. They may not be moved to 2.0.1 merely to obtain a Stable label. Anchor/Stable promotion requires every remaining gate to pass for the exact 2.0 candidate, including applicable production identity/key custody, platform-system acceptance, target-runtime evidence, Everkeep recovery, consequential-execution readback, observability/monitoring, current Glaze acceptance for shipped UI, and release provenance/rollback. The release gate now has a machine-readable pending evidence contract, but no accepted release record exists.
 
 ## Version 2.0.1
 
