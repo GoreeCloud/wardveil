@@ -292,3 +292,12 @@ The canonical Security Center route in `GoreeCloud/static-websites/sites/main/se
 Static-websites repository validation run `37171153953` and main website validation run `37171153974` passed. The isolated artifact validated at 100 files / 322713 bytes, browser smoke passed all eleven canonical routes including `/security/` across representative widths, and main-push Cloudflare Pages check `111344235579` reported successful deployment of the exact revision. The Wardveil repository-local `website/` tree remains a historical/transitional V1.6 deployment copy for `security.goreecloud.com` and is not relabeled as V1.7.
 
 The Version 2.0 `security-center-glaze-acceptance` gate remains blocked pending exact-current rendered/human/accessibility/performance/resilience/rollback acceptance, canonical deployed-byte readback, legacy deployment cutover/retirement, and final production consumer acceptance. No protection, runtime, Anchor, or Stable authority is created by the source migration.
+
+## October 3, 2026 — Release provenance and rollback evidence contract
+
+Wardveil added `qualification/release-evidence.template.json`, `docs/RELEASE-PROVENANCE-ROLLBACK.md`, and a fail-closed validator to define the exact evidence required by the Version 2.0 `release-provenance-rollback` gate.
+
+The template binds candidate `wardveil-2.0.0-seal.1` to required published release identity, artifact/package digest, SBOM/signing/source-attestation evidence, exact deployment identity, canonical readback, rollback target, and a completed rollback exercise. Every release-specific value remains pending or null, and the template is explicitly non-authorizing.
+
+The gate therefore remains blocked. No release tag, release artifact, production deployment, Anchor, Stable, or `Protected by Wardveil` authority is established by defining the evidence contract.
+
