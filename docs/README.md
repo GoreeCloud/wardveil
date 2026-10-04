@@ -7,6 +7,7 @@ This directory is the canonical documentation tree for **Wardveil Security by Go
 - [Project specifications](PROJECT-SPECIFICATIONS.md)
 - [Project record](PROJECT-RECORD.md)
 - [Version 2.0 release boundary](RELEASE-2.0.md)
+- [Release provenance and rollback evidence](RELEASE-PROVENANCE-ROLLBACK.md)
 - [Public-history safety disposition](PUBLIC-HISTORY-DISPOSITION.md)
 - [Capabilities](CAPABILITIES.md)
 - [Features](FEATURES.md)
