@@ -25,8 +25,8 @@ lifecycle_metadata:
     package_identity: null
     sbom_identity: null
     schema_migration_identity: null
-    configuration_boundary: "Provider-neutral Foundation 0.9 source candidate; qualification evidence must bind production deployment/provider state to this candidate, and any material runtime/dependency/security/recovery/platform/configuration change supersedes it."
-    dependency_state: "Anchor qualification blocked on qualification/seal-readiness.json; unresolved qualification dependencies do not expand candidate authority."
+    configuration_boundary: "Wardveil Version 2.0 release candidate over the verified Foundation 0.9 implementation source; qualification evidence must bind production deployment/provider state to this candidate, and any material runtime/dependency/security/recovery/platform/configuration change supersedes it."
+    dependency_state: "Version 2.0 Anchor qualification is blocked on qualification/seal-readiness.json; unfinished feature expansion is assigned to 2.0.1 and does not reduce candidate qualification requirements."
     previous_known_good: "Weave source baseline cc493530c02925a4404c54d2767c15d9fbfa0835"
     rollback_target: "cc493530c02925a4404c54d2767c15d9fbfa0835"
   last_transition: null
