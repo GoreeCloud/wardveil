@@ -92,7 +92,7 @@ platform_systems:
       - website/GLAZE-UI-V1.6-ADOPTION.md
       - website/glaze-ui-v1.6.0.css
       - website/index.html
-    notes: Security Center source now targets the current GLAZE UI V1.6 / 1.6.0 Anchor consumer contract (with Stable compatibility naming retained by Glaze UI) through a bounded repository-local source mapping. Exact-revision rendered review, accessibility, representative-target/performance, rollback, deployed-byte/provenance, consumer-registry, release, and production acceptance remain required before conformance.
+    notes: Security Center source remains on historical GLAZE UI V1.6 / 1.6.0. The current shared target is Glaze V1.7 / 1.7.0, so this relationship remains migration-required until fresh source adoption plus exact-revision rendered, accessibility, representative-target/performance, rollback, deployed-byte/provenance, consumer-registry, release, and production acceptance are complete.
   mesh:
     result: applicable-migration-required
     version: null
@@ -177,10 +177,10 @@ external_dependencies:
 
 compatibility:
   platform_contract: '2.0'
-  glaze_ui_required: '1.6.0'
+  glaze_ui_required: '1.7.0'
   requires:
     - goreecloud-platform-contract==2.0
-    - glaze-ui==1.6.0
+    - glaze-ui==1.7.0
   provides:
     - wardveil-security-2.0
     - wardveil-mesh-evidence-profile-v1
@@ -240,7 +240,7 @@ conformance:
     - Privacy Shield integration and production acceptance remain incomplete.
     - Canonical Everkeep v1.1 restore-verification consumption is source-validated and single-host durable execution/reconciliation is exact-head tested, but no fresh authoritative restore exercise exists for an exact deployed Wardveil revision; target-side readback, distributed/multi-host replay guarantees, and broader production durability remain incomplete.
     - Source-level Mesh evidence and Platform Registry clients are implemented and exact-head validated, but live producer identity, routing, publication, delivery, and end-to-end Mesh acceptance remain production-unaccepted.
-    - Security Center source now targets GLAZE UI V1.6 / 1.6.0, but final human rendered review, accessibility, representative-target/performance, rollback, deployment, deployed-byte/provenance, consumer-registry, and production consumer acceptance remain open.
+    - Security Center source remains on historical GLAZE UI V1.6 / 1.6.0 while the current required target is Glaze V1.7 / 1.7.0; migration plus human rendered review, accessibility, representative-target/performance, rollback, deployment, deployed-byte/provenance, consumer-registry, and production consumer acceptance remain open.
     - Authorized Quarantine execution, external target readback/idempotency, authoritative Audit/Security Center provenance, and broader protection-claim authority remain unaccepted.
     - GoreeCloud Policy v1 source adoption is implemented, but live caller identity, authenticated decision exchange, distribution, freshness/expiry handling, obligations coordination, target-environment evidence, and production acceptance remain migration-required.
     - GoreeCloud Observability v1 source adoption is implemented for privacy-minimized operational signals, but live producer identity, authenticated publication/collection, freshness/completeness, retention/deletion, diagnostics/alerting, target-environment evidence, and production acceptance remain migration-required.
