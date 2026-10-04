@@ -2,7 +2,7 @@
 
 Wardveil Security is GoreeCloud's platform-wide first-party security system and shared security plane. It coordinates evidence-backed trust, policy, protection, detection, scanning, quarantine, incident response, audit, and security-center experiences across GoreeCloud.
 
-> **Current status:** Seal under Platform Contract 2.0. Exact candidate `wardveil-0.9.0-seal.1` freezes Foundation 0.9 implementation source at `cc493530c02925a4404c54d2767c15d9fbfa0835`. Deployment remains development and Anchor qualification is blocked on the gate groups in `qualification/seal-readiness.json`. The Seal transition does not create a `Protected by Wardveil` claim, production runtime acceptance, or Anchor authority; any material runtime, dependency, security, recovery, supported-platform, or release-critical configuration change supersedes this candidate.
+> **Current status:** Seal under Platform Contract 2.0. Exact candidate `wardveil-2.0.0-seal.1` assigns Wardveil **Version 2.0.0** to the already-validated Foundation 0.9 implementation source at `cc493530c02925a4404c54d2767c15d9fbfa0835`. Deployment remains development and Anchor/Stable qualification is blocked on the non-deferrable gate groups in `qualification/seal-readiness.json`. Future feature expansion that is not required to qualify the bounded 2.0 release is assigned to **2.0.1** in `docs/PLANNED-FEATURES.md`. This version rebaseline does not create a `Protected by Wardveil` claim, production runtime acceptance, or Anchor authority.
 
 ## First-party security capabilities
 
