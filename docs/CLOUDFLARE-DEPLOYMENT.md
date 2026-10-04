@@ -32,3 +32,14 @@ PITR availability is not restore verification. Recovery acceptance requires an e
 ## Production acceptance state
 
 Source validation and Cloudflare Pages preview success do not prove that the Worker/Durable Object backend has been deployed or accepted in production. A newer workflow-control commit also does not silently replace the frozen Seal source being qualified. Until live exact-candidate Worker evidence is collected, production runtime status remains **unaccepted**.
+
+
+## October 4, 2026 deployment preflight
+
+GitHub Actions run `37236563970` dispatched the governed production workflow from authoritative `main` for exact Seal source `cc493530c02925a4404c54d2767c15d9fbfa0835`.
+
+Candidate identity, ancestry, and exact checkout checks passed. The run then stopped at the required environment-input preflight before Wrangler setup or any deployment step.
+
+The production environment did not provide the three required inputs named by the workflow: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, and `WARDVEIL_HEALTH_URL`.
+
+No Worker deployment, runtime probe, Durable Object mutation, or production acceptance evidence occurred. Runtime acceptance remains unaccepted until those environment inputs are provisioned through the authorized configuration process and a fresh exact-candidate run succeeds.
