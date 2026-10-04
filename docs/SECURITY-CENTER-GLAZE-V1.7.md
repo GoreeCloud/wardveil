@@ -40,8 +40,9 @@ For exact static-websites revision `531744f2a82133caca8ddde00fa782415d1a42e1`:
 - repository validation passed;
 - retained-public-site validation passed;
 - the canonical website source/build/browser validation passed;
-- Cloudflare Pages check `111350809391` completed successfully; and
-- the successful Pages preview is `https://3f1561c8.goreecloud-website.pages.dev`.
+- main-push Cloudflare Pages check `111344235579` completed successfully for the exact revision, with deployment id `833c933e-f6d0-48ce-b14d-30c8e62a74f2`;
+- a later branch-preview Pages check `111350809391` also completed successfully for the unchanged public-source revision; and
+- the branch preview is `https://3f1561c8.goreecloud-website.pages.dev`.
 
 This establishes canonical source adoption and a successful Pages deployment check for the shared website revision.
 
