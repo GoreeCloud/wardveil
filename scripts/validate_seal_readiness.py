@@ -58,9 +58,9 @@ def main() -> None:
 
     if candidate.get("schema_version") != 1 or candidate.get("component") != "Wardveil Security":
         fail("candidate identity drifted")
-    if candidate.get("candidate_id") != "wardveil-0.9.0-seal.1":
+    if candidate.get("candidate_id") != "wardveil-2.0.0-seal.1":
         fail("unexpected Wardveil Seal candidate id")
-    if candidate.get("lifecycle") != "seal" or candidate.get("candidate_version") != "0.9.0":
+    if candidate.get("lifecycle") != "seal" or candidate.get("candidate_version") != "2.0.0":
         fail("candidate lifecycle/version drifted")
     source_revision = candidate.get("source_revision")
     if not isinstance(source_revision, str) or not re.fullmatch(r"[0-9a-f]{40}", source_revision):
@@ -115,7 +115,7 @@ def main() -> None:
         fail("no Anchor blockers remain; perform a separate exact-candidate Anchor transition instead")
 
     print(
-        "Wardveil Seal candidate guard passed: wardveil-0.9.0-seal.1 is frozen; "
+        "Wardveil Seal candidate guard passed: wardveil-2.0.0-seal.1 is frozen; "
         f"Anchor qualification remains blocked by {len(blocked)} gate groups."
     )
 

@@ -269,3 +269,10 @@ Routine implementation chronology remains in `CHANGELOGS.md`. `FEATURES.md` reta
 Wardveil migrated its human-readable repository documentation into the canonical `docs/` tree. The change preserves document content and Git history, retains `README.md`, `LICENSE`, `VERSION`, source-control controls, `goreecloud.platform.yaml`, and implementation directories at root for entry-point or technical purposes, and updates path-sensitive validators, workflows, contracts, evidence records, and ownership controls.
 
 Repository governance now rejects migrated human-readable documentation at root. This is a repository-organization and maintainability change only; it does not alter Wardveil runtime/provider acceptance, protection claims, Seal, Anchor, release, or production authority.
+
+
+## October 3, 2026 — Version 2.0 release identity and successor split
+
+Wardveil's governed release identity is now **Internal Version 2.0.0 / External Version 2.0.0** while remaining lifecycle **Seal**. Candidate `wardveil-2.0.0-seal.1` deliberately reuses the already-validated Foundation 0.9 implementation source `cc493530c02925a4404c54d2767c15d9fbfa0835`; this is a release-scope/version rebaseline, not a claim that previously unaccepted runtime behavior became verified.
+
+All nine gate groups in `qualification/seal-readiness.json` remain Version 2.0 Anchor blockers. Unfinished or unverified feature expansion that is not required to qualify the bounded 2.0 release is transferred to Version 2.0.1. Stable/Anchor status remains withheld until the exact 2.0 candidate satisfies every applicable gate.

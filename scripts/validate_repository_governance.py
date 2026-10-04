@@ -180,7 +180,11 @@ def validate_readme_release_status(readme: str, version_text: str) -> None:
         "> **Current status:** Seal under Platform Contract 2.0.",
         "README lifecycle status",
     )
-    candidate_line = f"wardveil-{version}-seal.1"
+    manifest = read(ROOT / "goreecloud.platform.yaml")
+    release_match = re.search(r"(?m)^version:\s*'?(\d+\.\d+\.\d+)'?\s*$", manifest)
+    if not release_match:
+        fail("platform manifest must declare a semantic release version")
+    candidate_line = f"wardveil-{release_match.group(1)}-seal.1"
     require(readme, candidate_line, "README Seal candidate identity")
     require(readme, f"Foundation {match.group(1)}.{match.group(2)} implementation source", "README release status")
 
