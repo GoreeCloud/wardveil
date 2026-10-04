@@ -1,5 +1,12 @@
 # Wardveil Security — Changelogs
 
+## 2026-10-03 — Version 2.0 release provenance/rollback evidence contract
+
+- Added a fail-closed machine-readable release-evidence template for `wardveil-2.0.0-seal.1`.
+- Bound required final evidence to exact release/tag identity, artifact/package digest, SBOM/signing/source attestation, deployed revision/environment, canonical readback, and a completed rollback exercise.
+- Added foundation-CI validation that requires every release-specific value to remain pending or null while only the template exists.
+- Kept `release-provenance-rollback` blocked; this contract does not create a published release, artifact identity, production deployment, Anchor, Stable, or `Protected by Wardveil` authority.
+
 ## 2026-10-03 — Security Center Glaze V1.7 canonical source adoption
 
 - Reconciled the canonical Security Center source to `GoreeCloud/static-websites/sites/main/security/index.html` at exact V1.7 source revision `531744f2a82133caca8ddde00fa782415d1a42e1` and exact route blob `1c3f93866eb76c9ce366ba8f2db42b15dc5ad427`.
