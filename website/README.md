@@ -1,14 +1,20 @@
 # Wardveil Security Public Website
 
-> **Static website source authority:** the canonical source for the public Security Center is now `GoreeCloud/goreecloud-static-websites/sites/security`. This `website/` directory is a protected transitional deployment copy while Cloudflare Pages still uses the legacy Wardveil repository. Future authoritative public-site source changes belong in the centralized repository. Do not remove this copy until Cloudflare repository/root/build cutover and exact production verification have passed.
+> **Static website source authority:** the canonical source for the current GoreeCloud Security route is `GoreeCloud/static-websites/sites/main/security/index.html`. This `website/` directory is a protected legacy/transitional deployment copy for the historical `security.goreecloud.com` path. Future authoritative public-site source changes belong in the centralized repository. Do not remove this copy until the legacy custom-domain/source disposition and exact production verification have passed.
 
-The public Wardveil Security Center is `https://security.goreecloud.com`.
+The canonical GoreeCloud Security route is `https://www.goreecloud.com/security/`. The historical custom-domain path `https://security.goreecloud.com` remains a separate legacy deployment/cutover obligation until explicitly retired or redirected and verified.
 
 ## Current presentation boundary
 
-The Security Center targets **GLAZE UI V1.1 / 1.1.0 Stable** for its active public presentation layer. The current adoption preserves bounded Soft Glaze for navigation chrome, solid content and consequential security-reading surfaces, 48 px interaction targets, 56 px Touch Assistance targets, explicit Light/Dark/Deep Dark appearance mapping, safe-area handling, reduced-motion and reduced-transparency behavior, increased-contrast and forced-colors fallbacks, no-backdrop resilience, and print behavior. These presentation changes do not create, upgrade, or infer Wardveil protection, verification, response, runtime, scanner, production, or acceptance state.
+The canonical Security Center source in `GoreeCloud/static-websites/sites/main/security/index.html` now targets **Glaze V1.7 / 1.7.0 Stable** at exact static-websites revision `531744f2a82133caca8ddde00fa782415d1a42e1`. Its consumer state is `source-adopted-unaccepted`.
 
-GLAZE UI V1.2 Frosted Neutral remains Candidate-only and is not the active production consumer target. Earlier Glaze UI 2.x adoption records and assets are retained only as historical pre-reset evidence and are excluded from the active legacy Pages build.
+For that exact central revision, repository/site validation and the Cloudflare Pages deployment check are successful. The canonical Security route blob is `1c3f93866eb76c9ce366ba8f2db42b15dc5ad427`.
+
+This retained Wardveil `website/` directory remains a **legacy/transitional V1.6 source/build copy** for the historical `security.goreecloud.com` deployment contract. It must not be relabeled as V1.7 unless those legacy bytes are actually migrated and independently accepted.
+
+Glaze remains presentation authority only. V1.7 source adoption, a successful build, or a deployment check cannot create, upgrade, or infer Wardveil protection, verification, response, runtime, scanner, production, Anchor, or Stable state.
+
+Exact-current rendered/human review, accessibility, representative performance/resilience, rollback evidence, canonical deployed-byte readback, legacy custom-domain cutover/retirement, and final Security Center consumer acceptance remain open.
 
 ## Current legacy Cloudflare Pages contract
 
@@ -21,7 +27,7 @@ Until the controlled deployment cutover is completed, production still uses this
 - Build output directory: `website/dist`
 - Custom domain: `security.goreecloud.com`
 
-The target source authority after cutover is `GoreeCloud/goreecloud-static-websites/sites/security`; the final Pages root/build configuration must be verified through authenticated Cloudflare controls rather than inferred from source documentation.
+The current source authority is `GoreeCloud/static-websites/sites/main/security/index.html`. Any remaining custom-domain/root/build retirement or redirect for this legacy copy must be verified through authenticated deployment controls rather than inferred from source documentation.
 
 The legacy build copies the approved Wardveil identity from `branding/wardveil-security-icon.svg` into the isolated public artifact. That local file is a synchronized derivative of the canonical `GoreeCloud/goreecloud-branding-assets` source and must remain byte-identical to the approved canonical asset.
 
@@ -43,11 +49,11 @@ python3 website/validate_responsive.py
 python3 website/browser_responsive_smoke.py
 ```
 
-The centralized package has its own exact-candidate validation in `GoreeCloud/goreecloud-static-websites` and has reached `validated-in-central-repo`.
+The centralized package has exact-revision validation in `GoreeCloud/static-websites`; revision `531744f2a82133caca8ddde00fa782415d1a42e1` passed repository/main-site validation and Cloudflare Pages deployment.
 
 ## Public-information and acceptance boundary
 
-Wardveil Security runtime, contracts, security authority, and canonical product identity remain authoritative in this repository. **Static public website source authority does not.** The public-site source package is governed from `GoreeCloud/goreecloud-static-websites/sites/security`.
+Wardveil Security runtime, contracts, security authority, and canonical product identity remain authoritative in this repository. **Static public website source authority does not.** The public-site source package is governed from `GoreeCloud/static-websites/sites/main/security/index.html`.
 
 The retained legacy website source and generated `website/dist` may continue serving deployment/rollback needs only until the Cloudflare Pages project is cut over and the exact resulting production deployment is accepted. Generated output is deployment evidence, not canonical source authority.
 

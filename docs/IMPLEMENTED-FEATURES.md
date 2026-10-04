@@ -12,6 +12,7 @@ Version 2.0.0 uses the frozen **Foundation 0.9 implementation baseline** and cur
 - a bounded source-level Quarantine executor path;
 - an exact-revision Cloudflare deployment gate preserving explicit target authority and least privilege;
 - Wardveil-native trust, policy, protection, detection, scan, quarantine, response, audit, and Security Center contracts/semantics as scoped by the repository.
+- Canonical public Security Center source adoption of Glaze V1.7 / 1.7.0 at `GoreeCloud/static-websites@531744f2a82133caca8ddde00fa782415d1a42e1`, with repository/main-site validation, isolated-artifact validation, responsive browser smoke, and Cloudflare Pages deployment evidence; downstream consumer acceptance remains separately blocked.
 
 ## Detection Engine V1 — Development source foundation
 

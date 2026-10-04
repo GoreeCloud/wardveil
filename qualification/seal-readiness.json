@@ -64,10 +64,11 @@
       "id": "security-center-glaze-acceptance",
       "state": "blocked",
       "evidence": [
-        "website/GLAZE-UI-V1.6-ADOPTION.md",
+        "docs/integrations/security-center-static-site.md",
+        "website/README.md",
         "goreecloud.platform.yaml"
       ],
-      "reason": "Version 2.0 Anchor qualification blocker: Rendered, accessibility, performance, rollback, deployed-byte, and production consumer acceptance remain open."
+      "reason": "Version 2.0 Anchor qualification blocker: canonical Security Center source migration to Glaze V1.7 / 1.7.0 is complete at GoreeCloud/static-websites revision 531744f2a82133caca8ddde00fa782415d1a42e1, with successful repository/site validation and a successful Cloudflare Pages deployment check. Exact-current rendered/human/accessibility/performance/resilience/rollback acceptance, canonical deployed-byte readback, legacy security.goreecloud.com cutover/retirement, and final production consumer acceptance remain incomplete."
     },
     {
       "id": "release-provenance-rollback",

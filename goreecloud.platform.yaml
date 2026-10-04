@@ -87,12 +87,11 @@ platform_systems:
     notes: Wardveil has a bounded restore-verification consumer pinned to canonical GoreeCloud/everkeep v1.1 evidence plus source-validated single-host durable execution-state/restart-safe reconciliation. The v1.1 schema is byte-identical between its introduction revision and current verified canonical Everkeep main. Live Everkeep backup/restore execution and exact deployed-revision production recovery acceptance remain migration-required.
   glaze_ui:
     result: applicable-migration-required
-    version: '1.6.0'
+    version: '1.7.0'
     evidence:
-      - website/GLAZE-UI-V1.6-ADOPTION.md
-      - website/glaze-ui-v1.6.0.css
-      - website/index.html
-    notes: Security Center source remains on historical GLAZE UI V1.6 / 1.6.0. The current shared target is Glaze V1.7 / 1.7.0, so this relationship remains migration-required until fresh source adoption plus exact-revision rendered, accessibility, representative-target/performance, rollback, deployed-byte/provenance, consumer-registry, release, and production acceptance are complete.
+      - docs/SECURITY-CENTER-GLAZE-V1.7.md
+      - website/README.md
+    notes: The canonical Security Center source in GoreeCloud/static-websites now targets Glaze V1.7 / 1.7.0 at revision 531744f2a82133caca8ddde00fa782415d1a42e1, with successful repository/main-site validation, isolated-artifact validation, responsive browser smoke including /security/, and a successful Cloudflare Pages deployment check. Migration remains required because canonical-origin readback, downstream rendered/accessibility/performance/resilience/rollback acceptance, final consumer approval, and legacy security.goreecloud.com source/deployment retirement or cutover remain incomplete. The repository-local website/ directory remains a historical V1.6 legacy/transitional deployment copy rather than current source authority.
   mesh:
     result: applicable-migration-required
     version: null
@@ -230,7 +229,7 @@ conformance:
     - reference/wardveil_platform_registry_delivery.py
     - scripts/test_wardveil_sqlite_execution_state.py
     - scripts/test_wardveil_platform_registry_delivery.py
-    - website/GLAZE-UI-V1.6-ADOPTION.md
+    - docs/SECURITY-CENTER-GLAZE-V1.7.md
     - qualification/seal-readiness.json
     - scripts/audit_public_git_history.py
   blockers:
@@ -240,7 +239,7 @@ conformance:
     - Privacy Shield integration and production acceptance remain incomplete.
     - Canonical Everkeep v1.1 restore-verification consumption is source-validated and single-host durable execution/reconciliation is exact-head tested, but no fresh authoritative restore exercise exists for an exact deployed Wardveil revision; target-side readback, distributed/multi-host replay guarantees, and broader production durability remain incomplete.
     - Source-level Mesh evidence and Platform Registry clients are implemented and exact-head validated, but live producer identity, routing, publication, delivery, and end-to-end Mesh acceptance remain production-unaccepted.
-    - Security Center source remains on historical GLAZE UI V1.6 / 1.6.0 while the current required target is Glaze V1.7 / 1.7.0; migration plus human rendered review, accessibility, representative-target/performance, rollback, deployment, deployed-byte/provenance, consumer-registry, and production consumer acceptance remain open.
+    - Canonical Security Center source now targets Glaze V1.7 / 1.7.0 at GoreeCloud/static-websites revision 531744f2a82133caca8ddde00fa782415d1a42e1 with successful repository/main-site validation, isolated-artifact validation, browser smoke, and a successful Cloudflare Pages deployment check. Canonical-origin readback, human rendered/accessibility/performance/resilience review, rollback, final consumer acceptance, and legacy security.goreecloud.com retirement/cutover remain open.
     - Authorized Quarantine execution, external target readback/idempotency, authoritative Audit/Security Center provenance, and broader protection-claim authority remain unaccepted.
     - GoreeCloud Policy v1 source adoption is implemented, but live caller identity, authenticated decision exchange, distribution, freshness/expiry handling, obligations coordination, target-environment evidence, and production acceptance remain migration-required.
     - GoreeCloud Observability v1 source adoption is implemented for privacy-minimized operational signals, but live producer identity, authenticated publication/collection, freshness/completeness, retention/deletion, diagnostics/alerting, target-environment evidence, and production acceptance remain migration-required.

@@ -1,14 +1,14 @@
 # Wardveil Security — Planned Features
 
 > **Authority:** Repository-native planned-feature record migrated from the richer Drive planning source on 2026-09-27.  
-> **Boundary:** Current lifecycle is Seal under Platform Contract 2.0. Exact candidate `wardveil-2.0.0-seal.1` assigns Version 2.0.0 to verified Foundation 0.9 implementation source `cc493530c02925a4404c54d2767c15d9fbfa0835`. The nine gate groups in `qualification/seal-readiness.json` remain non-deferrable Version 2.0 Anchor requirements. All unfinished or unverified roadmap expansion outside that qualification boundary is assigned to Version 2.0.1.
+> **Boundary:** Current lifecycle is Seal under Platform Contract 2.0. Exact candidate `wardveil-2.0.0-seal.1` assigns Version 2.0.0 to verified Foundation 0.9 implementation source `cc493530c02925a4404c54d2767c15d9fbfa0835`. Eight gate groups in `qualification/seal-readiness.json` remain blocked non-deferrable Version 2.0 Anchor requirements; `public-history-safety` has passed. All unfinished or unverified roadmap expansion outside that qualification boundary is assigned to Version 2.0.1.
 
 
 ## Version 2.0 / 2.0.1 scope split — 2026-10-03
 
 **Version 2.0.0** is deliberately bounded to the implementation already frozen and source-validated by the Seal candidate. The release identity change does not convert source validation into production acceptance.
 
-The following work stays attached to **2.0** because it is required for Anchor/Stable qualification of the bounded release: all nine gate groups in `qualification/seal-readiness.json`, including platform-system acceptance, production Identity/key custody, target runtime acceptance, Everkeep restore proof, any shipped consequential-execution readback, operational observability/alerting, current Glaze consumer acceptance for shipped UI, release provenance/rollback, and public-history safety disposition.
+The following work stays attached to **2.0** because it is required for Anchor/Stable qualification of the bounded release: the eight still-blocked gate groups in `qualification/seal-readiness.json`, including platform-system acceptance, production Identity/key custody, target runtime acceptance, Everkeep restore proof, any shipped consequential-execution readback, operational observability/alerting, current Glaze consumer acceptance for shipped UI, and release provenance/rollback. Public-history safety has already passed.
 
 Everything else in this roadmap that is not already in `docs/IMPLEMENTED-FEATURES.md` and is not one of those mandatory 2.0 qualification gates is **2.0.1 planned scope**. This includes feature expansion such as broader adaptive trust, device-integrity coverage, application containment/isolation expansion, behavioral-detection expansion, Incident Center expansion, Security Timeline, additional containment workflows, profile/policy expansion, and other future security-operations capabilities.
 
@@ -1118,7 +1118,7 @@ Current state: Source Validated — Development candidate; production storage, p
 FR-009
 P0
 Implement Security Center 2.0 as the next-upgrade user/admin read model with complete security information architecture, first-class explanation, fail-closed Protected presentation, current Stable Glaze UI targeting, responsive/accessibility support, material/performance fallbacks, and explicit rendered-review, live-evidence, deployment, rollback, runtime, production, and Stable acceptance gates.
-Current state: GLAZE UI V1.6 / 1.6.0 source/build migration integrated through PR #150 / 01fe556f8c9f590edc04a1ccb566b482d5b1a0b0; exact candidate 498d5be74ae42f0de4a6e5a637d8742e7edec820 passed exact-head V1.6 site, Platform Contract, Foundation, Mesh, and Scan validation. Human rendered review, representative accessibility/performance, live evidence consumption, rollback, deployment/deployed-byte provenance, consumer-registry, runtime validation, production acceptance, and Stable qualification remain pending.
+Current state: canonical Security Center source adoption of Glaze V1.7 / 1.7.0 is complete in `GoreeCloud/static-websites/sites/main/security/index.html` at revision `531744f2a82133caca8ddde00fa782415d1a42e1`, with successful repository/main-site validation, isolated-artifact validation, responsive browser smoke, and Cloudflare Pages deployment. Canonical-origin readback, human rendered/accessibility/performance/resilience review, rollback, legacy custom-domain/source disposition, consumer acceptance, runtime validation, production acceptance, and Stable qualification remain pending. The repository-local `website/` copy remains historical V1.6 transitional deployment material.
 FR-010
 High
 Implement the GoreeCloud Identity consumer boundary for service identity and signing-key lifecycle evidence with exact authority/profile/revision/service/audience/scope binding, audience separation, short-lived credential and key-profile checks, fail-closed verifier evidence, rotation/revocation/replay/expiry/audit/emergency-revocation gates, and rejection of Mesh credentials as direct execution authority.
