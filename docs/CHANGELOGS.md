@@ -1,5 +1,12 @@
 # Wardveil Security — Changelogs
 
+## 2026-10-04 — Cloudflare runtime evidence blocked by missing environment values
+
+- Recorded workflow run `37236563970`, which successfully verified the declared Version 2.0 Seal source `cc493530c02925a4404c54d2767c15d9fbfa0835` and exact candidate checkout through the guarded production workflow.
+- The run failed closed before Wrangler installation or deployment because `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, and `WARDVEIL_HEALTH_URL` were unavailable to the `wardveil-production` job.
+- No Cloudflare Worker deployment or production runtime mutation occurred, and no runtime acceptance evidence was created.
+- The `cloudflare-runtime-acceptance` gate remains blocked pending authorized environment-value provisioning and a fresh exact-candidate dispatch.
+
 ## 2026-10-04 — Seal-bound production deployment control
 
 - Corrected Wardveil production workflows so authoritative `main` owns workflow control while `qualification/seal-candidate.json#source_revision` owns deployed source bytes.
