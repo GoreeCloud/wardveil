@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "component": "Wardveil Cloudflare persistence deployment",
   "workflow": ".github/workflows/deploy-cloudflare-persistence.yml",
   "worker_name": "goreecloud-wardveil-persistence",
@@ -24,5 +24,9 @@
   "health_success_is_protection_claim": false,
   "storage_health_is_protection_claim": false,
   "production_runtime_status_source": "contracts/wardveil.cloudflare.runtime-acceptance.json",
-  "public_readiness_path": "/readyz"
+  "public_readiness_path": "/readyz",
+  "declared_seal_candidate_source_required": true,
+  "candidate_metadata_source": "qualification/seal-candidate.json",
+  "candidate_source_must_be_ancestor_of_workflow_control_revision": true,
+  "workflow_control_revision_separate_from_deployed_revision": true
 }
