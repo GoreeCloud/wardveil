@@ -29,9 +29,10 @@
       "state": "blocked",
       "evidence": [
         "contracts/wardveil.cloudflare.runtime-acceptance.json",
-        "evidence/wardveil.cloudflare.production.template.json"
+        "evidence/wardveil.cloudflare.production.template.json",
+        "docs/CLOUDFLARE-DEPLOYMENT.md"
       ],
-      "reason": "Version 2.0 Anchor qualification blocker: Runtime acceptance is unaccepted and exact deployed liveness/readiness/service-binding evidence is not yet collected."
+      "reason": "Version 2.0 Anchor qualification blocker: governed deployment run 37236563970 verified main-controlled workflow execution, exact declared Seal source binding, candidate ancestry, and exact candidate checkout, then failed closed before Wrangler installation or production mutation because the wardveil-production environment did not supply CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID, or WARDVEIL_HEALTH_URL. Runtime acceptance remains unaccepted and no deployed liveness/readiness/service-binding evidence exists."
     },
     {
       "id": "everkeep-restore",
