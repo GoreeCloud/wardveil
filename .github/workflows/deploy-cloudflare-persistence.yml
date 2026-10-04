@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       expected_sha:
-        description: Exact main commit SHA approved for deployment
+        description: Exact declared Seal candidate source SHA approved for deployment
         required: true
         type: string
 
@@ -25,22 +25,50 @@ jobs:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       WARDVEIL_HEALTH_URL: ${{ secrets.WARDVEIL_HEALTH_URL }}
+      WARDVEIL_CANDIDATE_SHA: ${{ inputs.expected_sha }}
     steps:
-      - name: Check out exact source revision
+      - name: Check out governing main revision
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          fetch-depth: 0
           ref: ${{ github.sha }}
 
-      - name: Verify approved main revision
-        env:
-          EXPECTED_SHA: ${{ inputs.expected_sha }}
+      - name: Verify declared Seal candidate source
         run: |
           set -euo pipefail
-          test -n "$EXPECTED_SHA"
-          test "$GITHUB_SHA" = "$EXPECTED_SHA"
-          test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
-          test "$(git branch --show-current)" = "main" || test "$GITHUB_REF" = "refs/heads/main"
+          test "$GITHUB_REF" = "refs/heads/main"
+          test -n "$WARDVEIL_CANDIDATE_SHA"
+          python3 - <<'PY'
+          import json
+          import os
+          import re
+          from pathlib import Path
+
+          expected = os.environ["WARDVEIL_CANDIDATE_SHA"]
+          if not re.fullmatch(r"[0-9a-f]{40}", expected):
+              raise SystemExit("expected_sha must be an exact lowercase commit SHA")
+          candidate = json.loads(Path("qualification/seal-candidate.json").read_text())
+          if candidate.get("lifecycle") != "seal":
+              raise SystemExit("deployment requires a declared Seal candidate")
+          if candidate.get("source_revision") != expected:
+              raise SystemExit("expected_sha does not match the declared Seal candidate source")
+          if candidate.get("production_approved") is not False or candidate.get("authority_effect") != "none":
+              raise SystemExit("Seal candidate metadata must remain non-authorizing before qualification")
+          PY
+          git merge-base --is-ancestor "$WARDVEIL_CANDIDATE_SHA" "$GITHUB_SHA"
+
+      - name: Check out exact Seal candidate source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+          ref: ${{ inputs.expected_sha }}
+
+      - name: Verify exact candidate checkout
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$WARDVEIL_CANDIDATE_SHA"
 
       - name: Verify required deployment secrets
         run: |
@@ -72,7 +100,7 @@ jobs:
         run: >-
           npx wrangler deploy
           --config acceptance-probe/wrangler.jsonc
-          --var EXPECTED_REVISION:$GITHUB_SHA
+          --var EXPECTED_REVISION:$WARDVEIL_CANDIDATE_SHA
           --var ACCEPTANCE_TENANT:wardveil-runtime-acceptance
 
       - name: Verify public health and readiness endpoints
@@ -171,7 +199,8 @@ jobs:
 
           probe = json.loads(Path('/tmp/wardveil-probe.json').read_text())
           runtime_contract = json.loads(Path('contracts/wardveil.cloudflare.runtime-acceptance.json').read_text())
-          sha = os.environ['GITHUB_SHA']
+          sha = os.environ['WARDVEIL_CANDIDATE_SHA']
+          workflow_control_sha = os.environ['GITHUB_SHA']
           source = os.environ['EVIDENCE_SOURCE']
           validity_seconds = runtime_contract.get('evidence_validity_seconds')
           if validity_seconds != 3600:
@@ -232,6 +261,7 @@ jobs:
               'component': 'Wardveil Cloudflare persistence runtime',
               'environment': 'production',
               'deployed_revision': sha,
+              'workflow_control_revision': workflow_control_sha,
               'collected_at': now,
               'valid_until': expiry,
               'acceptance_status': 'unaccepted',
@@ -249,7 +279,7 @@ jobs:
           {
             echo '## Wardveil Cloudflare runtime evidence collection'
             echo
-            echo "- Source/deployed revision: \`$GITHUB_SHA\`"
+            echo "- Seal source/deployed revision: \`$WARDVEIL_CANDIDATE_SHA\`"
             echo '- Persistence Worker deployment: completed'
             echo '- Internal acceptance-probe deployment: completed with public routes disabled'
             echo '- Authorized service-binding append/read: passed'
