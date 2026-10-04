@@ -96,7 +96,7 @@ Older Glaze UI 1.0/2.1-era checkpoints remain historical evidence only.
 
 The canonical Security Center source now targets Glaze V1.7 / 1.7.0 in `GoreeCloud/static-websites`; the Wardveil repository-local V1.6 website remains a legacy/transitional deployment copy.
 
-Final rendered review, accessibility, representative performance/target behavior, rollback, deployed-byte/provenance, consumer registration, runtime deployment, and production acceptance remain open.
+Repository/main-site validation, the isolated artifact, responsive browser smoke, and the Cloudflare Pages deployment check pass for the exact V1.7 source revision. Canonical-origin exact-byte readback, human rendered/accessibility review, representative performance/resilience, rollback verification, final consumer acceptance, and legacy `security.goreecloud.com` source/deployment retirement or cutover remain open.
 
 ## Identity and signing-key lifecycle source work
 
@@ -293,3 +293,10 @@ That shared website revision passed repository/site validation and received a su
 
 The Version 2.0 `security-center-glaze-acceptance` gate remains blocked pending exact-current rendered/human/accessibility/performance/resilience/rollback acceptance, canonical deployed-byte readback, legacy deployment cutover/retirement, and final production consumer acceptance. No protection, runtime, Anchor, or Stable authority is created by the source migration.
 
+## October 3, 2026 — Security Center Glaze V1.7 canonical source adoption
+
+The canonical GoreeCloud Security route in `GoreeCloud/static-websites` now adopts Glaze V1.7 / `1.7.0` at exact source revision `531744f2a82133caca8ddde00fa782415d1a42e1`. The exact `sites/main/security/index.html` blob is `1c3f93866eb76c9ce366ba8f2db42b15dc5ad427`.
+
+Static-websites repository validation run `37171153953` and main website validation run `37171153974` passed. The isolated artifact validated at 100 files / 322713 bytes, browser smoke passed all eleven canonical routes including `/security/` across representative widths, and Cloudflare Pages check `111344235579` reported successful deployment of the exact revision.
+
+This advances the source-migration and machine/deployment portions of Wardveil Version 2.0 gate `security-center-glaze-acceptance` but does not pass it. Canonical-origin readback, human/accessibility/performance/resilience review, rollback evidence, final consumer acceptance, and legacy `security.goreecloud.com` retirement/cutover remain open. The repository-local `website/` copy remains historical V1.6 transitional deployment material.
