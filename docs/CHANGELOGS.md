@@ -1,5 +1,13 @@
 # Wardveil Security — Changelogs
 
+## 2026-10-03 — Public-history safety disposition
+
+- Accepted the already-published bounded non-confidential repository metadata documented by issue #176 as existing public information after forward minimization of current `main` and continued fail-closed retained-reference auditing.
+- Added `docs/PUBLIC-HISTORY-DISPOSITION.md` and marked only `public-history-safety` as passed.
+- The other eight Version 2.0 Anchor qualification gates remain blocked, so Wardveil remains Seal and not Stable.
+- Corrected current-state Project Record surfaces to identify `wardveil-2.0.0-seal.1` while preserving the September 30 Foundation 0.9 Seal transition as historical evidence.
+- No branch retirement, shared-history modification, runtime authority, deployment, production acceptance, published release, Anchor, or Stable authority is created by this disposition.
+
 ## 2026-10-03 — Version 2.0 release identity and 2.0.1 scope split
 
 - Rebased the governed Wardveil release identity from Foundation 0.9 to **Version 2.0.0** without changing the frozen implementation source: candidate `wardveil-2.0.0-seal.1` remains bound to `cc493530c02925a4404c54d2767c15d9fbfa0835`.
