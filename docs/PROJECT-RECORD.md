@@ -1,7 +1,7 @@
 # Wardveil Security — Project Record
 
 **Repository:** `GoreeCloud/wardveil`  
-**Lifecycle:** Seal — Platform Contract 2.0; exact candidate `wardveil-0.9.0-seal.1` freezes Foundation 0.9 implementation source at `cc493530c02925a4404c54d2767c15d9fbfa0835`; deployment remains development, Anchor qualification remains blocked, and overall production runtime acceptance remains unaccepted  
+**Lifecycle:** Seal — Platform Contract 2.0; exact release candidate `wardveil-2.0.0-seal.1` reuses the verified Foundation 0.9 implementation source at `cc493530c02925a4404c54d2767c15d9fbfa0835`; deployment remains development, Anchor qualification remains blocked, and overall production runtime acceptance remains unaccepted  
 **Migration baseline:** `2ddcf03b24b65e8e8112ba6cd18f9a9c56bb0a89`  
 **Record purpose:** Significant architecture, runtime, security, governance, integration, lifecycle, and project-document migration history  
 **Canonical authority:** This file becomes the repository-local project record once accepted on the default branch.
@@ -205,7 +205,7 @@ This closes a source-declaration gap only. Production API acceptance remains una
 
 ## Current production-acceptance boundary
 
-Wardveil is classified **Seal** under Platform Contract 2.0. Exact candidate `wardveil-0.9.0-seal.1` freezes implementation source revision `cc493530c02925a4404c54d2767c15d9fbfa0835` (tree `b835d305c3b21d72cd00645dac3d1945626c6d8b`) for Anchor qualification. Deployment remains development and qualification remains blocked. Seal establishes exact candidate identity only; it does not establish production acceptance, a `Protected by Wardveil` claim, or Anchor.
+Wardveil is classified **Seal** under Platform Contract 2.0. Exact release candidate `wardveil-2.0.0-seal.1` reuses the verified Foundation 0.9 implementation source revision `cc493530c02925a4404c54d2767c15d9fbfa0835` (tree `b835d305c3b21d72cd00645dac3d1945626c6d8b`) for Anchor qualification. Deployment remains development and qualification remains blocked. Seal establishes exact candidate identity only; it does not establish production acceptance, a `Protected by Wardveil` claim, or Anchor.
 
 Broad production acceptance remains blocked on applicable evidence for:
 - production GoreeCloud Identity/service identity and signing-key custody;
@@ -275,4 +275,12 @@ Repository governance now rejects migrated human-readable documentation at root.
 
 Wardveil's governed release identity is now **Internal Version 2.0.0 / External Version 2.0.0** while remaining lifecycle **Seal**. Candidate `wardveil-2.0.0-seal.1` deliberately reuses the already-validated Foundation 0.9 implementation source `cc493530c02925a4404c54d2767c15d9fbfa0835`; this is a release-scope/version rebaseline, not a claim that previously unaccepted runtime behavior became verified.
 
-All nine gate groups in `qualification/seal-readiness.json` remain Version 2.0 Anchor blockers. Unfinished or unverified feature expansion that is not required to qualify the bounded 2.0 release is transferred to Version 2.0.1. Stable/Anchor status remains withheld until the exact 2.0 candidate satisfies every applicable gate.
+At the Version 2.0 rebaseline, all nine gate groups in `qualification/seal-readiness.json` were Anchor blockers. The later October 3 public-history disposition passes only `public-history-safety`; the remaining eight gate groups stay blocked. Unfinished or unverified feature expansion that is not required to qualify the bounded 2.0 release is transferred to Version 2.0.1. Stable/Anchor status remains withheld until the exact 2.0 candidate satisfies every applicable remaining gate.
+
+## October 3, 2026 — Public-history safety disposition
+
+Wardveil completed the governed disposition required by issue #176 for the already-published bounded non-confidential producer/source and operational metadata in reachable history and retained public refs. The current tip had already been forward-minimized through PR #175, and the required retained-reference audit remains fail-closed on protected heads.
+
+The bounded residual class is accepted as existing public information without shared-history rewriting or branch retirement. That acceptance is recorded in `docs/PUBLIC-HISTORY-DISPOSITION.md` and does not authorize future over-disclosure, destructive cleanup, runtime authority, deployment, release, Anchor, Stable, or a `Protected by Wardveil` claim.
+
+Accordingly, `qualification/seal-readiness.json` marks only `public-history-safety` as passed. The other eight Version 2.0 Anchor gate groups remain blocked, so candidate `wardveil-2.0.0-seal.1` remains lifecycle Seal and non-production.

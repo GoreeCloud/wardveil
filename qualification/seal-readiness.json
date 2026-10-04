@@ -79,12 +79,13 @@
     },
     {
       "id": "public-history-safety",
-      "state": "blocked",
+      "state": "passed",
       "evidence": [
         "scripts/audit_public_git_history.py",
+        "docs/PUBLIC-HISTORY-DISPOSITION.md",
         "docs/PROJECT-RECORD.md"
       ],
-      "reason": "Version 2.0 Anchor qualification blocker: Credential-shaped retained-ref scanning is automated and green, but issue #176 still lacks a governed disposition for restricted non-secret provenance already published in reachable history and retained public refs."
+      "reason": "Version 2.0 public-history safety accepted: required retained-reference scanning remains green, current main is forward-minimized, and docs/PUBLIC-HISTORY-DISPOSITION.md governs the bounded historical non-confidential metadata described by issue #176 without authorizing destructive cleanup."
     }
   ]
 }
