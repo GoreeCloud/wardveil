@@ -6,15 +6,15 @@ The canonical GoreeCloud Security route is `https://www.goreecloud.com/security/
 
 ## Current presentation boundary
 
-The canonical Security Center source in `GoreeCloud/static-websites/sites/main/security/index.html` now targets **Glaze V1.7 / 1.7.0 Stable** at exact static-websites revision `531744f2a82133caca8ddde00fa782415d1a42e1`. Its consumer state is `source-adopted-unaccepted`.
+The canonical Security Center source in `GoreeCloud/static-websites/sites/main/security/index.html` targets **Glaze V1.7 / 1.7.0 Stable**. The exact deployed/readback candidate is `17303b6c7381faaa0e89ce6175ce24048fb56a12`; the canonical Security route blob is `f3d6cac2b16954e0879298de0724bfe16b916715`. Current static-websites `main` is `9ae21cf12e276ea7e553fcf2573318602886428e` and retains the same public Security bytes.
 
-For that exact central revision, repository/site validation and the Cloudflare Pages deployment check are successful. The canonical Security route blob is `1c3f93866eb76c9ce366ba8f2db42b15dc5ad427`.
+For that deployed/readback candidate, repository/main-site validation, isolated-artifact validation, responsive/interaction smoke, privacy/security validation, Cloudflare deployment evidence, and byte-for-byte canonical readback are complete. All eleven canonical HTML routes matched source; `/security/` matched exactly at 9,953 bytes. The shared website consumer state is `pending-human-acceptance`.
 
 This retained Wardveil `website/` directory remains a **legacy/transitional V1.6 source/build copy** for the historical `security.goreecloud.com` deployment contract. It must not be relabeled as V1.7 unless those legacy bytes are actually migrated and independently accepted.
 
 Glaze remains presentation authority only. V1.7 source adoption, a successful build, or a deployment check cannot create, upgrade, or infer Wardveil protection, verification, response, runtime, scanner, production, Anchor, or Stable state.
 
-Exact-current rendered/human review, accessibility, representative performance/resilience, rollback evidence, canonical deployed-byte readback, legacy custom-domain cutover/retirement, and final Security Center consumer acceptance remain open.
+Canonical deployed-byte readback and machine validation are complete. Owner visual review, keyboard review, assistive-technology review, representative performance/resilience acceptance, final consumer approval, and legacy custom-domain cutover/retirement remain open.
 
 ## Current legacy Cloudflare Pages contract
 
@@ -49,7 +49,7 @@ python3 website/validate_responsive.py
 python3 website/browser_responsive_smoke.py
 ```
 
-The centralized package has exact-revision validation in `GoreeCloud/static-websites`; revision `531744f2a82133caca8ddde00fa782415d1a42e1` passed repository/main-site validation and Cloudflare Pages deployment.
+The centralized package has exact-revision validation in `GoreeCloud/static-websites`; deployed/readback candidate `17303b6c7381faaa0e89ce6175ce24048fb56a12` passed machine validation and byte-for-byte canonical production readback for all eleven HTML routes. Current main `9ae21cf12e276ea7e553fcf2573318602886428e` preserves the same public Security bytes.
 
 ## Public-information and acceptance boundary
 

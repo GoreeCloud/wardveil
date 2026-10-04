@@ -1,5 +1,14 @@
 # Wardveil Security — Changelogs
 
+## 2026-10-04 — Security Center canonical readback reconciliation
+
+- Bound the Wardveil Security Center Glaze gate to the stronger current `GoreeCloud/static-websites` V1.7 evidence set rather than the earlier source-adoption-only checkpoint.
+- Recorded deployed/readback candidate `17303b6c7381faaa0e89ce6175ce24048fb56a12`, Security route blob `f3d6cac2b16954e0879298de0724bfe16b916715`, and byte-for-byte canonical readback for all eleven public HTML routes.
+- Verified current static-websites main `9ae21cf12e276ea7e553fcf2573318602886428e` retains the same public Security bytes after later support-documentation/test changes.
+- Corrected stale Wardveil Platform Contract evidence paths to the canonical `docs/integrations/security-center-static-site.md` record.
+- Kept `security-center-glaze-acceptance` blocked on owner visual, keyboard, assistive-technology, representative performance/resilience, final consumer approval, and legacy `security.goreecloud.com` retirement/cutover.
+- No Wardveil protection, runtime, production, Anchor, or Stable authority is created by the website readback evidence.
+
 ## 2026-10-03 — Version 2.0 release provenance/rollback evidence contract
 
 - Added a fail-closed machine-readable release-evidence template for `wardveil-2.0.0-seal.1`.
