@@ -28,5 +28,9 @@
   "declared_seal_candidate_source_required": true,
   "candidate_metadata_source": "qualification/seal-candidate.json",
   "candidate_source_must_be_ancestor_of_workflow_control_revision": true,
-  "workflow_control_revision_separate_from_deployed_revision": true
+  "workflow_control_revision_separate_from_deployed_revision": true,
+  "deployment_source_binding": "qualification/seal-candidate.json#source_revision",
+  "workflow_control_revision_recorded": true,
+  "candidate_must_be_ancestor_of_workflow_control_revision": true,
+  "workflow_control_revision_is_deployed_revision": false
 }
