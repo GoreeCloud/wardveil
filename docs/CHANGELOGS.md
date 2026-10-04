@@ -2,19 +2,12 @@
 
 ## 2026-10-03 — Security Center Glaze V1.7 canonical source adoption
 
-- Reconciled the canonical Security Center source to `GoreeCloud/static-websites/sites/main/security/index.html` at exact V1.7 source revision `531744f2a82133caca8ddde00fa782415d1a42e1`.
-- Recorded successful repository/main-site validation, isolated-artifact validation, responsive browser smoke including `/security/`, and the successful Cloudflare Pages deployment check for that exact revision.
+- Reconciled the canonical Security Center source to `GoreeCloud/static-websites/sites/main/security/index.html` at exact V1.7 source revision `531744f2a82133caca8ddde00fa782415d1a42e1` and exact route blob `1c3f93866eb76c9ce366ba8f2db42b15dc5ad427`.
+- Recorded successful repository/main-site validation, isolated-artifact validation, responsive browser smoke including `/security/`, and a successful Cloudflare Pages deployment check for that exact revision.
 - Updated the Wardveil Platform Contract Glaze relationship from historical source target `1.6.0` to canonical source target `1.7.0` while keeping the relationship migration-required.
+- Corrected the legacy website authority record to `GoreeCloud/static-websites` and preserved the Wardveil repository-local V1.6 site as transitional deployment/rollback material.
 - Kept `security-center-glaze-acceptance` blocked because canonical-origin readback, human/accessibility/performance/resilience review, rollback evidence, final consumer acceptance, and legacy `security.goreecloud.com` retirement/cutover remain incomplete.
-- The repository-local `website/` copy remains historical V1.6 transitional deployment material; no Wardveil runtime, protection-claim, production, Anchor, or Stable authority is created by this source reconciliation.
-
-## 2026-10-03 — Security Center Glaze V1.7 source adoption
-
-- Reconciled the canonical Security Center source to Glaze V1.7 / `1.7.0` at `GoreeCloud/static-websites@531744f2a82133caca8ddde00fa782415d1a42e1`.
-- Recorded the exact Security route blob `1c3f93866eb76c9ce366ba8f2db42b15dc5ad427`, successful repository/site validation, and successful Cloudflare Pages deployment check.
-- Corrected the legacy website README to the current `GoreeCloud/static-websites` authority and preserved the Wardveil repository-local V1.6 site as transitional deployment/rollback material.
-- Kept `security-center-glaze-acceptance` blocked on rendered/human/accessibility/performance/resilience/rollback acceptance, canonical deployed-byte readback, legacy cutover/retirement, and final consumer approval.
-- This source migration creates no protection, runtime, production, Anchor, or Stable authority.
+- No Wardveil runtime, protection-claim, production, Anchor, or Stable authority is created by this source reconciliation.
 
 ## 2026-10-03 — Public-history safety disposition
 
