@@ -13,7 +13,7 @@
       "evidence": [
         "goreecloud.platform.yaml"
       ],
-      "reason": "Anchor qualification blocker: Eight external Integral Platform Systems remain migration-required."
+      "reason": "Version 2.0 Anchor qualification blocker: Eight external Integral Platform Systems remain migration-required."
     },
     {
       "id": "production-identity-key-custody",
@@ -22,7 +22,7 @@
         "docs/SERVICE-IDENTITY.md",
         "goreecloud.platform.yaml"
       ],
-      "reason": "Anchor qualification blocker: Production GoreeCloud Identity issuance, JWKS trust, signing-key custody, rotation/revocation, and approved cryptography remain unaccepted."
+      "reason": "Version 2.0 Anchor qualification blocker: Production GoreeCloud Identity issuance, JWKS trust, signing-key custody, rotation/revocation, and approved cryptography remain unaccepted."
     },
     {
       "id": "cloudflare-runtime-acceptance",
@@ -31,7 +31,7 @@
         "contracts/wardveil.cloudflare.runtime-acceptance.json",
         "evidence/wardveil.cloudflare.production.template.json"
       ],
-      "reason": "Anchor qualification blocker: Runtime acceptance is unaccepted and exact deployed liveness/readiness/service-binding evidence is not yet collected."
+      "reason": "Version 2.0 Anchor qualification blocker: Runtime acceptance is unaccepted and exact deployed liveness/readiness/service-binding evidence is not yet collected."
     },
     {
       "id": "everkeep-restore",
@@ -40,7 +40,7 @@
         "docs/EVERKEEP-RESTORE-VERIFICATION.md",
         "contracts/wardveil.everkeep.restore-verification.json"
       ],
-      "reason": "Anchor qualification blocker: No fresh authoritative restore exercise is bound to the exact deployed Wardveil revision."
+      "reason": "Version 2.0 Anchor qualification blocker: No fresh authoritative restore exercise is bound to the exact deployed Wardveil revision."
     },
     {
       "id": "quarantine-target-readback",
@@ -49,7 +49,7 @@
         "docs/QUARANTINE-EXECUTOR.md",
         "goreecloud.platform.yaml"
       ],
-      "reason": "Anchor qualification blocker: Production target authorization, mutation/readback, idempotency, and uncertain-outcome reconciliation remain unaccepted."
+      "reason": "Version 2.0 Anchor qualification blocker: Production target authorization, mutation/readback, idempotency, and uncertain-outcome reconciliation remain unaccepted."
     },
     {
       "id": "observability-monitoring-alerting",
@@ -58,7 +58,7 @@
         "docs/OBSERVABILITY-INTEGRATION.md",
         "goreecloud.platform.yaml"
       ],
-      "reason": "Anchor qualification blocker: Live publication, completeness/freshness, diagnostics, monitoring, and alert routing remain unaccepted."
+      "reason": "Version 2.0 Anchor qualification blocker: Live publication, completeness/freshness, diagnostics, monitoring, and alert routing remain unaccepted."
     },
     {
       "id": "security-center-glaze-acceptance",
@@ -67,7 +67,7 @@
         "website/GLAZE-UI-V1.6-ADOPTION.md",
         "goreecloud.platform.yaml"
       ],
-      "reason": "Anchor qualification blocker: Rendered, accessibility, performance, rollback, deployed-byte, and production consumer acceptance remain open."
+      "reason": "Version 2.0 Anchor qualification blocker: Rendered, accessibility, performance, rollback, deployed-byte, and production consumer acceptance remain open."
     },
     {
       "id": "release-provenance-rollback",
@@ -75,7 +75,7 @@
       "evidence": [
         "goreecloud.platform.yaml"
       ],
-      "reason": "Anchor qualification blocker: No exact published release evidence, artifact identity, SBOM/signing provenance, or accepted rollback target is declared."
+      "reason": "Version 2.0 Anchor qualification blocker: No exact published release evidence, artifact identity, SBOM/signing provenance, or accepted rollback target is declared."
     },
     {
       "id": "public-history-safety",
@@ -84,7 +84,7 @@
         "scripts/audit_public_git_history.py",
         "docs/PROJECT-RECORD.md"
       ],
-      "reason": "Anchor qualification blocker: Credential-shaped retained-ref scanning is automated and green, but issue #176 still lacks a governed disposition for restricted non-secret provenance already published in reachable history and retained public refs."
+      "reason": "Version 2.0 Anchor qualification blocker: Credential-shaped retained-ref scanning is automated and green, but issue #176 still lacks a governed disposition for restricted non-secret provenance already published in reachable history and retained public refs."
     }
   ]
 }
