@@ -182,7 +182,7 @@ def validate_readme_release_status(readme: str, version_text: str) -> None:
     )
     candidate_line = f"wardveil-{version}-seal.1"
     require(readme, candidate_line, "README Seal candidate identity")
-    require(readme, f"Version {version}", "README release status")
+    require(readme, f"Foundation {match.group(1)}.{match.group(2)} implementation source", "README release status")
 
     if re.search(r"> \*\*Current status:\*\* Foundation \d+\.\d+ development\.", readme):
         fail("README release status still identifies an accepted foundation as development")
