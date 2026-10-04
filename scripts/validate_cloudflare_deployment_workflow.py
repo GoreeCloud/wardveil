@@ -10,7 +10,7 @@ acceptance = json.loads((ROOT / "contracts/wardveil.cloudflare.runtime-acceptanc
 wrangler = (ROOT / "cloudflare/wrangler.jsonc").read_text()
 
 required = {
-    "schema_version": 2,
+    "schema_version": 3,
     "worker_name": "goreecloud-wardveil-persistence",
     "acceptance_probe_worker_name": "goreecloud-wardveil-acceptance-probe",
     "wrangler_version": "4.37.0",
@@ -29,6 +29,10 @@ required = {
     "health_success_is_protection_claim": False,
     "storage_health_is_protection_claim": False,
     "production_runtime_status_source": "contracts/wardveil.cloudflare.runtime-acceptance.json",
+    "deployment_source_binding": "qualification/seal-candidate.json#source_revision",
+    "workflow_control_revision_recorded": True,
+    "candidate_must_be_ancestor_of_workflow_control_revision": True,
+    "workflow_control_revision_is_deployed_revision": False,
 }
 for key, expected in required.items():
     if contract.get(key) != expected:
