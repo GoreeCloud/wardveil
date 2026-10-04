@@ -301,3 +301,13 @@ The template binds candidate `wardveil-2.0.0-seal.1` to required published relea
 
 The gate therefore remains blocked. No release tag, release artifact, production deployment, Anchor, Stable, or `Protected by Wardveil` authority is established by defining the evidence contract.
 
+## October 4, 2026 — Security Center canonical readback reconciliation
+
+Wardveil now consumes the stronger current Glaze V1.7 website evidence from `GoreeCloud/static-websites` rather than treating canonical readback as missing.
+
+Exact deployed/readback candidate `17303b6c7381faaa0e89ce6175ce24048fb56a12` passed repository/main-site validation, isolated-artifact validation, responsive/interaction smoke, privacy/security validation, and byte-for-byte canonical production readback for all eleven current HTML routes. The Security route is blob `f3d6cac2b16954e0879298de0724bfe16b916715` and matched production at 9,953 bytes. Current static-websites main `9ae21cf12e276ea7e553fcf2573318602886428e` preserves the same public Security bytes.
+
+The shared website consumer remains `pending-human-acceptance`. Wardveil Version 2.0 gate `security-center-glaze-acceptance` therefore remains blocked on owner visual, keyboard, assistive-technology, representative performance/resilience, final consumer approval, and the separate legacy `security.goreecloud.com` retirement/cutover obligation.
+
+This reconciliation also repairs stale Platform Contract evidence paths to the canonical `docs/integrations/security-center-static-site.md` record. No protection, runtime, production, Anchor, or Stable authority is created.
+
