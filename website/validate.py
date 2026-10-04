@@ -184,16 +184,16 @@ require(
 )
 
 for needle in (
-    "Status: **Source Adoption Candidate / consumer acceptance pending**",
-    "Target: **GLAZE UI V1.6 / 1.6.0 Stable**",
+    "Status: **Legacy / transitional deployment package; current canonical source is elsewhere**",
+    "Local package target: **GLAZE UI V1.6 / 1.6.0 Stable (historical mapping)**",
     GLAZE_RELEASE_SOURCE,
-    "Known-good rollback baseline: **1.5.1**",
+    "Known-good local rollback baseline: **1.5.1**",
     "48 px floor",
     "56 px floor",
     "Reduced Transparency",
     "Forced Colors",
-    "source/build migration evidence only",
-    "canonical Glaze consumer registry currently requires V1.6.0",
+    "legacy V1.6 deployment package",
+    "canonical current Security Center source",
     "Wardveil Security remains the authority for security truth",
 ):
     require(needle in adoption, f"GLAZE UI V1.6 adoption record missing boundary: {needle}")
@@ -201,7 +201,7 @@ require("GLAZE UI V1.1 Adoption" in historical_v11, "retained V1.1 adoption reco
 require("Glaze UI 2.1 Adoption" in historical_v21, "retained 2.1 adoption record must remain identifiable")
 
 for needle in (
-    "Validate Security Center GLAZE UI V1.6 source adoption",
+    "Validate legacy Security Center GLAZE UI V1.6 deployment package",
     "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
     "actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97",
     "persist-credentials: false",
@@ -215,6 +215,6 @@ for needle in (
 print(
     "Wardveil Security public website validation passed for "
     f"foundation {foundation_version}, Sentinel Fold primary identity, and "
-    f"{GLAZE_PRODUCT} / {GLAZE_VERSION} source/build Adoption Candidate mapping; "
+    f"{GLAZE_PRODUCT} / {GLAZE_VERSION} legacy/transitional deployment mapping; "
     "rendered/deployment/production consumer acceptance remains pending"
 )
