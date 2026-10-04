@@ -1,5 +1,12 @@
 # Wardveil Security — Changelogs
 
+## 2026-10-03 — Version 2.0 release identity and 2.0.1 scope split
+
+- Rebased the governed Wardveil release identity from Foundation 0.9 to **Version 2.0.0** without changing the frozen implementation source: candidate `wardveil-2.0.0-seal.1` remains bound to `cc493530c02925a4404c54d2767c15d9fbfa0835`.
+- Preserved Seal lifecycle, development deployment, blocked Anchor qualification, and all nine mandatory gate groups; no missing runtime, security, privacy, recovery, Glaze, observability, release, or public-history evidence is treated as passing.
+- Assigned unfinished/unverified feature expansion outside the bounded 2.0 qualification boundary to **Version 2.0.1**.
+- Added an explicit release-boundary record with internal/external version identity and the non-deferrable 2.0 Anchor gates.
+
 ## 2026-09-30 — Foundation 0.9 Seal candidate
 
 - Promoted the current release line from Weave to **Seal** under Platform Contract 2.0 by freezing exact candidate `wardveil-0.9.0-seal.1` at implementation source `cc493530c02925a4404c54d2767c15d9fbfa0835` / tree `b835d305c3b21d72cd00645dac3d1945626c6d8b`.
