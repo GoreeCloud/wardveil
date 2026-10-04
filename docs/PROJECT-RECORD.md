@@ -319,3 +319,11 @@ Runtime evidence now distinguishes the exact Seal source/deployed revision from 
 
 The change does not promote Wardveil, does not mark Cloudflare runtime acceptance complete, and does not create a protection claim. Live exact-candidate deployment, liveness/readiness, privileged service-binding evidence, failure evidence, Everkeep restore verification, and other remaining Version 2.0 gates still require authoritative runtime evidence.
 
+## October 4, 2026 — Cloudflare runtime deployment blocked on environment values
+
+Wardveil Cloudflare persistence workflow run `37236563970` verified the corrected production-control path against exact Seal source `cc493530c02925a4404c54d2767c15d9fbfa0835`. Candidate identity and checkout controls passed.
+
+The run then failed closed before Wrangler installation or deployment because `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, and `WARDVEIL_HEALTH_URL` were unavailable to the `wardveil-production` job. No Worker deployment occurred and no runtime evidence was generated.
+
+The Version 2.0 `cloudflare-runtime-acceptance` gate remains blocked. Required next work is infrastructure-side provisioning of those environment values through an authorized secret/configuration process, followed by a fresh exact-candidate dispatch and authoritative runtime evidence collection.
+
