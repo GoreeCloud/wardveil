@@ -94,7 +94,7 @@ Security Center source passed through multiple design-system generations during 
 
 Older Glaze UI 1.0/2.1-era checkpoints remain historical evidence only.
 
-Current accepted repository source targets the official Anchor Glaze UI 1.6.0 contract through repository-local source/build mappings.
+The canonical Security Center source now targets Glaze V1.7 / 1.7.0 in `GoreeCloud/static-websites`; the Wardveil repository-local V1.6 website remains a legacy/transitional deployment copy.
 
 Final rendered review, accessibility, representative performance/target behavior, rollback, deployed-byte/provenance, consumer registration, runtime deployment, and production acceptance remain open.
 
@@ -284,3 +284,12 @@ Wardveil completed the governed disposition required by issue #176 for the alrea
 The bounded residual class is accepted as existing public information without shared-history rewriting or branch retirement. That acceptance is recorded in `docs/PUBLIC-HISTORY-DISPOSITION.md` and does not authorize future over-disclosure, destructive cleanup, runtime authority, deployment, release, Anchor, Stable, or a `Protected by Wardveil` claim.
 
 Accordingly, `qualification/seal-readiness.json` marks only `public-history-safety` as passed. The other eight Version 2.0 Anchor gate groups remain blocked, so candidate `wardveil-2.0.0-seal.1` remains lifecycle Seal and non-production.
+
+## October 3, 2026 — Security Center Glaze V1.7 source adoption
+
+The canonical Security Center route in `GoreeCloud/static-websites/sites/main/security/index.html` now targets Glaze V1.7 / `1.7.0` at exact static-websites revision `531744f2a82133caca8ddde00fa782415d1a42e1`. The exact route blob is `1c3f93866eb76c9ce366ba8f2db42b15dc5ad427`.
+
+That shared website revision passed repository/site validation and received a successful Cloudflare Pages deployment check. The Wardveil repository-local `website/` tree remains a historical/transitional V1.6 deployment copy for `security.goreecloud.com` and is not relabeled as V1.7.
+
+The Version 2.0 `security-center-glaze-acceptance` gate remains blocked pending exact-current rendered/human/accessibility/performance/resilience/rollback acceptance, canonical deployed-byte readback, legacy deployment cutover/retirement, and final production consumer acceptance. No protection, runtime, Anchor, or Stable authority is created by the source migration.
+
