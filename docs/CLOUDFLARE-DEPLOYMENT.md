@@ -32,3 +32,19 @@ PITR availability is not restore verification. Recovery acceptance requires an e
 ## Production acceptance state
 
 Source validation and Cloudflare Pages preview success do not prove that the Worker/Durable Object backend has been deployed or accepted in production. A newer workflow-control commit also does not silently replace the frozen Seal source being qualified. Until live exact-candidate Worker evidence is collected, production runtime status remains **unaccepted**.
+
+## October 4, 2026 deployment attempt
+
+GitHub Actions workflow run `37236563970` exercised the corrected exact-candidate deployment guard from authoritative `main` revision `5a9611f4da2c954274ef1d35c64ec13823bce190`.
+
+The workflow:
+
+- validated `expected_sha` against the declared Seal source;
+- verified the Seal source was an ancestor of the governing workflow-control revision;
+- checked out exact candidate `cc493530c02925a4404c54d2767c15d9fbfa0835`; and
+- verified the exact candidate checkout.
+
+It then failed closed at the required environment-value check because `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, and `WARDVEIL_HEALTH_URL` were unavailable. All deployment and evidence-collection steps were skipped.
+
+Therefore no Cloudflare Worker was deployed, no production runtime state changed, and no runtime acceptance evidence was created. The next action is authorized provisioning of the required `wardveil-production` environment values followed by a fresh exact-candidate workflow dispatch.
+
