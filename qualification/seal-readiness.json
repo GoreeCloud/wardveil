@@ -74,9 +74,11 @@
       "id": "release-provenance-rollback",
       "state": "blocked",
       "evidence": [
+        "qualification/release-evidence.template.json",
+        "docs/RELEASE-PROVENANCE-ROLLBACK.md",
         "goreecloud.platform.yaml"
       ],
-      "reason": "Version 2.0 Anchor qualification blocker: No exact published release evidence, artifact identity, SBOM/signing provenance, or accepted rollback target is declared."
+      "reason": "Version 2.0 Anchor qualification blocker: a fail-closed machine-readable release-evidence template now defines the required published release, artifact, SBOM/signing/source-attestation, deployment, readback, and rollback evidence. No accepted release record, artifact identity, published tag, SBOM/signing provenance, deployment identity, canonical readback, or completed rollback exercise exists yet."
     },
     {
       "id": "public-history-safety",
