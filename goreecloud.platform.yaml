@@ -89,7 +89,7 @@ platform_systems:
     result: applicable-migration-required
     version: '1.7.0'
     evidence:
-      - docs/integrations/security-center-static-site.md
+      - docs/SECURITY-CENTER-GLAZE-V1.7.md
       - website/README.md
     notes: The canonical Security Center source in GoreeCloud/static-websites now targets Glaze V1.7 / 1.7.0 at revision 531744f2a82133caca8ddde00fa782415d1a42e1, with successful repository/main-site validation, isolated-artifact validation, responsive browser smoke including /security/, and a successful Cloudflare Pages deployment check. Migration remains required because canonical-origin readback, downstream rendered/accessibility/performance/resilience/rollback acceptance, final consumer approval, and legacy security.goreecloud.com source/deployment retirement or cutover remain incomplete. The repository-local website/ directory remains a historical V1.6 legacy/transitional deployment copy rather than current source authority.
   mesh:
