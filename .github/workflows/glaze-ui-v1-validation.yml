@@ -1,4 +1,4 @@
-name: Validate Security Center GLAZE UI V1.6 source adoption
+name: Validate legacy Security Center GLAZE UI V1.6 deployment package
 
 on:
   pull_request:
@@ -16,12 +16,12 @@ permissions:
   contents: read
 
 concurrency:
-  group: security-center-glaze-v16-${{ github.workflow }}-${{ github.ref }}
+  group: legacy-security-center-glaze-v16-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   validate:
-    name: Validate Security Center GLAZE UI V1.6 source adoption
+    name: Validate legacy Security Center GLAZE UI V1.6 deployment package
     runs-on: ubuntu-24.04
     timeout-minutes: 8
     steps:
@@ -41,7 +41,7 @@ jobs:
         with:
           python-version: "3.13"
 
-      - name: Build and validate Security Center GLAZE UI V1.6 source adoption
+      - name: Build and validate legacy Security Center GLAZE UI V1.6 deployment package
         run: python3 website/validate.py
 
       - name: Validate responsive public-document layout
