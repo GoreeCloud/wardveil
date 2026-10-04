@@ -1,7 +1,19 @@
 # Wardveil Security — Planned Features
 
 > **Authority:** Repository-native planned-feature record migrated from the richer Drive planning source on 2026-09-27.  
-> **Boundary:** Current lifecycle is Seal under Platform Contract 2.0. Exact candidate `wardveil-0.9.0-seal.1` freezes Foundation 0.9 implementation source at `cc493530c02925a4404c54d2767c15d9fbfa0835`. Historical Development/Weave wording below remains provenance. Planned Wardveil 2.0 direction does not expand the sealed candidate or establish production runtime acceptance, Covered/Protected state, or Anchor.
+> **Boundary:** Current lifecycle is Seal under Platform Contract 2.0. Exact candidate `wardveil-2.0.0-seal.1` assigns Version 2.0.0 to verified Foundation 0.9 implementation source `cc493530c02925a4404c54d2767c15d9fbfa0835`. The nine gate groups in `qualification/seal-readiness.json` remain non-deferrable Version 2.0 Anchor requirements. All unfinished or unverified roadmap expansion outside that qualification boundary is assigned to Version 2.0.1.
+
+
+## Version 2.0 / 2.0.1 scope split — 2026-10-03
+
+**Version 2.0.0** is deliberately bounded to the implementation already frozen and source-validated by the Seal candidate. The release identity change does not convert source validation into production acceptance.
+
+The following work stays attached to **2.0** because it is required for Anchor/Stable qualification of the bounded release: all nine gate groups in `qualification/seal-readiness.json`, including platform-system acceptance, production Identity/key custody, target runtime acceptance, Everkeep restore proof, any shipped consequential-execution readback, operational observability/alerting, current Glaze consumer acceptance for shipped UI, release provenance/rollback, and public-history safety disposition.
+
+Everything else in this roadmap that is not already in `docs/IMPLEMENTED-FEATURES.md` and is not one of those mandatory 2.0 qualification gates is **2.0.1 planned scope**. This includes feature expansion such as broader adaptive trust, device-integrity coverage, application containment/isolation expansion, behavioral-detection expansion, Incident Center expansion, Security Timeline, additional containment workflows, profile/policy expansion, and other future security-operations capabilities.
+
+2.0.1 remains a successor development line. It must not silently enter the 2.0 candidate, and it receives no Stable/Anchor authority from the 2.0 release.
+
 
 Planned Upgrade, Features, Capabilities, and Long-Term Security Operations Direction
 Purpose and Authority
@@ -9,7 +21,7 @@ This file is the repository-native Wardveil planned-feature authority migrated f
 `PROJECT-SPECIFICATIONS.md` governs long-lived project requirements, while verified repository/runtime evidence governs current implementation state. Wardveil policy and security authority boundaries continue to control what the product may claim or execute.
 Current Roadmap Control and Sealed Foundation 0.9 Candidate
 The following obligations and states are carried forward from the existing Wardveil feature roadmap. They are not inferred from the new planning text. Any Source Validated or source-implemented wording remains bounded to the exact development evidence previously recorded and does not establish runtime, production, Covered, Protected, or Stable status.
-Seal convergence note — Platform Contract 2.0 classifies the current Foundation 0.9 line as Seal. Candidate `wardveil-0.9.0-seal.1` is frozen at exact implementation source `cc493530c02925a4404c54d2767c15d9fbfa0835`. Remaining P0 work is Anchor qualification evidence: platform integration, production identity/key custody, recovery, target-environment validation, Security Center acceptance, operational evidence, release provenance/rollback, and public-history disposition. Qualification remains blocked; no blocked gate is treated as passed by the Seal transition.
+Seal convergence note — Platform Contract 2.0 classifies the current Version 2.0 line as Seal. Candidate `wardveil-2.0.0-seal.1` is frozen at exact implementation source `cc493530c02925a4404c54d2767c15d9fbfa0835`. Remaining P0 work is Anchor qualification evidence: platform integration, production identity/key custody, recovery, target-environment validation, Security Center acceptance, operational evidence, release provenance/rollback, and public-history disposition. Qualification remains blocked; no blocked gate is treated as passed by the Seal transition.
 Weave progress note — Everkeep restore-verification v1.1 consumption is now pinned to canonical `GoreeCloud/everkeep`, with the accepted schema blob verified unchanged from introduction to current main. The remaining recovery gate is a fresh authoritative restore exercise bound to the exact deployed Wardveil revision; source provenance alone does not satisfy recovery acceptance.
 Weave progress note — Wardveil now declares the bounded private `wardveil-persistence-rpc/v1` service-binding API already implemented by the Cloudflare persistence Worker. The supported application methods and non-mutating public health/readiness paths are machine-readable and CI-validated; production API acceptance, authenticated deployed service identity/transport, target-environment failure behavior, observability, recovery, and release evidence remain open.
 Weave progress note — Cloudflare persistence now has source-level `/healthz` liveness and `/readyz` readiness, with readiness exercising the Durable Object/storage/schema path and deployment evidence requiring both. Deployed readiness, alert routing, recovery, and production acceptance remain open.
