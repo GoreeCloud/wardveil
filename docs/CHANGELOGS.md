@@ -1,5 +1,13 @@
 # Wardveil Security — Changelogs
 
+## 2026-10-04 — Seal-bound production deployment control
+
+- Corrected Wardveil production workflows so authoritative `main` owns workflow control while `qualification/seal-candidate.json#source_revision` owns deployed source bytes.
+- Dispatch now rejects any `expected_sha` that does not exactly match the declared Seal source and requires that candidate to be an ancestor of the governing workflow-control revision.
+- Runtime evidence records the exact Seal source/deployed revision separately from the workflow-control revision.
+- Updated persistence/quarantine deployment contracts, validators, and operator documentation to fail closed on identity drift.
+- No Cloudflare runtime acceptance, Everkeep recovery acceptance, protection claim, Anchor, or Stable status is created by this control fix.
+
 ## 2026-10-04 — Security Center canonical readback reconciliation
 
 - Bound the Wardveil Security Center Glaze gate to the stronger current `GoreeCloud/static-websites` V1.7 evidence set rather than the earlier source-adoption-only checkpoint.
