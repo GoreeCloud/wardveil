@@ -4,7 +4,7 @@
 
 ## Verified Version 2.0 scope — Foundation 0.9 implementation baseline
 
-The repository README identifies **Foundation 0.9 active** and currently documents the following source-level capabilities:
+Version 2.0.0 uses the frozen **Foundation 0.9 implementation baseline** and currently includes the following source-level capabilities:
 
 - replay-resistant runtime execution authorization;
 - durable execution-state and reconciliation safeguards;
@@ -47,4 +47,4 @@ Wardveil has a bounded Everkeep v1.1 restore-verification consumer tied to canon
 
 ## Acceptance boundary
 
-Production cryptography, key management, authenticated runtime transport, production executor evidence, production deployment, cross-system runtime acceptance, Covered/Protected claims, and Anchor/Anchor/Stable status remain separate evidence-gated work. A Wardveil policy decision is not automatically execution authority, and branding or documentation alone is never protection evidence.
+Production cryptography, key management, authenticated runtime transport, production executor evidence, production deployment, cross-system runtime acceptance, Covered/Protected claims, and Anchor/Stable status remain separate evidence-gated work. A Wardveil policy decision is not automatically execution authority, and branding or documentation alone is never protection evidence.
