@@ -15,9 +15,9 @@ This is a bounded repository-governance decision for the existing published hist
 ## Evidence and conditions
 
 - The required retained-reference audit remains part of protected-head validation.
-- Issue #176 records the completed review of the known historical metadata class and the forward minimization already merged through PR #175.
+- Issue #176 records the retained-history audit, retained-ref classification, and forward minimization already merged through PR #175; this disposition document supplies the governed residual-exposure decision for the bounded non-confidential metadata class.
 - Any materially different future finding requires a new review rather than inheriting this decision.
-- Branch retirement or shared-history modification remains separately governed.
+- Branch retirement or shared-history modification remains separately governed and is not required to treat this already-published bounded non-confidential metadata class as accepted public information.
 
 ## Qualification effect
 
