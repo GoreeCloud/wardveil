@@ -6,13 +6,15 @@ The canonical GoreeCloud Security route is `https://www.goreecloud.com/security/
 
 ## Current presentation boundary
 
-The canonical Security Center source in `GoreeCloud/static-websites/sites/main/security/index.html` now targets **Glaze V1.7 / 1.7.0** at static-websites revision `531744f2a82133caca8ddde00fa782415d1a42e1`. It records consumer state `source-adopted-unaccepted`.
+The canonical Security Center source in `GoreeCloud/static-websites/sites/main/security/index.html` now targets **Glaze V1.7 / 1.7.0 Stable** at exact static-websites revision `531744f2a82133caca8ddde00fa782415d1a42e1`. Its consumer state is `source-adopted-unaccepted`.
 
-For that exact revision, repository/main-site validation, isolated-artifact validation, responsive browser smoke including `/security/`, and the Cloudflare Pages deployment check all pass. Canonical-origin exact-byte/readback evidence, current human/accessibility/performance/resilience review, rollback verification, final consumer acceptance, and legacy custom-domain/source retirement remain pending.
+For that exact central revision, repository/site validation and the Cloudflare Pages deployment check are successful. The canonical Security route blob is `1c3f93866eb76c9ce366ba8f2db42b15dc5ad427`.
 
-This protected repository-local legacy copy still uses the historical **GLAZE UI V1.6 / 1.6.0** source/build mapping. Earlier V1.1 and Glaze UI 2.x adoption records remain historical evidence. The legacy copy must not be relabeled as V1.7 without actually rebuilding and accepting those bytes.
+This retained Wardveil `website/` directory remains a **legacy/transitional V1.6 source/build copy** for the historical `security.goreecloud.com` deployment contract. It must not be relabeled as V1.7 unless those legacy bytes are actually migrated and independently accepted.
 
-Presentation state does not create, upgrade, or infer Wardveil protection, verification, response, runtime, scanner, production, or acceptance state.
+Glaze remains presentation authority only. V1.7 source adoption, a successful build, or a deployment check cannot create, upgrade, or infer Wardveil protection, verification, response, runtime, scanner, production, Anchor, or Stable state.
+
+Exact-current rendered/human review, accessibility, representative performance/resilience, rollback evidence, canonical deployed-byte readback, legacy custom-domain cutover/retirement, and final Security Center consumer acceptance remain open.
 
 ## Current legacy Cloudflare Pages contract
 
