@@ -8,6 +8,7 @@
 **Qualification State:** Blocked  
 **Exact Candidate:** `wardveil-2.0.0-seal.1`  
 **Frozen Implementation Source:** `cc493530c02925a4404c54d2767c15d9fbfa0835`  
+**Foundation Contract Version:** `0.9.0` (root `VERSION`; intentionally independent from release identity)  
 **Successor Development Line:** 2.0.1
 
 ## Bounded 2.0 scope
