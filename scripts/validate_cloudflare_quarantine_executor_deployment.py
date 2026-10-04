@@ -44,6 +44,11 @@ def main() -> None:
     require(deployment.get("source_placeholder_may_be_deployed") is False, "source placeholder must never deploy")
     require(deployment.get("production_runtime_status_after_workflow") == "unaccepted", "workflow must remain unaccepted")
     require(deployment.get("pinned_wrangler_version") == "4.37.0", "unexpected Wrangler deployment version")
+    require(deployment.get("declared_seal_candidate_source_required") is True, "declared Seal candidate source must control deployment bytes")
+    require(deployment.get("deployment_source_binding") == "qualification/seal-candidate.json#source_revision", "unexpected Seal candidate source binding")
+    require(deployment.get("workflow_control_revision_recorded") is True, "workflow-control revision must be recorded separately")
+    require(deployment.get("workflow_control_revision_is_deployed_revision") is False, "workflow-control revision must not be mislabeled as deployed source")
+    require(deployment.get("candidate_must_be_ancestor_of_workflow_control_revision") is True, "candidate ancestry guard must remain enabled")
 
     target = contract.get("target_authority") or {}
     for key in (
