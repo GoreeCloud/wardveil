@@ -289,14 +289,6 @@ Accordingly, `qualification/seal-readiness.json` marks only `public-history-safe
 
 The canonical Security Center route in `GoreeCloud/static-websites/sites/main/security/index.html` now targets Glaze V1.7 / `1.7.0` at exact static-websites revision `531744f2a82133caca8ddde00fa782415d1a42e1`. The exact route blob is `1c3f93866eb76c9ce366ba8f2db42b15dc5ad427`.
 
-That shared website revision passed repository/site validation and received a successful Cloudflare Pages deployment check. The Wardveil repository-local `website/` tree remains a historical/transitional V1.6 deployment copy for `security.goreecloud.com` and is not relabeled as V1.7.
+Static-websites repository validation run `37171153953` and main website validation run `37171153974` passed. The isolated artifact validated at 100 files / 322713 bytes, browser smoke passed all eleven canonical routes including `/security/` across representative widths, and main-push Cloudflare Pages check `111344235579` reported successful deployment of the exact revision. The Wardveil repository-local `website/` tree remains a historical/transitional V1.6 deployment copy for `security.goreecloud.com` and is not relabeled as V1.7.
 
 The Version 2.0 `security-center-glaze-acceptance` gate remains blocked pending exact-current rendered/human/accessibility/performance/resilience/rollback acceptance, canonical deployed-byte readback, legacy deployment cutover/retirement, and final production consumer acceptance. No protection, runtime, Anchor, or Stable authority is created by the source migration.
-
-## October 3, 2026 — Security Center Glaze V1.7 canonical source adoption
-
-The canonical GoreeCloud Security route in `GoreeCloud/static-websites` now adopts Glaze V1.7 / `1.7.0` at exact source revision `531744f2a82133caca8ddde00fa782415d1a42e1`. The exact `sites/main/security/index.html` blob is `1c3f93866eb76c9ce366ba8f2db42b15dc5ad427`.
-
-Static-websites repository validation run `37171153953` and main website validation run `37171153974` passed. The isolated artifact validated at 100 files / 322713 bytes, browser smoke passed all eleven canonical routes including `/security/` across representative widths, and Cloudflare Pages check `111344235579` reported successful deployment of the exact revision.
-
-This advances the source-migration and machine/deployment portions of Wardveil Version 2.0 gate `security-center-glaze-acceptance` but does not pass it. Canonical-origin readback, human/accessibility/performance/resilience review, rollback evidence, final consumer acceptance, and legacy `security.goreecloud.com` retirement/cutover remain open. The repository-local `website/` copy remains historical V1.6 transitional deployment material.
