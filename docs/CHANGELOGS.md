@@ -1,5 +1,13 @@
 # Wardveil Security — Changelogs
 
+## 2026-10-03 — Security Center Glaze V1.7 source adoption
+
+- Reconciled the canonical Security Center source to Glaze V1.7 / `1.7.0` at `GoreeCloud/static-websites@531744f2a82133caca8ddde00fa782415d1a42e1`.
+- Recorded the exact Security route blob `1c3f93866eb76c9ce366ba8f2db42b15dc5ad427`, successful repository/site validation, and successful Cloudflare Pages deployment check.
+- Corrected the legacy website README to the current `GoreeCloud/static-websites` authority and preserved the Wardveil repository-local V1.6 site as transitional deployment/rollback material.
+- Kept `security-center-glaze-acceptance` blocked on rendered/human/accessibility/performance/resilience/rollback acceptance, canonical deployed-byte readback, legacy cutover/retirement, and final consumer approval.
+- This source migration creates no protection, runtime, production, Anchor, or Stable authority.
+
 ## 2026-10-03 — Public-history safety disposition
 
 - Accepted the already-published bounded non-confidential repository metadata documented by issue #176 as existing public information after forward minimization of current `main` and continued fail-closed retained-reference auditing.
