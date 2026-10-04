@@ -47,4 +47,4 @@ Wardveil has a bounded Everkeep v1.1 restore-verification consumer tied to canon
 
 ## Acceptance boundary
 
-Production cryptography, key management, authenticated runtime transport, production executor evidence, production deployment, cross-system runtime acceptance, Covered/Protected claims, and Anchor/Stable status remain separate evidence-gated work. A Wardveil policy decision is not automatically execution authority, and branding or documentation alone is never protection evidence.
+Production cryptography, key management, authenticated runtime transport, production executor evidence, production deployment, cross-system runtime acceptance, Covered/Protected claims, and Anchor/Anchor/Stable status remain separate evidence-gated work. A Wardveil policy decision is not automatically execution authority, and branding or documentation alone is never protection evidence.
