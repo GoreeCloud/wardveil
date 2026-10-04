@@ -23,7 +23,7 @@
       "result": "success"
     }
   ],
-  "configuration_boundary": "Wardveil Version 2.0 release candidate over verified Foundation 0.9 implementation source. Production deployment/provider identities remain qualification evidence and must bind to this source candidate; any material runtime, dependency, security, recovery, supported-platform, or release-critical configuration change supersedes this candidate.",
+  "configuration_boundary": "Wardveil Version 2.0 release candidate over Foundation 0.9 implementation source. Production deployment tooling may advance on authoritative main only when it preserves candidate bytes and binds deployed source exactly to this record's source_revision; the workflow-control revision must be evidenced separately. Any material runtime, dependency, security/privacy, recovery, supported-platform, or runtime-affecting configuration change supersedes this candidate.",
   "dependency_state": "Version 2.0 Anchor qualification remains blocked on the nine gate groups in qualification/seal-readiness.json. Unfinished feature expansion outside the bounded 2.0 candidate is assigned to 2.0.1 and does not reduce any 2.0 Anchor gate.",
   "previous_known_good": "Verified Foundation 0.9 source baseline cc493530c02925a4404c54d2767c15d9fbfa0835",
   "rollback_target": "cc493530c02925a4404c54d2767c15d9fbfa0835",
