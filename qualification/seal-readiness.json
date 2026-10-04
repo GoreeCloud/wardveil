@@ -64,7 +64,7 @@
       "id": "security-center-glaze-acceptance",
       "state": "blocked",
       "evidence": [
-        "docs/SECURITY-CENTER-GLAZE-V1.7.md",
+        "docs/integrations/security-center-static-site.md",
         "website/README.md",
         "goreecloud.platform.yaml"
       ],
