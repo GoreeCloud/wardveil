@@ -2,7 +2,7 @@
 
 > **Authority:** Repository-native implemented-feature record. Verified repository source and acceptance evidence remain controlling.
 
-## Verified Foundation 0.9 source state
+## Verified Version 2.0 scope — Foundation 0.9 implementation baseline
 
 The repository README identifies **Foundation 0.9 active** and currently documents the following source-level capabilities:
 
@@ -47,4 +47,4 @@ Wardveil has a bounded Everkeep v1.1 restore-verification consumer tied to canon
 
 ## Acceptance boundary
 
-Production cryptography, key management, authenticated runtime transport, production executor evidence, production deployment, cross-system runtime acceptance, Covered/Protected claims, and Stable status remain separate evidence-gated work. A Wardveil policy decision is not automatically execution authority, and branding or documentation alone is never protection evidence.
+Production cryptography, key management, authenticated runtime transport, production executor evidence, production deployment, cross-system runtime acceptance, Covered/Protected claims, and Anchor/Stable status remain separate evidence-gated work. A Wardveil policy decision is not automatically execution authority, and branding or documentation alone is never protection evidence.
