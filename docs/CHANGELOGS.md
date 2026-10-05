@@ -1,5 +1,11 @@
 # Wardveil Security — Changelogs
 
+## 2026-10-05 — Seal state record reconciliation
+
+- Aligned machine-readable lifecycle records with the current Version 2.0 Seal state.
+- Removed stale open-blocker wording for already-passed public-history safety and established Seal identity.
+- Reconciled the Cloudflare qualification record to PR #208 and current repository control head while keeping runtime acceptance blocked.
+
 ## 2026-10-04 — Cloudflare acceptance-probe revision binding fix
 
 - Corrected the privileged acceptance and observability probe requests to send the exact declared Seal source revision instead of the newer workflow-control revision.
