@@ -327,3 +327,9 @@ The run then failed closed before Wrangler installation or deployment because `C
 
 The Version 2.0 `cloudflare-runtime-acceptance` gate remains blocked. Required next work is infrastructure-side provisioning of those environment values through an authorized secret/configuration process, followed by a fresh exact-candidate dispatch and authoritative runtime evidence collection.
 
+## October 4, 2026 — Cloudflare probe revision correction
+
+A source review found that two runtime-evidence probe requests used the workflow-control revision after the workflow had switched to the frozen Seal source. The workflow now sends the Seal candidate revision to those probes and keeps the workflow-control revision as separate provenance.
+
+Validation now enforces that identity separation. The Cloudflare runtime gate remains blocked and no lifecycle promotion is created by this source correction.
+
