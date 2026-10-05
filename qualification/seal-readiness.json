@@ -32,7 +32,7 @@
         "evidence/wardveil.cloudflare.production.template.json",
         "docs/CLOUDFLARE-DEPLOYMENT.md"
       ],
-      "reason": "Version 2.0 Anchor qualification blocker: guarded exact-candidate deployment workflow run 37236563970 correctly bound and checked out wardveil-2.0.0-seal.1 source cc493530c02925a4404c54d2767c15d9fbfa0835, then failed closed before deployment because CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID, and WARDVEIL_HEALTH_URL were unavailable in the wardveil-production environment. No Worker deployment or runtime evidence occurred. Provision the required environment values through the authorized infrastructure process, then rerun the exact Seal source and collect liveness/readiness/service-binding/failure/target-environment evidence."
+      "reason": "Version 2.0 Anchor qualification blocker: guarded deployment run 37236563970 correctly bound and checked out wardveil-2.0.0-seal.1 source cc493530c02925a4404c54d2767c15d9fbfa0835, then failed closed before deployment because CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID, and WARDVEIL_HEALTH_URL were unavailable in the wardveil-production environment. PR #208 later corrected privileged acceptance/observability probe revision binding so the probes use the exact frozen Seal candidate while workflow-control GITHUB_SHA remains provenance; current main is 2ca1cd9248bd8b85c84768ffc7e4594ad469c778. No newer deployment run supersedes 37236563970 and no Worker/runtime evidence exists. Provision the required environment values through the authorized infrastructure process, rerun the exact Seal source, and collect liveness/readiness/service-binding/failure/observability/target-environment evidence."
     },
     {
       "id": "everkeep-restore",
