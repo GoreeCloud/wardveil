@@ -148,7 +148,7 @@ jobs:
           code="$(curl --silent --show-error --output /tmp/wardveil-probe.json --write-out '%{http_code}' \
             --request POST \
             --header 'content-type: application/json' \
-            --data "{\"revision\":\"$GITHUB_SHA\"}" \
+            --data "{\"revision\":\"$WARDVEIL_CANDIDATE_SHA\"}" \
             http://127.0.0.1:8788/run)"
           cat /tmp/wardveil-probe.json
           test "$code" = "200"
@@ -169,7 +169,7 @@ jobs:
           code="$(curl --silent --show-error --output /tmp/wardveil-observability-response.json --write-out '%{http_code}' \
             --request POST \
             --header 'content-type: application/json' \
-            --data "{\"revision\":\"$GITHUB_SHA\",\"marker\":\"$marker\"}" \
+            --data "{\"revision\":\"$WARDVEIL_CANDIDATE_SHA\",\"marker\":\"$marker\"}" \
             http://127.0.0.1:8788/observe-failure)"
           cat /tmp/wardveil-observability-response.json
           test "$code" = "200"

@@ -1,5 +1,12 @@
 # Wardveil Security — Changelogs
 
+## 2026-10-04 — Cloudflare acceptance-probe revision binding fix
+
+- Corrected the privileged acceptance and observability probe requests to send the exact declared Seal source revision instead of the newer workflow-control revision.
+- Preserved `GITHUB_SHA` only as workflow-control provenance while `WARDVEIL_CANDIDATE_SHA` remains the deployed/runtime evidence identity.
+- Hardened both Cloudflare workflow validators to reject any future probe payload that substitutes workflow-control identity for the deployed candidate.
+- This is source/control hardening only. No Cloudflare deployment, runtime acceptance, Anchor, Stable, or protection claim is created.
+
 ## 2026-10-04 — Cloudflare runtime evidence blocked by missing environment values
 
 - Recorded workflow run `37236563970`, which successfully verified the declared Version 2.0 Seal source `cc493530c02925a4404c54d2767c15d9fbfa0835` and exact candidate checkout through the guarded production workflow.
