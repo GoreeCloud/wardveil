@@ -78,6 +78,13 @@ for token in [
     if token not in workflow:
         raise SystemExit(f"Cloudflare deployment workflow missing: {token}")
 
+candidate_probe_revision = r'\"revision\":\"$WARDVEIL_CANDIDATE_SHA\"'
+workflow_control_probe_revision = r'\"revision\":\"$GITHUB_SHA\"'
+if workflow.count(candidate_probe_revision) != 2:
+    raise SystemExit("Cloudflare privileged probes must both bind to the exact Seal candidate SHA")
+if workflow_control_probe_revision in workflow:
+    raise SystemExit("Cloudflare runtime probes must not use workflow-control GITHUB_SHA as the deployed revision")
+
 if "contents: read" not in workflow:
     raise SystemExit("Deployment workflow must retain least-privilege contents: read")
 if "contents: write" in workflow:
