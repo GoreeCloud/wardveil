@@ -65,6 +65,11 @@ for token in [
 ]:
     assert token in workflow, f"missing runtime evidence workflow invariant: {token}"
 
+candidate_probe_revision = r'\"revision\":\"$WARDVEIL_CANDIDATE_SHA\"'
+workflow_control_probe_revision = r'\"revision\":\"$GITHUB_SHA\"'
+assert workflow.count(candidate_probe_revision) == 2, "both privileged evidence probes must use the exact Seal candidate revision"
+assert workflow_control_probe_revision not in workflow, "workflow-control GITHUB_SHA must remain provenance only, not the deployed probe revision"
+
 assert "actions/upload-artifact@" not in workflow, "runtime evidence must not add an ungoverned artifact Action dependency"
 assert "contents: write" not in workflow, "runtime evidence collection must not gain repository write permission"
 assert "curl --silent --show-error --output /tmp/wardveil-probe.json" in workflow
