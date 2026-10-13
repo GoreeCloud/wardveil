@@ -58,8 +58,11 @@ for token in [
     'expected_sha does not match the declared Seal candidate source',
     'git merge-base --is-ancestor "$WARDVEIL_CANDIDATE_SHA" "$GITHUB_SHA"',
     'test "$(git rev-parse HEAD)" = "$WARDVEIL_CANDIDATE_SHA"',
-    "wrangler@4.37.0",
-    "npx wrangler deploy --config wrangler.jsonc",
+    'npm install --no-save --ignore-scripts --prefix "$RUNNER_TEMP/wardveil-wrangler" wrangler@4.37.0',
+    'test -x "$RUNNER_TEMP/wardveil-wrangler/node_modules/.bin/wrangler"',
+    'wrangler" --version | grep -Fq "4.37.0"',
+    'echo "$RUNNER_TEMP/wardveil-wrangler/node_modules/.bin" >> "$GITHUB_PATH"',
+    "wrangler deploy --config wrangler.jsonc",
     "Deploy internal Wardveil acceptance probe",
     "--var EXPECTED_REVISION:$WARDVEIL_CANDIDATE_SHA",
     "acceptance-runner/wrangler.jsonc",
@@ -84,6 +87,9 @@ if workflow.count(candidate_probe_revision) != 2:
     raise SystemExit("Cloudflare privileged probes must both bind to the exact Seal candidate SHA")
 if workflow_control_probe_revision in workflow:
     raise SystemExit("Cloudflare runtime probes must not use workflow-control GITHUB_SHA as the deployed revision")
+
+if "npx wrangler" in workflow:
+    raise SystemExit("Cloudflare deployment must use the isolated pinned Wrangler binary, not npx resolution")
 
 if "contents: read" not in workflow:
     raise SystemExit("Deployment workflow must retain least-privilege contents: read")

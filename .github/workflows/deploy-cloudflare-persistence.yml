@@ -89,16 +89,24 @@ jobs:
 
       - name: Install exact Wrangler release with remote-binding support
         working-directory: cloudflare
-        run: npm install --no-save --ignore-scripts wrangler@4.37.0
+        run: |
+          set -euo pipefail
+          # Install CLI independently of the frozen candidate project dependency graph.
+          # Wrangler 4.37.0 expects workers-types v4 while the Seal source pins v5;
+          # --force / --legacy-peer-deps would weaken the candidate dependency contract.
+          npm install --no-save --ignore-scripts --prefix "$RUNNER_TEMP/wardveil-wrangler" wrangler@4.37.0
+          test -x "$RUNNER_TEMP/wardveil-wrangler/node_modules/.bin/wrangler"
+          "$RUNNER_TEMP/wardveil-wrangler/node_modules/.bin/wrangler" --version | grep -Fq "4.37.0"
+          echo "$RUNNER_TEMP/wardveil-wrangler/node_modules/.bin" >> "$GITHUB_PATH"
 
       - name: Deploy Wardveil persistence Worker
         working-directory: cloudflare
-        run: npx wrangler deploy --config wrangler.jsonc
+        run: wrangler deploy --config wrangler.jsonc
 
       - name: Deploy internal Wardveil acceptance probe
         working-directory: cloudflare
         run: >-
-          npx wrangler deploy
+          wrangler deploy
           --config acceptance-probe/wrangler.jsonc
           --var EXPECTED_REVISION:$WARDVEIL_CANDIDATE_SHA
           --var ACCEPTANCE_TENANT:wardveil-runtime-acceptance
@@ -131,7 +139,7 @@ jobs:
         working-directory: cloudflare
         run: |
           set -euo pipefail
-          npx wrangler dev --config acceptance-runner/wrangler.jsonc --ip 127.0.0.1 --port 8788 > /tmp/wardveil-acceptance-runner.log 2>&1 &
+          wrangler dev --config acceptance-runner/wrangler.jsonc --ip 127.0.0.1 --port 8788 > /tmp/wardveil-acceptance-runner.log 2>&1 &
           echo $! > /tmp/wardveil-acceptance-runner.pid
           for attempt in $(seq 1 30); do
             if curl --fail --silent http://127.0.0.1:8788/healthz > /dev/null; then
@@ -163,7 +171,7 @@ jobs:
           PY
           )"
           printf '%s' "$marker" > /tmp/wardveil-observability-marker
-          npx wrangler tail goreecloud-wardveil-persistence --format json --search "$marker" > /tmp/wardveil-tail.log 2>&1 &
+          wrangler tail goreecloud-wardveil-persistence --format json --search "$marker" > /tmp/wardveil-tail.log 2>&1 &
           echo $! > /tmp/wardveil-tail.pid
           sleep 3
           code="$(curl --silent --show-error --output /tmp/wardveil-observability-response.json --write-out '%{http_code}' \
