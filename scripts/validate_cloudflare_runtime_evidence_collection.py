@@ -73,6 +73,13 @@ assert workflow_control_probe_revision not in workflow, "workflow-control GITHUB
 assert "actions/upload-artifact@" not in workflow, "runtime evidence must not add an ungoverned artifact Action dependency"
 assert "contents: write" not in workflow, "runtime evidence collection must not gain repository write permission"
 assert "curl --silent --show-error --output /tmp/wardveil-probe.json" in workflow
+for token in [
+    "--output /tmp/wardveil-probe.json --connect-timeout 10 --max-time 150",
+    "--output /tmp/wardveil-observability-response.json --connect-timeout 10 --max-time 45",
+    "--output /tmp/wardveil-public-mutation-response --connect-timeout 10 --max-time 20",
+    "--fail --silent --connect-timeout 2 --max-time 4 http://127.0.0.1:8788/healthz",
+]:
+    assert token in workflow, f"Missing fail-closed HTTP timeout boundary: {token}"
 assert "test \"$code\" = \"200\"" in workflow
 assert "Generic public POST /records" in workflow or "public POST /records" in doc
 assert "Remaining pending acceptance evidence: Everkeep-governed restore verification" in workflow
