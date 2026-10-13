@@ -150,6 +150,32 @@ jobs:
           cat /tmp/wardveil-acceptance-runner.log >&2
           exit 1
 
+      # This synthetic-only preflight distinguishes a broken remote service binding
+      # from a long-running retention acceptance probe. It is not acceptance evidence.
+      - name: Check non-public service-binding connectivity before retention acceptance
+        run: |
+          set -euo pipefail
+          marker="acceptance-$(python3 -c 'import uuid; print(uuid.uuid4())')"
+          printf '%s' "$marker" > /tmp/wardveil-binding-connectivity-marker
+          code="$(curl --silent --show-error --output /tmp/wardveil-binding-connectivity.json --connect-timeout 10 --max-time 35 --write-out '%{http_code}' \
+            --request POST \
+            --header 'content-type: application/json' \
+            --data "{\"revision\":\"$WARDVEIL_CANDIDATE_SHA\",\"marker\":\"$marker\"}" \
+            http://127.0.0.1:8788/observe-failure)"
+          if [ "$code" != "200" ]; then
+            echo "Private service binding unreachable: synthetic preflight HTTP $code (expected 200)." >&2
+            exit 1
+          fi
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          result = json.loads(Path('/tmp/wardveil-binding-connectivity.json').read_text())
+          marker = Path('/tmp/wardveil-binding-connectivity-marker').read_text()
+          if result.get('marker') != marker or result.get('expected_failure_observed') is not True:
+              raise SystemExit('Private service-binding preflight returned an invalid response')
+          print('Private service-binding preflight passed (synthetic expected failure only; no acceptance authority).')
+          PY
+
       - name: Collect privileged service-binding and retention evidence
         run: |
           set -euo pipefail
