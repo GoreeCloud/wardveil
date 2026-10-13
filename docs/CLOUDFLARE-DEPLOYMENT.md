@@ -48,3 +48,15 @@ It then failed closed at the required environment-value check because `CLOUDFLAR
 
 Therefore no Cloudflare Worker was deployed, no production runtime state changed, and no runtime acceptance evidence was created. The next action is authorized provisioning of the required `wardveil-production` environment values followed by a fresh exact-candidate workflow dispatch.
 
+## October 13, 2026 production deployment and qualification observations
+
+An authorized exact-candidate deployment-and-acceptance attempt from GitHub Actions `main` advanced beyond the October 4 missing-secrets blocker. The owner provisioned the three required names in the `wardveil-production` environment; secret values were not retrieved or retained in acceptance evidence.
+
+- Governance/control revision: `2b47ceab7316e0a9196f5ce53c1d8fc13b6ae637` (PR #212 corrected an isolated pinned Wrangler 4.37.0 installation issue).
+- Frozen candidate/deployed source revision: `cc493530c02925a4404c54d2767c15d9fbfa0835` (unchanged Seal source).
+- [Initial deployment run #38471274185](https://github.com/GoreeCloud/wardveil/actions/runs/38471274185) deployed both Workers but failed after an unexpected HTTP 500 from the public negative mutation probe; later independent HTTPS requests returned HTTP 404.
+- [Re-run #38471548668](https://github.com/GoreeCloud/wardveil/actions/runs/38471548668) deployed the persistence Worker (reported Cloudflare version `16ae7dc9-435e-40af-b826-8554d5a24744`) and non-public acceptance probe (reported version `70766cd3-f59a-4561-9544-f7754d364cc1`). The run advanced through public health/readiness and public mutation-surface checks and started a local-only acceptance runner. It was cancelled after the job's 20-minute limit while awaiting `POST /run` in the `Collect privileged service-binding and retention evidence` step (started 21:34:16 UTC). It **did not** produce passed evidence for authenticated append/read, checkpoint non-regression, digest readback, the retention alarm, or privileged observability.
+- Independent read-only HTTPS checks from the authorized GoreeCloud VPS and laptop around 22:00 UTC observed `GET /healthz` HTTP 200 (`alive`), `GET /readyz` HTTP 200 (`ready`), and `GET /records` HTTP 404. These are point-in-time observations of public reachability only.
+- [PR #213](https://github.com/GoreeCloud/wardveil/pull/213) introduces bounded, fail-closed HTTP request timeouts and is subject to governed merge before any new qualification run. [Issue #214](https://github.com/GoreeCloud/wardveil/issues/214) tracks the unresolved private binding timeout.
+
+**Qualification boundary:** The Worker deployment and public smoke checks are confirmed. Cloudflare production runtime acceptance remains **unaccepted** and the `cloudflare-runtime-acceptance` Seal/Anchor gate remains blocked. A bounded, exact-source private service-binding run with real positive and negative evidence, a separate Everkeep-governed isolated restore exercise, and the remaining lifecycle gates are required. The Cloudflare Worker being alive/ready cannot be interpreted as a `Protected by Wardveil` claim or Anchor promotion.
