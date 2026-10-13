@@ -42,6 +42,8 @@ for token in [
     "--var EXPECTED_REVISION:$WARDVEIL_CANDIDATE_SHA",
     "--var ACCEPTANCE_TENANT:wardveil-runtime-acceptance",
     "acceptance-runner/wrangler.jsonc",
+    "Check non-public service-binding connectivity before retention acceptance",
+    "Private service binding unreachable: synthetic preflight HTTP",
     "Collect privileged service-binding and retention evidence",
     "Collect bounded observability failure evidence",
     "wrangler tail goreecloud-wardveil-persistence --format json --search",
@@ -67,7 +69,7 @@ for token in [
 
 candidate_probe_revision = r'\"revision\":\"$WARDVEIL_CANDIDATE_SHA\"'
 workflow_control_probe_revision = r'\"revision\":\"$GITHUB_SHA\"'
-assert workflow.count(candidate_probe_revision) == 2, "both privileged evidence probes must use the exact Seal candidate revision"
+assert workflow.count(candidate_probe_revision) == 3, "preflight and both privileged evidence probes must use the exact Seal candidate revision"
 assert workflow_control_probe_revision not in workflow, "workflow-control GITHUB_SHA must remain provenance only, not the deployed probe revision"
 
 assert "actions/upload-artifact@" not in workflow, "runtime evidence must not add an ungoverned artifact Action dependency"
