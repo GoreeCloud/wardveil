@@ -54,6 +54,8 @@ jobs:
 
       - name: Validate Seal readiness boundary
         run: python3 scripts/validate_seal_readiness.py
+      - name: Reject malformed Seal qualification evidence
+        run: python3 scripts/test_seal_readiness_negative.py
 
       - name: Validate release provenance and rollback evidence template
         run: python3 scripts/validate_release_provenance_template.py
