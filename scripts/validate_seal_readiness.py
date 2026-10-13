@@ -65,21 +65,41 @@ def main() -> None:
     source_revision = candidate.get("source_revision")
     if not isinstance(source_revision, str) or not re.fullmatch(r"[0-9a-f]{40}", source_revision):
         fail("candidate source_revision must be an exact commit SHA")
+    if not re.fullmatch(r"[0-9a-f]{40}", str(candidate.get("source_tree", ""))):
+        fail("candidate source_tree must be an exact SHA")
+    if not re.fullmatch(r"[0-9a-f]{40}", str(candidate.get("rollback_target", ""))):
+        fail("candidate rollback_target must be an exact SHA")
+    if candidate.get("anchor_qualification_status") != "blocked":
+        fail("candidate cannot claim Anchor while qualification is blocked")
     if candidate.get("production_approved") is not False or candidate.get("authority_effect") != "none":
         fail("Seal candidate must remain non-authorizing before Anchor qualification")
     validations = candidate.get("source_validation")
     if not isinstance(validations, list) or len(validations) < 1 or any(v.get("result") != "success" for v in validations):
         fail("candidate must retain successful exact-source validation evidence")
 
-    if not isinstance(record["gates"], list) or {gate.get("id") for gate in record["gates"]} != EXPECTED_GATES:
+    if (not isinstance(record["gates"], list) or len(record["gates"]) != len(EXPECTED_GATES)
+            or {gate.get("id") for gate in record["gates"]} != EXPECTED_GATES):
         fail("gate inventory drifted")
     for gate in record["gates"]:
         if set(gate) != {"id", "state", "evidence", "reason"}:
             fail(f"{gate.get('id')}: gate fields drifted")
         if gate["state"] not in {"blocked", "passed"}:
             fail(f"{gate['id']}: unsupported state")
-        if not gate["evidence"] or not gate["reason"]:
-            fail(f"{gate['id']}: evidence and reason are required")
+        if not isinstance(gate["reason"], str) or not gate["reason"].strip():
+            fail(f"{gate['id']}: nonempty reason required")
+        paths = gate["evidence"]
+        if not isinstance(paths, list) or not paths or any(not isinstance(p, str) for p in paths):
+            fail(f"{gate['id']}: evidence must be a nonempty list of repository-local paths")
+        if len(paths) != len(set(paths)):
+            fail(f"{gate['id']}: duplicate evidence path")
+        for entry in paths:
+            relative = Path(entry)
+            if (not entry or entry != entry.strip() or relative.is_absolute()
+                    or ".." in relative.parts or "." in relative.parts):
+                fail(f"{gate['id']}: unsafe evidence path")
+            resolved = (ROOT / relative).resolve()
+            if not resolved.is_relative_to(ROOT.resolve()) or not resolved.is_file():
+                fail(f"{gate['id']}: evidence path missing or outside repository: {entry}")
 
     lifecycle_match = re.search(r"(?m)^lifecycle:\s*([a-z-]+)\s*$", manifest)
     source_match = re.search(r"(?m)^\s{4}source_revision:\s*([0-9a-f]{40})\s*$", manifest)
