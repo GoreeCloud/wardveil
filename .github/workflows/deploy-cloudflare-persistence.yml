@@ -114,12 +114,12 @@ jobs:
       - name: Verify public health and readiness endpoints
         run: |
           set -euo pipefail
-          health_response="$(curl --fail-with-body --silent --show-error --location "$WARDVEIL_HEALTH_URL")"
+          health_response="$(curl --fail-with-body --silent --show-error --connect-timeout 10 --max-time 20 --location "$WARDVEIL_HEALTH_URL")"
           printf '%s\n' "$health_response"
           printf '%s' "$health_response" | grep -q 'goreecloud-wardveil-persistence'
           printf '%s' "$health_response" | grep -q '"status":"alive"'
           origin="${WARDVEIL_HEALTH_URL%/healthz}"
-          readiness_response="$(curl --fail-with-body --silent --show-error --location "$origin/readyz")"
+          readiness_response="$(curl --fail-with-body --silent --show-error --connect-timeout 10 --max-time 20 --location "$origin/readyz")"
           printf '%s\n' "$readiness_response"
           printf '%s' "$readiness_response" | grep -q '"status":"ready"'
           printf '%s' "$readiness_response" | grep -q '"dependency":"durable-object-sqlite"'
@@ -128,7 +128,7 @@ jobs:
         run: |
           set -euo pipefail
           origin="${WARDVEIL_HEALTH_URL%/healthz}"
-          code="$(curl --silent --show-error --output /tmp/wardveil-public-mutation-response --write-out '%{http_code}' --request POST "$origin/records" || true)"
+          code="$(curl --silent --show-error --output /tmp/wardveil-public-mutation-response --connect-timeout 10 --max-time 20 --write-out '%{http_code}' --request POST "$origin/records" || true)"
           cat /tmp/wardveil-public-mutation-response || true
           case "$code" in
             404|405) ;;
@@ -142,7 +142,7 @@ jobs:
           wrangler dev --config acceptance-runner/wrangler.jsonc --ip 127.0.0.1 --port 8788 > /tmp/wardveil-acceptance-runner.log 2>&1 &
           echo $! > /tmp/wardveil-acceptance-runner.pid
           for attempt in $(seq 1 30); do
-            if curl --fail --silent http://127.0.0.1:8788/healthz > /dev/null; then
+            if curl --fail --silent --connect-timeout 2 --max-time 4 http://127.0.0.1:8788/healthz > /dev/null; then
               exit 0
             fi
             sleep 1
@@ -153,7 +153,7 @@ jobs:
       - name: Collect privileged service-binding and retention evidence
         run: |
           set -euo pipefail
-          code="$(curl --silent --show-error --output /tmp/wardveil-probe.json --write-out '%{http_code}' \
+          code="$(curl --silent --show-error --output /tmp/wardveil-probe.json --connect-timeout 10 --max-time 150 --write-out '%{http_code}' \
             --request POST \
             --header 'content-type: application/json' \
             --data "{\"revision\":\"$WARDVEIL_CANDIDATE_SHA\"}" \
@@ -174,7 +174,7 @@ jobs:
           wrangler tail goreecloud-wardveil-persistence --format json --search "$marker" > /tmp/wardveil-tail.log 2>&1 &
           echo $! > /tmp/wardveil-tail.pid
           sleep 3
-          code="$(curl --silent --show-error --output /tmp/wardveil-observability-response.json --write-out '%{http_code}' \
+          code="$(curl --silent --show-error --output /tmp/wardveil-observability-response.json --connect-timeout 10 --max-time 45 --write-out '%{http_code}' \
             --request POST \
             --header 'content-type: application/json' \
             --data "{\"revision\":\"$WARDVEIL_CANDIDATE_SHA\",\"marker\":\"$marker\"}" \
