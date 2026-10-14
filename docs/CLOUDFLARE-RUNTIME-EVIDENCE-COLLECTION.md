@@ -37,6 +37,18 @@ The deadline is part of Wardveil's acceptance evidence, not a consumer preferenc
 
 The source-controlled production template is deliberately expired and uses a placeholder revision. It is contract scaffolding only and cannot satisfy current-evidence queries.
 
+## Historical Workers Logs readback — separate least-privilege identity
+
+A live Cloudflare Worker tail session can fail to attach or deliver a particular marker. Historical stored-event readback is a separate, supplemental evidence path; neither a probe acknowledgement nor an empty live tail is sufficient to assert that the event was observed.
+
+On October 14, 2026, [governed nonpromoting readback run #38560325264](https://github.com/GoreeCloud/wardveil/actions/runs/38560325264) reached the Cloudflare API but received HTTP **403** when using the existing short-lived `CLOUDFLARE_API_TOKEN` Workers Admin deployment credential. The local verifier self-test passed. The 403 is consistent with the documented additional Workers Observability API permission; it is not evidence that the marker is absent or that the Worker failed. [Cloudflare's query endpoint](https://developers.cloudflare.com/api/resources/workers/subresources/observability/subresources/telemetry/methods/query/) requires **Workers Observability Write**, even to run a historical readback query.
+
+Do not expand or reuse the deployed Worker administrator's token. For authorized historical readback, the owner must independently create a **separate, short-lived Cloudflare API token** scoped to the selected GoreeCloud account with only `Workers Observability Write`, then store its value directly under the exact GitHub **environment secret name** `CLOUDFLARE_OBSERVABILITY_API_TOKEN` in `GoreeCloud/wardveil` → `wardveil-production`. Do not send the value in chat, copy it into source, or attach it to task records. Token creation and permission changes are owner actions; this repository does not generate or broaden tokens.
+
+The manual workflow `.github/workflows/verify-cloudflare-historical-observability.yml` queries only historical `cloudflare-workers` events. It uses the separate observability token, the existing account ID, an exact synthetic marker, and an owner-selected bounded UTC window (at most 30 minutes). The verifier requires a completed Cloudflare query and the exact marker in a record attributed to `goreecloud-wardveil-persistence`. It does not output raw events or upload artifacts; a nonmatch, missing token, 403, or unexpected API response fails closed.
+
+The known historical target from [production run #38558212925](https://github.com/GoreeCloud/wardveil/actions/runs/38558212925) is marker `acceptance-ebb6c624-69dd-4364-bc66-f282b2a6e5e1` around October 14, 2026, 11:41 UTC. Stored-log availability is subject to Cloudflare retention, sampling and account entitlement. A later independent readback does **not** retroactively convert the failed original workflow run to success or promote the Seal candidate. Reconciliation must be documented under the exact source/workflow revisions and independently verified by the release process.
+
 ## Evidence intentionally left pending
 
 The deployment workflow must not self-certify recovery authority. After the expanded runtime probe and independent Cloudflare tail observation complete, the remaining acceptance requirement is:
