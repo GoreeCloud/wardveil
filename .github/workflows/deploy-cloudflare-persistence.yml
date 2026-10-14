@@ -203,9 +203,9 @@ jobs:
           PY
           )"
           printf '%s' "$marker" > /tmp/wardveil-observability-marker
-          wrangler tail goreecloud-wardveil-persistence --format json --search "$marker" > /tmp/wardveil-tail.log 2>&1 &
+          "$RUNNER_TEMP/wardveil-wrangler-remote/node_modules/.bin/wrangler" tail goreecloud-wardveil-persistence --format json --search "$marker" > /tmp/wardveil-tail.log 2>&1 &
           echo $! > /tmp/wardveil-tail.pid
-          sleep 3
+          sleep 8
           code="$(curl --silent --show-error --output /tmp/wardveil-observability-response.json --connect-timeout 10 --max-time 45 --write-out '%{http_code}' \
             --request POST \
             --header 'content-type: application/json' \
@@ -215,7 +215,7 @@ jobs:
           test "$code" = "200"
           grep -q '"expected_failure_observed":true' /tmp/wardveil-observability-response.json
           observed=false
-          for attempt in $(seq 1 30); do
+          for attempt in $(seq 1 45); do
             if grep -q "$marker" /tmp/wardveil-tail.log; then
               observed=true
               break
@@ -223,7 +223,23 @@ jobs:
             sleep 1
           done
           kill "$(cat /tmp/wardveil-tail.pid)" || true
-          cat /tmp/wardveil-tail.log
+          # Only report bounded diagnostic metadata, never raw Cloudflare log payloads.
+          python3 - <<'PY'
+          import json
+          import re
+          from pathlib import Path
+          path = Path("/tmp/wardveil-tail.log")
+          marker = Path("/tmp/wardveil-observability-marker").read_text()
+          content = path.read_text(errors="replace") if path.is_file() else ""
+          print(json.dumps({
+              "kind": "wardveil_tail_nonsecret_observability_summary",
+              "tail_log_present": path.is_file(),
+              "tail_log_lines": min(len(content.splitlines()), 100000),
+              "acceptance_marker_observed": marker in content,
+              "tail_error_marker_present": bool(re.search(r"\[ERROR\]|\berror:", content, re.I)),
+              "acceptance_authority": False,
+          }, sort_keys=True))
+          PY
           test "$observed" = "true"
 
       - name: Build revision-bound runtime evidence manifest
