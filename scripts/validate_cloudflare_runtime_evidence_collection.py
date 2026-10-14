@@ -44,6 +44,11 @@ for token in [
     "acceptance-runner/wrangler.jsonc",
     "Check non-public service-binding connectivity before retention acceptance",
     "Private service binding unreachable: synthetic preflight HTTP",
+    "Summarize local-only remote binding failure (nonsecret)",
+    "remote_service_binding_declared",
+    "runner_process_alive_at_failure",
+    "raw_log_retained_in_ci_artifact",
+    "acceptance_authority",
     "Collect privileged service-binding and retention evidence",
     "Collect bounded observability failure evidence",
     "wrangler tail goreecloud-wardveil-persistence --format json --search",
@@ -72,6 +77,8 @@ workflow_control_probe_revision = r'\"revision\":\"$GITHUB_SHA\"'
 assert workflow.count(candidate_probe_revision) == 3, "preflight and both privileged evidence probes must use the exact Seal candidate revision"
 assert workflow_control_probe_revision not in workflow, "workflow-control GITHUB_SHA must remain provenance only, not the deployed probe revision"
 
+assert "if: failure()" in workflow, "failed runtime probe must produce nonsecret diagnostic summary"
+assert "raw_log_retained_in_ci_artifact" in workflow, "runner diagnostics must not upload raw logs"
 assert "actions/upload-artifact@" not in workflow, "runtime evidence must not add an ungoverned artifact Action dependency"
 assert "contents: write" not in workflow, "runtime evidence collection must not gain repository write permission"
 assert "curl --silent --show-error --output /tmp/wardveil-probe.json" in workflow
