@@ -66,6 +66,8 @@ for token in [
     "Deploy internal Wardveil acceptance probe",
     "--var EXPECTED_REVISION:$WARDVEIL_CANDIDATE_SHA",
     "acceptance-runner/wrangler.jsonc",
+    'npm install --no-save --ignore-scripts --prefix "$RUNNER_TEMP/wardveil-wrangler-remote" wrangler@4.129.1',
+    'wrangler-remote/node_modules/.bin/wrangler" dev --config acceptance-runner/wrangler.jsonc --ip 127.0.0.1 --port 8788',
     "Check non-public service-binding connectivity before retention acceptance",
     "wardveil-binding-connectivity.json --connect-timeout 10 --max-time 35",
     "Collect privileged service-binding and retention evidence",

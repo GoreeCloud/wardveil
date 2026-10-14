@@ -139,7 +139,13 @@ jobs:
         working-directory: cloudflare
         run: |
           set -euo pipefail
-          wrangler dev --config acceptance-runner/wrangler.jsonc --ip 127.0.0.1 --port 8788 > /tmp/wardveil-acceptance-runner.log 2>&1 &
+          # Production Worker deployment remains pinned to Wrangler 4.37.0.
+          # Use a separate isolated, newer Wrangler CLI for the LOCAL-ONLY
+          # remote-binding acceptance bridge to distinguish old proxy failures.
+          npm install --no-save --ignore-scripts --prefix "$RUNNER_TEMP/wardveil-wrangler-remote" wrangler@4.129.1
+          test -x "$RUNNER_TEMP/wardveil-wrangler-remote/node_modules/.bin/wrangler"
+          "$RUNNER_TEMP/wardveil-wrangler-remote/node_modules/.bin/wrangler" --version | grep -Fq "4.129.1"
+          "$RUNNER_TEMP/wardveil-wrangler-remote/node_modules/.bin/wrangler" dev --config acceptance-runner/wrangler.jsonc --ip 127.0.0.1 --port 8788 > /tmp/wardveil-acceptance-runner.log 2>&1 &
           echo $! > /tmp/wardveil-acceptance-runner.pid
           for attempt in $(seq 1 30); do
             if curl --fail --silent --connect-timeout 2 --max-time 4 http://127.0.0.1:8788/healthz > /dev/null; then
