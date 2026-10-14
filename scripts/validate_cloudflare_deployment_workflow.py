@@ -66,6 +66,8 @@ for token in [
     "Deploy internal Wardveil acceptance probe",
     "--var EXPECTED_REVISION:$WARDVEIL_CANDIDATE_SHA",
     "acceptance-runner/wrangler.jsonc",
+    "Check non-public service-binding connectivity before retention acceptance",
+    "wardveil-binding-connectivity.json --connect-timeout 10 --max-time 35",
     "Collect privileged service-binding and retention evidence",
     "Collect bounded observability failure evidence",
     "wrangler tail goreecloud-wardveil-persistence --format json --search",
@@ -83,8 +85,8 @@ for token in [
 
 candidate_probe_revision = r'\"revision\":\"$WARDVEIL_CANDIDATE_SHA\"'
 workflow_control_probe_revision = r'\"revision\":\"$GITHUB_SHA\"'
-if workflow.count(candidate_probe_revision) != 2:
-    raise SystemExit("Cloudflare privileged probes must both bind to the exact Seal candidate SHA")
+if workflow.count(candidate_probe_revision) != 3:
+    raise SystemExit("Cloudflare synthetic preflight and privileged probes must bind to the exact Seal candidate SHA")
 if workflow_control_probe_revision in workflow:
     raise SystemExit("Cloudflare runtime probes must not use workflow-control GITHUB_SHA as the deployed revision")
 
