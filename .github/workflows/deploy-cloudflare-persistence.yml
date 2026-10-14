@@ -358,7 +358,7 @@ jobs:
               "remote_bridge_error": bool(re.search(r"remote binding.*error|proxyworker|remote.*connection.*error", raw, re.I)),
               "connection_lost": bool(re.search(r"network connection lost|econnreset|etimedout|connection refused", raw, re.I)),
               "rpc_method_error": bool(re.search(r"rpc receiver does not implement|rpc.*not supported", raw, re.I)),
-              "wrangler_error_marker_present": bool(re.search(r"\\[ERROR\\]|\\berror:", raw, re.I)),
+              "wrangler_error_marker_present": bool(re.search(r"\[ERROR\]|\berror:", raw, re.I)),
           }
           running = False
           if pid_file.is_file():
