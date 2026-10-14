@@ -1,0 +1,60 @@
+name: Verify Wardveil historical Workers Logs (non-promoting)
+
+on:
+  workflow_dispatch:
+    inputs:
+      marker:
+        description: Exact acceptance-* UUID from a previous synthetic observability run
+        required: true
+        type: string
+      from_utc:
+        description: Inclusive UTC start (ISO 8601, maximum 30-minute window)
+        required: true
+        type: string
+      to_utc:
+        description: Exclusive UTC end (ISO 8601, maximum 30-minute window)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wardveil-historical-observability-readback
+  cancel-in-progress: false
+
+jobs:
+  query-stored-worker-logs:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    environment: wardveil-production
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      WARDVEIL_ACCEPTANCE_MARKER: ${{ inputs.marker }}
+      WARDVEIL_WINDOW_FROM: ${{ inputs.from_utc }}
+      WARDVEIL_WINDOW_TO: ${{ inputs.to_utc }}
+    steps:
+      - name: Check out governed main source without credential persistence
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Confirm exact frozen Seal source
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/main"
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          candidate = json.loads(Path('qualification/seal-candidate.json').read_text())
+          assert candidate['source_revision'] == 'cc493530c02925a4404c54d2767c15d9fbfa0835'
+          assert not candidate.get('production_approved', False)
+          PY
+
+      - name: Validate bounded stored-log matching locally
+        run: python3 scripts/verify_cloudflare_historical_observability.py --self-test
+
+      - name: Query only synthetic stored Cloudflare events and redact payloads
+        run: python3 scripts/verify_cloudflare_historical_observability.py
