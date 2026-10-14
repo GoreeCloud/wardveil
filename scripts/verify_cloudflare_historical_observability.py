@@ -74,7 +74,9 @@ def main() -> None:
         raise SystemExit("Usage: verify_cloudflare_historical_observability.py [--self-test]")
     marker = os.environ["WARDVEIL_ACCEPTANCE_MARKER"]
     account = os.environ["CLOUDFLARE_ACCOUNT_ID"]
-    token = os.environ["CLOUDFLARE_API_TOKEN"]
+    token = os.environ.get("CLOUDFLARE_OBSERVABILITY_API_TOKEN", "")
+    if not token:
+        raise SystemExit("Dedicated Cloudflare observability credential is missing; keep deployment token unchanged")
     if not MARKER.fullmatch(marker) or not re.fullmatch(r"[a-fA-F0-9]{32}", account):
         raise SystemExit("Invalid marker/account input")
     start, end = validate_window(os.environ["WARDVEIL_WINDOW_FROM"], os.environ["WARDVEIL_WINDOW_TO"])
