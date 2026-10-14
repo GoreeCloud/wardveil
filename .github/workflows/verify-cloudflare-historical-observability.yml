@@ -30,7 +30,7 @@ jobs:
     timeout-minutes: 3
     environment: wardveil-production
     env:
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_OBSERVABILITY_API_TOKEN: ${{ secrets.CLOUDFLARE_OBSERVABILITY_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       WARDVEIL_ACCEPTANCE_MARKER: ${{ inputs.marker }}
       WARDVEIL_WINDOW_FROM: ${{ inputs.from_utc }}
