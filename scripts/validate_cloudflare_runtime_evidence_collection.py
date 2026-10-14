@@ -38,6 +38,7 @@ for token in [
     "persist-credentials: false",
     "wrangler@4.37.0",
     "wrangler@4.129.1",
+    'wrangler-remote/node_modules/.bin/wrangler" dev --config acceptance-runner/wrangler.jsonc --ip 127.0.0.1 --port 8788',
     "Deploy Wardveil persistence Worker",
     "Deploy internal Wardveil acceptance probe",
     "--var EXPECTED_REVISION:$WARDVEIL_CANDIDATE_SHA",
