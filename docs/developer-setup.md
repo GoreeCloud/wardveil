@@ -10,11 +10,11 @@
 
 ## Scope
 
-This initial Go 1.23 standard-library service implements only a tightly scoped, single-instance security **event ingestion and listing** loop. It is **not** an antivirus engine, SIEM, incident tracker, auth platform, hosted API, or hardened production service. No network blocking, file quarantine, credential handling, or session revocation is implemented. The service deliberately binds to a loopback IP and has no TLS listener; do not forward or expose it publicly. It has no tenant isolation, role directory, retention scheduler, database replication, or production-grade transactional store. `GET /healthz` is only process liveness, not readiness.
+This initial Go standard-library service implements only a tightly scoped, single-instance security **event ingestion and listing** loop. It is **not** an antivirus engine, SIEM, incident tracker, auth platform, hosted API, or hardened production service. No network blocking, file quarantine, credential handling, or session revocation is implemented. The service deliberately binds to a loopback IP and has no TLS listener; do not forward or expose it publicly. It has no tenant isolation, role directory, retention scheduler, database replication, or production-grade transactional store. `GET /healthz` is only process liveness, not readiness.
 
 ## Build and test
 
-Prerequisite: Go 1.23 or newer. From the repository root:
+Prerequisite: the supported Go 1.27.3 toolchain or newer supported release. Local source-compatibility tests were run on an older Go 1.23 toolchain; that is not evidence of current-toolchain CI or production runtime acceptance. From the repository root:
 
 ```sh
 go test -race ./...
