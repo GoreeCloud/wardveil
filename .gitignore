@@ -1,0 +1,6 @@
+/var/
+*.log
+*.test
+coverage.out
+.env
+.env.*
