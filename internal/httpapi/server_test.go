@@ -83,11 +83,11 @@ func TestAuthenticationAndReplay(t *testing.T) {
 }
 func TestInputLimits(t *testing.T) {
 	_, handler := fixture(t)
-	bad := []byte(\`{"schema_version":"1","source":"x","source_event_id":"y","event_type":"z","asset_id":"a","severity":"high","occurred_at":"2026-10-25T00:00:00Z","unknown":"field"}\`)
+	bad := []byte(`{"schema_version":"1","source":"x","source_event_id":"y","event_type":"z","asset_id":"a","severity":"high","occurred_at":"2026-10-25T00:00:00Z","unknown":"field"}`)
 	if got := request(handler, "POST", "/v1/events", ingestToken, bad).Code; got != 400 {
 		t.Fatalf("unknown field: %d", got)
 	}
-	if got := request(handler, "POST", "/v1/events", ingestToken, append([]byte(\`{"schema_version":"1","source":"x","source_event_id":"y","event_type":"z","severity":"high","asset_id":"\`), append(bytes.Repeat([]byte("x"), 4097), []byte(\`","occurred_at":"2026-10-25T00:00:00Z"}\`)...)...)).Code; got != 413 {
+	if got := request(handler, "POST", "/v1/events", ingestToken, append([]byte(`{"schema_version":"1","source":"x","source_event_id":"y","event_type":"z","severity":"high","asset_id":"`), append(bytes.Repeat([]byte("x"), 4097), []byte(`","occurred_at":"2026-10-25T00:00:00Z"}`)...)...)).Code; got != 413 {
 		t.Fatalf("oversize: %d", got)
 	}
 	e := input()
