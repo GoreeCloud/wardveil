@@ -37,6 +37,7 @@ All interfaces must follow **GoreeCloud UI (GC UI)**, the project's governing de
 - [Platform architecture](docs/architecture.md)
 - [Security and trust model](docs/security-model.md)
 - [Delivery roadmap](docs/roadmap.md)
+- [Scan advisory contracts](docs/scan-contract.md)
 - [Development event service](docs/developer-setup.md)
 
 ## First development target
