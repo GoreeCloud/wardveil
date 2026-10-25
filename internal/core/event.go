@@ -8,22 +8,22 @@ import (
 
 const SchemaVersion = "1"
 
-var identifier = regexp.MustCompile(\`^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,95}$\`)
+var identifier = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,95}$`)
 
 type EventInput struct {
-	SchemaVersion string    \`json:"schema_version"\`
-	Source        string    \`json:"source"\`
-	SourceEventID string    \`json:"source_event_id"\`
-	EventType     string    \`json:"event_type"\`
-	Severity      string    \`json:"severity"\`
-	AssetID       string    \`json:"asset_id"\`
-	OccurredAt    time.Time \`json:"occurred_at"\`
+	SchemaVersion string    `json:"schema_version"`
+	Source        string    `json:"source"`
+	SourceEventID string    `json:"source_event_id"`
+	EventType     string    `json:"event_type"`
+	Severity      string    `json:"severity"`
+	AssetID       string    `json:"asset_id"`
+	OccurredAt    time.Time `json:"occurred_at"`
 }
 
 type Event struct {
 	EventInput
-	ID         string    \`json:"id"\`
-	IngestedAt time.Time \`json:"ingested_at"\`
+	ID         string    `json:"id"`
+	IngestedAt time.Time `json:"ingested_at"`
 }
 
 func (e EventInput) Validate(now time.Time) error {
