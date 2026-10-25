@@ -1,0 +1,22 @@
+name: Validate Wardveil foundation
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  go-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: false
+      - name: Format check
+        run: test -z "$(gofmt -l cmd internal)"
+      - name: Static analysis
+        run: go vet ./...
+      - name: Race-tested unit tests
+        run: go test -race ./...
