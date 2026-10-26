@@ -20,6 +20,8 @@ var (
 	ErrConflict  = errors.New("source event id already used with different content")
 	ErrFull      = errors.New("event capacity reached")
 	ErrUncertain = errors.New("event journal write outcome uncertain; operator recovery required")
+	ErrLocked    = errors.New("event journal already has an active writer")
+	ErrPlatform  = errors.New("exclusive event journal locking is unavailable on this platform")
 )
 
 const maxEvents = 10000
@@ -53,6 +55,10 @@ func Open(dir string) (*Store, error) {
 	}
 	file, err := os.OpenFile(name, os.O_CREATE|os.O_RDWR, 0600)
 	if err != nil {
+		return nil, err
+	}
+	if err := lockWriter(file); err != nil {
+		file.Close()
 		return nil, err
 	}
 	s := &Store{file: file, byKey: make(map[string]int)}
