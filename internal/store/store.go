@@ -17,17 +17,19 @@ import (
 )
 
 var (
-	ErrConflict = errors.New("source event id already used with different content")
-	ErrFull     = errors.New("event capacity reached")
+	ErrConflict  = errors.New("source event id already used with different content")
+	ErrFull      = errors.New("event capacity reached")
+	ErrUncertain = errors.New("event journal write outcome uncertain; operator recovery required")
 )
 
 const maxEvents = 10000
 
 type Store struct {
-	mu      sync.Mutex
-	file    *os.File
-	records []core.Event
-	byKey   map[string]int
+	mu        sync.Mutex
+	file      *os.File
+	records   []core.Event
+	byKey     map[string]int
+	uncertain bool
 }
 
 func Open(dir string) (*Store, error) {
@@ -110,9 +112,21 @@ func (s *Store) load() error {
 
 func (s *Store) Close() error { s.mu.Lock(); defer s.mu.Unlock(); return s.file.Close() }
 
+// Writable reports whether this process can still acknowledge new journal writes.
+// An unsuccessful write or sync may have reached disk; do not accept more events
+// until an operator has inspected and reopened the journal.
+func (s *Store) Writable() bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return !s.uncertain
+}
+
 func (s *Store) Add(input core.EventInput) (core.Event, bool, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if s.uncertain {
+		return core.Event{}, false, ErrUncertain
+	}
 	key := input.Source + "\x00" + input.SourceEventID
 	if i, ok := s.byKey[key]; ok {
 		existing := s.records[i]
@@ -134,11 +148,16 @@ func (s *Store) Add(input core.EventInput) (core.Event, bool, error) {
 		return core.Event{}, false, err
 	}
 	line = append(line, '\n')
-	if _, err := s.file.Write(line); err != nil {
-		return core.Event{}, false, err
+	if n, err := s.file.Write(line); err != nil || n != len(line) {
+		s.uncertain = true
+		if err == nil {
+			err = io.ErrShortWrite
+		}
+		return core.Event{}, false, fmt.Errorf("%w: %v", ErrUncertain, err)
 	}
 	if err := s.file.Sync(); err != nil {
-		return core.Event{}, false, err
+		s.uncertain = true
+		return core.Event{}, false, fmt.Errorf("%w: %v", ErrUncertain, err)
 	}
 	s.byKey[key] = len(s.records)
 	s.records = append(s.records, event)

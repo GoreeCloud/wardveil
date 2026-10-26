@@ -5,12 +5,12 @@
 | Type | Developer and test instructions |
 | Status | Development prototype, not production-ready |
 | Owner | GoreeCloud |
-| Updated | 2026-10-25 |
+| Updated | 2026-10-26 |
 | Canonical location | `GoreeCloud/wardveil/docs/developer-setup.md` |
 
 ## Scope
 
-This initial Go standard-library service implements only a tightly scoped, single-instance security **event ingestion and listing** loop. It is **not** an antivirus engine, SIEM, incident tracker, auth platform, hosted API, or hardened production service. No network blocking, file quarantine, credential handling, or session revocation is implemented. The service deliberately binds to a loopback IP and has no TLS listener; do not forward or expose it publicly. It has no tenant isolation, role directory, retention scheduler, database replication, or production-grade transactional store. `GET /healthz` is only process liveness, not readiness.
+This initial Go standard-library service implements only a tightly scoped, single-instance security **event ingestion and listing** loop. It is **not** an antivirus engine, SIEM, incident tracker, auth platform, hosted API, or hardened production service. No network blocking, file quarantine, credential handling, or session revocation is implemented. The service deliberately binds to a loopback IP and has no TLS listener; do not forward or expose it publicly. It has no tenant isolation, role directory, retention scheduler, database replication, or production-grade transactional store. `GET /healthz` is a minimal process/journal-writability signal, not full operational readiness.
 
 ## Build and test
 
@@ -43,11 +43,11 @@ The example timestamp is illustrative; substitute a current RFC3339 timestamp wh
 
 ## API contract — prototype
 
-- `GET /healthz` — unauthenticated minimal liveness.
+- `GET /healthz` — unauthenticated minimal liveness and in-process journal-writability status; 503 after a detected uncertain journal write.
 - `POST /v1/events` — ingest-scope Bearer token; one strict JSON event; 4 KiB maximum; required fields: `schema_version`, `source`, `source_event_id`, `event_type`, `severity`, `asset_id`, `occurred_at`. Supports `schema_version=1` and severity `info|low|medium|high|critical`. Source, type and asset are bounded opaque identifiers, not arbitrary log message bodies. Event time must not be more than five minutes ahead or over 365 days old.
 - `GET /v1/events?limit=25` — read-scope token; limit 1–100, most recent first. No pagination or filtering yet.
 - Same `(source, source_event_id)` with identical data returns existing event; conflicting reuse returns HTTP 409.
-- Response status codes include 201 created, 200 replay/list, 400 invalid request, 401 missing credentials, 403 insufficient credentials, 409 conflicting replay, 413 oversized request, 415 unsupported content type, 422 invalid input, 507 capacity exceeded, 500 storage error.
+- Response status codes include 201 created, 200 replay/list, 400 invalid request, 401 missing credentials, 403 insufficient credentials, 409 conflicting replay, 413 oversized request, 415 unsupported content type, 422 invalid input, 503 uncertain journal write requiring recovery, 507 capacity exceeded, 500 other storage error.
 
 ## Security and operational limitations
 
@@ -55,7 +55,7 @@ The example timestamp is illustrative; substitute a current RFC3339 timestamp wh
 - Source authentication uses static per-service tokens with separate read/write scopes; there is **no token issuance, expiry, rotation API, mTLS, SSO, or fine-grained actor auditing**. These must be designed before external access.
 - All data remains in a single organization's prototype store; a source name is an untrusted string, not independently verified provenance. Future production ingestion needs authenticated per-source identities, replay windows, origin attestation and scoped tenant IDs.
 - This service has no secure transport on its own; binding to loopback is mandatory. Do not deploy behind an externally reachable reverse proxy without a separate security review, access control and TLS design.
-- File writes are synchronized individually but not transactional. Interrupted writes can cause a subsequent startup to fail closed. Do not depend on this prototype as a production incident record store.
+- File writes are synchronized individually but not transactional. A failed append or sync may have persisted some or all bytes without a safe acknowledgement. The current process therefore stops accepting **all** subsequent ingests, including replays, and `/healthz` returns 503. Stop the service, preserve the journal for inspection, determine whether its final record is complete and valid, and only then use an authorized recovery/restart procedure. Do not blindly truncate, delete, or retry writes. Interrupted writes can also cause a subsequent startup to fail closed. Do not depend on this prototype as a production incident record store.
 - This MVP creates no incident case, automated response, alert route or malware verdict. Explicitly evaluate privacy, storage integrity, recovery, telemetry ingestion rates, sensitivity controls and response semantics before expanding.
 
 ## Follow-up

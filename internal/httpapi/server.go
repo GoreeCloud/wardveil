@@ -32,6 +32,10 @@ func New(data *store.Store, ingestToken, readToken string) (*Server, error) {
 func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
+		if !s.store.Writable() {
+			problem(w, http.StatusServiceUnavailable, "event journal requires operator recovery")
+			return
+		}
 		send(w, http.StatusOK, map[string]string{"status": "ok"})
 	})
 	mux.HandleFunc("POST /v1/events", func(w http.ResponseWriter, r *http.Request) {
@@ -62,6 +66,10 @@ func (s *Server) Handler() http.Handler {
 		}
 		event, created, err := s.store.Add(input)
 		if err != nil {
+			if errors.Is(err, store.ErrUncertain) {
+				problem(w, http.StatusServiceUnavailable, "event journal requires operator recovery")
+				return
+			}
 			if errors.Is(err, store.ErrConflict) {
 				problem(w, http.StatusConflict, "conflicting source event")
 				return

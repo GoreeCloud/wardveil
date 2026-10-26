@@ -138,3 +138,25 @@ func TestTokenValidation(t *testing.T) {
 		t.Fatal("weak tokens allowed")
 	}
 }
+
+func TestUncertainJournalReturnsUnavailable(t *testing.T) {
+	data, handler := fixture(t)
+	if got := request(handler, "GET", "/healthz", "", nil).Code; got != 200 {
+		t.Fatalf("healthy journal: %d", got)
+	}
+	// Close the backing file to exercise the write-failure path without
+	// changing filesystem permissions or relying on platform-specific faults.
+	if err := data.Close(); err != nil {
+		t.Fatal(err)
+	}
+	payload, _ := json.Marshal(input())
+	if got := request(handler, "POST", "/v1/events", ingestToken, payload).Code; got != 503 {
+		t.Fatalf("uncertain write response: %d", got)
+	}
+	if got := request(handler, "GET", "/healthz", "", nil).Code; got != 503 {
+		t.Fatalf("unhealthy journal response: %d", got)
+	}
+	if got := request(handler, "POST", "/v1/events", ingestToken, payload).Code; got != 503 {
+		t.Fatalf("second write should remain refused: %d", got)
+	}
+}
