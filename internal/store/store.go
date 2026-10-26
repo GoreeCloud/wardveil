@@ -118,13 +118,12 @@ func (s *Store) load() error {
 
 func (s *Store) Close() error { s.mu.Lock(); defer s.mu.Unlock(); return s.file.Close() }
 
-// Writable reports whether this process can still acknowledge new journal writes.
-// An unsuccessful write or sync may have reached disk; do not accept more events
-// until an operator has inspected and reopened the journal.
+// Writable reports whether this process can acknowledge a new journal append.
+// An uncertain write or exhausted event capacity makes ingest unavailable.
 func (s *Store) Writable() bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	return !s.uncertain
+	return !s.uncertain && len(s.records) < maxEvents
 }
 
 func (s *Store) Add(input core.EventInput) (core.Event, bool, error) {

@@ -33,7 +33,7 @@ func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
 		if !s.store.Writable() {
-			problem(w, http.StatusServiceUnavailable, "event journal requires operator recovery")
+			problem(w, http.StatusServiceUnavailable, "event ingestion unavailable")
 			return
 		}
 		send(w, http.StatusOK, map[string]string{"status": "ok"})

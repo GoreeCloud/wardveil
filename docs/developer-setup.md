@@ -43,7 +43,7 @@ The example timestamp is illustrative; substitute a current RFC3339 timestamp wh
 
 ## API contract — prototype
 
-- `GET /healthz` — unauthenticated minimal liveness and in-process journal-writability status; 503 after a detected uncertain journal write.
+- `GET /healthz` — unauthenticated minimal liveness and in-process journal-writability status; 503 after a detected uncertain journal write **or** when the development event capacity is exhausted. It is not a full runtime readiness or remote-dependency probe.
 - `POST /v1/events` — ingest-scope Bearer token; one strict JSON event; 4 KiB maximum; required fields: `schema_version`, `source`, `source_event_id`, `event_type`, `severity`, `asset_id`, `occurred_at`. Supports `schema_version=1` and severity `info|low|medium|high|critical`. Source, type and asset are bounded opaque identifiers, not arbitrary log message bodies. Event time must not be more than five minutes ahead or over 365 days old.
 - `GET /v1/events?limit=25` — read-scope token; limit 1–100, most recent first. No pagination or filtering yet.
 - Same `(source, source_event_id)` with identical data returns existing event; conflicting reuse returns HTTP 409.
