@@ -42,3 +42,22 @@ func TestWriteFailureIsFailClosed(t *testing.T) {
 		t.Fatalf("unacknowledged event became visible: %#v", got)
 	}
 }
+
+func TestFullJournalIsNotReportedWritable(t *testing.T) {
+	s, err := Open(filepath.Join(t.TempDir(), "private"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer s.Close()
+	if !s.Writable() {
+		t.Fatal("empty journal should accept an append")
+	}
+	// Model the documented in-memory record bound without 10,000 fsyncs.
+	s.records = make([]core.Event, maxEvents)
+	if s.Writable() {
+		t.Fatal("capacity-exhausted journal reported writable")
+	}
+	if _, created, err := s.Add(core.EventInput{Source: "fixture", SourceEventID: "new"}); created || !errors.Is(err, ErrFull) {
+		t.Fatalf("full journal append = created %v, error %v", created, err)
+	}
+}
