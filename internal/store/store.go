@@ -2,6 +2,7 @@ package store
 
 import (
 	"bufio"
+	"bytes"
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
@@ -96,11 +97,22 @@ func (s *Store) load() error {
 			return ErrFull
 		}
 		var event core.Event
-		if err := json.Unmarshal(scan.Bytes(), &event); err != nil {
+		dec := json.NewDecoder(bytes.NewReader(scan.Bytes()))
+		dec.DisallowUnknownFields()
+		if err := dec.Decode(&event); err != nil {
 			return fmt.Errorf("corrupt event record: %w", err)
 		}
-		if event.ID == "" || event.Source == "" || event.SourceEventID == "" || event.IngestedAt.IsZero() {
-			return errors.New("invalid persisted event record")
+		var extra any
+		if err := dec.Decode(&extra); err != io.EOF {
+			return errors.New("persisted event record contains trailing JSON data")
+		}
+		id, err := hex.DecodeString(event.ID)
+		if err != nil || len(id) != 16 || event.ID != hex.EncodeToString(id) ||
+			event.IngestedAt.IsZero() || event.IngestedAt.After(time.Now().UTC().Add(5*time.Minute)) {
+			return errors.New("invalid persisted event identity or ingestion time")
+		}
+		if err := event.EventInput.Validate(event.IngestedAt); err != nil {
+			return fmt.Errorf("invalid persisted source event: %w", err)
 		}
 		key := event.Source + "\x00" + event.SourceEventID
 		if _, exists := s.byKey[key]; exists {
