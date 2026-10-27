@@ -70,18 +70,18 @@ func TestOpenRejectsCorruptPersistedEventContracts(t *testing.T) {
 	base := core.Event{
 		EventInput: core.EventInput{
 			SchemaVersion: core.SchemaVersion,
-			Source: "fixture",
+			Source:        "fixture",
 			SourceEventID: "event-1",
-			EventType: "auth.anomaly",
-			Severity: "high",
-			AssetID: "asset-1",
-			OccurredAt: now,
+			EventType:     "auth.anomaly",
+			Severity:      "high",
+			AssetID:       "asset-1",
+			OccurredAt:    now,
 		},
-		ID: strings.Repeat("a", 32),
+		ID:         strings.Repeat("a", 32),
 		IngestedAt: now,
 	}
 	cases := []struct {
-		name string
+		name   string
 		mutate func(*core.Event)
 	}{
 		{"unsupported schema", func(e *core.Event) { e.SchemaVersion = "2" }},
@@ -96,10 +96,16 @@ func TestOpenRejectsCorruptPersistedEventContracts(t *testing.T) {
 			event := base
 			tc.mutate(&event)
 			encoded, err := json.Marshal(event)
-			if err != nil { t.Fatal(err) }
+			if err != nil {
+				t.Fatal(err)
+			}
 			dir := filepath.Join(t.TempDir(), "private")
-			if err := os.Mkdir(dir, 0700); err != nil { t.Fatal(err) }
-			if err := os.WriteFile(filepath.Join(dir, "events.jsonl"), append(encoded, '\n'), 0600); err != nil { t.Fatal(err) }
+			if err := os.Mkdir(dir, 0700); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(filepath.Join(dir, "events.jsonl"), append(encoded, '\n'), 0600); err != nil {
+				t.Fatal(err)
+			}
 			loaded, err := Open(dir)
 			if err == nil {
 				_ = loaded.Close()
@@ -109,11 +115,17 @@ func TestOpenRejectsCorruptPersistedEventContracts(t *testing.T) {
 	}
 	t.Run("unexpected record field", func(t *testing.T) {
 		encoded, err := json.Marshal(base)
-		if err != nil { t.Fatal(err) }
+		if err != nil {
+			t.Fatal(err)
+		}
 		untrusted := strings.TrimSuffix(string(encoded), "}") + `,"unexpected":"sensitive"}` + "\n"
 		dir := filepath.Join(t.TempDir(), "private")
-		if err := os.Mkdir(dir, 0700); err != nil { t.Fatal(err) }
-		if err := os.WriteFile(filepath.Join(dir, "events.jsonl"), []byte(untrusted), 0600); err != nil { t.Fatal(err) }
+		if err := os.Mkdir(dir, 0700); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(dir, "events.jsonl"), []byte(untrusted), 0600); err != nil {
+			t.Fatal(err)
+		}
 		loaded, err := Open(dir)
 		if err == nil {
 			_ = loaded.Close()
