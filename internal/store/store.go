@@ -156,11 +156,17 @@ func (s *Store) Add(input core.EventInput) (core.Event, bool, error) {
 	if len(s.records) >= maxEvents {
 		return core.Event{}, false, ErrFull
 	}
+	now := time.Now().UTC()
+	// Internal callers must not persist events that the startup validator
+	// would reject when the journal is reopened.
+	if err := input.Validate(now); err != nil {
+		return core.Event{}, false, fmt.Errorf("%w: %v", ErrInvalid, err)
+	}
 	b := make([]byte, 16)
 	if _, err := rand.Read(b); err != nil {
 		return core.Event{}, false, err
 	}
-	event := core.Event{EventInput: input, ID: hex.EncodeToString(b), IngestedAt: time.Now().UTC()}
+	event := core.Event{EventInput: input, ID: hex.EncodeToString(b), IngestedAt: now}
 	line, err := json.Marshal(event)
 	if err != nil {
 		return core.Event{}, false, err
@@ -185,6 +191,9 @@ func (s *Store) Add(input core.EventInput) (core.Event, bool, error) {
 func (s *Store) List(limit int) []core.Event {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if limit <= 0 {
+		return []core.Event{}
+	}
 	if limit > len(s.records) {
 		limit = len(s.records)
 	}
