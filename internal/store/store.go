@@ -20,6 +20,7 @@ import (
 var (
 	ErrConflict  = errors.New("source event id already used with different content")
 	ErrFull      = errors.New("event capacity reached")
+	ErrInvalid   = errors.New("invalid event input")
 	ErrUncertain = errors.New("event journal write outcome uncertain; operator recovery required")
 	ErrLocked    = errors.New("event journal already has an active writer")
 	ErrPlatform  = errors.New("exclusive event journal locking is unavailable on this platform")
