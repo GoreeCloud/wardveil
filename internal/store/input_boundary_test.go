@@ -17,12 +17,12 @@ func TestDirectStoreRejectsInvalidEventWithoutBreakingRecovery(t *testing.T) {
 	}
 	valid := core.EventInput{
 		SchemaVersion: core.SchemaVersion,
-		Source: "fixture",
+		Source:        "fixture",
 		SourceEventID: "event-1",
-		EventType: "test.event",
-		Severity: "info",
-		AssetID: "asset-1",
-		OccurredAt: time.Now().UTC(),
+		EventType:     "test.event",
+		Severity:      "info",
+		AssetID:       "asset-1",
+		OccurredAt:    time.Now().UTC(),
 	}
 	invalid := valid
 	invalid.SchemaVersion = "unknown"
