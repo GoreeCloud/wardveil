@@ -90,6 +90,18 @@ func TestInputLimits(t *testing.T) {
 	if got := request(handler, "POST", "/v1/events", ingestToken, append([]byte(`{"schema_version":"1","source":"x","source_event_id":"y","event_type":"z","severity":"high","asset_id":"`), append(bytes.Repeat([]byte("x"), 4097), []byte(`","occurred_at":"2026-10-25T00:00:00Z"}`)...)...)).Code; got != 413 {
 		t.Fatalf("oversize: %d", got)
 	}
+	// A valid JSON object followed by excessive whitespace must still be
+	// rejected as oversized, rather than misclassified as malformed JSON.
+	valid, _ := json.Marshal(input())
+	largeTrailer := append(append([]byte(nil), valid...), bytes.Repeat([]byte(" "), 4097)...)
+	if got := request(handler, "POST", "/v1/events", ingestToken, largeTrailer).Code; got != http.StatusRequestEntityTooLarge {
+		t.Fatalf("oversized trailing whitespace: %d", got)
+	}
+	// Multiple complete JSON documents are invalid even within the size cap.
+	doubleObject := append(append([]byte(nil), valid...), valid...)
+	if got := request(handler, "POST", "/v1/events", ingestToken, doubleObject).Code; got != http.StatusBadRequest {
+		t.Fatalf("multiple JSON objects: %d", got)
+	}
 	e := input()
 	e.Source = "../secret"
 	encoded, _ := json.Marshal(e)
