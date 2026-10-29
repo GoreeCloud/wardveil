@@ -57,7 +57,14 @@ func (s *Server) Handler() http.Handler {
 		}
 		var extra any
 		if err := dec.Decode(&extra); err != io.EOF {
-			problem(w, http.StatusBadRequest, "one JSON object required")
+			// The decoder may discover a body limit while checking for
+			// trailing JSON or whitespace. Preserve the 413 classification.
+			var max *http.MaxBytesError
+			if errors.As(err, &max) {
+				problem(w, http.StatusRequestEntityTooLarge, "request too large")
+			} else {
+				problem(w, http.StatusBadRequest, "one JSON object required")
+			}
 			return
 		}
 		if err := input.Validate(time.Now().UTC()); err != nil {
