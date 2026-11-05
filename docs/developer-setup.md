@@ -5,7 +5,7 @@
 | Type | Developer and test instructions |
 | Status | Development prototype, not production-ready |
 | Owner | GoreeCloud |
-| Updated | 2026-10-26 |
+| Updated | 2026-11-04 |
 | Canonical location | `GoreeCloud/wardveil/docs/developer-setup.md` |
 
 ## Scope
@@ -44,7 +44,7 @@ The example timestamp is illustrative; substitute a current RFC3339 timestamp wh
 ## API contract — prototype
 
 - `GET /healthz` — unauthenticated minimal liveness and in-process journal-writability status; 503 after a detected uncertain journal write **or** when the development event capacity is exhausted. It is not a full runtime readiness or remote-dependency probe.
-- `POST /v1/events` — ingest-scope Bearer token; one strict JSON event; 4 KiB maximum; required fields: `schema_version`, `source`, `source_event_id`, `event_type`, `severity`, `asset_id`, `occurred_at`. Supports `schema_version=1` and severity `info|low|medium|high|critical`. Source, type and asset are bounded opaque identifiers, not arbitrary log message bodies. Event time must not be more than five minutes ahead or over 365 days old.
+- `POST /v1/events` — ingest-scope Bearer token; one strict JSON event with case-insensitively unique field names (duplicate keys return HTTP 400); 4 KiB maximum; required fields: `schema_version`, `source`, `source_event_id`, `event_type`, `severity`, `asset_id`, `occurred_at`. Supports `schema_version=1` and severity `info|low|medium|high|critical`. Source, type and asset are bounded opaque identifiers, not arbitrary log message bodies. Event time must not be more than five minutes ahead or over 365 days old.
 - `GET /v1/events?limit=25` — read-scope token; limit 1–100, most recent first. No pagination or filtering yet.
 - Same `(source, source_event_id)` with identical data returns existing event; conflicting reuse returns HTTP 409.
 - Response status codes include 201 created, 200 replay/list, 400 invalid request, 401 missing credentials, 403 insufficient credentials, 409 conflicting replay, 413 oversized request, 415 unsupported content type, 422 invalid input, 503 uncertain journal write requiring recovery, 507 capacity exceeded, 500 other storage error.
