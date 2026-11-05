@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/json"
@@ -47,8 +48,16 @@ func (s *Server) Handler() http.Handler {
 			problem(w, http.StatusUnsupportedMediaType, "application/json required")
 			return
 		}
-		r.Body = http.MaxBytesReader(w, r.Body, 4096)
-		dec := json.NewDecoder(r.Body)
+		raw, err := io.ReadAll(http.MaxBytesReader(w, r.Body, 4096))
+		if err != nil {
+			decodeError(w, err)
+			return
+		}
+		if duplicateEventKeys(raw) {
+			problem(w, http.StatusBadRequest, "duplicate or invalid JSON event fields")
+			return
+		}
+		dec := json.NewDecoder(bytes.NewReader(raw))
 		dec.DisallowUnknownFields()
 		var input core.EventInput
 		if err := dec.Decode(&input); err != nil {
@@ -124,6 +133,40 @@ func (s *Server) Handler() http.Handler {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		mux.ServeHTTP(w, r)
 	})
+}
+
+// duplicateEventKeys rejects ambiguous fields before decoding into EventInput.
+// EventInput is intentionally flat; nested values are rejected separately by
+// the typed decoder. JSON names are case-folded by encoding/json, so the check
+// must also reject case variants that could overwrite the same struct field.
+func duplicateEventKeys(raw []byte) bool {
+	dec := json.NewDecoder(bytes.NewReader(raw))
+	start, err := dec.Token()
+	if err != nil || start != json.Delim('{') {
+		return true
+	}
+	seen := make(map[string]struct{})
+	for dec.More() {
+		token, err := dec.Token()
+		if err != nil {
+			return true
+		}
+		key, ok := token.(string)
+		if !ok {
+			return true
+		}
+		folded := strings.ToLower(key)
+		if _, exists := seen[folded]; exists {
+			return true
+		}
+		seen[folded] = struct{}{}
+		var value json.RawMessage
+		if err := dec.Decode(&value); err != nil {
+			return true
+		}
+	}
+	end, err := dec.Token()
+	return err != nil || end != json.Delim('}')
 }
 
 func (s *Server) authorize(w http.ResponseWriter, r *http.Request, expected [32]byte) bool {
