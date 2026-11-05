@@ -109,6 +109,42 @@ func TestInputLimits(t *testing.T) {
 		t.Fatalf("invalid identifier: %d", got)
 	}
 }
+func TestDuplicateEventJSONKeysAreRejected(t *testing.T) {
+	data, handler := fixture(t)
+	valid, err := json.Marshal(input())
+	if err != nil {
+		t.Fatal(err)
+	}
+	original := []byte(`"source":"identity"`)
+	if !bytes.Contains(valid, original) {
+		t.Fatal("unexpected event JSON contract")
+	}
+	for _, tc := range []struct {
+		name        string
+		replacement string
+	}{
+		{"same_value", `"source":"identity","source":"identity"`},
+		{"conflicting_value", `"source":"identity","source":"spoofed"`},
+		{"case_variant", `"source":"identity","SOURCE":"spoofed"`},
+		{"mixed_case_variant", `"source":"identity","SoUrCe":"spoofed"`},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			body := bytes.Replace(valid, original, []byte(tc.replacement), 1)
+			res := request(handler, "POST", "/v1/events", ingestToken, body)
+			if res.Code != http.StatusBadRequest {
+				t.Fatalf("ambiguous event accepted: status=%d body=%s", res.Code, res.Body.String())
+			}
+			if got := len(data.List(10)); got != 0 {
+				t.Fatalf("rejected payload persisted %d events", got)
+			}
+		})
+	}
+	// The stricter parsing boundary must not reject valid existing events.
+	if got := request(handler, "POST", "/v1/events", ingestToken, valid).Code; got != http.StatusCreated {
+		t.Fatalf("valid event rejected: %d", got)
+	}
+}
+
 func TestPersistencePermissionsAndReopen(t *testing.T) {
 	dir := filepath.Join(t.TempDir(), "private")
 	db, err := store.Open(dir)
