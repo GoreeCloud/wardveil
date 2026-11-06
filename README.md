@@ -6,6 +6,10 @@
 
 Wardveil is intended to protect GoreeCloud infrastructure, applications, services, and their users through coordinated detection, intelligence, policy evaluation, security monitoring, and controlled response. It complements rather than replaces other GoreeCloud products.
 
+## Privacy boundary
+
+**GoreeShield** owns user privacy controls, privacy protection, consent, data minimization, retention preferences, data-sharing choices, and personal-information governance. Wardveil owns **cybersecurity**: threat detection, malware and vulnerability scanning, network defense, intrusion monitoring, and incident response. Wardveil's security events and telemetry must respect applicable GoreeShield privacy controls, minimization, and retention requirements. It does not define privacy preferences, act as a consent authority, or take ownership of data-subject rights workflows.
+
 ## Product family
 
 | Module | Responsibility |
