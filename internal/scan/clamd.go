@@ -1,7 +1,7 @@
 package scan
 
 import (
-	"bufio"
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/binary"
@@ -217,13 +217,15 @@ func writeChunk(w io.Writer, data []byte) error {
 }
 
 func readRecord(conn net.Conn) (string, error) {
-	limited := io.LimitReader(conn, maxClamdReplyBytes+1)
-	record, err := bufio.NewReader(limited).ReadBytes(0)
+	// Non-session clamd commands close the connection after their reply.
+	// Require exactly one complete NUL-terminated record, not a clean
+	// first record followed by a conflicting detection or error record.
+	record, err := io.ReadAll(io.LimitReader(conn, maxClamdReplyBytes+1))
 	if err != nil {
 		return "", err
 	}
-	if int64(len(record)) > maxClamdReplyBytes || len(record) == 1 {
-		return "", errors.New("invalid clamd reply length")
+	if len(record) < 2 || int64(len(record)) > maxClamdReplyBytes || record[len(record)-1] != 0 || bytes.Count(record, []byte{0}) != 1 {
+		return "", errors.New("invalid or multiple clamd reply records")
 	}
 	return string(record[:len(record)-1]), nil
 }
