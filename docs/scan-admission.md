@@ -4,7 +4,7 @@
 | --- | --- |
 | Repository | `GoreeCloud/wardveil` |
 | Component | `internal/scan/admission.go` |
-| Date | November 6, 2026 |
+| Date | November 7, 2026 (journal descriptor safety follow-up) |
 | Stage | Development-only; not deployed or connected to a source-product owner |
 | Dependency | [Held-object coordinator](scan-coordinator.md) and [ClamAV adapter](clamd-adapter.md) |
 
@@ -16,13 +16,13 @@ The coordinator authenticates the caller, reserves a bounded in-flight slot, the
 
 ## Reference `FileAdmission`
 
-`OpenFileAdmission(/absolute/private/journal)` is a small, **single-host Linux/local-filesystem** reference implementation. The configured directory is trusted administrator configuration, **not** an API field or user path. It must be private `0700`, not a symlink, persistent, and reside on a filesystem with reliable atomic `O_EXCL` and `fsync`; initial directory creation also synchronizes its parent. Permission drift is checked before each reservation.
+`OpenFileAdmission(/absolute/private/journal)` is a small, **single-host Linux/local-filesystem** reference implementation. The configured directory is trusted administrator configuration, **not** an API field or user path. It must be private `0700`, not a symlink, persistent, and reside on a filesystem with reliable atomic `O_EXCL` and `fsync`; initial directory creation also synchronizes its parent. Permission drift is checked against an opened Linux directory descriptor before each reservation. The marker is created by `openat` relative to that descriptor, the file and directory are fsynced, and directory identity is rechecked before success; see [pinned journal directory safety](scan-private-journal-directory.md).
 
 For each validated `OwnerProduct + LeaseID` pair, the store hashes a NUL-delimited composite identity and atomically creates one `0600` file containing only a fixed version marker. It fsyncs the marker and directory before letting a scan begin; no credentials, personal file content, file paths or raw lease identifiers are written. Existing markers, including zero-length markers left by a crash, reject a duplicate `Reserve`.
 
 The owner must guarantee lease uniqueness and binding to the exact object version, and must issue a **new**, independently authorized pending lease for any legitimate rescan. Retry with the same lease—even after a scanner outage or recorder failure—is denied. This conservative behavior avoids silently producing two verdicts for one hold, but requires an explicit operator recovery workflow.
 
-**Limits:** This admission implementation is **not** a multi-host consensus or distributed idempotency service, an authenticated network endpoint, a persistent work queue, an audit event store, a file-owner lease validator, or a replacement for database transactions. A separate [development-only private advisory receipt journal](scan-advice-receipts.md) records successful advice on one host after scanning; it is not a production audit or case service. Untrusted or network-mounted filesystems, directory replacement races in a hostile parent, disk exhaustion, backup/restore of marker files, marker retention, manual deletion, concurrent multi-instance capacity and crash recovery still require an approved operational design. Never automatically delete old markers or suppress/ignore an uncertain-write error. Even successful fsyncs rely on underlying storage guarantees.
+**Limits:** This admission implementation is **not** a multi-host consensus or distributed idempotency service, an authenticated network endpoint, a persistent work queue, an audit event store, a file-owner lease validator, or a replacement for database transactions. A separate [development-only private advisory receipt journal](scan-advice-receipts.md) records successful advice on one host after scanning; it is not a production audit or case service. Untrusted or network-mounted filesystems, **hostile ancestor directories and residual parent-component races**, disk exhaustion, backup/restore of marker files, marker retention, manual deletion, concurrent multi-instance capacity and crash recovery still require an approved operational design. The new `openat`/no-follow protections close the former final-component check-then-create path race but do **not** make an attacker-writable parent or a compromised host safe. Never automatically delete old markers or suppress/ignore an uncertain-write error. Even successful fsyncs rely on underlying storage guarantees.
 
 ## Capacity limits
 
