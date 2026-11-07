@@ -78,7 +78,7 @@ func PHP2ShellAssessment(input PHPRuntime, index int) PHPAssessment {
 		result.PatchState = "unrecognized_branch"
 	}
 	switch {
-	case result.RoleState == "invalid" || result.PatchState == "invalid_version":
+	case result.RoleState == "invalid" || result.PatchState == "invalid_version" || result.PatchState == "unrecognized_branch":
 		result.Triage = "verify_inventory"
 	case result.RoleState == "web" &&
 		(result.PatchState == "below_upstream_fix_threshold" || result.PatchState == "legacy_or_vendor_specific"):
