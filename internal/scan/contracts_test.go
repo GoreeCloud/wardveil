@@ -111,7 +111,7 @@ func TestResultBindingAndAdvisoryDisposition(t *testing.T) {
 func TestResultRequiresValidatedOriginalRequest(t *testing.T) {
 	now := time.Now().UTC().Truncate(time.Second)
 	cases := []struct {
-		name string
+		name   string
 		change func(*Request)
 	}{
 		{"invalid_owner", func(r *Request) { r.OwnerProduct = "../private" }},
