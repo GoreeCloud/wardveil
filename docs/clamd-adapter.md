@@ -1,6 +1,6 @@
 # ClamAV Unix-socket adapter — development boundary
 
-**Status:** Protocol adapter and fake-daemon unit tests only. No ClamAV daemon, production scanner, queue, authenticated service API, file-owner quarantine handshake, or VPS deployment is supplied or verified by this change.
+**Status:** Development Unix-socket protocol adapter tested against a fake daemon **and** a rootless isolated real ClamAV 1.4.6 daemon using synthetic fixtures. Its coordinator now includes a [conservative CVD signature-readiness gate](scan-readiness.md), but **no verified current official signatures, production daemon, authenticated service API, real file-owner quarantine handshake, or VPS deployment** have been established.
 
 ## Scope
 
