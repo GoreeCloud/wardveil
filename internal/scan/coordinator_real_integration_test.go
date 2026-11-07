@@ -38,6 +38,7 @@ func TestCoordinatorLiveClamd(t *testing.T) {
 				t.Fatal(err)
 			}
 			w := ScanCoordinator{
+				Readiness: syntheticReadiness(),
 				Admission: admission,
 				Capacity:  testScanLimiter(),
 				Auth:      coordinatorAuth(),
