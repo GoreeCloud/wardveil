@@ -107,3 +107,29 @@ func TestResultBindingAndAdvisoryDisposition(t *testing.T) {
 		t.Fatal("future scan accepted")
 	}
 }
+
+func TestResultRequiresValidatedOriginalRequest(t *testing.T) {
+	now := time.Now().UTC().Truncate(time.Second)
+	cases := []struct {
+		name string
+		change func(*Request)
+	}{
+		{"invalid_owner", func(r *Request) { r.OwnerProduct = "../private" }},
+		{"invalid_object", func(r *Request) { r.ObjectID = "../private" }},
+		{"bad_digest", func(r *Request) { r.SHA256 = strings.Repeat("Z", 64) }},
+		{"oversized_metadata", func(r *Request) { r.SizeBytes = 1<<40 + 1 }},
+		{"expired_intake", func(r *Request) { r.RequestedAt = now.Add(-25 * time.Hour) }},
+		{"unsupported_schema", func(r *Request) { r.SchemaVersion = "99" }},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			original := exampleRequest(now)
+			tc.change(&original)
+			matching := exampleResult(original, now)
+			// Result binding alone must not rehabilitate an invalid request.
+			if err := matching.ValidateFor(original, now); err == nil {
+				t.Fatal("accepted result matching an invalid original request")
+			}
+		})
+	}
+}
