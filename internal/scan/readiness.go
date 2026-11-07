@@ -78,6 +78,12 @@ func (v VerifiedCVDReadiness) Check(ctx context.Context) error {
 	if err != nil || !dir.IsDir() || dir.Mode().Perm()&0022 != 0 {
 		return errors.New("signature database directory unavailable or unsafe")
 	}
+	// Do not attest a directory that could also load unsigned CLD or custom
+	// signatures in addition to the verified CVDs. This intentionally
+	// restrictive reference mode requires a dedicated two-file database.
+	if err := checkStrictCVDDirectory(v.DatabaseDirectory); err != nil {
+		return err
+	}
 	subctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
@@ -249,4 +255,36 @@ func (c Clamd) versionReply(ctx context.Context) (string, error) {
 		return "", err
 	}
 	return readRecord(conn)
+}
+
+// checkStrictCVDDirectory rejects all extra files, subdirectories and
+// symlinks. A CVD-only deployment must not silently load daily.cld,
+// bytecode/custom .hdb/.ldb/.ndb, or other unverified databases.
+// Full FreshClam-managed installations need a separately audited verifier.
+func checkStrictCVDDirectory(dir string) error {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return errors.New("cannot enumerate ClamAV signature database directory")
+	}
+	if len(entries) != 2 {
+		return errors.New("strict CVD mode requires exactly main.cvd and daily.cvd")
+	}
+	var main, daily bool
+	for _, entry := range entries {
+		if !entry.Type().IsRegular() {
+			return errors.New("strict CVD database contains a non-regular entry")
+		}
+		switch entry.Name() {
+		case "main.cvd":
+			main = true
+		case "daily.cvd":
+			daily = true
+		default:
+			return errors.New("strict CVD database contains unverified extra content")
+		}
+	}
+	if !main || !daily {
+		return errors.New("strict CVD database is incomplete")
+	}
+	return nil
 }
