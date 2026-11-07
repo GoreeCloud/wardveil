@@ -42,7 +42,7 @@ On the authorized Linux developer checkout, unit tests with synthetic content an
 - Rejection of symlink/public directory, permissions drift, cancellation, malformed or world-readable receipts.
 - Coordinator integration with private admission and receipt journaling. A synthetic malicious result produces `retain_pending_review`; a replayed owner lease does not execute a second scan.
 
-The checks are local and synthetic; they do not demonstrate official ClamAV signatures, end-to-end authenticated source-product holds, production durability, disaster recovery, or filesystem tamper-evidence.
+The **opt-in isolated real-ClamAV 1.4.6 test** was additionally run on the authorized Linux development laptop using a preinstalled rootless Podman image, a local Unix socket, no network access and **only synthetic** benign/custom-malicious fixtures. Both verdicts were written to and read back from the **real local private receipt store**; the custom-signature-only daemon was rejected as official-CVD ready. `GOMAXPROCS=2 GOFLAGS=-p=1 GOMEMLIMIT=512MiB timeout 100s bash scripts/verify-clamd-lab.sh` completed with exit **0**; disposable daemon cleanup was verified. Repository-wide Go race tests, static analysis and formatting/diff checks passed afterward with exit **0**. These checks do **not** demonstrate genuine current official ClamAV signatures, authenticated source-product holds, production audit durability, disaster recovery, or tamper-evidence.
 
 ## Remaining acceptance gates
 
