@@ -68,17 +68,14 @@ func OpenFileAdmission(dir string) (*FileAdmission, error) {
 	return &FileAdmission{dir: dir}, nil
 }
 
-// Always revalidate permissions before reserve, not just at construction.
-// The containing path remains trusted administrator configuration.
-func checkPrivateAdmissionDirectory(dir string) error {
-	fi, err := os.Lstat(dir)
+// Open and validate an actual private directory without following its final
+// path component. A subsequent journal operation also pins a descriptor.
+func checkPrivateAdmissionDirectory(path string) error {
+	dir, err := openPrivateJournalDirectory(path)
 	if err != nil {
 		return err
 	}
-	if !fi.IsDir() || fi.Mode().Perm()&0077 != 0 {
-		return errors.New("admission directory must be a private 0700 directory, not a symlink")
-	}
-	return nil
+	return dir.Close()
 }
 
 // Reserve durably marks a lease before it can be scanned. Existing markers,
@@ -95,9 +92,11 @@ func (f *FileAdmission) Reserve(ctx context.Context, caller VerifiedCaller, held
 	if f == nil || f.dir == "" {
 		return errors.New("unconfigured admission journal")
 	}
-	if err := checkPrivateAdmissionDirectory(f.dir); err != nil {
+	directory, err := openPrivateJournalDirectory(f.dir)
+	if err != nil {
 		return fmt.Errorf("admission directory became unsafe: %w", err)
 	}
+	defer directory.Close()
 	if !identifier.MatchString(caller.OwnerProduct) || caller.OwnerProduct != req.OwnerProduct ||
 		!identifier.MatchString(caller.Subject) || !identifier.MatchString(held.LeaseID) ||
 		!held.Pending || held.OwnerProduct != req.OwnerProduct || held.ObjectID != req.ObjectID ||
@@ -106,31 +105,16 @@ func (f *FileAdmission) Reserve(ctx context.Context, caller VerifiedCaller, held
 	}
 	// A zero byte separates owner and lease, avoiding ambiguous composite IDs.
 	h := sha256.Sum256([]byte(caller.OwnerProduct + "\x00" + held.LeaseID))
-	name := filepath.Join(f.dir, hex.EncodeToString(h[:])+".admitted")
-	fd, err := os.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
+	name := hex.EncodeToString(h[:]) + ".admitted"
+	// A pinned verified directory descriptor eliminates path re-resolution
+	// between the permission check, O_EXCL create, and directory fsync.
+	// Write no user bytes, credentials, object names or unhashed lease IDs.
+	err = createPrivateJournalRecord(directory, f.dir, name, []byte("wardveil-scan-admitted-v1\n"))
 	if errors.Is(err, os.ErrExist) {
 		return ErrAdmissionReplay
 	}
 	if err != nil {
-		return fmt.Errorf("admission marker create failed: %w", err)
-	}
-	// Write no user bytes, credentials, object names or unhashed lease IDs.
-	_, writeErr := fd.WriteString("wardveil-scan-admitted-v1\n")
-	if writeErr == nil {
-		writeErr = fd.Sync()
-	}
-	closeErr := fd.Close()
-	if writeErr != nil || closeErr != nil {
-		return errors.New("admission marker durability uncertain; retain hold")
-	}
-	dirFd, err := os.Open(f.dir)
-	if err != nil {
-		return errors.New("admission directory sync unavailable; retain hold")
-	}
-	syncErr := dirFd.Sync()
-	closeErr = dirFd.Close()
-	if syncErr != nil || closeErr != nil {
-		return errors.New("admission directory durability uncertain; retain hold")
+		return errors.New("admission marker or directory durability uncertain; retain hold")
 	}
 	if err := ctx.Err(); err != nil {
 		return err
