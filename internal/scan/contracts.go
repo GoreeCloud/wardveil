@@ -130,3 +130,14 @@ func Recommend(verdict Verdict) Disposition {
 	}
 	return RetainPendingReview
 }
+
+// RecommendFor is the safe advisory entry point when the original request
+// and a returned verdict are available. A bare Clean string must never be
+// interpreted as matched scan evidence; invalid, expired or mismatched
+// results retain the owner's pre-release hold.
+func RecommendFor(request Request, result Result, now time.Time) Disposition {
+	if err := result.ValidateFor(request, now); err != nil {
+		return RetainPendingReview
+	}
+	return Recommend(result.Verdict)
+}
