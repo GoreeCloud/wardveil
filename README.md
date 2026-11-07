@@ -47,6 +47,7 @@ All interfaces must follow **GoreeCloud UI (GC UI)**, the project's governing de
 - [Private scan lease-admission and backpressure requirements](docs/scan-admission.md)
 - [Signed CVD readiness gate, unsupported CLD formats and staging requirements](docs/scan-readiness.md)
 - [Private advisory receipt journal and recovery safeguards](docs/scan-advice-receipts.md)
+- [Pinned private journal directory handles and filesystem limits](docs/scan-private-journal-directory.md)
 - [Development event service](docs/developer-setup.md)
 
 ## First development target

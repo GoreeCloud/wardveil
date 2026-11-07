@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"time"
 )
 
@@ -115,33 +114,17 @@ func (f *FileAdviceRecorder) RecordAdvice(ctx context.Context, caller VerifiedCa
 	if err := ctx.Err(); err != nil {
 		return err
 	}
-	path := filepath.Join(f.dir, fp+".advice")
-	file, err := os.OpenFile(path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
+	directory, err := openPrivateJournalDirectory(f.dir)
+	if err != nil {
+		return errors.New("advice receipt directory unavailable; hold retained")
+	}
+	defer directory.Close()
+	err = createPrivateJournalRecord(directory, f.dir, fp+".advice", encoded)
 	if errors.Is(err, os.ErrExist) {
 		return ErrAdviceAlreadyRecorded
 	}
 	if err != nil {
-		return errors.New("advice receipt creation failed; hold retained")
-	}
-	n, writeErr := file.Write(encoded)
-	if writeErr == nil && n != len(encoded) {
-		writeErr = io.ErrShortWrite
-	}
-	if writeErr == nil {
-		writeErr = file.Sync()
-	}
-	closeErr := file.Close()
-	if writeErr != nil || closeErr != nil {
-		return errors.New("advice receipt write uncertain; hold retained")
-	}
-	directory, err := os.Open(f.dir)
-	if err != nil {
-		return errors.New("advice receipt directory unavailable; hold retained")
-	}
-	syncErr := directory.Sync()
-	closeErr = directory.Close()
-	if syncErr != nil || closeErr != nil {
-		return errors.New("advice receipt directory sync uncertain; hold retained")
+		return errors.New("advice receipt or directory durability uncertain; hold retained")
 	}
 	return ctx.Err()
 }
@@ -154,14 +137,14 @@ func (f *FileAdviceRecorder) ReadReceipt(ctx context.Context, caller VerifiedCal
 		return AdviceReceipt{}, err
 	}
 	fp := adviceLeaseFingerprint(caller.OwnerProduct, lease)
-	path := filepath.Join(f.dir, fp+".advice")
-	info, err := os.Lstat(path)
-	if err != nil || !info.Mode().IsRegular() || info.Mode().Perm()&0077 != 0 || info.Size() < 2 || info.Size() > maxAdviceReceiptBytes {
-		return AdviceReceipt{}, errors.New("advice receipt missing, incomplete or unsafe")
+	directory, err := openPrivateJournalDirectory(f.dir)
+	if err != nil {
+		return AdviceReceipt{}, errors.New("advice receipt directory unavailable or unsafe")
 	}
-	raw, err := os.ReadFile(path)
-	if err != nil || len(raw) != int(info.Size()) || !bytes.HasSuffix(raw, []byte{10}) {
-		return AdviceReceipt{}, errors.New("advice receipt unreadable or incomplete")
+	defer directory.Close()
+	raw, err := readPrivateJournalRecord(directory, f.dir, fp+".advice", maxAdviceReceiptBytes)
+	if err != nil || !bytes.HasSuffix(raw, []byte{10}) {
+		return AdviceReceipt{}, errors.New("advice receipt missing, unreadable or incomplete")
 	}
 	dec := json.NewDecoder(bytes.NewReader(raw))
 	dec.DisallowUnknownFields()
