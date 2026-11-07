@@ -56,3 +56,7 @@ A minimal, verifiable file-scanning workflow: a source product holds an upload p
 - Use verified implementation and runtime results to claim functionality or release readiness; documents are not implementation evidence.
 
 Wardveil is maintained in this repository. The current documents capture GoreeCloud founder intent and proposed design; implementation choices remain subject to applicable GoreeCloud governance and engineering verification.
+
+## License
+
+The GoreeCloud-controlled source and documentation in this repository are provided under the [Apache License, Version 2.0](LICENSE). Named third-party security engines, frameworks, APIs, rule feeds and trademarks are **not** bundled or licensed by this repository's primary license merely because they are mentioned. Each future integration, signature database, rule set, or redistributed component requires its own provenance and license review before inclusion.
