@@ -36,6 +36,14 @@ A controlled test was executed on an authorized Linux development laptop with a 
 - Harmless synthetic input → `clean`, empty signature.
 - Test-only matching input → `malicious`, `Wardveil.Test.Fixture.UNOFFICIAL`, with the owner disposition remaining pending review.
 
+For repeatable local testing, the verified `scripts/verify-clamd-lab.sh` helper creates the test signature and configuration, launches an **existing preinstalled** official `docker.io/clamav/clamav:1.4_base` image under rootless Podman, runs the opt-in Go integration test, and stops/removes its temporary container and synthetic files. It refuses rootful execution and automatic image downloads, opens no ports, and uses a private socket with a constrained process and resource budget. From the repository root, after independently reviewing the installed image and confirming sufficient host resources:
+
+```bash
+bash scripts/verify-clamd-lab.sh
+```
+
+This is an optional developer test, not a service-installation procedure. The image's custom test database does not measure signature freshness or production malware coverage.
+
 To reproduce with a separately prepared isolated test daemon containing the matching custom rule:
 
 ```bash
