@@ -27,4 +27,23 @@ The `VERSION` query identifies the engine but **does not certify current signatu
 
 `go test -race ./internal/scan` exercises a fake Unix-socket server: stream framing, clean/malicious classifications, exact content and digest binding, source errors, stalled-source cancellation, malformed daemon responses, missing version data, transport outages, and timeouts. These tests **do not execute real ClamAV**, prove malware-detection efficacy, or validate an actual VPS.
 
+### Real-daemon smoke test (nonproduction, November 6, 2026)
+
+The opt-in `internal/scan/clamd_real_integration_test.go` test exercises this actual adapter against a running local ClamAV daemon. Ordinary CI skips this test unless `WARDVEIL_CLAMD_TEST_SOCKET` points to an explicitly isolated **test** Unix socket.
+
+A controlled test was executed on an authorized Linux development laptop with a preinstalled official `clamav/clamav:1.4_base` image. Rootless Podman ran ClamAV **1.4.6** with no network, no published ports, a read-only container root, dropped capabilities, no-new-privileges, a 512 MiB memory limit, a 32-process limit, and a private owner-accessible Unix socket. The daemon used only a **single custom synthetic .hdb signature**, not the production or official full malware database. Both real-engine adapter cases passed:
+
+- Harmless synthetic input → `clean`, empty signature.
+- Test-only matching input → `malicious`, `Wardveil.Test.Fixture.UNOFFICIAL`, with the owner disposition remaining pending review.
+
+To reproduce with a separately prepared isolated test daemon containing the matching custom rule:
+
+```bash
+WARDVEIL_CLAMD_TEST_SOCKET=/absolute/path/to/private/clamd.sock \
+  go test -v -count=1 -run '^TestClamdLiveEngine, [security model](security-model.md), and [VPS-to-local hosting decision](architecture.md). ClamAV's official [clamd protocol](https://docs.clamav.net/manual/Usage/ClamdProtocol.html) defines `zINSTREAM` framing and reply semantics.
+ ./internal/scan
+```
+
+This proves the basic Unix-socket command framing, content binding, strict reply parsing, and real daemon interaction for the two synthetic cases; it does **not** prove real-world malware detection accuracy, up-to-date signatures, EICAR detection with the official databases, concurrent-load safety, recovery, quarantine enforcement, VPS suitability, or deployment readiness. The manual lab container was stopped after validation.
+
 See [scan advisory contracts](scan-contract.md), [security model](security-model.md), and [VPS-to-local hosting decision](architecture.md). ClamAV's official [clamd protocol](https://docs.clamav.net/manual/Usage/ClamdProtocol.html) defines `zINSTREAM` framing and reply semantics.
