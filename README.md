@@ -2,7 +2,7 @@
 
 **GoreeCloud's proposed unified security command center.**
 
-> **Status:** Product vision and development-stage implementation. The repository contains a local event-ingestion prototype, a Unix-socket ClamAV protocol adapter tested with synthetic fixtures against fake and isolated real daemons, and an in-process held-source scan coordinator with unimplemented production authentication/owner adapters. No end-to-end file-owner scanning, deployed malware protection, WAF enforcement, or automated incident response is verified.
+> **Status:** Product vision and development-stage implementation. The repository contains a local event-ingestion prototype, a Unix-socket ClamAV protocol adapter tested with synthetic fixtures against fake and isolated real daemons, and an in-process held-source scan coordinator with private single-host lease replay markers and bounded local scan capacity. Production authentication/owner adapters, cross-host job tracking and release enforcement remain unimplemented. No end-to-end file-owner scanning, deployed malware protection, WAF enforcement, or automated incident response is verified.
 
 Wardveil is intended to protect GoreeCloud infrastructure, applications, services, and their users through coordinated detection, intelligence, policy evaluation, security monitoring, and controlled response. It complements rather than replaces other GoreeCloud products.
 
@@ -44,6 +44,7 @@ All interfaces must follow **GoreeCloud UI (GC UI)**, the project's governing de
 - [Scan advisory contracts](docs/scan-contract.md)
 - [ClamAV development adapter and security gates](docs/clamd-adapter.md)
 - [Held-object coordinator, authorization interfaces and integration gates](docs/scan-coordinator.md)
+- [Private scan lease-admission and backpressure requirements](docs/scan-admission.md)
 - [Development event service](docs/developer-setup.md)
 
 ## First development target
