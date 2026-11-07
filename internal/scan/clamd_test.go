@@ -109,7 +109,7 @@ func TestClamdINSTREAMVerdicts(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			f := makeScannerDaemon(t, "ClamAV 1.4.3/27340/Fri Nov 6 2026", tc.response, false)
-			result, err := (Clamd{SocketPath: f.socket}).Scan(context.Background(), testScanRequest(payload), bytes.NewReader(payload))
+			result, err := (Clamd{SocketPath: f.socket}).Scan(context.Background(), testScanRequest(payload), io.NopCloser(bytes.NewReader(payload)))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -147,7 +147,7 @@ func TestClamdRejectsUntrustedInput(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			f := makeScannerDaemon(t, "ClamAV 1.4.3/123/now", "stream: OK", false)
 			tc.conf.SocketPath = f.socket
-			_, err := tc.conf.Scan(context.Background(), tc.req, bytes.NewReader(tc.data))
+			_, err := tc.conf.Scan(context.Background(), tc.req, io.NopCloser(bytes.NewReader(tc.data)))
 			if err == nil {
 				t.Fatal("expected scan to fail closed")
 			}
@@ -166,7 +166,7 @@ func TestClamdRejectsUnsafeReplies(t *testing.T) {
 	} {
 		t.Run(fmt.Sprintf("%q", reply), func(t *testing.T) {
 			f := makeScannerDaemon(t, "ClamAV 1.4.3/123/now", reply, false)
-			_, err := (Clamd{SocketPath: f.socket}).Scan(context.Background(), testScanRequest(payload), bytes.NewReader(payload))
+			_, err := (Clamd{SocketPath: f.socket}).Scan(context.Background(), testScanRequest(payload), io.NopCloser(bytes.NewReader(payload)))
 			if err == nil {
 				t.Fatal("unsafe clamd reply accepted")
 			}
@@ -174,22 +174,36 @@ func TestClamdRejectsUnsafeReplies(t *testing.T) {
 	}
 	t.Run("version_command_disabled", func(t *testing.T) {
 		f := makeScannerDaemon(t, "COMMAND UNAVAILABLE", "stream: OK", false)
-		_, err := (Clamd{SocketPath: f.socket}).Scan(context.Background(), testScanRequest(payload), bytes.NewReader(payload))
+		_, err := (Clamd{SocketPath: f.socket}).Scan(context.Background(), testScanRequest(payload), io.NopCloser(bytes.NewReader(payload)))
 		if err == nil {
 			t.Fatal("unverified engine version accepted")
 		}
 	})
 	t.Run("scanner_timeout", func(t *testing.T) {
 		f := makeScannerDaemon(t, "ClamAV 1.4.3/123/now", "stream: OK", true)
-		_, err := (Clamd{SocketPath: f.socket, Timeout: 60 * time.Millisecond}).Scan(context.Background(), testScanRequest(payload), bytes.NewReader(payload))
+		_, err := (Clamd{SocketPath: f.socket, Timeout: 60 * time.Millisecond}).Scan(context.Background(), testScanRequest(payload), io.NopCloser(bytes.NewReader(payload)))
 		if err == nil {
 			t.Fatal("scanner timeout accepted")
 		}
 	})
 	t.Run("missing_socket", func(t *testing.T) {
-		_, err := (Clamd{SocketPath: filepath.Join(t.TempDir(), "absent.sock")}).Scan(context.Background(), testScanRequest(payload), bytes.NewReader(payload))
+		_, err := (Clamd{SocketPath: filepath.Join(t.TempDir(), "absent.sock")}).Scan(context.Background(), testScanRequest(payload), io.NopCloser(bytes.NewReader(payload)))
 		if err == nil {
 			t.Fatal("offline daemon accepted")
 		}
 	})
+}
+
+func TestClamdClosesStalledSourceOnTimeout(t *testing.T) {
+	f := makeScannerDaemon(t, "ClamAV 1.4.3/123/now", "stream: OK", false)
+	reader, writer := io.Pipe()
+	defer writer.Close()
+	start := time.Now()
+	_, err := (Clamd{SocketPath: f.socket, Timeout: 75 * time.Millisecond}).Scan(context.Background(), testScanRequest([]byte("x")), reader)
+	if err == nil {
+		t.Fatal("stalled source was accepted")
+	}
+	if time.Since(start) > time.Second {
+		t.Fatal("scan cancellation did not close source promptly")
+	}
 }
