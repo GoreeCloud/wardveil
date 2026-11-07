@@ -2,7 +2,7 @@
 
 **GoreeCloud's proposed unified security command center.**
 
-> **Status:** Product vision and initial technical design. The repository contains product plans and a development-only local event ingestion prototype. It does not provide deployed threat detection, malware protection, WAF enforcement, or automated incident response.
+> **Status:** Product vision and initial technical design. The repository contains product plans, a development-only local event ingestion prototype, and an unintegrated, Unix-socket ClamAV protocol adapter tested against a fake daemon. It does not provide deployed threat detection, a verified malware-scanning service, WAF enforcement, or automated incident response.
 
 Wardveil is intended to protect GoreeCloud infrastructure, applications, services, and their users through coordinated detection, intelligence, policy evaluation, security monitoring, and controlled response. It complements rather than replaces other GoreeCloud products.
 
@@ -42,6 +42,7 @@ All interfaces must follow **GoreeCloud UI (GC UI)**, the project's governing de
 - [Security and trust model](docs/security-model.md)
 - [Delivery roadmap](docs/roadmap.md)
 - [Scan advisory contracts](docs/scan-contract.md)
+- [ClamAV development adapter and security gates](docs/clamd-adapter.md)
 - [Development event service](docs/developer-setup.md)
 
 ## First development target
