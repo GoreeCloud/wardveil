@@ -73,6 +73,7 @@ type ScanCoordinator struct {
 	Record    AdvisoryRecorder
 	Admission JobAdmission
 	Capacity  *ScanLimiter
+	Readiness ScanReadiness
 }
 
 // ScanAdvice is a non-authoritative result, not a permission to release.
@@ -121,7 +122,7 @@ func (w ScanCoordinator) Process(ctx context.Context, credential []byte, request
 	if ctx == nil {
 		return ScanAdvice{}, errors.New("scan context required")
 	}
-	if w.Auth == nil || w.Source == nil || w.Engine == nil || w.Record == nil || w.Admission == nil || w.Capacity == nil {
+	if w.Auth == nil || w.Source == nil || w.Engine == nil || w.Record == nil || w.Admission == nil || w.Capacity == nil || w.Readiness == nil {
 		return ScanAdvice{}, errors.New("scan coordinator dependency missing")
 	}
 	if err := ctx.Err(); err != nil {
@@ -141,6 +142,14 @@ func (w ScanCoordinator) Process(ctx context.Context, credential []byte, request
 	if !identifier.MatchString(caller.OwnerProduct) || !identifier.MatchString(caller.Subject) ||
 		caller.OwnerProduct != request.OwnerProduct {
 		return ScanAdvice{}, errors.New("scan caller not authorized for object owner")
+	}
+	if err := ctx.Err(); err != nil {
+		return ScanAdvice{}, err
+	}
+	// Fail closed when signed, current signature state and loaded daemon
+	// database readiness cannot be independently verified.
+	if err := w.Readiness.Check(ctx); err != nil {
+		return ScanAdvice{}, errors.New("scan signature readiness is unavailable or unverified")
 	}
 	if err := ctx.Err(); err != nil {
 		return ScanAdvice{}, err
