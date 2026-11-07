@@ -52,7 +52,8 @@ func TestPHP2ShellTriageNeverClaimsConfirmedRemediation(t *testing.T) {
 		{"8.4.27", "web", "verify_running_runtime"},
 		{"8.4.27", "unknown", "verify_web_exposure"},
 		{"8.1.34", "web", "urgent_verify_patch"},
-		{"8.6.0", "web", "verify_running_runtime"},
+		{"8.6.0", "web", "verify_inventory"},
+		{"9.0.0", "unknown", "verify_inventory"},
 		{"8.4.27", "invalid-role", "verify_inventory"},
 		{"bad", "web", "verify_inventory"},
 	}
