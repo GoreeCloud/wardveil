@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -265,5 +266,179 @@ func TestVerifiedCVDMissingMainFails(t *testing.T) {
 	}
 	if err := gate.Check(context.Background()); err == nil {
 		t.Fatal("missing signed main CVD must be rejected")
+	}
+}
+
+func TestReadinessUsesScanCapacityBeforeStartingVerification(t *testing.T) {
+	payload := []byte("synthetic held file")
+	req := coordinatorRequest(payload)
+	limit, err := NewScanLimiter(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	occupied, err := limit.Acquire(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	checks, opens, admissions, scans, records := 0, 0, 0, 0, 0
+	worker := ScanCoordinator{
+		Auth:     coordinatorAuth(),
+		Capacity: limit,
+		Readiness: readinessFunc(func(context.Context) error {
+			checks++
+			return errors.New("unverified signatures")
+		}),
+		Source: sourceOwnerFunc(func(context.Context, VerifiedCaller, Request) (HeldObject, error) {
+			opens++
+			return coordinatorHeld(req, io.NopCloser(bytes.NewReader(payload))), nil
+		}),
+		Admission: admissionFunc(func(context.Context, VerifiedCaller, HeldObject, Request) error {
+			admissions++
+			return nil
+		}),
+		Engine: malwareEngineFunc(func(context.Context, Request, io.ReadCloser) (Result, error) {
+			scans++
+			return coordinatorResult(req, Clean), nil
+		}),
+		Record: recordFunc(func(context.Context, VerifiedCaller, string, Request, Result, Disposition) error {
+			records++
+			return nil
+		}),
+	}
+	out, err := worker.Process(context.Background(), []byte("authorized-fixture"), req)
+	if !errors.Is(err, ErrScanBusy) || out != (ScanAdvice{}) || checks != 0 ||
+		opens != 0 || admissions != 0 || scans != 0 || records != 0 {
+		t.Fatalf("saturated scanner allowed readiness: %+v err=%v checks=%d", out, err, checks)
+	}
+	occupied()
+	for i := 0; i < 2; i++ {
+		out, err = worker.Process(context.Background(), []byte("authorized-fixture"), req)
+		if err == nil || out != (ScanAdvice{}) || checks != i+1 ||
+			opens != 0 || admissions != 0 || scans != 0 || records != 0 {
+			t.Fatalf("readiness failure leaked a capacity slot or accessed source: %+v err=%v checks=%d", out, err, checks)
+		}
+	}
+}
+
+func TestConcurrentReadinessNeverExceedsLocalScanLimit(t *testing.T) {
+	payload := []byte("test bytes")
+	req := coordinatorRequest(payload)
+	limit, err := NewScanLimiter(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	started := make(chan struct{})
+	release := make(chan struct{})
+	var checks, opened, recorded atomic.Int64
+	worker := ScanCoordinator{
+		Auth:     coordinatorAuth(),
+		Capacity: limit,
+		Readiness: readinessFunc(func(context.Context) error {
+			if checks.Add(1) == 1 {
+				close(started)
+			}
+			<-release
+			return errors.New("synthetic unready")
+		}),
+		Source: sourceOwnerFunc(func(context.Context, VerifiedCaller, Request) (HeldObject, error) {
+			opened.Add(1)
+			return HeldObject{}, errors.New("no owner access allowed")
+		}),
+		Admission: admissionFunc(func(context.Context, VerifiedCaller, HeldObject, Request) error {
+			t.Error("admission attempted during readiness failure")
+			return nil
+		}),
+		Engine: malwareEngineFunc(func(context.Context, Request, io.ReadCloser) (Result, error) {
+			t.Error("engine invoked during readiness failure")
+			return Result{}, nil
+		}),
+		Record: recordFunc(func(context.Context, VerifiedCaller, string, Request, Result, Disposition) error {
+			recorded.Add(1)
+			return nil
+		}),
+	}
+	var leader sync.WaitGroup
+	leader.Add(1)
+	go func() {
+		defer leader.Done()
+		_, _ = worker.Process(context.Background(), []byte("authorized-fixture"), req)
+	}()
+	<-started
+	const requests = 48
+	results := make(chan error, requests)
+	for i := 0; i < requests; i++ {
+		go func() {
+			_, e := worker.Process(context.Background(), []byte("authorized-fixture"), req)
+			results <- e
+		}()
+	}
+	for i := 0; i < requests; i++ {
+		if e := <-results; !errors.Is(e, ErrScanBusy) {
+			t.Fatalf("simultaneous request bypassed capacity: %v", e)
+		}
+	}
+	close(release)
+	leader.Wait()
+	if checks.Load() != 1 || opened.Load() != 0 || recorded.Load() != 0 {
+		t.Fatalf("unbounded readiness workers or owner disclosure: checks=%d opened=%d recorded=%d",
+			checks.Load(), opened.Load(), recorded.Load())
+	}
+}
+
+func TestStrictCVDModeRefusesCoexistingUnverifiedSignatureFiles(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		add  func(*testing.T, string)
+	}{
+		{"unsigned_daily_cld", func(t *testing.T, dir string) {
+			if err := os.WriteFile(filepath.Join(dir, "daily.cld"), []byte("unverified patch state"), 0600); err != nil {
+				t.Fatal(err)
+			}
+		}},
+		{"additional_bytecode_cvd", func(t *testing.T, dir string) {
+			if err := os.WriteFile(filepath.Join(dir, "bytecode.cvd"), []byte("unverified archive"), 0600); err != nil {
+				t.Fatal(err)
+			}
+		}},
+		{"custom_hdb", func(t *testing.T, dir string) {
+			if err := os.WriteFile(filepath.Join(dir, "custom.hdb"), []byte("unverified custom signatures"), 0600); err != nil {
+				t.Fatal(err)
+			}
+		}},
+		{"custom_ldb", func(t *testing.T, dir string) {
+			if err := os.WriteFile(filepath.Join(dir, "custom.ldb"), []byte("unverified custom signatures"), 0600); err != nil {
+				t.Fatal(err)
+			}
+		}},
+		{"freshclam_state", func(t *testing.T, dir string) {
+			if err := os.WriteFile(filepath.Join(dir, "freshclam.dat"), []byte("unverified update metadata"), 0600); err != nil {
+				t.Fatal(err)
+			}
+		}},
+		{"extra_directory", func(t *testing.T, dir string) {
+			if err := os.Mkdir(filepath.Join(dir, "custom-sigs"), 0700); err != nil {
+				t.Fatal(err)
+			}
+		}},
+		{"unexpected_symlink", func(t *testing.T, dir string) {
+			if err := os.Symlink(filepath.Join(dir, "main.cvd"), filepath.Join(dir, "shadow.cvd")); err != nil {
+				t.Fatal(err)
+			}
+		}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			gate := fakeSignedCVDs(t, time.Hour, true)
+			tc.add(t, gate.DatabaseDirectory)
+			if err := gate.Check(context.Background()); err == nil {
+				t.Fatal("coexisting unverified database content accepted as signed CVD-only readiness")
+			}
+		})
+	}
+}
+
+func TestStrictCVDModeRequiresOnlyTwoKnownRegularFiles(t *testing.T) {
+	gate := fakeSignedCVDs(t, time.Hour, true)
+	if err := checkStrictCVDDirectory(gate.DatabaseDirectory); err != nil {
+		t.Fatalf("dedicated two-file CVD directory was rejected: %v", err)
 	}
 }
