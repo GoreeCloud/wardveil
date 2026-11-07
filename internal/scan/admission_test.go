@@ -212,7 +212,8 @@ func TestCoordinatorDurableAdmissionPreventsReplayAndLeaks(t *testing.T) {
 	}
 	var scans, records, closes atomic.Int64
 	worker := ScanCoordinator{
-		Auth: coordinatorAuth(),
+		Readiness: syntheticReadiness(),
+		Auth:      coordinatorAuth(),
 		Source: sourceOwnerFunc(func(_ context.Context, _ VerifiedCaller, _ Request) (HeldObject, error) {
 			source := io.NopCloser(bytes.NewReader(payload))
 			return coordinatorHeld(req, countedClose{ReadCloser: source, onClose: func() { closes.Add(1) }}), nil
@@ -266,7 +267,8 @@ func TestCoordinatorCapacityDenialBeforeOpeningOwner(t *testing.T) {
 	defer release()
 	var opened atomic.Int64
 	w := ScanCoordinator{
-		Auth: coordinatorAuth(),
+		Readiness: syntheticReadiness(),
+		Auth:      coordinatorAuth(),
 		Source: sourceOwnerFunc(func(context.Context, VerifiedCaller, Request) (HeldObject, error) {
 			opened.Add(1)
 			t.Fatal("source opened despite capacity being full")
@@ -348,7 +350,8 @@ func TestFileAdmissionErrorStaysPendingWithMarker(t *testing.T) {
 	req := coordinatorRequest(payload)
 	var scans atomic.Int32
 	w := ScanCoordinator{
-		Auth: coordinatorAuth(),
+		Readiness: syntheticReadiness(),
+		Auth:      coordinatorAuth(),
 		Source: sourceOwnerFunc(func(context.Context, VerifiedCaller, Request) (HeldObject, error) {
 			return coordinatorHeld(req, io.NopCloser(bytes.NewReader(payload))), nil
 		}),
