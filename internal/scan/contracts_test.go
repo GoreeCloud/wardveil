@@ -133,3 +133,71 @@ func TestResultRequiresValidatedOriginalRequest(t *testing.T) {
 		})
 	}
 }
+
+func TestValidatedRecommendationRetainsHoldForUntrustedCleanVerdicts(t *testing.T) {
+	now := time.Date(2026, 11, 7, 12, 0, 0, 0, time.UTC)
+	request := exampleRequest(now)
+	clean := exampleResult(request, now)
+	if RecommendFor(request, clean, now) != EligibleForOwnerReview {
+		t.Fatal("a valid matching clean result should remain eligible for owner review only")
+	}
+	mutatedResults := []struct {
+		name   string
+		change func(*Result)
+	}{
+		{"wrong_request", func(r *Result) { r.RequestID = "other" }},
+		{"wrong_owner", func(r *Result) { r.OwnerProduct = "other" }},
+		{"wrong_object", func(r *Result) { r.ObjectID = "other" }},
+		{"wrong_digest", func(r *Result) { r.SHA256 = strings.Repeat("b", 64) }},
+		{"wrong_schema", func(r *Result) { r.SchemaVersion = "99" }},
+		{"unknown_engine", func(r *Result) { r.Engine = "../invalid" }},
+		{"future_timestamp", func(r *Result) { r.ScannedAt = now.Add(10 * time.Minute) }},
+		{"before_intake", func(r *Result) { r.ScannedAt = now.Add(-time.Hour) }},
+		{"unknown_verdict", func(r *Result) { r.Verdict = Verdict("invalid") }},
+	}
+	for _, tc := range mutatedResults {
+		t.Run(tc.name, func(t *testing.T) {
+			bad := clean
+			tc.change(&bad)
+			if got := RecommendFor(request, bad, now); got != RetainPendingReview {
+				t.Fatalf("unvalidated clean scan result received %q", got)
+			}
+		})
+	}
+	mutatedRequests := []struct {
+		name   string
+		change func(*Request)
+	}{
+		{"expired_request", func(r *Request) { r.RequestedAt = now.Add(-25 * time.Hour) }},
+		{"invalid_owner", func(r *Request) { r.OwnerProduct = "../private" }},
+		{"invalid_digest", func(r *Request) { r.SHA256 = strings.Repeat("Z", 64) }},
+		{"invalid_size", func(r *Request) { r.SizeBytes = -1 }},
+		{"invalid_schema", func(r *Request) { r.SchemaVersion = "2" }},
+	}
+	for _, tc := range mutatedRequests {
+		t.Run(tc.name, func(t *testing.T) {
+			bad := request
+			tc.change(&bad)
+			matched := exampleResult(bad, now)
+			if got := RecommendFor(bad, matched, now); got != RetainPendingReview {
+				t.Fatalf("invalid intake with matching clean result received %q", got)
+			}
+		})
+	}
+	for _, verdict := range []Verdict{Malicious, Suspicious, Inconclusive, ScanError} {
+		outcome := clean
+		outcome.Verdict = verdict
+		if got := RecommendFor(request, outcome, now); got != RetainPendingReview {
+			t.Fatalf("non-clean verdict %q received %q", verdict, got)
+		}
+	}
+}
+
+func TestRecommendationRequiresRecentRequestAtAdvisoryTime(t *testing.T) {
+	initial := time.Date(2026, 11, 7, 12, 0, 0, 0, time.UTC)
+	request := exampleRequest(initial)
+	result := exampleResult(request, initial)
+	if got := RecommendFor(request, result, initial.Add(25*time.Hour)); got != RetainPendingReview {
+		t.Fatalf("stale queued result must retain owner hold, got %q", got)
+	}
+}
