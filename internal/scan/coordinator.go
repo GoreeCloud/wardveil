@@ -67,10 +67,12 @@ type AdvisoryRecorder interface {
 // ScanCoordinator is an in-process development handshake, not a deployed API,
 // persistent queue, authenticated HTTP server, or file-owner release engine.
 type ScanCoordinator struct {
-	Auth   CallerAuthenticator
-	Source HeldSourceOwner
-	Engine MalwareEngine
-	Record AdvisoryRecorder
+	Auth      CallerAuthenticator
+	Source    HeldSourceOwner
+	Engine    MalwareEngine
+	Record    AdvisoryRecorder
+	Admission JobAdmission
+	Capacity  *ScanLimiter
 }
 
 // ScanAdvice is a non-authoritative result, not a permission to release.
@@ -119,7 +121,7 @@ func (w ScanCoordinator) Process(ctx context.Context, credential []byte, request
 	if ctx == nil {
 		return ScanAdvice{}, errors.New("scan context required")
 	}
-	if w.Auth == nil || w.Source == nil || w.Engine == nil || w.Record == nil {
+	if w.Auth == nil || w.Source == nil || w.Engine == nil || w.Record == nil || w.Admission == nil || w.Capacity == nil {
 		return ScanAdvice{}, errors.New("scan coordinator dependency missing")
 	}
 	if err := ctx.Err(); err != nil {
@@ -140,6 +142,16 @@ func (w ScanCoordinator) Process(ctx context.Context, credential []byte, request
 		caller.OwnerProduct != request.OwnerProduct {
 		return ScanAdvice{}, errors.New("scan caller not authorized for object owner")
 	}
+	if err := ctx.Err(); err != nil {
+		return ScanAdvice{}, err
+	}
+	// Fail before asking the source owner to open content if the scanner is
+	// already at its configured single-process capacity.
+	releaseSlot, err := w.Capacity.Acquire(ctx)
+	if err != nil {
+		return ScanAdvice{}, err
+	}
+	defer releaseSlot()
 	if err := ctx.Err(); err != nil {
 		return ScanAdvice{}, err
 	}
@@ -165,6 +177,11 @@ func (w ScanCoordinator) Process(ctx context.Context, credential []byte, request
 		return ScanAdvice{}, errors.New("scan source is not an exact attested pending object")
 	}
 	if err := ctx.Err(); err != nil {
+		return ScanAdvice{}, err
+	}
+	// The durable admission marker must be committed before any source bytes
+	// reach the scanner. A failed or replayed admission retains the owner hold.
+	if err := w.Admission.Reserve(ctx, caller, held, request); err != nil {
 		return ScanAdvice{}, err
 	}
 	result, err := w.Engine.Scan(ctx, request, content)
