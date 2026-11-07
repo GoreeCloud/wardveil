@@ -5,7 +5,7 @@
 | Document type | Technical architecture proposal |
 | Owner | GoreeCloud |
 | Status | Proposed; not an implemented-system description |
-| Created / updated | 2026-10-25 |
+| Created / updated | 2026-10-25 / 2026-11-06 |
 | Canonical location | `GoreeCloud/wardveil/docs/architecture.md` |
 
 ## 1. Purpose and principles
@@ -133,7 +133,23 @@ Do not split into microservices merely to mirror the seven product names. A modu
 
 Specify authenticated, versioned internal interfaces for event ingestion, scan request/status, findings, incidents, policy evaluation, action proposals, and evidence retrieval. Use explicit authorization checks per resource and tenant. Prefer asynchronous queues for engine work and reliable retries, with bounded dead-letter handling. Define idempotency, ordering limits, schema compatibility, and retention before declaring APIs stable.
 
-## 9. Open design decisions
+## 9. Founder-directed interim scanner hosting (November 6, 2026)
+
+**Decision:** Wardveil's intended ClamAV scanning backend will run on an owner-controlled VPS as the interim hosting environment. After the owner purchases and provisions a local server, migrate the scanning workload to that server. The scanning interface and source-product authorization/hold boundaries must remain provider- and location-independent so the cutover does not require client redesign.
+
+**Status distinction:** This records the founder's hosting decision, not evidence of a working ClamAV adapter, installed packages, an assigned VPS instance, a reachable scanner endpoint, or an approved production deployment. As of the decision, the repository's scan contracts are advisory and do not invoke ClamAV. Final host identity, sizing, network topology, placement and migration date remain subject to verification.
+
+**Required VPS-stage safeguards and acceptance gates:**
+- Expose no raw ClamAV daemon listener to the public internet. Use a private service path with authenticated, authorized Wardveil API access, encrypted transport, and restricted firewall boundaries.
+- Isolate untrusted scan work with least-privilege service identities and tightly bounded file size, archive expansion, CPU, memory, disk, scan duration and concurrency. Do not execute samples or grant broad host filesystem access.
+- Permit source-product bytes only through explicit per-object authority; preserve GoreeShield minimization, private temporary storage, retention/deletion controls and source-owner quarantine/release decisions.
+- Verify signature update provenance and freshness, engine health, restart and upgrade behavior, actionable monitoring, storage exhaustion behavior, and safe degraded/error states. Begin with observe/alert-only policy behavior.
+- Check VPS capacity, co-located workloads, backups/recovery and network exposure. Use isolated benign and EICAR fixtures, abuse cases, outage tests, authorized source handshakes and independent readback before operational claims.
+- Treat live installation, configuration, firewall exposure, credential changes and service cutover as separate controlled operations requiring appropriate authorization and rollback procedures.
+
+**Local-server migration gate:** Verify the destination's hardware, OS, isolation and data-handling controls; deploy and test the same versioned scan contract and result provenance; stage traffic transfer with health and security tests; confirm temporary sample/evidence handling and privacy policy; validate rollback and owner-owned release controls; retire VPS scanner dependencies only after the local service passes acceptance. Do not claim local-server readiness before hardware exists and a cutover has been verified.
+
+## 10. Open design decisions
 
 - Approved language/runtime and deployment topology, based on existing GoreeCloud infrastructure rather than assumption.
 - Single-user vs organization tenant model and entitlement boundaries.
