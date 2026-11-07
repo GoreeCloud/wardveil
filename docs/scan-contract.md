@@ -4,8 +4,8 @@
 | --- | --- |
 | Document type | Technical contract |
 | Responsible owner | GoreeCloud / Wardveil |
-| Status | Development implementation; not integrated with a scanner or production service |
-| Created / updated | 2026-10-25 |
+| Status | Development advisory contract and in-process adapter/coordination only; no production service |
+| Created / updated | 2026-10-25 / 2026-11-06 |
 | Canonical location | `GoreeCloud/wardveil/docs/scan-contract.md` |
 | Code | [`internal/scan/contracts.go`](../internal/scan/contracts.go) |
 
@@ -13,7 +13,7 @@
 
 This contract defines **metadata-only requests**, **non-authoritative scan results**, and **advisory dispositions** for a future Wardveil Scan integration.
 
-The file-owning GoreeCloud product—not Wardveil—retains authority over upload visibility, quarantine, release, deletion, and access permissions. These advisory contract types do not read or execute files, create scan jobs, invoke ClamAV, or perform security actions. A separate [development-only Unix-socket adapter](clamd-adapter.md) now supports caller-provided byte streaming but is not connected to authenticated source-product integration or a running ClamAV service.
+The file-owning GoreeCloud product—not Wardveil—retains authority over upload visibility, quarantine, release, deletion, and access permissions. These advisory contract types do not read or execute files, create scan jobs, invoke ClamAV, or perform security actions. A separate [development-only Unix-socket adapter](clamd-adapter.md) supports caller-provided byte streaming and was tested against an isolated real ClamAV daemon with synthetic fixtures. The [held-object coordinator](scan-coordinator.md) defines an in-process authorization/owner-hold/result-recording handshake with injectable trusted interfaces. Neither establishes an authenticated production endpoint or a connected source-product release workflow.
 
 ## Proposed request flow
 
@@ -37,9 +37,9 @@ The request's 1 TiB value is a **metadata validation ceiling**, not a promise of
 ## Security and failure boundaries
 
 - No arbitrary filesystem path or network URL is part of the contract.
-- There is **no authenticated upload/download service, isolated daemon provisioning, job scheduling, or response adapter**. The unintegrated ClamAV protocol adapter streams only explicitly supplied bytes to a Unix socket; real engine availability and isolation are not verified.
-- The result's hash field is a claimed identity and must be verified against actual bytes by an authenticated scanning service before it may be trusted.
-- The API does not yet provide expiry, signature attestation, identity verification, multi-tenant authorization, audit persistence, cancellation, retries, job scheduling, quarantine state, or release decisions.
+- There is **no deployed authenticated scan service, source-product pending/quarantine integration, permanent daemon provisioning, durable job scheduling, or release adapter**. Isolated ClamAV lab verification used only synthetic fixtures; production signature readiness and host hardening remain unverified.
+- The result's hash field is a claimed identity. The ClamAV adapter verifies streamed content and the in-process coordinator independently checks the engine-consumed bytes, size and EOF before accepting advisory results. A real authenticated service boundary and source-owner permission checks are still required.
+- The system does not yet provide production credential verification, hold-lease expiry/replay controls, signature freshness attestation, multi-tenant authorization, durable audit persistence, retries/queues, source-owned quarantine state, or release decisions. Development interfaces and context cancellation are not substitutes.
 - A forged but syntactically valid `clean` result remains untrusted without a signed/authenticated provider boundary and source-owner review. Validation does not establish truth.
 - Never send raw user files, sensitive metadata, or hashes to an external malware/reputation provider without explicit authorization and applicable privacy review.
 - No automatic clearing of pending holds for scans that fail, time out, return ambiguous evidence, or produce unknown verdicts.
@@ -50,4 +50,4 @@ Implementation validation should include request bounds, path-like identifier re
 
 Before the feature is integrated with a live GoreeCloud service, verify authenticated source identity, service-owned quarantine workflow, safe isolated engine execution, content-hash verification, retention rules, retries, cancellation, auditability and recovery. Integrations must not bypass GoreeCloud Vault or Identity ownership boundaries, and any native client must satisfy the governing GC UI and OS-native standards.
 
-**Status boundary:** Advisory type/validation logic and a local Unix-socket protocol adapter exist as developer code. No real ClamAV scan, authorized upload/quarantine integration, production malware protection, or deployment has been verified.
+**Status boundary:** Advisory types, a local Unix-socket ClamAV adapter, and a source-owner held-object coordinator exist as developer code. A controlled real ClamAV synthetic smoke test passed; **no source-product upload/quarantine integration, production malware protection, or deployment** has been verified.

@@ -78,5 +78,5 @@ fi
 
 echo "Testing the real ClamAV daemon using synthetic fixtures only."
 WARDVEIL_CLAMD_TEST_SOCKET="$lab/clamd.sock" \
-  go test -v -count=1 -run '^TestClamdLiveEngine$' ./internal/scan
+  go test -v -count=1 -run '^Test(ClamdLiveEngine|CoordinatorLiveClamd)$' ./internal/scan
 echo "Real-daemon smoke check passed; stopping disposable test service."
