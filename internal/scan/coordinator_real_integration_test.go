@@ -32,7 +32,10 @@ func TestCoordinatorLiveClamd(t *testing.T) {
 			payload := []byte(tc.payload)
 			req := coordinatorRequest(payload)
 			reader := &trackedContent{Reader: bytes.NewReader(payload)}
-			records := 0
+			receipt, err := OpenFileAdviceRecorder(filepath.Join(t.TempDir(), "private-advice"))
+			if err != nil {
+				t.Fatal(err)
+			}
 			admission, err := OpenFileAdmission(filepath.Join(t.TempDir(), "private-journal"))
 			if err != nil {
 				t.Fatal(err)
@@ -49,14 +52,7 @@ func TestCoordinatorLiveClamd(t *testing.T) {
 					return coordinatorHeld(req, reader), nil
 				}),
 				Engine: Clamd{SocketPath: socket, MaxBytes: 1024, Timeout: 5 * time.Second},
-				Record: recordFunc(func(_ context.Context, caller VerifiedCaller, lease string, actual Request, result Result, rec Disposition) error {
-					records++
-					if actual != req || lease != "pending:lease-19" || caller.OwnerProduct != req.OwnerProduct ||
-						result.Verdict != tc.want || rec != tc.dispose {
-						t.Fatal("recorded unsafe or mismatched advice")
-					}
-					return nil
-				}),
+				Record: receipt,
 			}
 			out, err := w.Process(context.Background(), []byte("authorized-fixture"), req)
 			if err != nil {
@@ -64,8 +60,14 @@ func TestCoordinatorLiveClamd(t *testing.T) {
 			}
 			if out.Result.Verdict != tc.want || out.Recommendation != tc.dispose ||
 				out.Result.Engine != "clamav" || out.Result.EngineVersion == "" ||
-				records != 1 || reader.closes != 1 {
-				t.Fatalf("incorrect real-engine handshake: %+v records=%d closes=%d", out, records, reader.closes)
+				reader.closes != 1 {
+				t.Fatalf("incorrect real-engine handshake: %+v closes=%d", out, reader.closes)
+			}
+			saved, err := receipt.ReadReceipt(context.Background(),
+				VerifiedCaller{OwnerProduct: req.OwnerProduct, Subject: "test:service"}, out.LeaseID)
+			if err != nil || saved.Verdict != tc.want || saved.Recommendation != tc.dispose ||
+				saved.Engine != "clamav" || saved.LeaseFingerprint == "" {
+				t.Fatalf("missing or inconsistent private advisory receipt: %+v %v", saved, err)
 			}
 			if tc.want == Malicious && out.Result.SignatureID != "Wardveil.Test.Fixture.UNOFFICIAL" {
 				t.Fatalf("incorrect synthetic signature: %q", out.Result.SignatureID)
