@@ -12,7 +12,7 @@
 
 A successful clean scan does not authorize file release. A scanned object can also be harmed by replayed requests, duplicate concurrent jobs, and uncontrolled simultaneous scanner workloads. `ScanCoordinator` therefore requires an explicit `JobAdmission` and `ScanLimiter`, in addition to its authenticated caller, trusted source owner, engine and advisory recorder.
 
-The coordinator authenticates the caller, reserves a bounded in-flight slot **before opening** source-owned content, verifies a matching pending/held owner lease, then durably admits that lease **before calling the scanner**. Admission failure or capacity exhaustion returns an error with no scanner execution or advisory record. Successful admission does **not** modify or release the source owner's hold.
+The coordinator authenticates the caller, requires a successful [signed-CVD readiness check](scan-readiness.md), then reserves a bounded in-flight slot **before opening** source-owned content, verifies a matching pending/held owner lease, and durably admits that lease **before calling the scanner**. A failed readiness check does not consume a lease marker. Admission failure or capacity exhaustion returns an error with no scanner execution or advisory record. Successful admission does **not** modify or release the source owner's hold.
 
 ## Reference `FileAdmission`
 
