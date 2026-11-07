@@ -102,6 +102,7 @@ func TestCoordinatorCleanAndMaliciousRemainAdvisory(t *testing.T) {
 			reader := &trackedContent{Reader: bytes.NewReader(payload)}
 			openCalls, scanCalls, recordCalls := 0, 0, 0
 			worker := ScanCoordinator{
+				Readiness: syntheticReadiness(),
 				Admission: admissionFunc(func(context.Context, VerifiedCaller, HeldObject, Request) error { return nil }),
 				Capacity:  testScanLimiter(),
 				Auth:      coordinatorAuth(),
@@ -172,6 +173,7 @@ func TestCoordinatorRejectsUntrustedCallerBeforeSource(t *testing.T) {
 			}
 			opens, scans, records := 0, 0, 0
 			w := ScanCoordinator{
+				Readiness: syntheticReadiness(),
 				Admission: admissionFunc(func(context.Context, VerifiedCaller, HeldObject, Request) error { return nil }),
 				Capacity:  testScanLimiter(),
 				Auth:      tc.auth,
@@ -218,6 +220,7 @@ func TestCoordinatorHeldAttestationFailClosed(t *testing.T) {
 			held := coordinatorHeld(req, reader)
 			tc.mutate(&held)
 			w := ScanCoordinator{
+				Readiness: syntheticReadiness(),
 				Admission: admissionFunc(func(context.Context, VerifiedCaller, HeldObject, Request) error { return nil }),
 				Capacity:  testScanLimiter(),
 				Auth:      coordinatorAuth(),
@@ -269,6 +272,7 @@ func TestCoordinatorCannotTrustForgedOrIncompleteScan(t *testing.T) {
 			reader := &trackedContent{Reader: bytes.NewReader(tc.file)}
 			engineCalls, recordCalls := 0, 0
 			w := ScanCoordinator{
+				Readiness: syntheticReadiness(),
 				Admission: admissionFunc(func(context.Context, VerifiedCaller, HeldObject, Request) error { return nil }),
 				Capacity:  testScanLimiter(),
 				Auth:      coordinatorAuth(),
@@ -316,6 +320,7 @@ func TestCoordinatorRecorderOrSourceFailureLeavesHold(t *testing.T) {
 			reader := &trackedContent{Reader: bytes.NewReader(payload)}
 			scans, records := 0, 0
 			w := ScanCoordinator{
+				Readiness: syntheticReadiness(),
 				Admission: admissionFunc(func(context.Context, VerifiedCaller, HeldObject, Request) error { return nil }),
 				Capacity:  testScanLimiter(),
 				Auth:      coordinatorAuth(),
@@ -357,6 +362,7 @@ func TestCoordinatorCanceledContextNeverRecordsAdvice(t *testing.T) {
 	defer cancel()
 	calls := 0
 	w := ScanCoordinator{
+		Readiness: syntheticReadiness(),
 		Admission: admissionFunc(func(context.Context, VerifiedCaller, HeldObject, Request) error { return nil }),
 		Capacity:  testScanLimiter(),
 		Auth:      coordinatorAuth(),
@@ -386,6 +392,7 @@ func TestCoordinatorRejectsMissingDependenciesOrContext(t *testing.T) {
 		{"unconfigured", ScanCoordinator{}, context.Background()},
 		{"nil_context", ScanCoordinator{}, nil},
 		{"canceled_context", ScanCoordinator{
+			Readiness: syntheticReadiness(),
 			Admission: admissionFunc(func(context.Context, VerifiedCaller, HeldObject, Request) error { return nil }),
 			Capacity:  testScanLimiter(),
 			Auth:      coordinatorAuth(),
@@ -416,6 +423,7 @@ func TestCoordinatorClosesSourceEvenWhenOwnerAlsoReportsError(t *testing.T) {
 	req := coordinatorRequest([]byte("fixture"))
 	reader := &trackedContent{Reader: bytes.NewReader([]byte("fixture"))}
 	w := ScanCoordinator{
+		Readiness: syntheticReadiness(),
 		Admission: admissionFunc(func(context.Context, VerifiedCaller, HeldObject, Request) error { return nil }),
 		Capacity:  testScanLimiter(),
 		Auth:      coordinatorAuth(),

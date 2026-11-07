@@ -5,7 +5,7 @@
 | Status | Development-stage in-process handshake; not integrated with a live source owner or production authentication |
 | Date | November 6, 2026 |
 | Source | `internal/scan/coordinator.go`, `internal/scan/admission.go`, their tests |
-| Dependency | [ClamAV Unix-socket adapter](clamd-adapter.md); [scan advisory schema](scan-contract.md) |
+| Dependency | [ClamAV Unix-socket adapter](clamd-adapter.md); [scan advisory schema](scan-contract.md); [signature readiness](scan-readiness.md) |
 
 ## Purpose
 
@@ -26,7 +26,7 @@ Authentication, source-owner attestation and result recording are **interfaces**
 
 ## Explicit admission and bounded in-flight capacity
 
-The coordinator now **requires** an injected `JobAdmission` and `ScanLimiter` along with its trusted caller authenticator, held source, engine and advisory recorder. After authentication it acquires a bounded capacity slot without a queued wait, rejecting overloaded requests **before** opening source bytes. After exact pending-lease attestation, it calls `JobAdmission.Reserve` **before** invoking the engine. A rejected replay or uncertain journal write fails closed, closes the source handle, records no verdict, and never releases the owner hold.
+The coordinator now **requires** an injected `JobAdmission` and `ScanLimiter` along with its trusted caller authenticator, held source, engine and advisory recorder. After authentication it first acquires a bounded scanner-capacity slot without a queued wait, **then** invokes the required [signed-CVD scanner readiness gate](scan-readiness.md) while holding that slot. This order prevents unbounded signature-verifier processes and rejects unverified/stale signatures and overloaded requests **before** opening source bytes. After exact pending-lease attestation, it calls `JobAdmission.Reserve` **before** invoking the engine. A rejected replay or uncertain journal write fails closed, closes the source handle, records no verdict, and never releases the owner hold.
 
 The reference `FileAdmission` creates private, fsynced, create-exclusive markers for the exact owner lease, and never deletes them automatically. **The owning product must generate a new authorized pending lease for an explicit rescan**; a failed or crashed scan with the old lease remains blocked until operator-directed recovery. See [admission requirements, tests and limitations](scan-admission.md). The `ScanLimiter` slots apply to a **single process** only; a production multi-worker service still needs global capacity, retention and durable queue design.
 
