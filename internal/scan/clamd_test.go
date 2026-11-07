@@ -161,6 +161,8 @@ func TestClamdRejectsUnsafeReplies(t *testing.T) {
 		"stream: access denied ERROR",
 		"stream: OKAY",
 		"stream: Eicar.Test FOUND extra",
+		"stream: OK\x00stream: Eicar.Test FOUND",
+		"stream: Eicar.Test FOUND\x00stream: OK",
 		"stream: bad/signature FOUND",
 		"stream: ",
 	} {
