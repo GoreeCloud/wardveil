@@ -4,7 +4,7 @@
 
 ## Scope
 
-The `internal/scan.Clamd` adapter implements the documented ClamAV `zINSTREAM\0` protocol over an **absolute Unix-domain socket path only**. It does not accept network addresses, arbitrary file paths, URLs, or instructions to operate on source files. Its caller must already be an authorized file-owning product or trusted worker and must supply an already-open, finite, approved `io.Reader` bound to the exact `scan.Request` object. The adapter does not provide identity verification or access authorization by itself.
+The `internal/scan.Clamd` adapter implements the documented ClamAV `zINSTREAM\0` protocol over an **absolute Unix-domain socket path only**. It does not accept network addresses, arbitrary file paths, URLs, or instructions to operate on source files. Its caller must already be an authorized file-owning product or trusted worker and must supply an already-open, finite, approved `io.ReadCloser` bound to the exact `scan.Request` object. The adapter takes responsibility for closing that reader on return or context cancellation; the source owner's `Close` must unblock pending reads. The adapter does not provide identity verification or access authorization by itself.
 
 The code:
 - Validates the existing advisory request; imposes an 8 MiB default and 64 MiB absolute client-side stream ceiling, with a 30-second default and two-minute maximum scan timeout.
@@ -13,7 +13,7 @@ The code:
 - Returns a versioned, **non-authoritative** `scan.Result` with `clean` or `malicious` only when the exact supported daemon reply is parsed. It never automatically releases, deletes, quarantines, or changes ownership of a file.
 - Leaves non-clean and failed jobs under the source owner's pending/review policy. The error return must not be transformed into an allow decision.
 
-The source reader's own operations must be bounded and cancellation-aware at the owner integration layer. The ClamAV daemon's isolation, archive/decompression limits, memory/CPU/disk controls, concurrency and update policy are **outside the adapter** and must be independently implemented and tested.
+The caller must supply a closable source whose `Close` unblocks a pending `Read` on cancellation; a custom reader that ignores Close can still stall this prototype. Owner integration must verify this contract. The ClamAV daemon's isolation, archive/decompression limits, memory/CPU/disk controls, concurrency and update policy are **outside the adapter** and must be independently implemented and tested.
 
 ## Hosting and trust
 
@@ -25,6 +25,6 @@ The `VERSION` query identifies the engine but **does not certify current signatu
 
 ## Tests and evidence
 
-`go test -race ./internal/scan` exercises a fake Unix-socket server: stream framing, clean/malicious classifications, exact content and digest binding, source errors, malformed daemon responses, missing version data, transport outages, and timeouts. These tests **do not execute real ClamAV**, prove malware-detection efficacy, or validate an actual VPS.
+`go test -race ./internal/scan` exercises a fake Unix-socket server: stream framing, clean/malicious classifications, exact content and digest binding, source errors, stalled-source cancellation, malformed daemon responses, missing version data, transport outages, and timeouts. These tests **do not execute real ClamAV**, prove malware-detection efficacy, or validate an actual VPS.
 
 See [scan advisory contracts](scan-contract.md), [security model](security-model.md), and [VPS-to-local hosting decision](architecture.md). ClamAV's official [clamd protocol](https://docs.clamav.net/manual/Usage/ClamdProtocol.html) defines `zINSTREAM` framing and reply semantics.
