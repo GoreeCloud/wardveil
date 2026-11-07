@@ -21,7 +21,7 @@ The file-owning GoreeCloud product—not Wardveil—retains authority over uploa
 2. The source supplies a validated scan request with `request_id`, `owner_product`, `object_id`, lowercase SHA-256 digest, length metadata, and `requested_at`. No filesystem path, authentication token, raw contents, or arbitrary URL is accepted by the contract.
 3. A future trusted adapter obtains file bytes **only** through a separately authorized, scope-limited file-owner interface. That adapter must enforce sandboxing, size, timeout, archive, decompression, and engine-update controls.
 4. An adapter returns a structured verdict. Wardveil first revalidates the original request (including its 24-hour intake window), then checks that the result matches that request, product, object and hash. An expired or malformed original request fails closed even when an untrusted verdict exactly matches it. This deliberately requires a fresh authorized intake for work delayed beyond 24 hours; future queue handling needs separate review. Provenance and engine trust must be enforced by a future authenticated service layer.
-5. Wardveil recommends `eligible_for_owner_review` **only** for `clean`. All other verdicts—including `malicious`, `suspicious`, `inconclusive`, `error`, or an unknown value—recommend `retain_pending_review`.
+5. The new `RecommendFor(request, result, now)` helper first requires a valid original request and a matching, timely, structurally valid result. **Only** then can a `clean` verdict recommend `eligible_for_owner_review`. Mismatches, malformed/expired intake, invalid engine metadata and every non-clean verdict recommend `retain_pending_review`. The older `Recommend(verdict)` accepts a **bare value** and is not sufficient evidence for a source-owner decision; callers with request/result data should use `RecommendFor`.
 6. The file-owning product applies its own permission checks, policy, quarantine/release controls and audit process. A clean verdict is **not** an authorization to publish or release a file.
 
 ## Version 1 types
@@ -46,7 +46,7 @@ The request's 1 TiB value is a **metadata validation ceiling**, not a promise of
 
 ## Verification and integration gates
 
-Implementation validation should include request bounds, path-like identifier rejection, bad hash rejection, future/stale timestamps, **revalidation of the original request during result assessment**, binding of results to original product/object/hash/request, unknown verdict rejection, and fail-closed disposition recommendations. The tests are in [`internal/scan/contracts_test.go`](../internal/scan/contracts_test.go).
+Implementation validation should include request bounds, path-like identifier rejection, bad hash rejection, future/stale timestamps, **revalidation of the original request during result assessment**, binding of results to original product/object/hash/request, unknown verdict rejection, fail-closed validated disposition recommendations, and stale queued-verdict holds. The tests are in [`internal/scan/contracts_test.go`](../internal/scan/contracts_test.go).
 
 Before the feature is integrated with a live GoreeCloud service, verify authenticated source identity, service-owned quarantine workflow, safe isolated engine execution, content-hash verification, retention rules, retries, cancellation, auditability and recovery. Integrations must not bypass GoreeCloud Vault or Identity ownership boundaries, and any native client must satisfy the governing GC UI and OS-native standards.
 
