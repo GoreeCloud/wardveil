@@ -54,6 +54,9 @@ type MalwareEngine interface {
 	Scan(ctx context.Context, request Request, content io.ReadCloser) (Result, error)
 }
 
+// Keep the trusted local ClamAV adapter compatible with the coordinator.
+var _ MalwareEngine = Clamd{}
+
 // AdvisoryRecorder records only the scoped result/lease and recommendation.
 // It never grants access, releases a file, deletes an object, or mutates holds.
 // Its owner-specific implementation must deduplicate request/lease identities.
