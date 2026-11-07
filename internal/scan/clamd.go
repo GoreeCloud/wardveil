@@ -12,6 +12,7 @@ import (
 	"net"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -59,15 +60,19 @@ func (c Clamd) settings() (int64, time.Duration, error) {
 // Scan streams exactly the declared bytes through a Unix-domain clamd socket.
 // It verifies the SHA-256 of the actual bytes and refuses to return a clean
 // verdict for missing, extra, or mismatched content. A finite, authorized
-// source reader is required; readers should support cancellation by their
-// owning service. This does not grant filesystem access or release permission.
-func (c Clamd) Scan(ctx context.Context, request Request, source io.Reader) (Result, error) {
+// source reader is required. Scan takes ownership of closing that source;
+// its Close must unblock a pending Read on cancellation. This does not grant
+// filesystem access or release permission.
+func (c Clamd) Scan(ctx context.Context, request Request, source io.ReadCloser) (Result, error) {
 	if ctx == nil {
 		return Result{}, errors.New("missing scan context")
 	}
 	if source == nil {
 		return Result{}, errors.New("missing authorized scan content")
 	}
+	var closeOnce sync.Once
+	closeSource := func() { closeOnce.Do(func() { _ = source.Close() }) }
+	defer closeSource()
 	if err := request.Validate(time.Now().UTC()); err != nil {
 		return Result{}, fmt.Errorf("invalid scan request: %w", err)
 	}
@@ -80,6 +85,8 @@ func (c Clamd) Scan(ctx context.Context, request Request, source io.Reader) (Res
 	}
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
+	stopSource := context.AfterFunc(ctx, closeSource)
+	defer stopSource()
 
 	version, err := c.version(ctx)
 	if err != nil {
