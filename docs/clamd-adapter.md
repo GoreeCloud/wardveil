@@ -9,7 +9,7 @@ The `internal/scan.Clamd` adapter implements the documented ClamAV `zINSTREAM\0`
 The code:
 - Validates the existing advisory request; imposes an 8 MiB default and 64 MiB absolute client-side stream ceiling, with a 30-second default and two-minute maximum scan timeout.
 - Queries clamd `VERSION`, then sends `INSTREAM` in bounded 32 KiB chunks, terminating with a zero-length chunk.
-- Rejects missing/excess source bytes, SHA-256 mismatches, unknown/malformed replies, unavailable version metadata, timeouts, and disconnected daemon responses.
+- Rejects missing/excess source bytes, SHA-256 mismatches, unknown/malformed/extra reply records, unavailable version metadata, timeouts, and disconnected daemon responses.
 - Returns a versioned, **non-authoritative** `scan.Result` with `clean` or `malicious` only when the exact supported daemon reply is parsed. It never automatically releases, deletes, quarantines, or changes ownership of a file.
 - Leaves non-clean and failed jobs under the source owner's pending/review policy. The error return must not be transformed into an allow decision.
 
