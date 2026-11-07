@@ -4,7 +4,7 @@
 | --- | --- |
 | Status | Development-stage in-process handshake; not integrated with a live source owner or production authentication |
 | Date | November 6, 2026 |
-| Source | `internal/scan/coordinator.go`, `internal/scan/admission.go`, their tests |
+| Source | `internal/scan/coordinator.go`, `internal/scan/admission.go`, `internal/scan/advice_store.go`, their tests |
 | Dependency | [ClamAV Unix-socket adapter](clamd-adapter.md); [scan advisory schema](scan-contract.md); [signature readiness](scan-readiness.md) |
 
 ## Purpose
@@ -20,9 +20,9 @@ Prevent an engine's syntactically valid clean verdict from being mistaken for pe
 3. A source-product-owned `HeldSourceOwner.OpenHeld` checks the verified identity and its own object permissions, then attests that the exact product/object/version is **still pending and inaccessible** to normal download, export and release paths. This adapter supplies an already-open content handle and owner-generated scoped lease ID, not a caller-supplied filesystem path or URL.
 4. The coordinator rejects any missing hold, mismatched product/object/SHA-256/size, invalid lease identifier, absent bytes or canceled request before scanning. The returned source is closed on all completed paths.
 5. The trusted `MalwareEngine` consumes the content. The coordinator independently hashes every byte read and requires the exact declared size **and end-of-stream** before considering even a syntactically clean `scan.Result`. It also validates result request/product/object/hash and engine metadata using `Result.ValidateFor`.
-6. `AdvisoryRecorder.RecordAdvice` receives the authenticated caller, owner-generated lease, request, result and `Recommend` recommendation. Clean means **eligible for owner review**, not automatic release; all other outcomes retain the owner's pending-review disposition. A missing/failed recorder returns an error rather than releasing content.
+6. `AdvisoryRecorder.RecordAdvice` receives the authenticated caller, owner-generated lease, request, result and `Recommend` recommendation. Clean means **eligible for owner review**, not automatic release; all other outcomes retain the owner's pending-review disposition. A missing/failed recorder returns an error rather than releasing content. A new [private local advisory receipt journal](scan-advice-receipts.md) implements a bounded, append-only-by-creation single-host receipt and recovery readback; **it is not a real owner audit/case service**.
 
-Authentication, source-owner attestation and result recording are **interfaces**, not implemented adapters to GoreeCloud Identity, any source product, or an authenticated transport. An interface alone does not prove end-to-end authorization or stop a dishonest/misconfigured source owner. The source owner's pending-state and lease assertions must be independently verified in its actual code and API before integration.
+Authentication and source-owner attestation remain **interfaces**, not implemented adapters to GoreeCloud Identity, any source product, or an authenticated transport. Advice recording has a development-only local receipt implementation, but **no production identity or audit/case service**. An interface alone does not prove end-to-end authorization or stop a dishonest/misconfigured source owner. The source owner's pending-state and lease assertions must be independently verified in its actual code and API before integration.
 
 ## Explicit admission and bounded in-flight capacity
 
