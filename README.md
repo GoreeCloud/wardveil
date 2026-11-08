@@ -43,7 +43,7 @@ All interfaces must follow **GoreeCloud UI (GC UI)**, the project's governing de
 - [Delivery roadmap](docs/roadmap.md)
 - [Scan advisory contracts](docs/scan-contract.md)
 - [Development event service](docs/developer-setup.md)
-- [Controlled source-audit pilot](docs/security-audit-pilot.md) — offline source integrity and static container-policy checks only; no third-party agent execution
+- [Controlled source-audit pilot](docs/security-audit-pilot.md) — offline source integrity, static container-policy checks, and a read-only Linux kernel self-probe; runtime isolation and third-party execution remain unapproved
 
 ## First development target
 
