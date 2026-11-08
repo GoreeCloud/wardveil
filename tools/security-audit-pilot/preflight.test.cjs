@@ -58,6 +58,20 @@ test('rejects symlinked ancestor of root',{skip:!supported},()=>withFixture(root
     assert.throws(()=>verifySnapshot(path.join(link,path.basename(root)),sampleManifest),/symlink or non-directory ancestor/);
   } finally { fs.rmSync(parent,{recursive:true,force:true}); }
 }));
+test('rejects a symlink as the requested snapshot root',{skip:!supported},()=>withFixture(root=>{
+  const link=root+'.link';
+  try {
+    fs.symlinkSync(root,link);
+    assert.throws(()=>verifySnapshot(link,sampleManifest),/symlink or non-directory ancestor/);
+  } finally { if (fs.existsSync(link)) fs.unlinkSync(link); }
+}));
+test('never follows a FIFO or device-like extra entry',{skip:!supported},()=>withFixture(root=>{
+  const fifo=path.join(root,'extra.fifo');
+  const made=spawnSync('mkfifo',[fifo],{encoding:'utf8',timeout:2000});
+  if (made.error) throw made.error;
+  assert.equal(made.status,0,made.stderr);
+  assert.throws(()=>verifySnapshot(root,sampleManifest),/nonregular entry/);
+}));
 test('rejects unexpected nested directory',{skip:!supported},()=>withFixture(root=>{
   fs.mkdirSync(path.join(root,'skills/security-audit/other'));
   assert.throws(()=>verifySnapshot(root,sampleManifest),/unexpected directory/);
