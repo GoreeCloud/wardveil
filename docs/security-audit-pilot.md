@@ -46,10 +46,10 @@ This narrowly scoped GitHub checkout requires normal CI network access to retrie
 
 The static policy currently requires:
 
-- Network mode `none`, no published ports, no host PID/IPC/cgroup namespaces, no host links, and no device access.
+- Network mode `none`, no published ports, no host PID/IPC/cgroup/UTS namespaces, no additional network attachments, host DNS/hosts settings, or supplemental groups; no host links or device access.
 - Read-only container root, unprivileged numeric UID:GID, dropped capabilities, `no-new-privileges`, and a non-unconfined AppArmor profile.
 - PID limit 1–32, memory 64–512 MiB, no additional swap, CPU at most 1, and OOM killing enabled.
-- Only a digest-pinned image reference approved externally; an exact read-only source bind under `/srv/wardveil-audit-pilot/source/`; no other host mounts, image volumes, or inherited container volumes.
+- Only a digest-pinned image reference approved externally; an exact read-only source bind under `/srv/wardveil-audit-pilot/source/`; no other host mounts, image volumes, or inherited container volumes. Both the declared `HostConfig.Mounts` entries and observed `Mounts` must agree on a private-propagation, read-only bind.
 - Small in-memory-only `/scratch` (64 MiB) and `/tmp` (32 MiB) with `nosuid,nodev,noexec`; exact safe `HOME`, `TMPDIR`, `PATH`, and `LANG` environment values, with no other environment variables.
 - No container healthcheck execution, automatic restarts, sysctl overrides, or persistent host-side container log driver.
 
@@ -62,9 +62,9 @@ node tools/security-audit-pilot/check-container-policy.cjs \
   --source /srv/wardveil-audit-pilot/source/<reviewed-target>
 ```
 
-The checker **does not** independently establish that the inspection file comes from the actual Docker engine or that the image bytes match its claimed digest. It also cannot prove external network blocking or filesystem isolation under real execution. An operator must independently verify a rootless daemon or effective user-namespace remapping, active kernel seccomp/LSM enforcement, protected snapshot ownership, mounted source permissions, network isolation, runtime resource controls, and a trusted execution path on a disposable nonproduction host before any audit execution. A Docker `HostConfig.UsernsMode` value of an empty string means "use daemon policy"—**not** automatically "private"; Docker documents `host` as the only explicit `--userns` override. See [Docker run user namespaces](https://docs.docker.com/reference/cli/docker/container/run/#disable-namespace-remapping-for-a-container---userns) and [Docker userns-remap](https://docs.docker.com/engine/security/userns-remap/).
+The checker **does not** independently establish that the inspection file comes from the actual Docker engine or that the image bytes match its claimed digest. It also cannot prove external network blocking or filesystem isolation under real execution. An operator must independently verify a rootless daemon or effective user-namespace remapping, active kernel seccomp/LSM enforcement, protected snapshot ownership, mounted source permissions (including recursive submounts on older kernels), network isolation, runtime resource controls, and a trusted execution path on a disposable nonproduction host before any audit execution. A Docker `HostConfig.UsernsMode` value of an empty string means "use daemon policy"—**not** automatically "private"; Docker documents `host` as the only explicit `--userns` override. See [Docker run user namespaces](https://docs.docker.com/reference/cli/docker/container/run/#disable-namespace-remapping-for-a-container---userns) and [Docker userns-remap](https://docs.docker.com/engine/security/userns-remap/).
 
-**Test evidence:** 42 locally passing synthetic policy tests, including rejection of host mounts, secrets in environment, root users, host namespaces, extra volumes, privileged execution, no limits, and malformed or non-regular input. The tests do not provision, inspect, start, or validate a real Docker container. Combined with 15 source-integrity tests, 57 local tests pass at the development checkpoint. GitHub CI on the updated PR must be read back separately before reporting a hosted pass.
+**Test evidence:** 49 locally passing synthetic policy tests, including rejection of host mounts, secrets in environment, root users, host namespaces, extra volumes, privileged execution, no limits, and malformed or non-regular input. The tests do not provision, inspect, start, or validate a real Docker container. Combined with 15 source-integrity tests, 64 local tests pass at the development checkpoint. GitHub CI on the updated PR must be read back separately before reporting a hosted pass.
 
 ## Threats and currently open upstream issues
 
