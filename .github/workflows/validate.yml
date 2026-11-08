@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
@@ -20,3 +22,13 @@ jobs:
         run: go vet ./...
       - name: Race-tested unit tests
         run: go test -race ./...
+  source-audit-pilot-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Verify Node is available
+        run: node --version
+      - name: Source-integrity gate unit tests (offline; no upstream execution)
+        run: node --test tools/security-audit-pilot/preflight.test.cjs
