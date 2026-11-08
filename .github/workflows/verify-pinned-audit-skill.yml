@@ -14,11 +14,11 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Checkout reviewed Wardveil integrity tool
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
       - name: Obtain immutable public Cloudflare source (never execute it)
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           repository: cloudflare/security-audit-skill
           ref: c1c8a8c1471069fb0e188eeaff69b8e8db6564a8
