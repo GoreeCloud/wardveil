@@ -15,7 +15,8 @@ function good(){return {
   HostConfig:{NetworkMode:'none',Privileged:false,ReadonlyRootfs:true,CapDrop:['ALL'],CapAdd:[],SecurityOpt:['no-new-privileges:true'],
     PidMode:'',IpcMode:'private',CgroupnsMode:'private',UsernsMode:'',PidsLimit:24,Memory:256*1024*1024,MemorySwap:256*1024*1024,NanoCpus:500000000,
     OomKillDisable:false,Tmpfs:{'/scratch':'rw,nosuid,nodev,noexec,size=67108864','/tmp':'rw,nosuid,nodev,noexec,size=33554432'},
-    Binds:[],Devices:[],DeviceRequests:[],VolumesFrom:[],Links:[],PublishAllPorts:false,PortBindings:{},
+    Mounts:[{Type:'bind',Source:source,Target:'/source',ReadOnly:true,BindOptions:{Propagation:'rprivate'}}],
+    UTSMode:'',Binds:[],Devices:[],DeviceRequests:[],VolumesFrom:[],Links:[],PublishAllPorts:false,PortBindings:{},
     LogConfig:{Type:'none'},RestartPolicy:{Name:'no'}},
   Mounts:[{Type:'bind',Source:source,Destination:'/source',RW:false,Mode:'ro',Propagation:'rprivate'}],
   NetworkSettings:{Ports:{}}
@@ -39,6 +40,10 @@ invalid('missing cap drop',obj=>{obj.HostConfig.CapDrop=[];});
 invalid('unconfined profile',obj=>{obj.AppArmorProfile='unconfined';});
 invalid('disabled no-new-privileges',obj=>{obj.HostConfig.SecurityOpt=[];});
 invalid('host PID namespace',obj=>{obj.HostConfig.PidMode='host';});
+invalid('host UTS namespace',obj=>{obj.HostConfig.UTSMode='host';});
+invalid('hidden declared mount',obj=>{obj.HostConfig.Mounts.push({Type:'bind',Source:'/home',Target:'/private',ReadOnly:false});});
+invalid('mismatched declared source bind',obj=>{obj.HostConfig.Mounts[0].Source='/home/owner';});
+invalid('unsafe source mount propagation',obj=>{obj.HostConfig.Mounts[0].BindOptions.Propagation='rshared';});
 invalid('host IPC namespace',obj=>{obj.HostConfig.IpcMode='host';});
 invalid('host user namespace',obj=>{obj.HostConfig.UsernsMode='host';});
 invalid('root user',obj=>{obj.Config.User='0:0';});
@@ -57,6 +62,9 @@ invalid('source mounted from wrong location',obj=>{obj.Mounts[0].Source='/root';
 invalid('host device exposure',obj=>{obj.HostConfig.Devices=[{PathOnHost:'/dev/kvm'}];});
 invalid('GPU device request',obj=>{obj.HostConfig.DeviceRequests=[{}];});
 invalid('published port',obj=>{obj.HostConfig.PortBindings={'80/tcp':[{}]};});
+invalid('attached network',obj=>{obj.NetworkSettings.Networks={bridge:{}};});
+invalid('additional DNS resolver',obj=>{obj.HostConfig.Dns=['8.8.8.8'];});
+invalid('supplemental groups',obj=>{obj.HostConfig.GroupAdd=['0'];});
 invalid('additional legacy bind',obj=>{obj.HostConfig.Binds=['/:/host:ro'];});
 test('expected image must be pinned; expected source must be safe',()=>{
  for(const changed of [{image:'wardveil-audit:latest',source},{image,source:'/home/operator/repo'},
