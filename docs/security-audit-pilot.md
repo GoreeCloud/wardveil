@@ -40,6 +40,32 @@ The separate [`verify-pinned-audit-skill.yml`](../.github/workflows/verify-pinne
 
 This narrowly scoped GitHub checkout requires normal CI network access to retrieve the public Git content. That is different from the separately prohibited external network for **target-controlled** code during a future security audit. Neither a passing CI integrity job nor the local user/network namespace smoke test is proof that an executable audit sandbox meets the privacy, resource, and isolation requirements.
 
+## Offline created-container policy gate (implemented; no runtime authorization)
+
+[check-container-policy.cjs](../tools/security-audit-pilot/check-container-policy.cjs) evaluates an **offline JSON snapshot** of Docker's inspection metadata for exactly one **created, not started** container. It never calls Docker, creates/starts containers, reads host secrets, downloads images, opens sockets, or executes the candidate skill or target.
+
+The static policy currently requires:
+
+- Network mode \`none\`, no published ports, no host PID/IPC/cgroup namespaces, no host links, and no device access.
+- Read-only container root, unprivileged numeric UID:GID, dropped capabilities, \`no-new-privileges\`, and a non-unconfined AppArmor profile.
+- PID limit 1–32, memory 64–512 MiB, no additional swap, CPU at most 1, and OOM killing enabled.
+- Only a digest-pinned image reference approved externally; an exact read-only source bind under \`/srv/wardveil-audit-pilot/source/\`; no other host mounts, image volumes, or inherited container volumes.
+- Small in-memory-only \`/scratch\` (64 MiB) and \`/tmp\` (32 MiB) with \`nosuid,nodev,noexec\`; exact safe \`HOME\`, \`TMPDIR\`, \`PATH\`, and \`LANG\` environment values, with no other environment variables.
+- No container healthcheck execution, automatic restarts, sysctl overrides, or persistent host-side container log driver.
+
+The checker refuses a running/previously started container. It reads at most 128 KiB of input through a Linux no-follow/nonblocking regular-file descriptor and does not echo raw inspection content or environment values. It returns **\`STATIC POLICY MATCH ONLY\`**, deliberately not "sandbox verified". The command requires an explicit image digest and a separately vetted host source path. Example syntax (illustrative only; **do not create/start a container without separate authorization and reviewed isolation design**):
+
+\`\`\`sh
+node tools/security-audit-pilot/check-container-policy.cjs \
+  /absolute/private/path/to/inspect.json \
+  --image '<reviewed-image>@sha256:<exact-64-hex-digest>' \
+  --source /srv/wardveil-audit-pilot/source/<reviewed-target>
+\`\`\`
+
+The checker **does not** independently establish that the inspection file comes from the actual Docker engine or that the image bytes match its claimed digest. It also cannot prove external network blocking or filesystem isolation under real execution. An operator must independently verify a rootless daemon or effective user-namespace remapping, active kernel seccomp/LSM enforcement, protected snapshot ownership, mounted source permissions, network isolation, runtime resource controls, and a trusted execution path on a disposable nonproduction host before any audit execution. A Docker \`HostConfig.UsernsMode\` value of an empty string means "use daemon policy"—**not** automatically "private"; Docker documents \`host\` as the only explicit \`--userns\` override. See [Docker run user namespaces](https://docs.docker.com/reference/cli/docker/container/run/#disable-namespace-remapping-for-a-container---userns) and [Docker userns-remap](https://docs.docker.com/engine/security/userns-remap/).
+
+**Test evidence:** 42 locally passing synthetic policy tests, including rejection of host mounts, secrets in environment, root users, host namespaces, extra volumes, privileged execution, no limits, and malformed or non-regular input. The tests do not provision, inspect, start, or validate a real Docker container. Combined with 15 source-integrity tests, 57 local tests pass at the development checkpoint. GitHub CI on the updated PR must be read back separately before reporting a hosted pass.
+
 ## Threats and currently open upstream issues
 
 - [Upstream issue #128](https://github.com/cloudflare/security-audit-skill/issues/128): an external reporter describes destructive damage to their Windows profile after an agent tried to prepare a sandbox. This is a user report, not an independently reproduced incident; it justifies a strict rule: **never wipe, reset, truncate, move, or clean real HOME, cache, credentials, toolchains, SSH directories, or any host state to create a sandbox**.
