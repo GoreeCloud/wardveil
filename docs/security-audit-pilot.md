@@ -66,6 +66,24 @@ The checker **does not** independently establish that the inspection file comes 
 
 **Test evidence:** 49 locally passing synthetic policy tests, including rejection of host mounts, secrets in environment, root users, host namespaces, extra volumes, privileged execution, no limits, and malformed or non-regular input. The tests do not provision, inspect, start, or validate a real Docker container. Combined with 15 source-integrity tests, 64 local tests pass at the development checkpoint. GitHub CI on the updated PR must be read back separately before reporting a hosted pass.
 
+## Linux kernel self-probe (implemented; independent host verification still required)
+
+For this pilot I require kernel-observed evidence in addition to the static Docker configuration check. The new [`runtime-probe.cjs`](../tools/security-audit-pilot/runtime-probe.cjs) reads **only the current process's** bounded Linux `/proc` and cgroup v2 files. It launches no subprocesses, changes no environment variable, executes no target or Cloudflare code, opens no network socket, and writes no files. It accepts **no path or configuration arguments**, preventing a caller from pointing it at a forged evidence directory through its CLI.
+
+The probe checks: an explicitly non-root real/effective/saved/filesystem UID and GID, user/group ID maps that exclude host root, `NoNewPrivs: 1`, enforced kernel seccomp filtering, zero Linux capabilities (inheritable, permitted, effective, bounding, ambient), enforced AppArmor confinement, only the loopback network interface, and bounded cgroup v2 CPU/memory/PID/swap limits. It examines mountinfo for a read-only container root, a read-only `/source`, separate `/scratch` and `/tmp` tmpfs mounts with `nosuid,nodev,noexec`, and **no nested mounts** under any of those three paths. An exact allowlist of `HOME`, `TMPDIR`, `PATH` and `LANG` rejects inherited environment values. Missing/unreadable, malformed, unexpected or excessive input fails closed; raw environment and mount metadata are never printed.
+
+The **only intended invocation** is by an independently verified operator *inside a freshly provisioned disposable, nonproduction, isolated test container*, running the trusted first-party probe before any third-party tooling. This is not a user-laptop/VPS procedure or an instruction to create or launch a container now:
+
+```sh
+node tools/security-audit-pilot/runtime-probe.cjs
+```
+
+A success message says **`KERNEL SELF-PROBE MATCH ONLY`**, not "runtime isolation certified". This probe is not a complete audit sandbox: it does **not** authenticate the container engine, its image or mount source, host network namespace identities, host-side ACLs, seccomp *filter contents*, AppArmor policy strength, egress controls on other pathways, `/etc/hosts` and other noncritical mount contents, or provenance and trustworthiness of its own execution. Filesystem limits and cgroup controls must be independently cross-checked from the **host side** in the designated disposable environment. It also requires cgroup v2 and an enforcing AppArmor LSM; unsupported Linux variants are **blocked**, not silently accepted. A static Docker configuration match plus a passing self-probe is **still insufficient by itself** to authorize agent execution.
+
+The first-party synthetic test suite `runtime-probe.test.cjs` contains **39 passing unit tests**, including rejection of host-root mappings, writable source/submounts, disabled or missing seccomp/no-new-privileges, capabilities, non-loopback interfaces, unbounded cgroups, unenforced AppArmor, and extra environment variables. At the local development checkpoint, **103/103 combined Node tests passed** (15 integrity + 49 static policy + 39 kernel probe). A deliberate read-only invocation in the assistant's ordinary container **returned BLOCKED**, appropriately demonstrating that an arbitrary development environment cannot satisfy this restrictive profile. No actual target audit container was provisioned or started.
+
+Sources used for the model: [Linux kernel proc documentation](https://www.kernel.org/doc/html/latest/filesystems/proc.html), [Docker seccomp](https://docs.docker.com/engine/security/seccomp/), [Docker user namespace isolation](https://docs.docker.com/engine/security/userns-remap/), and [Docker bind mounts and recursive read-only limitations](https://docs.docker.com/engine/storage/bind-mounts/).
+
 ## Threats and currently open upstream issues
 
 - [Upstream issue #128](https://github.com/cloudflare/security-audit-skill/issues/128): an external reporter describes destructive damage to their Windows profile after an agent tried to prepare a sandbox. This is a user report, not an independently reproduced incident; it justifies a strict rule: **never wipe, reset, truncate, move, or clean real HOME, cache, credentials, toolchains, SSH directories, or any host state to create a sandbox**.
