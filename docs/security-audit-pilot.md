@@ -18,9 +18,9 @@ The upstream project is a **coding-agent methodology**, not an antivirus engine 
 
 ## Implemented read-only source-integrity gate
 
-`tools/security-audit-pilot/preflight.cjs` verifies **all 22 upstream tracked files** against the exact Git object IDs and byte lengths from the pinned commit's tree. It rejects missing, modified, additional, symbolic-link, non-regular, or oversized tracked files; validates manifest paths; and accepts only a real directory. Git metadata (`.git`) is intentionally not examined. The checker does not invoke Git, npm, the upstream validators, a coding agent, a shell, or any code from the candidate repository. It does not install dependencies, execute target-controlled processes, access the network, write files, or modify the source.
+`tools/security-audit-pilot/preflight.cjs` verifies **all 22 upstream tracked files** against the exact Git object IDs and byte lengths from the pinned commit's tree. It rejects missing, modified, additional, symbolic-link, non-regular, or oversized tracked files; validates manifest paths and symlinked ancestors; and uses pinned Linux directory descriptors to reduce rename/replacement races during traversal. It accepts only a real directory. Git metadata (`.git`) is intentionally not examined. The checker does not invoke Git, npm, the upstream validators, a coding agent, a shell, or any code from the candidate repository. It does not install dependencies, execute target-controlled processes, access the network, write files, or modify the source.
 
-The checker requires **Linux** with the expected `O_NOFOLLOW` and `O_NONBLOCK` file-open flags. This is an integrity check of a locally supplied snapshot, **not** proof of upstream authorship, sandboxing, freedom from malicious instructions, absence of TOCTOU races in a concurrently mutable directory, or security of a future audit. SHA-1 values are Git's content-addressed blob IDs, not independent SHA-256 attestations. Protect the verified source directory against modification between the check and any separate evaluation.
+The checker requires **Linux**, `/proc/self/fd`, and the expected `O_NOFOLLOW`, `O_NONBLOCK`, and `O_DIRECTORY` file-open flags. This is an integrity check of a locally supplied snapshot, **not** proof of upstream authorship, sandboxing, freedom from malicious instructions, absence of TOCTOU races in a concurrently mutable directory, or security of a future audit. SHA-1 values are Git's content-addressed blob IDs, not independent SHA-256 attestations. Protect the verified source directory against modification between the check and any separate evaluation. Directory descriptors reduce traversal races, but do not make a concurrently writable tree immutable.
 
 Read-only usage, after a human reviews and obtains the pinned candidate source through an approved process:
 
@@ -33,6 +33,12 @@ node --test tools/security-audit-pilot/preflight.test.cjs
 ```
 
 `PASS` means **only** that the supplied file set matches the pinned manifest. `BLOCKED` exits nonzero and must prevent progress; never bypass the gate by changing the pin or manifest merely to accommodate unexpected content. A revised upstream commit requires a fresh code/license review and a new complete manifest in a separate PR.
+
+## CI verification of the real pinned source
+
+The separate [`verify-pinned-audit-skill.yml`](../.github/workflows/verify-pinned-audit-skill.yml) workflow runs on changes to this pilot and can also be dispatched after it exists on the default branch. It uses read-only GitHub Actions credentials to check out a **public, immutable Cloudflare commit** into a temporary GitHub-hosted runner directory and runs only our first-party `preflight.cjs` against that source. It **does not run Cloudflare's scripts, download model dependencies, invoke a security agent, mount an owner device, or alter a deployment**. The job's successful exact-commit result establishes upstream file-byte matching in that CI run only; it does not prove the skill is safe to execute.
+
+This narrowly scoped GitHub checkout requires normal CI network access to retrieve the public Git content. That is different from the separately prohibited external network for **target-controlled** code during a future security audit. Neither a passing CI integrity job nor the local user/network namespace smoke test is proof that an executable audit sandbox meets the privacy, resource, and isolation requirements.
 
 ## Threats and currently open upstream issues
 
