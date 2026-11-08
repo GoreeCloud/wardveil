@@ -62,6 +62,7 @@ function evaluateContainerConfig(input, expected) {
     doc.AppArmorProfile !== 'unconfined', 'require active non-unconfined AppArmor profile');
   requireField(host.PidMode === '' || host.PidMode === 'private', 'PID namespace must be private');
   requireField(host.IpcMode === 'private', 'IPC namespace must be private');
+  requireField(host.UTSMode === '' || host.UTSMode === 'private', 'UTS namespace must not be shared with host');
   requireField(host.CgroupnsMode === 'private', 'cgroup namespace must be private');
   // Docker supports empty (daemon policy) or 'host' here; 'private' is not a Docker --userns value.
   // Empty does NOT prove daemon remapping: require separate host-level userns/rootless evidence.
@@ -89,6 +90,15 @@ function evaluateContainerConfig(input, expected) {
     typeof mounts[0].Mode === 'string' && mounts[0].Mode.split(',').includes('ro') &&
     (mounts[0].Propagation === 'rprivate' || mounts[0].Propagation === 'private'),
     'exactly one approved read-only source bind mount; no extra host mounts');
+  // Inspect both declared mount intent and realized Mounts. The latter alone
+  // may not reflect deferred/hidden mount configuration in every engine.
+  requireField(Array.isArray(host.Mounts) && host.Mounts.length === 1 &&
+    isPlainObject(host.Mounts[0]) && host.Mounts[0].Type === 'bind' &&
+    host.Mounts[0].Source === expected.source && host.Mounts[0].Target === '/source' &&
+    host.Mounts[0].ReadOnly === true &&
+    isPlainObject(host.Mounts[0].BindOptions) &&
+    host.Mounts[0].BindOptions.Propagation === 'rprivate',
+    'declared mount must be only the approved read-only private source bind');
   requireField(!host.Binds || (Array.isArray(host.Binds) && host.Binds.length === 0), 'no legacy bind mounts');
   requireField(!host.Devices || (Array.isArray(host.Devices) && host.Devices.length === 0), 'no host devices');
   requireField(!host.DeviceRequests || (Array.isArray(host.DeviceRequests) && host.DeviceRequests.length === 0), 'no GPU or device requests');
@@ -108,6 +118,14 @@ function evaluateContainerConfig(input, expected) {
     'no container sysctl overrides');
   requireField(host.DeviceCgroupRules == null || (Array.isArray(host.DeviceCgroupRules) && host.DeviceCgroupRules.length === 0),
     'no device cgroup bypass rules');
+  requireField(host.GroupAdd == null || (Array.isArray(host.GroupAdd) && host.GroupAdd.length === 0),
+    'no supplemental groups');
+  requireField(['Dns','DnsOptions','DnsSearch','ExtraHosts'].every(key =>
+    host[key] == null || (Array.isArray(host[key]) && host[key].length === 0)),
+    'no host DNS or additional host mappings');
+  requireField(network.Networks == null || (isPlainObject(network.Networks) &&
+    Object.keys(network.Networks).every(key => key === 'none')),
+    'network inspection must not show other attached networks');
   requireField(host.PublishAllPorts === false && isPlainObject(host.PortBindings) &&
     Object.keys(host.PortBindings).length === 0 && (network.Ports == null ||
       (isPlainObject(network.Ports) && Object.keys(network.Ports).length === 0)),
