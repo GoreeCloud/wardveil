@@ -55,6 +55,24 @@ This narrowly scoped GitHub checkout requires normal CI network access to retrie
 5. **Observe-only reporting:** Capture redacted, bounded verdicts (`confirmed`, `needs_validation`, `rejected`), coverage ledger, exact source/target commit, source trace, independent verification, known gaps, elapsed time, agent/model invocation counts, token/cost estimates where available, and safety incidents. A JSON schema-valid report is not a certified vulnerability.
 6. **Acceptance review:** Compare at least one repeat run to a baseline manual/static review. Track false positives and missed coverage, preserve a documented rollback and temporary storage deletion plan, and receive explicit gate review before any repository automation or API integration.
 
+## Proposed first pilot target and source-only baseline (November 7, 2026)
+
+**Candidate:** the authorized public repository [`GoreeCloud/wardveil`](https://github.com/GoreeCloud/wardveil) at `main` commit `41ff4766719e87a3f5399359d0e721cce5df9493`. This is a **candidate selection and read-only baseline**, not authorization to launch target code or an AI-agent audit.
+
+Source-only observations from that revision, for later audit quality comparison:
+
+| Surface | Verified source fact | Audit comparison question |
+| --- | --- | --- |
+| `cmd/wardveil/main.go` | The development service requires a literal loopback IP listener and bounds HTTP timeouts. | Does an agent incorrectly report an internet-exposed listener without deployment evidence? |
+| `internal/httpapi/server.go` | The two API paths use distinct bearer-token hashes; event input has a 4096-byte body limit, JSON field controls and a bounded list query. | Does it trace auth and parsing before asserting a boundary bypass? |
+| `internal/core/event.go` | Typed event identifiers, severity, schema and timestamps are validated. | Are claimed input failures reachable after validation? |
+| `internal/store/store.go` | A local JSONL journal checks private permissions and record bounds. Its directory/file open sequence is path-based in the reviewed default branch. | Does it recognize filesystem substitution and platform ownership assumptions, including the unmerged proposed corrective [PR #19](https://github.com/GoreeCloud/wardveil/pull/19)? |
+| `internal/scan/contracts.go` | The scanner contract carries metadata and advisory verdicts only; it does not read or execute file bytes. | Does it avoid falsely claiming deployed malware scanning or quarantine enforcement? |
+
+**Current assessment:** This limited source-only baseline produced no independently reproduced, confirmed vulnerability. Potential journal filesystem-substitution risks and existing pending patches require controlled validation; do not label any proposed issue as confirmed without an independent source trace and safe fixture result. As additional code is merged, re-pin the target revision rather than silently mixing old and new source evidence.
+
+A targeted static pass also inspected the 22 files in the pinned upstream skill. The two validator CLIs contain read-only file handling and bounded JSON validation; their test suites spawn Node child processes and remove their own generated temporary directories. The published Markdown instructions request OS-enforced sandboxing but **cannot enforce it by themselves**. This does not certify the skill as safe or substitute for complete independent review of execution behavior. No upstream code was executed in this assessment.
+
 ## Integration and release boundaries
 
 The current change does **not** vendor Cloudflare's source, change Wardveil's security-event or scan contract, add background agents, install or execute the skill, fetch third-party dependencies, expose APIs, or publish reports. Upstream's MIT terms apply if its code is subsequently copied or redistributed; preserve author attribution and notices. Wardveil's own repository-license decision remains pending in [PR #23](https://github.com/GoreeCloud/wardveil/pull/23) and must be settled independently.
