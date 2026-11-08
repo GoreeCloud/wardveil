@@ -57,21 +57,10 @@ function requiredOpenFlags() {
 
 function verifySnapshot(root, manifest = FILES) {
   const flags = requiredOpenFlags();
-  // No path component leading to the source root may be a symlink.
-  // A descriptor-backed walk below pins directories against rename/replacement.
   if (!path.isAbsolute(root)) throw new Error('source root must be absolute');
-  let component = path.parse(root).root;
-  for (const part of root.slice(component.length).split(path.sep).filter(Boolean)) {
-    if (part === '.' || part === '..') throw new Error('unsafe source root component');
-    component = path.join(component, part);
-    const stat = fs.lstatSync(component);
-    if (!stat.isDirectory() || stat.isSymbolicLink()) {
-      throw new Error('source path has a symlink or non-directory ancestor');
-    }
-  }
-  const rootStat = fs.lstatSync(root);
-  if (!rootStat.isDirectory() || rootStat.isSymbolicLink()) {
-    throw new Error('source root must be a real directory, not a symlink');
+  const rootParts = root.slice(path.parse(root).root.length).split(path.sep).filter(Boolean);
+  if (rootParts.some(part => part === '.' || part === '..')) {
+    throw new Error('unsafe source root component');
   }
   if (!Number.isInteger(fs.constants.O_DIRECTORY) || !fs.constants.O_DIRECTORY ||
       !fs.existsSync('/proc/self/fd')) {
@@ -155,12 +144,23 @@ function verifySnapshot(root, manifest = FILES) {
       }
     }
   }
-  const rootFd = fs.openSync(root, flags | fs.constants.O_DIRECTORY);
+  // Open every path component relative to the already-open parent directory.
+  // This avoids the check-then-open race of validating ancestors by pathname.
+  let rootFd = fs.openSync(path.parse(root).root, flags | fs.constants.O_DIRECTORY);
   try {
-    const openedRoot = fs.fstatSync(rootFd);
-    if (!openedRoot.isDirectory() || openedRoot.dev !== rootStat.dev ||
-        openedRoot.ino !== rootStat.ino) {
-      throw new Error('source root changed while opening');
+    for (const part of rootParts) {
+      let child;
+      try {
+        child = fs.openSync('/proc/self/fd/' + rootFd + '/' + part,
+          flags | fs.constants.O_DIRECTORY);
+      } catch (err) {
+        if (err.code === 'ELOOP' || err.code === 'ENOTDIR') {
+          throw new Error('source path has a symlink or non-directory ancestor');
+        }
+        throw err;
+      }
+      fs.closeSync(rootFd);
+      rootFd = child;
     }
     walk(rootFd, '');
   } finally { fs.closeSync(rootFd); }
