@@ -1,0 +1,29 @@
+name: Verify pinned Cloudflare audit skill source (no execution)
+on:
+  pull_request:
+    paths:
+      - 'tools/security-audit-pilot/**'
+      - 'docs/security-audit-pilot.md'
+      - '.github/workflows/verify-pinned-audit-skill.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify-upstream-tree:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout reviewed Wardveil integrity tool
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Obtain immutable public Cloudflare source (never execute it)
+        uses: actions/checkout@v7
+        with:
+          repository: cloudflare/security-audit-skill
+          ref: c1c8a8c1471069fb0e188eeaff69b8e8db6564a8
+          path: _audit_skill_reference
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Verify every upstream Git blob without importing or executing code
+        run: node tools/security-audit-pilot/preflight.cjs "$GITHUB_WORKSPACE/_audit_skill_reference"
