@@ -57,9 +57,25 @@ function requiredOpenFlags() {
 
 function verifySnapshot(root, manifest = FILES) {
   const flags = requiredOpenFlags();
+  // No path component leading to the source root may be a symlink.
+  // A descriptor-backed walk below pins directories against rename/replacement.
+  if (!path.isAbsolute(root)) throw new Error('source root must be absolute');
+  let component = path.parse(root).root;
+  for (const part of root.slice(component.length).split(path.sep).filter(Boolean)) {
+    if (part === '.' || part === '..') throw new Error('unsafe source root component');
+    component = path.join(component, part);
+    const stat = fs.lstatSync(component);
+    if (!stat.isDirectory() || stat.isSymbolicLink()) {
+      throw new Error('source path has a symlink or non-directory ancestor');
+    }
+  }
   const rootStat = fs.lstatSync(root);
   if (!rootStat.isDirectory() || rootStat.isSymbolicLink()) {
     throw new Error('source root must be a real directory, not a symlink');
+  }
+  if (!Number.isInteger(fs.constants.O_DIRECTORY) || !fs.constants.O_DIRECTORY ||
+      !fs.existsSync('/proc/self/fd')) {
+    throw new Error('Linux descriptor-backed directory scanning is unavailable');
   }
   const expected = new Map();
   const dirs = new Set();
@@ -76,50 +92,78 @@ function verifySnapshot(root, manifest = FILES) {
   }
   if (!expected.size) throw new Error('empty source manifest');
   const checked = new Set();
-  function walk(dir, rel) {
-    for (const name of fs.readdirSync(dir)) {
+  // Use pinned directory descriptors, not path-based recursive descent. A
+  // renamed directory cannot redirect descendants outside this open tree.
+  function walk(directoryFd, rel) {
+    const directoryRef = '/proc/self/fd/' + directoryFd;
+    const entries = fs.readdirSync(directoryRef).sort();
+    for (const name of entries) {
+      const ref = directoryRef + '/' + name;
       if (rel === '' && name === '.git') {
-        // Git metadata is not needed for immutable file-content verification.
-        const stat = fs.lstatSync(path.join(dir,name));
+        // Git metadata never contributes to the file-content snapshot.
+        const stat = fs.lstatSync(ref);
         if (stat.isSymbolicLink() || !(stat.isDirectory() || stat.isFile())) {
           throw new Error('unsafe git metadata entry');
         }
         continue;
       }
-      const key = rel ? `${rel}/${name}` : name;
-      const target = path.join(dir, name);
-      const st = fs.lstatSync(target);
-      if (st.isSymbolicLink()) throw new Error(`symlink prohibited: ${JSON.stringify(key)}`);
+      const key = rel ? rel + '/' + name : name;
+      const st = fs.lstatSync(ref);
+      if (st.isSymbolicLink()) throw new Error('symlink prohibited: ' + JSON.stringify(key));
       if (st.isDirectory()) {
-        if (!dirs.has(key)) throw new Error(`unexpected directory: ${JSON.stringify(key)}`);
-        walk(target, key);
+        if (!dirs.has(key)) throw new Error('unexpected directory: ' + JSON.stringify(key));
+        const childFd = fs.openSync(ref, flags | fs.constants.O_DIRECTORY);
+        try {
+          const opened = fs.fstatSync(childFd);
+          if (!opened.isDirectory() || opened.dev !== st.dev || opened.ino !== st.ino) {
+            throw new Error('directory changed during check: ' + JSON.stringify(key));
+          }
+          walk(childFd, key);
+        } finally { fs.closeSync(childFd); }
       } else if (st.isFile()) {
         const item = expected.get(key);
-        if (!item) throw new Error(`unexpected file: ${JSON.stringify(key)}`);
-        if (st.size !== item.size) throw new Error(`size mismatch: ${JSON.stringify(key)}`);
-        const fd = fs.openSync(target, flags);
+        if (!item) throw new Error('unexpected file: ' + JSON.stringify(key));
+        if (st.size !== item.size) throw new Error('size mismatch: ' + JSON.stringify(key));
+        const fd = fs.openSync(ref, flags);
         let bytes;
         try {
           const opened = fs.fstatSync(fd);
-          if (!opened.isFile() || opened.size !== item.size) throw new Error(`unsafe or changed file: ${JSON.stringify(key)}`);
-          // Bounded by the checked manifest byte size. Never import/execute it.
+          if (!opened.isFile() || opened.size !== item.size ||
+              opened.dev !== st.dev || opened.ino !== st.ino) {
+            throw new Error('unsafe or changed file: ' + JSON.stringify(key));
+          }
+          // Reads only the listed, byte-bounded source files. Never execute them.
           bytes = Buffer.alloc(item.size);
           let offset = 0;
           while (offset < bytes.length) {
             const n = fs.readSync(fd, bytes, offset, bytes.length - offset, null);
-            if (n === 0) throw new Error(`short read: ${JSON.stringify(key)}`);
+            if (n === 0) throw new Error('short read: ' + JSON.stringify(key));
             offset += n;
           }
-          if (fs.fstatSync(fd).size !== item.size) throw new Error(`file size changed: ${JSON.stringify(key)}`);
+          const after = fs.fstatSync(fd);
+          if (after.size !== item.size || after.mtimeMs !== opened.mtimeMs ||
+              after.ctimeMs !== opened.ctimeMs) {
+            throw new Error('file changed during check: ' + JSON.stringify(key));
+          }
         } finally { fs.closeSync(fd); }
-        if (gitBlobID(bytes) !== item.oid) throw new Error(`content hash mismatch: ${JSON.stringify(key)}`);
+        if (gitBlobID(bytes) !== item.oid) {
+          throw new Error('content hash mismatch: ' + JSON.stringify(key));
+        }
         checked.add(key);
       } else {
-        throw new Error(`nonregular entry: ${JSON.stringify(key)}`);
+        throw new Error('nonregular entry: ' + JSON.stringify(key));
       }
     }
   }
-  walk(root, '');
+  const rootFd = fs.openSync(root, flags | fs.constants.O_DIRECTORY);
+  try {
+    const openedRoot = fs.fstatSync(rootFd);
+    if (!openedRoot.isDirectory() || openedRoot.dev !== rootStat.dev ||
+        openedRoot.ino !== rootStat.ino) {
+      throw new Error('source root changed while opening');
+    }
+    walk(rootFd, '');
+  } finally { fs.closeSync(rootFd); }
   for (const name of expected.keys()) {
     if (!checked.has(name)) throw new Error(`missing file: ${JSON.stringify(name)}`);
   }
