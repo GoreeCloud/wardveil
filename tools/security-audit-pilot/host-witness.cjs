@@ -118,10 +118,32 @@ function safeHostWitness(inspect, observed, expected) {
   for (const ns of NS_TYPES) {
     const h=observed.hostNamespaces && observed.hostNamespaces[ns];
     const c=observed.containerNamespaces && observed.containerNamespaces[ns];
+    const hEnd=observed.hostNamespacesAfter && observed.hostNamespacesAfter[ns];
+    const cEnd=observed.containerNamespacesAfter && observed.containerNamespacesAfter[ns];
     check(isNamespaceRef(h,ns) && isNamespaceRef(c,ns) && h !== c,
       ns + ' namespace must be distinct from host PID1');
+    check(isNamespaceRef(hEnd,ns) && isNamespaceRef(cEnd,ns) &&
+      hEnd === h && cEnd === c,
+      ns + ' namespace identities must remain stable through capture');
   }
   const status=observed.status || '';
+  const statusAfter=typeof observed.statusAfter==='string' ? observed.statusAfter : '';
+  // Compare security-bearing fields, not volatile memory and scheduling
+  // counters in /proc/<pid>/status. Missing/duplicate fields fail closed.
+  const securityFields=['Pid','NSpid','Uid','Gid','Groups','TracerPid',
+    'NoNewPrivs','Seccomp','Seccomp_filters','CapInh','CapPrm','CapEff','CapBnd','CapAmb'];
+  for (const key of securityFields) {
+    const initial=getField(status,key);
+    check(initial !== null && initial === getField(statusAfter,key),
+      key + ' process status must remain stable through capture');
+  }
+  for (const key of ['uidMap','gidMap','mountinfo','apparmor','memory','swap','cpu','pids']) {
+    check(typeof observed[key]==='string' && typeof observed[key+'After']==='string' &&
+      observed[key]===observed[key+'After'],
+      key + ' host observation must remain unchanged through capture');
+  }
+  check(checkNetwork(observed.networkAfter||''),
+    'network must remain loopback-only at conclusion');
   // Inspect the kernel's own process IDs, not only the daemon-supplied PID.
   const kernelPid=getField(status,'Pid');
   const nsPid=getField(status,'NSpid');
@@ -232,6 +254,22 @@ function captureFromHost(inspect, expected) {
     pids:readCg('pids.max'),
   };
   witness.cgroupAfter=readBounded(proc+'/cgroup');
+  witness.hostNamespacesAfter={};
+  witness.containerNamespacesAfter={};
+  for(const ns of NS_TYPES){
+    witness.hostNamespacesAfter[ns]=fs.readlinkSync('/proc/1/ns/'+ns);
+    witness.containerNamespacesAfter[ns]=fs.readlinkSync(proc+'/ns/'+ns);
+  }
+  witness.statusAfter=readBounded(proc+'/status');
+  witness.uidMapAfter=readBounded(proc+'/uid_map');
+  witness.gidMapAfter=readBounded(proc+'/gid_map');
+  witness.mountinfoAfter=readBounded(proc+'/mountinfo');
+  witness.networkAfter=readBounded(proc+'/net/dev');
+  witness.apparmorAfter=readBounded(proc+'/attr/current');
+  witness.memoryAfter=readCg('memory.max');
+  witness.swapAfter=readCg('memory.swap.max');
+  witness.cpuAfter=readCg('cpu.max');
+  witness.pidsAfter=readCg('pids.max');
   witness.exeAfter=fs.readlinkSync(proc+'/exe');
   witness.cmdlineAfter=readBounded(proc+'/cmdline');
   witness.probeSha256After='sha256:'+crypto.createHash('sha256')
