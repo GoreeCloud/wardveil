@@ -82,6 +82,9 @@ bad('AppArmor disabled',r=>{r.apparmor='unconfined';});
 bad('AppArmor complain mode',r=>{r.apparmor='docker-default (complain)';});
 bad('extra environment secret',(r,e)=>{e.ACCESS_TOKEN='synthetic';});
 bad('host home',(r,e)=>{e.HOME='/home/user';});
+test('CLI rejects unsupported or unbounded witness windows',()=>{
+  assert.equal(main(['--witness-window=3600']),2);
+});
 test('CLI rejects any command-line arguments',()=>{
   assert.equal(main(['--config','unsafe']),2);
 });
