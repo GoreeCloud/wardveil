@@ -18,6 +18,10 @@ const EXPECTED_ENVS = Object.freeze({
   LANG: 'C.UTF-8',
 });
 const SAFE_SOURCE_PREFIX = '/srv/wardveil-audit-pilot/source/';
+// Only the reviewed first-party self-probe may run on the container's first start.
+// Matching these paths does NOT prove the image bytes or probe integrity.
+const EXPECTED_ENTRYPOINT = '/usr/bin/node';
+const EXPECTED_COMMAND = '/opt/wardveil/runtime-probe.cjs';
 
 function isPlainObject(obj) {
   return obj !== null && typeof obj === 'object' && !Array.isArray(obj) &&
@@ -50,7 +54,11 @@ function evaluateContainerConfig(input, expected) {
   const network = isPlainObject(doc.NetworkSettings) ? doc.NetworkSettings : {};
   const mounts = doc.Mounts;
 
-  requireField(state.Running === false && state.Status === 'created', 'container must exist in created, never-started state');
+  requireField(state.Running === false && state.Status === 'created' &&
+    state.Pid === 0 && state.Restarting === false && state.Paused === false &&
+    state.Dead === false && doc.RestartCount === 0 &&
+    (doc.ExecIDs == null || (Array.isArray(doc.ExecIDs) && doc.ExecIDs.length === 0)),
+    'container must be created, never started, and have no executing or restarted process');
   requireField(host.NetworkMode === 'none', 'external networking must be disabled at runtime configuration');
   requireField(host.Privileged === false && host.ReadonlyRootfs === true, 'root filesystem must be read-only and container unprivileged');
   requireField(Array.isArray(host.CapDrop) && host.CapDrop.map(v => String(v).toUpperCase()).includes('ALL') &&
@@ -74,7 +82,24 @@ function evaluateContainerConfig(input, expected) {
   requireField(finiteIntegerIn(host.MemorySwap,host.Memory,host.Memory), 'swap cannot exceed memory limit');
   requireField(finiteIntegerIn(host.NanoCpus,1,MAX_NANOCPUS), 'CPU budget must not exceed 1 CPU');
   requireField(host.OomKillDisable !== true, 'OOM killer must remain enabled');
+  requireField(host.Init === false && (host.Runtime === '' || host.Runtime === 'runc') &&
+    (host.Isolation === '' || host.Isolation === 'default') &&
+    (host.CgroupParent == null || host.CgroupParent === '') &&
+    (host.Ulimits == null || (Array.isArray(host.Ulimits) && host.Ulimits.length === 0)),
+    'no init wrapper, custom runtime, cgroup parent, or ulimit overrides');
   requireField(config.Image === expected.image, 'container image digest must equal approved digest');
+  requireField(Array.isArray(config.Entrypoint) &&
+    config.Entrypoint.length === 1 && config.Entrypoint[0] === EXPECTED_ENTRYPOINT &&
+    Array.isArray(config.Cmd) && config.Cmd.length === 1 &&
+    config.Cmd[0] === EXPECTED_COMMAND &&
+    doc.Path === EXPECTED_ENTRYPOINT && Array.isArray(doc.Args) &&
+    doc.Args.length === 1 && doc.Args[0] === EXPECTED_COMMAND,
+    'first start may run only the reviewed first-party kernel self-probe');
+  requireField(config.Tty === false && config.OpenStdin === false &&
+    config.StdinOnce === false && config.AttachStdin === false,
+    'interactive terminal or inherited stdin is not allowed');
+  requireField(typeof doc.Image === 'string' && /^sha256:[a-f0-9]{64}$/.test(doc.Image),
+    'resolved image ID must be an explicit sha256 digest');
   requireField(config.WorkingDir === '/scratch', 'working directory must be scratch');
   requireField(Array.isArray(config.Env) && config.Env.length === Object.keys(EXPECTED_ENVS).length &&
     config.Env.every(x => typeof x === 'string' && /^(HOME|TMPDIR|PATH|LANG)=/.test(x)) &&
@@ -188,4 +213,4 @@ function main(args) {
   }
 }
 if(require.main===module) process.exitCode=main(process.argv.slice(2));
-module.exports={MAX_BYTES,EXPECTED_ENVS,SAFE_SOURCE_PREFIX,validExpected,evaluateContainerConfig,tmpfsSafe,readInspectFile,main};
+module.exports={MAX_BYTES,EXPECTED_ENVS,SAFE_SOURCE_PREFIX,EXPECTED_ENTRYPOINT,EXPECTED_COMMAND,validExpected,evaluateContainerConfig,tmpfsSafe,readInspectFile,main};
