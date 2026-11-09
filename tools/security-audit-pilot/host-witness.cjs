@@ -75,7 +75,7 @@ function safeSnapshot(inspect, expected) {
     Restarting:false,Paused:false,Dead:false}, RestartCount:doc.RestartCount};
   let policy;
   try { policy = evaluateContainerConfig([configView],
-    {image:expected.image,source:expected.source}); }
+    {image:expected.image,imageId:expected.imageId,source:expected.source}); }
   catch { policy = {ok:false,errors:['invalid expected image or source']}; }
   check(policy.ok, 'active container config differs from restrictive pre-start policy');
   return {ok:e.length===0,errors:e,pid};
@@ -190,16 +190,16 @@ function captureFromHost(inspect, expected) {
 }
 function main(argv) {
   if(argv.length===1 && argv[0]==='--help'){
-    process.stdout.write('Read-only host witness: node host-witness.cjs /absolute/inspect.json --id <64hex> --image <name>@sha256:<64hex> --source /srv/wardveil-audit-pilot/source/<name>\n');
+    process.stdout.write('Read-only host witness: node host-witness.cjs /absolute/inspect.json --id <64hex> --image <name>@sha256:<64hex> --image-id sha256:<64hex> --source /srv/wardveil-audit-pilot/source/<name>\n');
     return 0;
   }
-  if(argv.length!==7 || !path.isAbsolute(argv[0]) || argv[1]!=='--id' ||
-     argv[3]!=='--image' || argv[5]!=='--source') {
-    process.stderr.write('BLOCKED: explicit inspect file, container ID, pinned image and source are required\n');
+  if(argv.length!==9 || !path.isAbsolute(argv[0]) || argv[1]!=='--id' ||
+     argv[3]!=='--image' || argv[5]!=='--image-id' || argv[7]!=='--source') {
+    process.stderr.write('BLOCKED: inspect file, container ID, pinned image, approved local image ID and source are required\n');
     return 2;
   }
   try {
-    const expected={id:argv[2],image:argv[4],source:argv[6]};
+    const expected={id:argv[2],image:argv[4],imageId:argv[6],source:argv[8]};
     const inspect=readInspectFile(argv[0]);
     const observed=captureFromHost(inspect,expected);
     const verdict=safeHostWitness(inspect,observed,expected);
