@@ -67,9 +67,9 @@ function evaluateContainerConfig(input, expected) {
   requireField(host.Privileged === false && host.ReadonlyRootfs === true, 'root filesystem must be read-only and container unprivileged');
   requireField(Array.isArray(host.CapDrop) && host.CapDrop.map(v => String(v).toUpperCase()).includes('ALL') &&
     Array.isArray(host.CapAdd) && host.CapAdd.length === 0, 'all Linux capabilities must be dropped; no additions');
-  requireField(Array.isArray(host.SecurityOpt) && host.SecurityOpt.includes('no-new-privileges:true') &&
-    !host.SecurityOpt.some(o => typeof o !== 'string' || /unconfined|apparmor=|seccomp=/i.test(o)),
-    'require no-new-privileges and refuse overridden/unconfined security profiles');
+  requireField(Array.isArray(host.SecurityOpt) && host.SecurityOpt.length === 1 &&
+    host.SecurityOpt[0] === 'no-new-privileges:true',
+    'require exact no-new-privileges security option; prohibit all other overrides');
   requireField(typeof doc.AppArmorProfile === 'string' && doc.AppArmorProfile !== '' &&
     doc.AppArmorProfile !== 'unconfined', 'require active non-unconfined AppArmor profile');
   requireField(host.PidMode === '' || host.PidMode === 'private', 'PID namespace must be private');
