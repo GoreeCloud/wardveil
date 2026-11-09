@@ -145,6 +145,8 @@ function evaluate(records, env) {
   const uids = ids(uid), gids = ids(gid);
   demand(uids.length === 4 && uids.every(x => x > 0 && x === uids[0]), 'process UID must be an explicit non-root unchanging ID');
   demand(gids.length === 4 && gids.every(x => x > 0 && x === gids[0]), 'process GID must be an explicit non-root unchanging ID');
+  demand(getField(status, 'TracerPid') === '0', 'probe must not be traced or ptrace-supervised');
+  demand(getField(status, 'Groups') === '', 'probe must not have supplementary groups');
   demand(getField(status, 'NoNewPrivs') === '1', 'no-new-privileges must be enforced');
   demand(getField(status, 'Seccomp') === '2', 'process must have a kernel seccomp filter');
   demand(/^\d+$/.test(getField(status, 'Seccomp_filters') || '') &&
