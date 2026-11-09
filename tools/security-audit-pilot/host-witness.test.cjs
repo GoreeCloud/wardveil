@@ -65,6 +65,13 @@ function observed() {
     pids:'24',swap:'0',cpu:'50000 100000',
   };
 }
+test('missing or malformed approved metadata fails closed without an exception',()=>{
+  for(const value of [null,undefined,[],{},'invalid']) {
+    const result=safeHostWitness(inspect(),observed(),value);
+    assert.equal(result.ok,false);
+    assert.ok(result.errors.length>0);
+  }
+});
 test('matching host and Docker metadata returns evidence match, not audit authorization',()=>{
   const result=safeHostWitness(inspect(), observed(), expected);
   assert.equal(result.ok,true,result.errors.join('; '));
