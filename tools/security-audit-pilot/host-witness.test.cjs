@@ -6,7 +6,8 @@ const id = 'a'.repeat(64);
 const image = 'wardveil-audit@sha256:'+'b'.repeat(64);
 const source = '/srv/wardveil-audit-pilot/source/public-fixture';
 const imageId='sha256:'+'c'.repeat(64);
-const expected = {id,image,imageId,source};
+const probeSha256='sha256:'+'1'.repeat(64);
+const expected = {id,image,imageId,probeSha256,source};
 const entry = '/usr/bin/node';
 const cmd = '/opt/wardveil/runtime-probe.cjs';
 const witnessArg = '--witness-window=90';
@@ -42,7 +43,7 @@ function observed() {
   ns.forEach((type,i)=>{hostNamespaces[type]=type+':['+(100+i)+']';
     containerNamespaces[type]=type+':['+(200+i)+']';});
   return {
-    pid:34567,startBefore:'123456',startAfter:'123456',comm:'node',exe:entry,
+    pid:34567,startBefore:'123456',startAfter:'123456',comm:'node',exe:entry,probeSha256,
     cmdline:[entry,cmd,witnessArg,''].join('\0'),
     hostNamespaces,containerNamespaces,
     cgroup:'0::/system.slice/docker-'+id+'.scope',
@@ -83,6 +84,9 @@ reject('different startup command',(d)=>{d[0].Config.Cmd=['/tmp/untrusted.cjs'];
 reject('well-formed wrong local image ID',(d)=>{d[0].Image='sha256:'+'d'.repeat(64);});
 reject('host expected image ID missing',(d,w,e)=>{delete e.imageId;});
 reject('host expected image ID disagrees',(d,w,e)=>{e.imageId='sha256:'+'e'.repeat(64);});
+reject('unapproved but well-formed probe hash',(d,w,e)=>{e.probeSha256='sha256:'+'2'.repeat(64);});
+reject('missing reviewed probe hash',(d,w,e)=>{delete e.probeSha256;});
+reject('host-viewed probe file differs',(d,w)=>{w.probeSha256='sha256:'+'2'.repeat(64);});
 reject('unapproved witness duration',(d)=>{d[0].Args[1]='--witness-window=3600';});
 reject('same host user namespace',(d,w)=>{w.containerNamespaces.user=w.hostNamespaces.user;});
 reject('same host network namespace',(d,w)=>{w.containerNamespaces.net=w.hostNamespaces.net;});
