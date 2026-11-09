@@ -199,6 +199,23 @@ jobs:
             [[ "$(sudo readlink "/proc/$hostpid/ns/$ns")" != "$(sudo readlink "/proc/1/ns/$ns")" ]] ||
               { echo "BLOCKED: host and probe $ns namespace were identical"; exit 1; }
           done
+          # Read-only corroboration: distinguish Moby's primary GID
+          # duplicated in OCI AdditionalGids from genuinely unrelated groups.
+          # Never print numeric identities or raw /proc status in public CI.
+          primary_gid="$(sudo awk '$1=="Gid:" {print $2}' "/proc/$hostpid/status")"
+          supplementary="$(sudo awk '$1=="Groups:" {for (i=2;i<=NF;i++) printf "%s%s", (i==2?"":" "), $i}' "/proc/$hostpid/status")"
+          declared="$(sudo docker --host "$socket" inspect -f '{{json .HostConfig.GroupAdd}}' "$container")"
+          if [[ "$declared" != "null" && "$declared" != "[]" ]]; then
+            echo 'BLOCKED: unexpected Docker GroupAdd configuration'
+            exit 1
+          fi
+          if [[ -z "$supplementary" ]]; then
+            echo 'HOST GROUP EVIDENCE: no supplementary GIDs'
+          elif [[ "$supplementary" == "$primary_gid" ]]; then
+            echo 'HOST GROUP EVIDENCE: primary GID also assigned as supplementary (strict zero-group policy still fails)'
+          else
+            echo 'HOST GROUP EVIDENCE: nonempty supplementary GID list differs from primary GID (strict policy fails)'
+          fi
           hostmap="$(sudo cat "/proc/$hostpid/uid_map")"
           outside="$(awk 'NR==1 {print $2}' <<< "$hostmap")"
           [[ "$outside" =~ ^[1-9][0-9]*$ ]] || { echo 'BLOCKED: UID 0 maps to host root'; exit 1; }
