@@ -88,6 +88,9 @@ function checkMounts(text) {
     ['/etc/resolv.conf', {required:['ro']}],
   ]);
   if (mounts.some(m => {
+    // Shared/slave mounts can receive propagation from a separate namespace.
+    // Nothing under this evidence-only audit profile should propagate mounts.
+    if (m.optional.some(x => /^(shared|master|propagate_from):/.test(x))) return true;
     if (m.mount.includes('\\') || !m.mount.startsWith('/')) return true;
     if (expected.includes(m.mount)) return false;
     const rule = systemMounts.get(m.mount);
