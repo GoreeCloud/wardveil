@@ -83,9 +83,11 @@ jobs:
           func main(){
             if os.Geteuid()!=65534 || os.Getegid()!=65534 { fail("process identity") }
             status:=read("/proc/self/status")
-            if field(status,"NoNewPrivs")!="1" || field(status,"Seccomp")!="2" ||
-              field(status,"TracerPid")!="0" || field(status,"Groups")!="" ||
-              field(status,"CapEff")!="0000000000000000" { fail("kernel privilege flags") }
+            if field(status,"NoNewPrivs")!="1" { fail("no_new_privs not enforced") }
+            if field(status,"Seccomp")!="2" { fail("seccomp not filtering") }
+            if field(status,"TracerPid")!="0" { fail("ptrace tracer present or evidence missing") }
+            if field(status,"Groups")!="" { fail("supplementary group membership") }
+            if field(status,"CapEff")!="0000000000000000" { fail("effective capabilities nonzero") }
             if field(status,"Seccomp_filters")=="0" || field(status,"Seccomp_filters")=="<missing>" { fail("seccomp filter count") }
             uid:=strings.Fields(read("/proc/self/uid_map"))
             gid:=strings.Fields(read("/proc/self/gid_map"))
