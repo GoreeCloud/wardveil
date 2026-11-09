@@ -20,7 +20,6 @@ const PLAIN=(v)=>v!==null && typeof v==='object' && !Array.isArray(v) &&
   (Object.getPrototypeOf(v)===Object.prototype || Object.getPrototypeOf(v)===null);
 const EMPTY=(v)=>v===undefined || (PLAIN(v)&&Object.keys(v).length===0);
 const EMPTY_ARRAY=(v)=>v===undefined || (Array.isArray(v)&&v.length===0);
-const NONNEG=(v)=>Number.isSafeInteger(v)&&v>=0;
 const POS=(v)=>Number.isSafeInteger(v)&&v>0;
 const keysOnly=(obj,names)=>PLAIN(obj)&&Object.keys(obj).every(k=>names.includes(k));
 function optionsMatch(actual,required){
@@ -95,6 +94,9 @@ function evaluateOciBundle(spec){
   const identity=evaluateOciIdentity(spec);
   if(!identity.ok) errors.push(...identity.errors.map(x=>'identity: '+x));
   if(!PLAIN(spec)) return {ok:false,errors};
+  demand(keysOnly(spec,[
+    'ociVersion','process','root','mounts','linux','hostname','hooks','annotations',
+  ]),'unexpected top-level OCI extension prohibited');
   const linux=PLAIN(spec.linux)?spec.linux:{};
   const root=PLAIN(spec.root)?spec.root:{};
   // The only supported root is an unambiguous directory inside the bundle.
