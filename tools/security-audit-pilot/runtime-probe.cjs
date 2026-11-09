@@ -195,8 +195,11 @@ function main(argv) {
     process.stdout.write('Read-only Linux kernel self-probe for a separate disposable audit container; usage: node runtime-probe.cjs\n');
     return 0;
   }
-  if (argv.length!==0) {
-    process.stderr.write('BLOCKED: this probe accepts no files, paths, or external commands\n');
+  // Optional finite witness window holds ONLY this first-party self-probe,
+  // never starts an agent, and does not write a handshake or spawn subprocesses.
+  const witnessWindow = argv.length === 1 && argv[0] === '--witness-window=90';
+  if (argv.length !== 0 && !witnessWindow) {
+    process.stderr.write('BLOCKED: only the exact 90-second host witness window is accepted; no files or commands\n');
     return 2;
   }
   try {
@@ -212,5 +215,14 @@ function main(argv) {
     return 1;
   }
 }
-if (require.main===module) process.exitCode = main(process.argv.slice(2));
+if (require.main===module) {
+  const args=process.argv.slice(2);
+  const result=main(args);
+  process.exitCode=result;
+  if (result === 0 && args.length === 1 && args[0] === '--witness-window=90') {
+    // A host witness can observe this already-validated, non-target process.
+    // Expiry is a failure, not an implicit approval. Node holds only a timer.
+    setTimeout(() => { process.exitCode=1; }, 90_000);
+  }
+}
 module.exports = {INPUTS,EXPLICIT_ENV,getField,parseMap,mappedWithoutHostRoot,parseMounts,checkMounts,checkNetwork,checkQuota,checkEnv,evaluate,readBounded,capture,main};
