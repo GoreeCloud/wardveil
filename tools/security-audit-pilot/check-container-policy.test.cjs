@@ -10,11 +10,12 @@ const image='wardveil-audit@sha256:'+'a'.repeat(64);
 const source='/srv/wardveil-audit-pilot/source/test-target';
 const expected={image,source};
 function good(){return {
-  State:{Status:'created',Running:false},AppArmorProfile:'docker-default',
-  Config:{User:'65534:65534',Image:image,WorkingDir:'/scratch',Env:['HOME=/scratch/home','TMPDIR=/tmp','PATH=/usr/local/bin:/usr/bin:/bin','LANG=C.UTF-8']},
+  State:{Status:'created',Running:false,Pid:0,Restarting:false,Paused:false,Dead:false},
+  RestartCount:0,ExecIDs:[],Path:'/usr/bin/node',Args:['/opt/wardveil/runtime-probe.cjs'],Image:'sha256:'+'c'.repeat(64),AppArmorProfile:'docker-default',
+  Config:{User:'65534:65534',Image:image,WorkingDir:'/scratch',Entrypoint:['/usr/bin/node'],Cmd:['/opt/wardveil/runtime-probe.cjs'],Tty:false,OpenStdin:false,StdinOnce:false,AttachStdin:false,Env:['HOME=/scratch/home','TMPDIR=/tmp','PATH=/usr/local/bin:/usr/bin:/bin','LANG=C.UTF-8']},
   HostConfig:{NetworkMode:'none',Privileged:false,ReadonlyRootfs:true,CapDrop:['ALL'],CapAdd:[],SecurityOpt:['no-new-privileges:true'],
     PidMode:'',IpcMode:'private',CgroupnsMode:'private',UsernsMode:'',PidsLimit:24,Memory:256*1024*1024,MemorySwap:256*1024*1024,NanoCpus:500000000,
-    OomKillDisable:false,Tmpfs:{'/scratch':'rw,nosuid,nodev,noexec,size=67108864','/tmp':'rw,nosuid,nodev,noexec,size=33554432'},
+    OomKillDisable:false,Init:false,Runtime:'runc',Isolation:'default',CgroupParent:'',Ulimits:[],Tmpfs:{'/scratch':'rw,nosuid,nodev,noexec,size=67108864','/tmp':'rw,nosuid,nodev,noexec,size=33554432'},
     Mounts:[{Type:'bind',Source:source,Target:'/source',ReadOnly:true,BindOptions:{Propagation:'rprivate'}}],
     UTSMode:'',Binds:[],Devices:[],DeviceRequests:[],VolumesFrom:[],Links:[],PublishAllPorts:false,PortBindings:{},
     LogConfig:{Type:'none'},RestartPolicy:{Name:'no'}},
@@ -26,6 +27,21 @@ test('a restrictive created-container inspection matches static policy',()=>{con
 test('single-element docker inspect array supported',()=>assert.equal(evaluateContainerConfig([good()],expected).ok,true));
 test('no false approval for malformed input',()=>{for(const value of [[],[good(),good()],null,{},'bad'])assert.equal(evaluateContainerConfig(value,expected).ok,false);});
 invalid('already running container',obj=>{obj.State.Status='running';obj.State.Running=true;});
+invalid('nonzero container PID',obj=>{obj.State.Pid=444;});
+invalid('already restarted container',obj=>{obj.RestartCount=1;});
+invalid('pending exec processes',obj=>{obj.ExecIDs=['unsafe-exec'];});
+invalid('unexpected container entrypoint',obj=>{obj.Config.Entrypoint=['/bin/sh'];});
+invalid('shell startup command',obj=>{obj.Config.Cmd=['-c','rm -rf /scratch'];});
+invalid('mismatched resolved process path',obj=>{obj.Path='/bin/sh';});
+invalid('mismatched resolved process arguments',obj=>{obj.Args=['/tmp/other.cjs'];});
+invalid('container with a TTY',obj=>{obj.Config.Tty=true;});
+invalid('interactive stdin',obj=>{obj.Config.OpenStdin=true;});
+invalid('host container init wrapper',obj=>{obj.HostConfig.Init=true;});
+invalid('custom container runtime',obj=>{obj.HostConfig.Runtime='custom-runc';});
+invalid('host cgroup parent',obj=>{obj.HostConfig.CgroupParent='/system.slice/important';});
+invalid('host ulimit override',obj=>{obj.HostConfig.Ulimits=[{Name:'nofile',Soft:1000000,Hard:1000000}];});
+invalid('unresolved image ID',obj=>{obj.Image='unknown';});
+
 invalid('external network',obj=>{obj.HostConfig.NetworkMode='bridge';});
 invalid('privileged container',obj=>{obj.HostConfig.Privileged=true;});
 invalid('writable root filesystem',obj=>{obj.HostConfig.ReadonlyRootfs=false;});
