@@ -16,7 +16,7 @@ const SOURCES = Object.freeze({
 });
 const FORBIDDEN = Object.freeze([
   /\b(?:eval|Function)\s*\(/,
-  /\b(?:exec|execFile|execSync|execFileSync|spawn|spawnSync|fork)\s*\(/,
+  /(?<!\.)\bexec\s*\(|\b(?:execFile|execSync|execFileSync|spawn|spawnSync|fork)\s*\(/,
   /\b(?:writeFile|writeFileSync|appendFile|appendFileSync|createWriteStream|rm|rmSync|rmdir|rmdirSync|unlink|unlinkSync|rename|renameSync|mkdir|mkdirSync|chmod|chmodSync|chown|chownSync)\s*\(/,
   /\b(?:fetch|XMLHttpRequest|WebSocket)\s*\(/,
   /\b(?:setInterval|setImmediate)\s*\(/,
@@ -50,9 +50,11 @@ for (const [name,allow] of Object.entries(SOURCES)) {
 test('tripwire rejects unreviewed import and direct system/network APIs',()=>{
   const good="const fs=require('node:fs');\n";
   assert.equal(checkReadOnlySource(good,['node:fs']),true);
+  assert.equal(checkReadOnlySource(good+"const m=/x/.exec('x');",['node:fs']),true);
   for (const bad of [
     good+"const cp=require('node:child_process');",
     good+"spawnSync('sh',['-c','exit 0']);",
+    good+"exec('sh');",
     good+"fs.writeFileSync('/tmp/x','data');",
     good+"fetch('https://example.invalid');",
     good+"eval('2+2');",
