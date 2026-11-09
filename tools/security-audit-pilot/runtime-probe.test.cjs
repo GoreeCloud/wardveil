@@ -57,6 +57,9 @@ for(const cap of ['CapInh','CapPrm','CapEff','CapBnd','CapAmb']) bad(cap+' effec
 });
 bad('writable root filesystem',r=>{r.mountinfo=r.mountinfo.replace('/ ro,relatime','/ rw,relatime');});
 bad('writable source',r=>{r.mountinfo=r.mountinfo.replace('/source ro,relatime','/source rw,relatime');});
+bad('shared source mount propagation',r=>{r.mountinfo=r.mountinfo.replace('/source ro,relatime - ','/source ro,relatime shared:14 - ');});
+bad('slave scratch mount propagation',r=>{r.mountinfo=r.mountinfo.replace('/scratch rw,nosuid,nodev,noexec,relatime - ','/scratch rw,nosuid,nodev,noexec,relatime master:12 - ');});
+bad('shared system proc propagation',r=>{r.mountinfo=r.mountinfo.replace('/proc rw,nosuid,nodev,noexec - ','/proc rw,nosuid,nodev,noexec shared:7 - ');});
 bad('missing scratch noexec',r=>{r.mountinfo=r.mountinfo.replace('/scratch rw,nosuid,nodev,noexec,relatime','/scratch rw,nosuid,nodev,relatime');});
 bad('source submount',r=>{r.mountinfo+='\n'+mount(6,'/source/host-private','rw,relatime','ext4','/dev/sdc');});
 bad('unapproved host bind at unrelated mountpoint',r=>{r.mountinfo+='\n'+mount(6,'/host','ro,relatime','ext4','/dev/sda','ro');});
