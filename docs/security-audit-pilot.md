@@ -3,8 +3,8 @@
 | Field | Value |
 | --- | --- |
 | Owner | GoreeCloud / Wardveil |
-| Date | November 7, 2026 |
-| Status | **Source-integrity gate implemented and locally tested; agent execution and integration NOT approved or performed** |
+| Date | November 8, 2026 (follow-up engineering review; original pilot research November 7) |
+| Status | **Four first-party verification gates implemented on draft PR only; actual disposable-host acceptance, upstream execution, integration and deployment NOT approved or performed** |
 | Candidate upstream | [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill) |
 | Reviewed source revision | [`c1c8a8c1471069fb0e188eeaff69b8e8db6564a8`](https://github.com/cloudflare/security-audit-skill/commit/c1c8a8c1471069fb0e188eeaff69b8e8db6564a8) (`main` as checked November 7, 2026) |
 | License / author | MIT; Cloudflare, Inc. Copyright notice belongs to upstream |
@@ -64,7 +64,7 @@ node tools/security-audit-pilot/check-container-policy.cjs \
 
 The checker **does not** independently establish that the inspection file comes from the actual Docker engine or that the image bytes match its claimed digest. The latest checker additionally restricts the first-start process to a finite first-party host-witness probe. It also cannot prove external network blocking or filesystem isolation under real execution. An operator must independently verify a rootless daemon or effective user-namespace remapping, active kernel seccomp/LSM enforcement, protected snapshot ownership, mounted source permissions (including recursive submounts on older kernels), network isolation, runtime resource controls, and a trusted execution path on a disposable nonproduction host before any audit execution. A Docker `HostConfig.UsernsMode` value of an empty string means "use daemon policy"—**not** automatically "private"; Docker documents `host` as the only explicit `--userns` override. See [Docker run user namespaces](https://docs.docker.com/reference/cli/docker/container/run/#disable-namespace-remapping-for-a-container---userns) and [Docker userns-remap](https://docs.docker.com/engine/security/userns-remap/).
 
-**Test evidence:** 49 locally passing synthetic policy tests, including rejection of host mounts, secrets in environment, root users, host namespaces, extra volumes, privileged execution, no limits, and malformed or non-regular input. The tests do not provision, inspect, start, or validate a real Docker container. Combined with 15 source-integrity tests, 64 local tests pass at the development checkpoint. GitHub CI on the updated PR must be read back separately before reporting a hosted pass.
+**Test evidence:** 66 first-party synthetic policy tests, including rejection of host mounts, secrets in environment, root users, host namespaces, extra volumes, privileged execution, no limits, and malformed or non-regular input. The tests do not provision, inspect, start, or validate a real Docker container. The current four-suite test inventory is 15 source-integrity + 66 static container-policy + 49 kernel-probe + 33 host-witness = **163 synthetic/unit tests**, pending exact-head CI after the documentation update. GitHub CI on the updated PR must be read back separately before reporting a hosted pass.
 
 ## Linux kernel self-probe (implemented; independent host verification still required)
 
@@ -80,7 +80,7 @@ node tools/security-audit-pilot/runtime-probe.cjs
 
 A success message says **`KERNEL SELF-PROBE MATCH ONLY`**, not "runtime isolation certified". This probe is not a complete audit sandbox: it does **not** authenticate the container engine, its image or mount source, host network namespace identities, host-side ACLs, seccomp *filter contents*, AppArmor policy strength, egress controls on other pathways, `/etc/hosts` and other noncritical mount contents, or provenance and trustworthiness of its own execution. Filesystem limits and cgroup controls must be independently cross-checked from the **host side** in the designated disposable environment. It also requires cgroup v2 and an enforcing AppArmor LSM; unsupported Linux variants are **blocked**, not silently accepted. A static Docker configuration match plus a passing self-probe is **still insufficient by itself** to authorize agent execution.
 
-The first-party synthetic test suite `runtime-probe.test.cjs` contains **39 passing unit tests**, including rejection of host-root mappings, writable source/submounts, disabled or missing seccomp/no-new-privileges, capabilities, non-loopback interfaces, unbounded cgroups, unenforced AppArmor, and extra environment variables. At the local development checkpoint, **103/103 combined Node tests passed** (15 integrity + 49 static policy + 39 kernel probe). A deliberate read-only invocation in the assistant's ordinary container **returned BLOCKED**, appropriately demonstrating that an arbitrary development environment cannot satisfy this restrictive profile. No actual target audit container was provisioned or started.
+The first-party synthetic test suite `runtime-probe.test.cjs` contains **49 passing unit tests**, including rejection of host-root mappings, writable source/submounts, disabled or missing seccomp/no-new-privileges, capabilities, non-loopback interfaces, unbounded cgroups, unenforced AppArmor, and extra environment variables. At the local development checkpoint, **163 first-party Node tests are now defined** (15 integrity + 66 static policy + 49 kernel probe + 33 host witness); all suites passed in the last completed GitHub Node job before this documentation update. A deliberate read-only invocation in the assistant's ordinary container **returned BLOCKED**, appropriately demonstrating that an arbitrary development environment cannot satisfy this restrictive profile. No actual target audit container was provisioned or started.
 
 Sources used for the model: [Linux kernel proc documentation](https://www.kernel.org/doc/html/latest/filesystems/proc.html), [Docker seccomp](https://docs.docker.com/engine/security/seccomp/), [Docker user namespace isolation](https://docs.docker.com/engine/security/userns-remap/), and [Docker bind mounts and recursive read-only limitations](https://docs.docker.com/engine/storage/bind-mounts/).
 
@@ -101,6 +101,8 @@ node tools/security-audit-pilot/host-witness.cjs \
   --image '<verified-image>@sha256:<64hex>' \
   --source /srv/wardveil-audit-pilot/source/<verified-public-fixture>
 ```
+
+The corresponding synthetic host-witness tests include **33 unit cases**, including same-host-namespace rejection, process restart/PID reuse, bad cgroup identity, host-root mappings, unexpected mounts and failing resource limits. The bounded probe and the static checker reject alternate time windows.
 
 **No container creation, starting, or agent execution is implemented or authorized in these scripts.** The host witness output is only `HOST KERNEL WITNESS MATCH ONLY`. A saved inspect file can be spoofed, a host PID 1 can itself be namespaced, kernel namespace differences do not prove that a namespace has no dangerous escape, and observation does not attest actual image contents, host ACLs, network firewall, seccomp policy contents, AppArmor strength or immutable source bytes. The host owner must independently verify these facts and the trusted image/probe on a disposable system. If the Docker probe window expires or the host cannot observe it in time, the test is **BLOCKED**, not silently retried against production.
 
