@@ -8,10 +8,11 @@ const {spawnSync}=require('node:child_process');
 const {evaluateContainerConfig,readInspectFile,main}=require('./check-container-policy.cjs');
 const image='wardveil-audit@sha256:'+'a'.repeat(64);
 const source='/srv/wardveil-audit-pilot/source/test-target';
-const expected={image,source};
+const imageId='sha256:'+'c'.repeat(64);
+const expected={image,imageId,source};
 function good(){return {
   State:{Status:'created',Running:false,Pid:0,Restarting:false,Paused:false,Dead:false},
-  RestartCount:0,ExecIDs:[],Path:'/usr/bin/node',Args:['/opt/wardveil/runtime-probe.cjs','--witness-window=90'],Image:'sha256:'+'c'.repeat(64),AppArmorProfile:'docker-default',
+  RestartCount:0,ExecIDs:[],Path:'/usr/bin/node',Args:['/opt/wardveil/runtime-probe.cjs','--witness-window=90'],Image:imageId,AppArmorProfile:'docker-default',
   Config:{User:'65534:65534',Image:image,WorkingDir:'/scratch',Entrypoint:['/usr/bin/node'],Cmd:['/opt/wardveil/runtime-probe.cjs','--witness-window=90'],Tty:false,OpenStdin:false,StdinOnce:false,AttachStdin:false,Env:['HOME=/scratch/home','TMPDIR=/tmp','PATH=/usr/local/bin:/usr/bin:/bin','LANG=C.UTF-8']},
   HostConfig:{NetworkMode:'none',Privileged:false,ReadonlyRootfs:true,CapDrop:['ALL'],CapAdd:[],SecurityOpt:['no-new-privileges:true'],
     PidMode:'',IpcMode:'private',CgroupnsMode:'private',UsernsMode:'',PidsLimit:24,Memory:256*1024*1024,MemorySwap:256*1024*1024,NanoCpus:500000000,
@@ -43,6 +44,7 @@ invalid('custom container runtime',obj=>{obj.HostConfig.Runtime='custom-runc';})
 invalid('host cgroup parent',obj=>{obj.HostConfig.CgroupParent='/system.slice/important';});
 invalid('host ulimit override',obj=>{obj.HostConfig.Ulimits=[{Name:'nofile',Soft:1000000,Hard:1000000}];});
 invalid('unresolved image ID',obj=>{obj.Image='unknown';});
+invalid('unapproved but well-formed local image ID',obj=>{obj.Image='sha256:'+'d'.repeat(64);});
 
 invalid('external network',obj=>{obj.HostConfig.NetworkMode='bridge';});
 invalid('privileged container',obj=>{obj.HostConfig.Privileged=true;});
@@ -85,18 +87,23 @@ invalid('additional DNS resolver',obj=>{obj.HostConfig.Dns=['8.8.8.8'];});
 invalid('supplemental groups',obj=>{obj.HostConfig.GroupAdd=['0'];});
 invalid('additional legacy bind',obj=>{obj.HostConfig.Binds=['/:/host:ro'];});
 test('expected image must be pinned; expected source must be safe',()=>{
- for(const changed of [{image:'wardveil-audit:latest',source},{image,source:'/home/operator/repo'},
-  {image,source:'/srv/wardveil-audit-pilot/source/../secrets'}]){
+ for(const changed of [{image:'wardveil-audit:latest',imageId,source},
+  {image,imageId:'sha256:invalid',source},
+  {image,source}, {image,imageId,source:'/home/operator/repo'},
+  {image,imageId,source:'/srv/wardveil-audit-pilot/source/../secrets'}]){
   assert.throws(()=>evaluateContainerConfig(good(),changed));
  }
 });
-test('CLI requires explicit source and immutable image',()=>{assert.equal(main([]),2);});
+test('CLI requires explicit source and both approved image identifiers',()=>{
+  assert.equal(main([]),2);
+  assert.equal(main(['/tmp/snapshot','--image',image,'--source',source]),2);
+});
 test('safe bounded file read and malformed JSON rejection',()=>{
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'wardveil-policy-'));
  const file=path.join(dir,'inspect.json');
  try{fs.writeFileSync(file,JSON.stringify([good()]));assert.equal(evaluateContainerConfig(readInspectFile(file),expected).ok,true);
-   assert.equal(main([file,'--image',image,'--source',source]),0);
-   fs.writeFileSync(file,'this is not json');assert.equal(main([file,'--image',image,'--source',source]),1);
+   assert.equal(main([file,'--image',image,'--image-id',imageId,'--source',source]),0);
+   fs.writeFileSync(file,'this is not json');assert.equal(main([file,'--image',image,'--image-id',imageId,'--source',source]),1);
  }finally{fs.rmSync(dir,{recursive:true,force:true});}
 });
 test('read rejects symlink and FIFO without blocking',()=>{
