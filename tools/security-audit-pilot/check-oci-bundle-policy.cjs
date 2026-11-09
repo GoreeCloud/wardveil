@@ -22,6 +22,21 @@ const DENIED_SYSCALLS=new Set([
   'init_module','finit_module','delete_module','kexec_load','kexec_file_load',
   'reboot','swapon','swapoff','open_by_handle_at','process_vm_writev',
 ]);
+// This is a proposed PRE-EXECUTION identity/security profile, not a working
+// Node syscall recipe. A default-deny profile with an open-ended "anything
+// not known to be bad" allowance is NOT reviewable or safe. The permitted
+// syscall names are explicitly enumerated and require a separate independent
+// audit before this bundle can be used on an actual runtime.
+const REVIEWED_SYSCALLS=new Set([
+  'read','write','close','exit','exit_group','futex','mmap','munmap',
+  'openat','newfstatat','brk','mprotect','rt_sigaction','rt_sigprocmask',
+  'rt_sigreturn','clock_gettime','getrandom','getpid','gettid',
+  'getuid','geteuid','getgid','getegid','lseek','pread64','fstat',
+  'readlinkat','statx','uname','arch_prctl','prlimit64','rseq',
+  'set_robust_list','sched_yield','epoll_create1','epoll_ctl',
+  'epoll_pwait','eventfd2','pipe2','fcntl','dup','dup2','dup3',
+  'nanosleep',
+]);
 const PLAIN=(v)=>v!==null && typeof v==='object' && !Array.isArray(v) &&
   (Object.getPrototypeOf(v)===Object.prototype || Object.getPrototypeOf(v)===null);
 const EMPTY=(v)=>v===undefined || (PLAIN(v)&&Object.keys(v).length===0);
@@ -73,7 +88,8 @@ function validSeccomp(sec){
        !Array.isArray(rule.names)||rule.names.length<1||rule.names.length>64) return false;
     for(const name of rule.names){
       if(typeof name!=='string' || !/^[a-z0-9_]{2,40}$/.test(name) ||
-         DENIED_SYSCALLS.has(name)||observed.has(name)) return false;
+         DENIED_SYSCALLS.has(name)||!REVIEWED_SYSCALLS.has(name)||
+         observed.has(name)) return false;
       observed.add(name);
     }
   }
@@ -167,4 +183,4 @@ function main(argv){
   }
 }
 if(require.main===module) process.exitCode=main(process.argv.slice(2));
-module.exports={RESERVED_MOUNTS,DENIED_SYSCALLS,validMounts,validSeccomp,validResources,evaluateOciBundle,main};
+module.exports={RESERVED_MOUNTS,DENIED_SYSCALLS,REVIEWED_SYSCALLS,validMounts,validSeccomp,validResources,evaluateOciBundle,main};
