@@ -7,7 +7,7 @@ const {spawnSync}=require('node:child_process');
 const {test}=require('node:test');
 const {EXPECTED_ENVS,SAFE_SOURCE_PREFIX}=require('./check-container-policy.cjs');
 const {REQUIRED_NAMESPACES}=require('./check-oci-identity.cjs');
-const {validMounts,validSeccomp,validResources,evaluateOciBundle}=require('./check-oci-bundle-policy.cjs');
+const {validMounts,validSeccomp,validResources,REVIEWED_SYSCALLS,evaluateOciBundle}=require('./check-oci-bundle-policy.cjs');
 function good(){
   return {
     ociVersion:'1.1.0',
@@ -142,6 +142,24 @@ rejects('seccomp allowed userfaultfd',x=>x.linux.seccomp.syscalls[0].names=['use
 rejects('seccomp allowed mount_setattr',x=>x.linux.seccomp.syscalls[0].names=['mount_setattr']);
 rejects('seccomp allowed bpf',x=>x.linux.seccomp.syscalls[0].names=['bpf']);
 rejects('seccomp allowed arbitrary syscalls',x=>x.linux.seccomp.syscalls[0].names=['*']);
+rejects('network socket creation despite isolated netns',x=>x.linux.seccomp.syscalls[0].names=['socket']);
+rejects('network connect',x=>x.linux.seccomp.syscalls[0].names=['connect']);
+rejects('network sendto',x=>x.linux.seccomp.syscalls[0].names=['sendto']);
+rejects('network bind',x=>x.linux.seccomp.syscalls[0].names=['bind']);
+rejects('network recvmsg',x=>x.linux.seccomp.syscalls[0].names=['recvmsg']);
+rejects('unreviewed process creation vfork',x=>x.linux.seccomp.syscalls[0].names=['vfork']);
+rejects('unreviewed process creation fork',x=>x.linux.seccomp.syscalls[0].names=['fork']);
+rejects('execve without execution profile review',x=>x.linux.seccomp.syscalls[0].names=['execve']);
+rejects('execveat without execution profile review',x=>x.linux.seccomp.syscalls[0].names=['execveat']);
+rejects('filesystem modification unlinkat',x=>x.linux.seccomp.syscalls[0].names=['unlinkat']);
+rejects('filesystem modification renameat',x=>x.linux.seccomp.syscalls[0].names=['renameat']);
+rejects('filesystem modification mkdirat',x=>x.linux.seccomp.syscalls[0].names=['mkdirat']);
+rejects('filesystem modification chmod',x=>x.linux.seccomp.syscalls[0].names=['chmod']);
+rejects('filesystem modification fchownat',x=>x.linux.seccomp.syscalls[0].names=['fchownat']);
+rejects('unreviewed rootfs syscall chdir',x=>x.linux.seccomp.syscalls[0].names=['chdir']);
+rejects('unreviewed socketpair despite no outside network',x=>x.linux.seccomp.syscalls[0].names=['socketpair']);
+rejects('unknown but syntactically valid syscall',x=>x.linux.seccomp.syscalls[0].names=['fancy_syscall']);
+
 rejects('seccomp duplicate syscall',x=>x.linux.seccomp.syscalls[0].names.push('read'));
 rejects('seccomp listener path',x=>x.linux.seccomp.listenerPath='/tmp/owner.sock');
 rejects('seccomp flags including speculative bypass',x=>x.linux.seccomp.flags=['SECCOMP_FILTER_FLAG_SPEC_ALLOW']);
@@ -164,6 +182,17 @@ test('read-only candidate CLI refuses symlinks, invalid JSON and oversized OCI d
     fs.writeFileSync(file,'{}'.padEnd(150000,' '));
     assert.notEqual(call(file).status,0);
   }finally{fs.rmSync(dir,{recursive:true,force:true})}
+});
+test('proposed syscall allowlist is explicit, finite and excludes escape paths',()=>{
+  for(const n of ['read','close','exit_group','futex']) assert.equal(REVIEWED_SYSCALLS.has(n),true);
+  for(const n of ['socket','connect','execve','execveat','clone','clone3','ptrace',
+    'mount','io_uring_setup','chown','renameat','fchownat','fancy_syscall']) {
+    assert.equal(REVIEWED_SYSCALLS.has(n),false,n);
+  }
+  assert.ok(REVIEWED_SYSCALLS.size>=10 && REVIEWED_SYSCALLS.size<=64);
+  const allowed=good();
+  allowed.linux.seccomp.syscalls[0].names=['read','write','close'];
+  assert.equal(evaluateOciBundle(allowed).ok,true);
 });
 test('bundle helpers are conservative on hostile values',()=>{
   assert.equal(validMounts([{destination:'/proc'}]),false);
