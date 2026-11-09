@@ -51,14 +51,22 @@ function mappedWithoutHostRoot(text, id) {
 }
 function parseMounts(text) {
   const result = [];
+  const seenMountpoints = new Set();
   for (const line of text.trim().split('\n')) {
     const pivot = line.indexOf(' - ');
     if (pivot < 0) return null;
     const lhs = line.slice(0, pivot).split(' ');
     const rhs = line.slice(pivot + 3).split(' ');
     if (lhs.length < 6 || rhs.length < 3) return null;
+    const point=lhs[4];
+    // Stacked duplicate mountpoints can conceal a different filesystem
+    // behind a seemingly safe allowlisted path such as /proc or /etc/hosts.
+    if (!point.startsWith('/') || point.includes('//') ||
+        point.split('/').some(part => part==='.' || part==='..') ||
+        seenMountpoints.has(point)) return null;
+    seenMountpoints.add(point);
     // Reject escaped/special mountpoints, which cannot satisfy these literal paths.
-    result.push({mount:lhs[4], options:lhs[5].split(','), optional:lhs.slice(6),
+    result.push({mount:point, options:lhs[5].split(','), optional:lhs.slice(6),
       fsType:rhs[0], superOpts:rhs.slice(2).join(' ').split(',')});
   }
   return result;
