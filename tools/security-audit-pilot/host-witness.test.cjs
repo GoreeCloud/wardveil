@@ -1,7 +1,10 @@
 'use strict';
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const {safeHostWitness,parseStartTicks,cgroupRelativePath,matchesProbeCommandLine,main} = require('./host-witness.cjs');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const {safeHostWitness,parseStartTicks,cgroupRelativePath,matchesProbeCommandLine,readPinnedProbeBytes,main} = require('./host-witness.cjs');
 const id = 'a'.repeat(64);
 const image = 'wardveil-audit@sha256:'+'b'.repeat(64);
 const source = '/srv/wardveil-audit-pilot/source/public-fixture';
@@ -67,6 +70,39 @@ function observed() {
     pids:'24',swap:'0',cpu:'50000 100000',
   };
 }
+test('pinned source reader accepts an ordinary first-party test script',()=>{
+  const root=fs.mkdtempSync(path.join(os.tmpdir(),'wardveil-pinned-probe-'));
+  try {
+    const folder=path.join(root,'opt','wardveil');
+    fs.mkdirSync(folder,{recursive:true});
+    const fixture=Buffer.from('/* first-party test fixture only */\n');
+    fs.writeFileSync(path.join(folder,'runtime-probe.cjs'),fixture);
+    assert.deepEqual(readPinnedProbeBytes(root),fixture);
+  } finally {fs.rmSync(root,{recursive:true,force:true});}
+});
+test('pinned source reader rejects symlinked probe ancestors and file',()=>{
+  const root=fs.mkdtempSync(path.join(os.tmpdir(),'wardveil-pinned-symlink-'));
+  try {
+    const trusted=path.join(root,'trusted');
+    const folder=path.join(trusted,'opt','wardveil');
+    fs.mkdirSync(folder,{recursive:true});
+    fs.writeFileSync(path.join(folder,'runtime-probe.cjs'),'/* fixture */');
+    const badTop=path.join(root,'bad-top');
+    fs.mkdirSync(badTop);
+    fs.symlinkSync(path.join(trusted,'opt'),path.join(badTop,'opt'));
+    assert.throws(()=>readPinnedProbeBytes(badTop));
+
+    const badChild=path.join(root,'bad-child');
+    fs.mkdirSync(path.join(badChild,'opt'),{recursive:true});
+    fs.symlinkSync(folder,path.join(badChild,'opt','wardveil'));
+    assert.throws(()=>readPinnedProbeBytes(badChild));
+
+    const badFinal=path.join(root,'bad-final','opt','wardveil');
+    fs.mkdirSync(badFinal,{recursive:true});
+    fs.symlinkSync(path.join(folder,'runtime-probe.cjs'),path.join(badFinal,'runtime-probe.cjs'));
+    assert.throws(()=>readPinnedProbeBytes(path.join(root,'bad-final')));
+  } finally {fs.rmSync(root,{recursive:true,force:true});}
+});
 test('missing or malformed approved metadata fails closed without an exception',()=>{
   for(const value of [null,undefined,[],{},'invalid']) {
     const result=safeHostWitness(inspect(),observed(),value);
