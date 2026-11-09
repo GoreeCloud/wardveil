@@ -11,7 +11,7 @@ const mount = (n,mp,opts,kind,src,superopts='rw') =>
 function good() {
   return {
     status: ['Name:\tnode','Uid:\t65534\t65534\t65534\t65534',
-      'Gid:\t65534\t65534\t65534\t65534','NoNewPrivs:\t1','Seccomp:\t2',
+      'Gid:\t65534\t65534\t65534\t65534','Groups:\t','TracerPid:\t0','NoNewPrivs:\t1','Seccomp:\t2',
       'Seccomp_filters:\t1','CapInh:\t0000000000000000','CapPrm:\t0000000000000000',
       'CapEff:\t0000000000000000','CapBnd:\t0000000000000000',
       'CapAmb:\t0000000000000000'].join('\n')+'\n',
@@ -48,6 +48,10 @@ bad('host-root UID mapping',r=>{r.uidMap='0 0 4294967295';});
 bad('UID not mapped',r=>{r.uidMap='0 100000 65533';});
 bad('host-root GID mapping',r=>{r.gidMap='0 0 4294967295';});
 bad('missing user namespace mapping',r=>{r.uidMap='';});
+bad('attached ptrace tracer',r=>{r.status=r.status.replace('TracerPid:\t0','TracerPid:\t99');});
+bad('missing tracer evidence',r=>{r.status=r.status.replace('TracerPid:\t0','');});
+bad('unexpected supplementary group',r=>{r.status=r.status.replace('Groups:\t','Groups:\t0 20');});
+bad('missing supplementary-group evidence',r=>{r.status=r.status.replace('Groups:\t','');});
 bad('no-new-privileges disabled',r=>{r.status=r.status.replace('NoNewPrivs:\t1','NoNewPrivs:\t0');});
 bad('seccomp not active',r=>{r.status=r.status.replace('Seccomp:\t2','Seccomp:\t0');});
 bad('zero seccomp filter count',r=>{r.status=r.status.replace('Seccomp_filters:\t1','Seccomp_filters:\t0');});
