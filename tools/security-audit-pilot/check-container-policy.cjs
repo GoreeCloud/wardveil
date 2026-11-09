@@ -136,8 +136,9 @@ function evaluateContainerConfig(input, expected) {
   requireField(!host.Links || (Array.isArray(host.Links) && host.Links.length === 0), 'no container network links');
   requireField(isPlainObject(host.LogConfig) && host.LogConfig.Type === 'none',
     'prevent persistent host-side container log capture');
-  requireField(isPlainObject(host.RestartPolicy) && host.RestartPolicy.Name === 'no',
-    'no automatic restart policy');
+  requireField(isPlainObject(host.RestartPolicy) && host.RestartPolicy.Name === 'no' &&
+    host.AutoRemove === false,
+    'no automatic restart or removal of the first-party witness container');
   requireField(config.Healthcheck == null ||
     (isPlainObject(config.Healthcheck) && Array.isArray(config.Healthcheck.Test) &&
     config.Healthcheck.Test.length === 1 && config.Healthcheck.Test[0] === 'NONE'),
