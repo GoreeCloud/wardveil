@@ -168,6 +168,30 @@ function safeHostWitness(inspect, observed, expected) {
   check(checkQuota(observed.cpu||''),'actual cgroup CPU quota must be <=1 CPU');
   return {ok:errs.length===0,errors:errs};
 }
+// The process root itself is a Linux procfs magic link, so pin it once.
+ // Every descendant is then opened relative to that pinned directory with
+ // O_NOFOLLOW. This blocks a symlink at /opt or /opt/wardveil from redirecting
+ // the file hash outside the reviewed image's intended script path.
+function readPinnedProbeBytes(root) {
+  if (process.platform !== 'linux' || !path.isAbsolute(root) ||
+      !fs.constants.O_DIRECTORY || !fs.constants.O_NOFOLLOW ||
+      !fs.existsSync('/proc/self/fd')) {
+    throw new Error('Linux directory-handle source verification is required');
+  }
+  const flags=fs.constants.O_RDONLY|fs.constants.O_DIRECTORY|fs.constants.O_NONBLOCK;
+  let dirFd=fs.openSync(root,flags);
+  try {
+    for (const part of ['opt','wardveil']) {
+      const child=fs.openSync('/proc/self/fd/'+dirFd+'/'+part,flags|fs.constants.O_NOFOLLOW);
+      fs.closeSync(dirFd);
+      dirFd=child;
+    }
+    return readBoundedBytes('/proc/self/fd/'+dirFd+'/runtime-probe.cjs');
+  } finally {
+    fs.closeSync(dirFd);
+  }
+}
+
 function captureFromHost(inspect, expected) {
   const p = safeSnapshot(inspect,expected);
   if (!p.ok) throw new Error('running container inspection does not meet pre-start policy');
@@ -190,11 +214,10 @@ function captureFromHost(inspect, expected) {
     pid,startBefore,comm:readBounded(proc+'/comm').trim(),
     exe:fs.readlinkSync(proc+'/exe'),
     cmdline:readBounded(proc+'/cmdline'),
-    // These bytes are read through the same pinned PID's mount-root view.
-    // O_NOFOLLOW on the final regular file prevents substituting a symlink
-    // for the approved first-party probe script.
+    // Anchor the container process root, pin its child directories, and
+    // refuse symlinks on every descendant before hashing bounded raw bytes.
     probeSha256:'sha256:'+crypto.createHash('sha256')
-      .update(readBoundedBytes(proc+'/root/opt/wardveil/runtime-probe.cjs'))
+      .update(readPinnedProbeBytes(proc+'/root'))
       .digest('hex'),
     cgroup,hostNamespaces,containerNamespaces,
     status:readBounded(proc+'/status'),
@@ -212,7 +235,7 @@ function captureFromHost(inspect, expected) {
   witness.exeAfter=fs.readlinkSync(proc+'/exe');
   witness.cmdlineAfter=readBounded(proc+'/cmdline');
   witness.probeSha256After='sha256:'+crypto.createHash('sha256')
-    .update(readBoundedBytes(proc+'/root/opt/wardveil/runtime-probe.cjs'))
+    .update(readPinnedProbeBytes(proc+'/root'))
     .digest('hex');
   witness.startAfter=parseStartTicks(readBounded(proc+'/stat'));
   return witness;
@@ -245,4 +268,4 @@ function main(argv) {
   }
 }
 if(require.main===module)process.exitCode=main(process.argv.slice(2));
-module.exports={NS_TYPES,parseStartTicks,cgroupRelativePath,matchesProbeCommandLine,safeSnapshot,safeHostWitness,captureFromHost,main};
+module.exports={NS_TYPES,parseStartTicks,cgroupRelativePath,matchesProbeCommandLine,readPinnedProbeBytes,safeSnapshot,safeHostWitness,captureFromHost,main};
