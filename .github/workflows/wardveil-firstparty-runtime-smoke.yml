@@ -125,17 +125,30 @@ jobs:
           test -s "$dir/rootfs/usr/bin/wardveil-probe"
           # This is a NEW daemon with separate socket, PID, data and exec roots.
           # Never restart or reconfigure the runner's preinstalled Docker daemon.
+          # Ignore the runner's default Docker daemon.json to avoid inheriting
+          # unrelated settings and conflicts with the separate daemon flags.
+          printf '{}\n' > "$dir/daemon.json"
           sudo dockerd \
+            --config-file "$dir/daemon.json" \
             --host "$socket" --pidfile "$pidfile" \
             --data-root "$dir/data" --exec-root "$dir/exec" \
             --userns-remap=default --bridge=none --iptables=false --ip6tables=false \
-            --containerd=/run/containerd/containerd.sock --log-level=error \
+            --log-level=error \
             > "$dir/daemon.log" 2>&1 &
           for n in $(seq 1 40); do
             [[ -S "$dir/dockerd.sock" ]] && break
             sleep 0.5
           done
-          [[ -S "$dir/dockerd.sock" ]] || { echo 'BLOCKED: isolated remapped daemon unavailable'; exit 1; }
+          if [[ ! -S "$dir/dockerd.sock" ]]; then
+            # Restrict public CI output to a few Docker-generated error lines.
+            # Sanitize path-like tokens; never print raw process environments.
+            if [[ -f "$dir/daemon.log" ]]; then
+              grep -Ei 'failed to start|fatal|initializ|permission denied|operation not permitted|storage driver|userns|configuration|conflict' "$dir/daemon.log" |
+                tail -n 5 | sed -E 's%/[a-zA-Z0-9_./-]+%<ephemeral-path>%g' | cut -c 1-220 || true
+            fi
+            echo 'BLOCKED: isolated remapped daemon unavailable'
+            exit 1
+          fi
           options="$(sudo docker --host "$socket" info --format '{{json .SecurityOptions}}' 2>/dev/null || true)"
           [[ "$options" == *"name=userns"* && "$options" == *"name=apparmor"* && "$options" == *"name=seccomp"* ]] ||
             { echo 'BLOCKED: daemon missing userns, AppArmor or seccomp'; exit 1; }
