@@ -45,7 +45,7 @@ function observed() {
   const hostNamespaces={},containerNamespaces={};
   ns.forEach((type,i)=>{hostNamespaces[type]=type+':['+(100+i)+']';
     containerNamespaces[type]=type+':['+(200+i)+']';});
-  return {
+  const reading = {
     pid:34567,startBefore:'123456',startAfter:'123456',comm:'node',
     exe:entry,exeAfter:entry,probeSha256,probeSha256After:probeSha256,
     cmdline:[entry,cmd,witnessArg,''].join('\0'),
@@ -69,6 +69,13 @@ function observed() {
     apparmor:'docker-default (enforce)\n',memory:String(256*1024*1024),
     pids:'24',swap:'0',cpu:'50000 100000',
   };
+  reading.hostNamespacesAfter={...reading.hostNamespaces};
+  reading.containerNamespacesAfter={...reading.containerNamespaces};
+  reading.statusAfter=reading.status;
+  for(const key of ['uidMap','gidMap','mountinfo','network','apparmor','memory','swap','cpu','pids']){
+    reading[key+'After']=reading[key];
+  }
+  return reading;
 }
 test('pinned source reader accepts an ordinary first-party test script',()=>{
   const root=fs.mkdtempSync(path.join(os.tmpdir(),'wardveil-pinned-probe-'));
@@ -134,6 +141,19 @@ reject('missing reviewed probe hash',(d,w,e)=>{delete e.probeSha256;});
 reject('host-viewed probe file differs',(d,w)=>{w.probeSha256='sha256:'+'2'.repeat(64);});
 reject('unapproved witness duration',(d)=>{d[0].Args[1]='--witness-window=3600';});
 reject('same host user namespace',(d,w)=>{w.containerNamespaces.user=w.hostNamespaces.user;});
+reject('namespace swapped during witness',(d,w)=>{w.containerNamespacesAfter.net='net:[399]';});
+reject('host namespace changed during witness',(d,w)=>{w.hostNamespacesAfter.user='user:[999]';});
+reject('missing final namespace snapshot',(d,w)=>{delete w.containerNamespacesAfter;});
+reject('privileges changed during witness',(d,w)=>{w.statusAfter=w.statusAfter.replace('NoNewPrivs:\t1','NoNewPrivs:\t0');});
+reject('capabilities changed during witness',(d,w)=>{w.statusAfter=w.statusAfter.replace('CapEff:\t0000000000000000','CapEff:\t0000000000000001');});
+reject('status security evidence absent at end',(d,w)=>{delete w.statusAfter;});
+reject('UID map changed during witness',(d,w)=>{w.uidMapAfter='0 300000 65536\n';});
+reject('mount topology changed during witness',(d,w)=>{w.mountinfoAfter+='\n'+mount(8,'/unexpected','ro','ext4','/dev/sdb','ro');});
+reject('AppArmor policy changed during witness',(d,w)=>{w.apparmorAfter='unconfined';});
+reject('CPU resource budget changed during witness',(d,w)=>{w.cpuAfter='max 100000';});
+reject('memory resource budget changed during witness',(d,w)=>{w.memoryAfter='max';});
+reject('external interface appeared during witness',(d,w)=>{w.networkAfter+=' eth0: 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\n';});
+
 reject('same host network namespace',(d,w)=>{w.containerNamespaces.net=w.hostNamespaces.net;});
 reject('same host PID namespace',(d,w)=>{w.containerNamespaces.pid=w.hostNamespaces.pid;});
 reject('same host cgroup namespace',(d,w)=>{w.containerNamespaces.cgroup=w.hostNamespaces.cgroup;});
