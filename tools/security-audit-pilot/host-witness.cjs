@@ -6,6 +6,7 @@
 // Its verdict is a narrow observation, never permission to launch an agent.
 const fs = require('node:fs');
 const path = require('node:path');
+const crypto = require('node:crypto');
 const {readInspectFile, evaluateContainerConfig} = require('./check-container-policy.cjs');
 const {readBounded, getField, mappedWithoutHostRoot, checkMounts, checkNetwork, checkQuota} = require('./runtime-probe.cjs');
 
@@ -55,6 +56,8 @@ function safeSnapshot(inspect, expected) {
   const e = [];
   const check = (yes, msg) => {if (!yes) e.push(msg);};
   check(expected && /^[0-9a-f]{64}$/.test(expected.id || ''), 'expected ID must be a full container digest');
+  check(expected && /^sha256:[a-f0-9]{64}$/.test(expected.probeSha256 || ''),
+    'reviewed first-party probe source SHA-256 is mandatory');
   check(doc && typeof doc === 'object' && doc.Id === expected.id, 'container ID must match explicit approved target');
   if (!doc || typeof doc !== 'object') return {ok:false,errors:e};
   const st = doc.State || {};
@@ -93,6 +96,9 @@ function safeHostWitness(inspect, observed, expected) {
   check(observed.comm === 'node', 'host-observed process name must be node');
   check(observed.exe === APPROVED_BIN,
     'host-observed executable must match approved Node binary without deletion or redirection');
+  check(typeof observed.probeSha256 === 'string' &&
+    observed.probeSha256 === expected.probeSha256,
+    'host-observed probe source SHA-256 must match independently reviewed source');
   check(matchesProbeCommandLine(observed.cmdline),
     'host-observed process argv must equal the exact first-party witness command');
   check(typeof observed.cgroup === 'string' &&
@@ -172,6 +178,12 @@ function captureFromHost(inspect, expected) {
     pid,startBefore,comm:readBounded(proc+'/comm').trim(),
     exe:fs.readlinkSync(proc+'/exe'),
     cmdline:readBounded(proc+'/cmdline'),
+    // These bytes are read through the same pinned PID's mount-root view.
+    // O_NOFOLLOW on the final regular file prevents substituting a symlink
+    // for the approved first-party probe script.
+    probeSha256:'sha256:'+crypto.createHash('sha256')
+      .update(readBounded(proc+'/root/opt/wardveil/runtime-probe.cjs'))
+      .digest('hex'),
     cgroup,hostNamespaces,containerNamespaces,
     status:readBounded(proc+'/status'),
     uidMap:readBounded(proc+'/uid_map'),
@@ -190,16 +202,17 @@ function captureFromHost(inspect, expected) {
 }
 function main(argv) {
   if(argv.length===1 && argv[0]==='--help'){
-    process.stdout.write('Read-only host witness: node host-witness.cjs /absolute/inspect.json --id <64hex> --image <name>@sha256:<64hex> --image-id sha256:<64hex> --source /srv/wardveil-audit-pilot/source/<name>\n');
+    process.stdout.write('Read-only host witness: node host-witness.cjs /absolute/inspect.json --id <64hex> --image <name>@sha256:<64hex> --image-id sha256:<64hex> --probe-sha256 sha256:<64hex> --source /srv/wardveil-audit-pilot/source/<name>\n');
     return 0;
   }
-  if(argv.length!==9 || !path.isAbsolute(argv[0]) || argv[1]!=='--id' ||
-     argv[3]!=='--image' || argv[5]!=='--image-id' || argv[7]!=='--source') {
-    process.stderr.write('BLOCKED: inspect file, container ID, pinned image, approved local image ID and source are required\n');
+  if(argv.length!==11 || !path.isAbsolute(argv[0]) || argv[1]!=='--id' ||
+     argv[3]!=='--image' || argv[5]!=='--image-id' ||
+     argv[7]!=='--probe-sha256' || argv[9]!=='--source') {
+    process.stderr.write('BLOCKED: inspect file, container ID, pinned image, approved local image ID, reviewed probe hash and source required\n');
     return 2;
   }
   try {
-    const expected={id:argv[2],image:argv[4],imageId:argv[6],source:argv[8]};
+    const expected={id:argv[2],image:argv[4],imageId:argv[6],probeSha256:argv[8],source:argv[10]};
     const inspect=readInspectFile(argv[0]);
     const observed=captureFromHost(inspect,expected);
     const verdict=safeHostWitness(inspect,observed,expected);
