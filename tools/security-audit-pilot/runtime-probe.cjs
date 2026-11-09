@@ -166,7 +166,7 @@ function evaluate(records, env) {
   demand(checkEnv(env), 'process environment must contain only approved variables');
   return {ok:failures.length===0, failures};
 }
-function readBounded(file) {
+function readBoundedBytes(file) {
   const flags = fs.constants.O_RDONLY | fs.constants.O_NONBLOCK | fs.constants.O_NOFOLLOW;
   if (process.platform !== 'linux' || !Number.isInteger(fs.constants.O_NOFOLLOW) ||
       !Number.isInteger(fs.constants.O_NONBLOCK)) throw new Error('unsupported platform');
@@ -182,8 +182,13 @@ function readBounded(file) {
       offset += n;
     }
     if (offset > MAX_BYTES) throw new Error('kernel observation exceeds bound');
-    return new TextDecoder('utf-8',{fatal:true}).decode(bytes.subarray(0,offset));
+    // Return the exact original bytes, including a possible UTF-8 BOM.
+    // Hashing decoded text could omit these bytes and mask source changes.
+    return bytes.subarray(0,offset);
   } finally { fs.closeSync(fd); }
+}
+function readBounded(file) {
+  return new TextDecoder('utf-8',{fatal:true}).decode(readBoundedBytes(file));
 }
 function capture() {
   const records = {};
@@ -225,4 +230,4 @@ if (require.main===module) {
     setTimeout(() => { process.exitCode=1; }, 90_000);
   }
 }
-module.exports = {INPUTS,EXPLICIT_ENV,getField,parseMap,mappedWithoutHostRoot,parseMounts,checkMounts,checkNetwork,checkQuota,checkEnv,evaluate,readBounded,capture,main};
+module.exports = {INPUTS,EXPLICIT_ENV,getField,parseMap,mappedWithoutHostRoot,parseMounts,checkMounts,checkNetwork,checkQuota,checkEnv,evaluate,readBounded,readBoundedBytes,capture,main};
