@@ -129,6 +129,11 @@ jobs:
           GOPROXY=off GOSUMDB=off GO111MODULE=off GOTOOLCHAIN=local CGO_ENABLED=0 \
             go build -trimpath -ldflags='-s -w' -o "$dir/rootfs/usr/bin/wardveil-probe" "$dir/probe.go"
           test -s "$dir/rootfs/usr/bin/wardveil-probe"
+          # The scratch image is executed as numeric UID 65534, so only
+          # its verified first-party executable and traversed directories
+          # need public execute/traverse permission; no file is writable.
+          chmod 0755 "$dir/rootfs" "$dir/rootfs/usr" "$dir/rootfs/usr/bin"
+          chmod 0555 "$dir/rootfs/usr/bin/wardveil-probe"
           # This is a NEW daemon with separate socket, PID, data and exec roots.
           # Never restart or reconfigure the runner's preinstalled Docker daemon.
           # Ignore the runner's default Docker daemon.json to avoid inheriting
