@@ -171,7 +171,8 @@ function tmpfsSafe(raw,maxSize) {
   const required=['rw','nosuid','nodev','noexec','size='+maxSize];
   return tokens.length===required.length && required.every(x => tokens.includes(x));
 }
-function readInspectFile(file) {
+function readInspectFile(file, parse=JSON.parse) {
+  if(typeof parse!=='function') throw new Error('JSON parser required');
   const flags=fs.constants.O_RDONLY|fs.constants.O_NOFOLLOW|fs.constants.O_NONBLOCK;
   if(process.platform !== 'linux' || !path.isAbsolute(file) ||
      !Number.isInteger(fs.constants.O_NOFOLLOW) || !fs.constants.O_NOFOLLOW ||
@@ -212,7 +213,10 @@ function readInspectFile(file) {
          first.dev!==after.dev) {
         throw new Error('inspect input changed during read');
       }
-      return JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(data));
+      // The exact same bounded descriptor-backed bytes feed the selected parser.
+      // Docker inspect keeps its existing behavior; OCI config uses duplicate-
+      // rejecting JSON parsing without a second racy file read.
+      return parse(new TextDecoder('utf-8',{fatal:true}).decode(data));
     } finally {fs.closeSync(fd);}
   } finally {fs.closeSync(dirFd);}
 }
