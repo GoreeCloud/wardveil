@@ -7,6 +7,7 @@
 const {SAFE_SOURCE_PREFIX,readInspectFile}=require('./check-container-policy.cjs');
 const {evaluateOciIdentity}=require('./check-oci-identity.cjs');
 
+const {parseUniqueJson}=require('./unique-json.cjs');
 const MAX_MEMORY=512*1024*1024;
 const MIN_MEMORY=64*1024*1024;
 const RESERVED_MOUNTS=Object.freeze(['/proc','/sys/fs/cgroup','/source','/scratch','/tmp']);
@@ -170,7 +171,7 @@ function main(argv){
     return 2;
   }
   try{
-    const verdict=evaluateOciBundle(readInspectFile(argv[0]));
+    const verdict=evaluateOciBundle(readInspectFile(argv[0],parseUniqueJson));
     if(!verdict.ok){
       for(const msg of verdict.errors)process.stderr.write('BLOCKED: '+msg+'\n');
       return 1;
