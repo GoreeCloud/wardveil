@@ -188,6 +188,8 @@ reject('missing supplementary group evidence',(d,w)=>{w.status=w.status.replace(
 reject('disabled seccomp',(d,w)=>{w.status=w.status.replace('Seccomp:\t2','Seccomp:\t0');});
 reject('nonzero capabilities',(d,w)=>{w.status=w.status.replace('CapBnd:\t0000000000000000','CapBnd:\t0000000000000001');});
 reject('unapproved host bind',(d,w)=>{w.mountinfo+='\n'+mount(6,'/host','ro','ext4','/dev/sdb','ro');});
+reject('stacked approved proc mount',(d,w)=>{w.mountinfo+='\n'+mount(7,'/proc','rw,nosuid,nodev,noexec','proc','proc');});
+
 reject('network interface exposure',(d,w)=>{w.network+=' eth0: 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\n';});
 reject('disabled AppArmor',(d,w)=>{w.apparmor='unconfined';});
 reject('unlimited CPU',(d,w)=>{w.cpu='max 100000';});
