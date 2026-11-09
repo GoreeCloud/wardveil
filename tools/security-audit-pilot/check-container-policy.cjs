@@ -22,6 +22,7 @@ const SAFE_SOURCE_PREFIX = '/srv/wardveil-audit-pilot/source/';
 // Matching these paths does NOT prove the image bytes or probe integrity.
 const EXPECTED_ENTRYPOINT = '/usr/bin/node';
 const EXPECTED_COMMAND = '/opt/wardveil/runtime-probe.cjs';
+const EXPECTED_WITNESS_ARGUMENT = '--witness-window=90';
 
 function isPlainObject(obj) {
   return obj !== null && typeof obj === 'object' && !Array.isArray(obj) &&
@@ -90,10 +91,11 @@ function evaluateContainerConfig(input, expected) {
   requireField(config.Image === expected.image, 'container image digest must equal approved digest');
   requireField(Array.isArray(config.Entrypoint) &&
     config.Entrypoint.length === 1 && config.Entrypoint[0] === EXPECTED_ENTRYPOINT &&
-    Array.isArray(config.Cmd) && config.Cmd.length === 1 &&
-    config.Cmd[0] === EXPECTED_COMMAND &&
+    Array.isArray(config.Cmd) && config.Cmd.length === 2 &&
+    config.Cmd[0] === EXPECTED_COMMAND && config.Cmd[1] === EXPECTED_WITNESS_ARGUMENT &&
     doc.Path === EXPECTED_ENTRYPOINT && Array.isArray(doc.Args) &&
-    doc.Args.length === 1 && doc.Args[0] === EXPECTED_COMMAND,
+    doc.Args.length === 2 && doc.Args[0] === EXPECTED_COMMAND &&
+    doc.Args[1] === EXPECTED_WITNESS_ARGUMENT,
     'first start may run only the reviewed first-party kernel self-probe');
   requireField(config.Tty === false && config.OpenStdin === false &&
     config.StdinOnce === false && config.AttachStdin === false,
@@ -213,4 +215,4 @@ function main(args) {
   }
 }
 if(require.main===module) process.exitCode=main(process.argv.slice(2));
-module.exports={MAX_BYTES,EXPECTED_ENVS,SAFE_SOURCE_PREFIX,EXPECTED_ENTRYPOINT,EXPECTED_COMMAND,validExpected,evaluateContainerConfig,tmpfsSafe,readInspectFile,main};
+module.exports={MAX_BYTES,EXPECTED_ENVS,SAFE_SOURCE_PREFIX,EXPECTED_ENTRYPOINT,EXPECTED_COMMAND,EXPECTED_WITNESS_ARGUMENT,validExpected,evaluateContainerConfig,tmpfsSafe,readInspectFile,main};
