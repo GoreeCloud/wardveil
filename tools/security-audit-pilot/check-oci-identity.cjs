@@ -9,6 +9,7 @@ const {
   EXPECTED_ENVS, readInspectFile,
 } = require('./check-container-policy.cjs');
 
+const {parseUniqueJson}=require('./unique-json.cjs');
 const REQUIRED_NAMESPACES = Object.freeze([
   'user','pid','mount','network','ipc','uts','cgroup',
 ]);
@@ -107,7 +108,7 @@ function main(argv) {
     return 2;
   }
   try {
-    const verdict=evaluateOciIdentity(readInspectFile(argv[0]));
+    const verdict=evaluateOciIdentity(readInspectFile(argv[0],parseUniqueJson));
     if(!verdict.ok) {
       for(const why of verdict.errors) process.stderr.write('BLOCKED: '+why+'\n');
       return 1;
