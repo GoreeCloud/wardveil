@@ -12,7 +12,7 @@ const SOURCES = Object.freeze({
   'preflight.cjs': ['node:fs','node:path','node:crypto'],
   'check-container-policy.cjs': ['node:fs','node:path','node:util'],
   'runtime-probe.cjs': ['node:fs','node:util'],
-  'host-witness.cjs': ['node:fs','node:path','./check-container-policy.cjs','./runtime-probe.cjs'],
+  'host-witness.cjs': ['node:fs','node:path','node:crypto','./check-container-policy.cjs','./runtime-probe.cjs'],
 });
 const FORBIDDEN = Object.freeze([
   /\b(?:eval|Function)\s*\(/,
