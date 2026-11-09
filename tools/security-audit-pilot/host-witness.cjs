@@ -29,9 +29,21 @@ function cgroupRelativePath(text, id) {
   if (lines.length !== 1) return null;
   const m = /^0::(\/[a-zA-Z0-9._\/-]+)$/.exec(lines[0]);
   if (!m || m[1] === '/' || m[1].includes('//') ||
-      m[1].split('/').some(part => part === '..' || part === '.') ||
-      !m[1].includes(id.slice(0, 12))) return null;
+      m[1].split('/').some(part => part === '..' || part === '.')) return null;
+  // Match an entire 64-hex container ID as a cgroup path component or
+  // Docker's full docker-<id>.scope name. A 12-character prefix or an
+  // embedded substring is not sufficient to bind an observed process.
+  const segments = m[1].split('/').filter(Boolean);
+  if (!segments.some(segment => segment === id || segment === 'docker-' + id + '.scope')) return null;
   return m[1];
+}
+function matchesProbeCommandLine(data) {
+  if (typeof data !== 'string') return false;
+  const actual = data.split('\0');
+  if (actual[actual.length-1] !== '') return false;
+  actual.pop();
+  return actual.length === 3 && actual[0] === APPROVED_BIN &&
+    actual[1] === APPROVED_COMMAND && actual[2] === APPROVED_WITNESS_ARGUMENT;
 }
 function isNamespaceRef(value, namespace) {
   return typeof value === 'string' &&
@@ -79,6 +91,8 @@ function safeHostWitness(inspect, observed, expected) {
   check(observed.startBefore != null && observed.startBefore === observed.startAfter &&
     /^\d+$/.test(observed.startBefore || ''), 'PID start time must remain stable during witness capture');
   check(observed.comm === 'node', 'host-observed process name must be node');
+  check(matchesProbeCommandLine(observed.cmdline),
+    'host-observed process argv must equal the exact first-party witness command');
   check(typeof observed.cgroup === 'string' &&
     !!cgroupRelativePath(observed.cgroup,expected.id),
     'host cgroup must include container ID and use cgroup v2');
@@ -140,6 +154,7 @@ function captureFromHost(inspect, expected) {
   const readCg=name=>readBounded(path.join(dir,name));
   const witness={
     pid,startBefore,comm:readBounded(proc+'/comm').trim(),
+    cmdline:readBounded(proc+'/cmdline'),
     cgroup,hostNamespaces,containerNamespaces,
     status:readBounded(proc+'/status'),
     uidMap:readBounded(proc+'/uid_map'),
@@ -182,4 +197,4 @@ function main(argv) {
   }
 }
 if(require.main===module)process.exitCode=main(process.argv.slice(2));
-module.exports={NS_TYPES,parseStartTicks,cgroupRelativePath,safeSnapshot,safeHostWitness,captureFromHost,main};
+module.exports={NS_TYPES,parseStartTicks,cgroupRelativePath,matchesProbeCommandLine,safeSnapshot,safeHostWitness,captureFromHost,main};
