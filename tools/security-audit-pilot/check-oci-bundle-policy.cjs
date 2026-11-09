@@ -12,6 +12,12 @@ const MIN_MEMORY=64*1024*1024;
 const RESERVED_MOUNTS=Object.freeze(['/proc','/sys/fs/cgroup','/source','/scratch','/tmp']);
 const DENIED_SYSCALLS=new Set([
   'mount','umount','umount2','pivot_root','chroot','setns','unshare',
+  // clone/clone3 with unreviewed flags could create nested namespaces.
+  // An executable that genuinely needs threads requires a separately
+  // reviewed argument-filtered profile; never allow an unfiltered syscall.
+  'clone','clone3','io_uring_setup','io_uring_enter','io_uring_register',
+  'userfaultfd','fanotify_init','fsopen','fsconfig','fsmount',
+  'open_tree','move_mount','mount_setattr',
   'ptrace','bpf','perf_event_open','keyctl','add_key','request_key',
   'init_module','finit_module','delete_module','kexec_load','kexec_file_load',
   'reboot','swapon','swapoff','open_by_handle_at','process_vm_writev',
