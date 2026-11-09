@@ -8,12 +8,13 @@ const source = '/srv/wardveil-audit-pilot/source/public-fixture';
 const expected = {id,image,source};
 const entry = '/usr/bin/node';
 const cmd = '/opt/wardveil/runtime-probe.cjs';
+const witnessArg = '--witness-window=90';
 function inspect() {
   return [{
-    Id:id,Image:'sha256:'+'c'.repeat(64),Path:entry,Args:[cmd],ExecIDs:[],RestartCount:0,
+    Id:id,Image:'sha256:'+'c'.repeat(64),Path:entry,Args:[cmd,witnessArg],ExecIDs:[],RestartCount:0,
     State:{Status:'running',Running:true,Pid:34567,Restarting:false,Paused:false,Dead:false},
     AppArmorProfile:'docker-default',
-    Config:{Image:image,User:'65534:65534',WorkingDir:'/scratch',Entrypoint:[entry],Cmd:[cmd],
+    Config:{Image:image,User:'65534:65534',WorkingDir:'/scratch',Entrypoint:[entry],Cmd:[cmd,witnessArg],
       Tty:false,OpenStdin:false,StdinOnce:false,AttachStdin:false,
       Env:['HOME=/scratch/home','TMPDIR=/tmp','PATH=/usr/local/bin:/usr/bin:/bin','LANG=C.UTF-8']},
     HostConfig:{
@@ -76,6 +77,7 @@ function reject(name, edit){
 reject('wrong container ID',(d,w,e)=>{e.id='f'.repeat(64);});
 reject('running wrong process',(d)=>{d[0].Path='/bin/sh';});
 reject('different startup command',(d)=>{d[0].Config.Cmd=['/tmp/untrusted.cjs'];});
+reject('unapproved witness duration',(d)=>{d[0].Args[1]='--witness-window=3600';});
 reject('same host user namespace',(d,w)=>{w.containerNamespaces.user=w.hostNamespaces.user;});
 reject('same host network namespace',(d,w)=>{w.containerNamespaces.net=w.hostNamespaces.net;});
 reject('same host PID namespace',(d,w)=>{w.containerNamespaces.pid=w.hostNamespaces.pid;});
