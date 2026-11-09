@@ -87,6 +87,13 @@ bad('no seccomp',x=>delete x.linux.seccomp);
 bad('permissive seccomp',x=>x.linux.seccomp.defaultAction='SCMP_ACT_ALLOW');
 bad('unrecognized seccomp action',x=>x.linux.seccomp.defaultAction='bogus');
 bad('OCI version missing',x=>delete x.ociVersion);
+bad('unreviewed OCI spec version',x=>x.ociVersion='1.99.0');
+bad('unreviewed process user umask extension',x=>x.process.user.umask=0);
+bad('unreviewed process scheduler extension',x=>x.process.scheduler={policy:'SCHED_FIFO'});
+bad('unreviewed process selinuxLabel extension',x=>x.process.selinuxLabel='untrusted');
+bad('unreviewed capability extension',x=>x.process.capabilities.debug=['CAP_SYS_ADMIN']);
+bad('unreviewed namespace extension',x=>x.linux.namespaces[0].extra='host');
+
 test('the disposable Docker smoke cannot silently waive zero supplementary groups',()=>{
   const workflow=fs.readFileSync(path.join(__dirname,'..','..','.github',
     'workflows','wardveil-firstparty-runtime-smoke.yml'),'utf8');
