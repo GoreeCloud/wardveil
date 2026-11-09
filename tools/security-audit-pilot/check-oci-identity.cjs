@@ -36,8 +36,13 @@ function evaluateOciIdentity(spec) {
   const caps=plain(proc.capabilities)?proc.capabilities:{};
   const linux=plain(spec.linux)?spec.linux:{};
   const root=plain(spec.root)?spec.root:{};
-  requireField(spec.ociVersion && /^1\.[0-9]+(?:\.[0-9]+)?$/.test(spec.ociVersion),
-    'explicit supported OCI 1.x spec required');
+  // Review only one concrete OCI schema revision, not arbitrary future 1.x
+  // versions whose security-sensitive field semantics may have changed.
+  requireField(spec.ociVersion === '1.1.0',
+    'explicit reviewed OCI spec version 1.1.0 required');
+  requireField(plain(user) &&
+    Object.keys(user).every(key=>['uid','gid','additionalGids'].includes(key)),
+    'unreviewed OCI process user extensions prohibited');
   requireField(user.uid===EXPECTED_UID && user.gid===EXPECTED_GID,
     'numeric unprivileged process UID/GID must match the reviewed profile');
   // This is intentionally stricter than Docker. Moby's getUser normally
@@ -45,6 +50,10 @@ function evaluateOciIdentity(spec) {
   // permission to weaken the zero supplementary-groups runtime rule.
   requireField(Array.isArray(user.additionalGids) && user.additionalGids.length===0,
     'OCI process user.additionalGids must be an explicitly empty array');
+  requireField(plain(proc) &&
+    Object.keys(proc).every(key=>[
+      'user','noNewPrivileges','terminal','args','cwd','env','apparmorProfile','capabilities',
+    ].includes(key)), 'unreviewed OCI process extensions prohibited');
   requireField(proc.noNewPrivileges===true,
     'no-new-privileges must be explicitly enabled in OCI process');
   requireField(proc.terminal===false,
@@ -63,6 +72,10 @@ function evaluateOciIdentity(spec) {
     proc.apparmorProfile.length>0 &&
     !/unconfined|complain/i.test(proc.apparmorProfile),
     'OCI process must request a non-unconfined AppArmor profile');
+  requireField(plain(caps) &&
+    Object.keys(caps).every(key=>
+      ['bounding','effective','permitted','inheritable','ambient'].includes(key)),
+    'unreviewed OCI capability extensions prohibited');
   for (const name of ['bounding','effective','permitted','inheritable','ambient']) {
     requireField(Array.isArray(caps[name]) && caps[name].length===0,
       'OCI '+name+' capabilities must be explicitly empty');
@@ -71,6 +84,7 @@ function evaluateOciIdentity(spec) {
   const ns=linux.namespaces;
   requireField(Array.isArray(ns) && ns.length===REQUIRED_NAMESPACES.length &&
     ns.every(n=>plain(n) && REQUIRED_NAMESPACES.includes(n.type) &&
+      Object.keys(n).every(key=>key==='type'||key==='path') &&
       (n.path===undefined || n.path==='')) &&
     REQUIRED_NAMESPACES.every(type=>ns.filter(n=>n.type===type).length===1),
     'all seven OCI namespaces must be private, unique and without host paths');
