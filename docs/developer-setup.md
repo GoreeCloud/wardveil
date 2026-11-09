@@ -24,7 +24,7 @@ go build ./cmd/wardveil
 
 ## Controlled local launch
 
-Use two **different**, high-entropy secrets of at least 32 bytes, kept out of shell history and logs and managed through an approved secret facility in later deployment. Set environment variables `WARDVEIL_INGEST_TOKEN`, `WARDVEIL_READ_TOKEN`, optionally `WARDVEIL_DATA_DIR` and `WARDVEIL_LISTEN`. Example shell input below references pre-provisioned environment variables, not hard-coded credentials:
+Use two **different**, high-entropy secrets of at least 32 bytes, kept out of shell history and logs and managed through an approved secret facility in later deployment. Set environment variables `WARDVEIL_INGEST_TOKEN`, `WARDVEIL_READ_TOKEN`, optionally `WARDVEIL_STATUS_TOKEN` (opt-in scoped health reader), `WARDVEIL_DATA_DIR` and `WARDVEIL_LISTEN`. When enabled, the status token must be a distinct secret of 32–1024 bytes, different from both event credentials; the service refuses startup if it overlaps. Example shell input below references pre-provisioned environment variables, not hard-coded credentials:
 
 ```sh
 WARDVEIL_DATA_DIR=./var WARDVEIL_LISTEN=127.0.0.1:8787 go run ./cmd/wardveil
@@ -44,6 +44,7 @@ The example timestamp is illustrative; substitute a current RFC3339 timestamp wh
 ## API contract — prototype
 
 - `GET /healthz` — unauthenticated minimal liveness and in-process journal-writability status; 503 after a detected uncertain journal write **or** when the development event capacity is exhausted. It is not a full runtime readiness or remote-dependency probe.
+- `GET /v1/status` — **disabled/404 by default** until `WARDVEIL_STATUS_TOKEN` is set. Requires a distinct status-only Bearer token; neither event-ingest nor event-read tokens authorize it, and the status token cannot read or ingest events. A valid read returns a minimal `wardveil.status.v1` response `{schema_version,state,observed_at}` (UTC source-observed millisecond timestamp). HTTP 200 maps to `ok` when the journal is writable, HTTP 503 to `degraded` when it is not. Query parameters and request bodies are rejected; no event identities, counts or payloads are included. `/healthz` remains unauthenticated and unchanged.
 - `POST /v1/events` — ingest-scope Bearer token; one strict JSON event with case-insensitively unique field names (duplicate keys return HTTP 400); 4 KiB maximum; required fields: `schema_version`, `source`, `source_event_id`, `event_type`, `severity`, `asset_id`, `occurred_at`. Supports `schema_version=1` and severity `info|low|medium|high|critical`. Source, type and asset are bounded opaque identifiers, not arbitrary log message bodies. Event time must not be more than five minutes ahead or over 365 days old.
 - `GET /v1/events?limit=25` — read-scope token; limit 1–100, most recent first. No pagination or filtering yet.
 - Same `(source, source_event_id)` with identical data returns existing event; conflicting reuse returns HTTP 409.
@@ -61,3 +62,9 @@ The example timestamp is illustrative; substitute a current RFC3339 timestamp wh
 ## Follow-up
 
 Build approved storage migrations, incident/audit models, source credential scoping, retention policies, and only then isolate ClamAV scanning behind source-owned quarantine contracts. Follow `docs/roadmap.md` and `docs/security-model.md`. UI development must use authoritative GC UI and verify each declared native OS target separately.
+
+### Dedicated Mesh status-only development scope
+
+The source-owned `/v1/status` route is **opt-in** for a reviewed, isolated local development session. Use a third independently generated high-entropy token exclusively for that route, never share the event-listing token with Mesh, and do not place any real credential in source, screenshots, logs, CI artifacts or issue reports. The secret is processed only in memory as an SHA-256 comparison reference; it is not a durable Keycloak or GoreeCloud Identity credential, nor does it implement revocation during an already running process. Revocation currently requires removing/replacing the configured status token and restarting the development process; a real production Identity revocation flow is unimplemented.
+
+Do not proxy this plain HTTP loopback service externally, place it on an internet-facing host, or treat the status result as Wardveil cybersecurity posture. A real Mesh connector must validate the **source-owned** version and timestamp and reject schema drift, untrusted origins, missing authentication, ambiguous headers, body overflow and credential scope crossover. The temporary hosted source CI smoke uses disposable test-only tokens and private journal data. This feature does not approve any production deployment, full incident record access, signed response, or Stable release.
