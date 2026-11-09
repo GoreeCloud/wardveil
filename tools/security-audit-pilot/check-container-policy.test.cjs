@@ -19,7 +19,7 @@ function good(){return {
     OomKillDisable:false,Init:false,Runtime:'runc',Isolation:'default',CgroupParent:'',Ulimits:[],Tmpfs:{'/scratch':'rw,nosuid,nodev,noexec,size=67108864','/tmp':'rw,nosuid,nodev,noexec,size=33554432'},
     Mounts:[{Type:'bind',Source:source,Target:'/source',ReadOnly:true,BindOptions:{Propagation:'rprivate'}}],
     UTSMode:'',Binds:[],Devices:[],DeviceRequests:[],VolumesFrom:[],Links:[],PublishAllPorts:false,PortBindings:{},
-    LogConfig:{Type:'none'},RestartPolicy:{Name:'no'}},
+    LogConfig:{Type:'none'},RestartPolicy:{Name:'no'},AutoRemove:false},
   Mounts:[{Type:'bind',Source:source,Destination:'/source',RW:false,Mode:'ro',Propagation:'rprivate'}],
   NetworkSettings:{Ports:{}}
 };}
@@ -51,6 +51,7 @@ invalid('privileged container',obj=>{obj.HostConfig.Privileged=true;});
 invalid('writable root filesystem',obj=>{obj.HostConfig.ReadonlyRootfs=false;});
 invalid('persisted container logs',obj=>{obj.HostConfig.LogConfig.Type='json-file';});
 invalid('automatic restart',obj=>{obj.HostConfig.RestartPolicy.Name='always';});
+invalid('automatic deletion of witness evidence',obj=>{obj.HostConfig.AutoRemove=true;});
 invalid('automatic image healthcheck',obj=>{obj.Config.Healthcheck={Test:['CMD','sh','-c','true']};});
 invalid('hidden image volumes',obj=>{obj.Config.Volumes={'/private':{}};});
 invalid('sysctl override',obj=>{obj.HostConfig.Sysctls={'net.ipv4.ip_forward':'1'};});
