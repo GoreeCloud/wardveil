@@ -45,6 +45,7 @@ function observed() {
     cmdline:[entry,cmd,witnessArg,''].join('\0'),
     hostNamespaces,containerNamespaces,
     cgroup:'0::/system.slice/docker-'+id+'.scope',
+    cgroupAfter:'0::/system.slice/docker-'+id+'.scope',
     status:['Name:\tnode','Pid:\t34567','NSpid:\t34567\t1','Uid:\t65534\t65534\t65534\t65534',
       'Gid:\t65534\t65534\t65534\t65534','NoNewPrivs:\t1',
       'Seccomp:\t2','Seccomp_filters:\t1',
@@ -96,6 +97,8 @@ reject('unapproved host-observed process arguments',(d,w)=>{w.cmdline=[entry,'/t
 reject('unapproved extra host-observed arguments',(d,w)=>{w.cmdline=[entry,cmd,witnessArg,'--unexpected',''].join('\0');});
 reject('truncated proc cmdline',(d,w)=>{w.cmdline=[entry,cmd,witnessArg].join('\0');});
 reject('no cgroup identifier binding',(d,w)=>{w.cgroup='0::/system.slice/unrelated.scope';});
+reject('migrated process cgroup during witness',(d,w)=>{w.cgroupAfter='0::/system.slice/unrelated.scope';});
+reject('missing cgroup reread',(d,w)=>{delete w.cgroupAfter;});
 reject('cgroup v1 record',(d,w)=>{w.cgroup='12:pids:/docker/'+id;});
 reject('host-root mapping',(d,w)=>{w.uidMap='0 0 65536';});
 reject('zero effective UID',(d,w)=>{w.status=w.status.replaceAll('65534','0');});
