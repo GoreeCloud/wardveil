@@ -26,12 +26,20 @@ Both accept a single, absolute, descriptor-safe Linux path to an ordinary, bound
 | Mount propagation | Explicit `rprivate`; no unreviewed mounted device nodes or network devices |
 | Resource limits | Memory 64–512 MiB, total memory+swap equal to memory limit (no added swap), bounded quota of at most one CPU, PID limit 1–32, an explicit deny-only device cgroup rule |
 | Additional settings | No lifecycle hooks, arbitrary annotations, sysctl modifications, unrelated platform/process extensions or unapproved cgroup override fields |
-| Seccomp syntax | Explicit `SCMP_ACT_ERRNO` default, x86-64 architecture, explicit unique syscall allow rules, no unfiltered clone/clone3, namespace/mount controls, ptrace, BPF, kernel module controls or selected high-risk io_uring/userfaultfd entry points; no notification listener, unreviewed flags or unknown rule actions |
+| Seccomp syntax | Explicit `SCMP_ACT_ERRNO` default, x86-64 architecture, and syscall names drawn **only from the fixed 44-name proposed allowlist**. Unreviewed names such as `socket`, `connect`, `execve`, `fork`, `clone`, `clone3`, filesystem mutation, mount, ptrace, BPF, io_uring, and userfaultfd are rejected. No notification listener, unreviewed flags or unknown rule actions |
 | Kernel-information paths | Exact reviewed mask list and read-only kernel-control paths |
 
 This proposal intentionally errs on the restrictive side. **It has not been demonstrated that Node can start and run successfully under this exact OCI profile.** In particular, the final seccomp syscall allowlist, the device setup required for runtime stdio, and recursive read-only mount behavior need separate runtime review; restrictions must not be silently relaxed to resolve a failure.
 
 The source of OCI field definitions is the [Open Container Initiative runtime specification](https://github.com/opencontainers/runtime-spec/blob/main/config.md) and its [Linux Go structures](https://github.com/opencontainers/runtime-spec/blob/main/specs-go/config.go). Reading this specification and validating JSON fields do **not** establish that any runtime supports or enforces the proposed values.
+
+## Unresolved execution-model incompatibilities and parser safety
+
+The proposed static seccomp policy is deliberately **not ready for Node execution**. In particular, `execve` and unfiltered `clone`/`clone3` are not approved, whereas normal OCI process startup and Node/libuv may require these operations. An execution-capable, argument-constrained profile would require independent runtime-specific analysis. We must not loosen the allowlist solely to make a green runtime check, and a passing static check must never be treated as evidence that the proposed Node process can start.
+
+The OCI CLI tools now share a first-party **duplicate-member-rejecting JSON parser**. It is applied to exactly the bytes read through the bounded, descriptor-relative Linux file reader; no second pathname-based read occurs. Repeated object keys, including escaped aliases such as `"a"` versus `"\\u0061"`, fail closed. Whitespace and normal formatted JSON remain supported. This is intended to prevent ambiguous OCI configuration evidence in tools with different duplicate-key handling; it is not runtime attestation.
+
+The existing Docker inspection input path retains its earlier JSON parser. The new rejection specifically protects both OCI CLI tools, which analyze pre-execution security-sensitive bundles. The parser has a 64-level structure-depth cap and relies on JSON.parse for syntax validation; the source file reader independently bounds bytes and rejects symlink ancestors, non-regular input and changes observed during read.
 
 ## Suggested read-only review procedure
 
