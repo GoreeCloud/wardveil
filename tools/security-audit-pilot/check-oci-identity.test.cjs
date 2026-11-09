@@ -87,6 +87,24 @@ bad('no seccomp',x=>delete x.linux.seccomp);
 bad('permissive seccomp',x=>x.linux.seccomp.defaultAction='SCMP_ACT_ALLOW');
 bad('unrecognized seccomp action',x=>x.linux.seccomp.defaultAction='bogus');
 bad('OCI version missing',x=>delete x.ociVersion);
+test('the disposable Docker smoke cannot silently waive zero supplementary groups',()=>{
+  const workflow=fs.readFileSync(path.join(__dirname,'..','..','.github',
+    'workflows','wardveil-firstparty-runtime-smoke.yml'),'utf8');
+  assert.ok(workflow.includes('if field(status,"Groups")!="" { fail("supplementary group membership") }'));
+  assert.ok(workflow.includes('--user 65534:65534 --pids-limit 24'));
+  assert.ok(workflow.includes('--cap-drop ALL --security-opt no-new-privileges:true'));
+  assert.ok(workflow.includes('--userns-remap=default'));
+  assert.ok(workflow.includes('HOST GROUP EVIDENCE: primary GID also assigned as supplementary'));
+  assert.ok(!workflow.includes('--group-add '));
+  assert.ok(workflow.includes("github.event.number == 24"));
+  assert.ok(workflow.includes('docker --host "$socket"'));
+});
+test('OCI identity checker never runs a process or opens a network socket',()=>{
+  const src=fs.readFileSync(path.join(__dirname,'check-oci-identity.cjs'),'utf8');
+  assert.doesNotMatch(src,/\brequire\(['"]node:(?:child_process|net|http|https|dgram|vm)['"]\)/);
+  assert.doesNotMatch(src,/\b(?:spawn|exec|fork)\s*\(/);
+  assert.doesNotMatch(src,/\b(?:fetch|WebSocket)\s*\(/);
+});
 test('validMap covers exact expected bounds',()=>{
   assert.equal(validMap([{containerID:0,hostID:1,size:65535}]),true);
   assert.equal(validMap([{containerID:0,hostID:1,size:65536}]),true);
