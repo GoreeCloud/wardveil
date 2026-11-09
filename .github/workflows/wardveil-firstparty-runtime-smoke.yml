@@ -1,0 +1,182 @@
+name: Wardveil first-party runtime isolation smoke (disposable host)
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+    paths:
+      - .github/workflows/wardveil-firstparty-runtime-smoke.yml
+
+permissions:
+  contents: read
+
+jobs:
+  disposable-remapped-daemon:
+    if: ${{ github.event.number == 24 && github.event.pull_request.head.repo.full_name == 'GoreeCloud/wardveil' && github.event.pull_request.head.ref == 'feat/security-audit-integrity-pilot-20261107' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - name: Compile isolated first-party fixture and test remapped daemon
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          umask 077
+          echo 'FIRST-PARTY RUNTIME TEST ONLY: ephemeral GitHub host, no owner devices or upstream skill'
+          command -v go >/dev/null
+          command -v docker >/dev/null
+          command -v dockerd >/dev/null
+          [[ "$(stat -fc %T /sys/fs/cgroup)" == cgroup2fs ]]
+          [[ "$(cat /sys/module/apparmor/parameters/enabled)" == Y ]]
+          dir="$(mktemp -d "$RUNNER_TEMP/wardveil-isolation.XXXXXXXX")"
+          socket="unix://$dir/dockerd.sock"
+          pidfile="$dir/dockerd.pid"
+          container=""
+          cleanup() {
+            if [[ -n "$container" ]]; then
+              sudo docker --host "$socket" rm -f "$container" >/dev/null 2>&1 || true
+            fi
+            if [[ -f "$pidfile" ]]; then
+              pid="$(cat "$pidfile" 2>/dev/null || true)"
+              if [[ "$pid" =~ ^[0-9]+$ ]]; then sudo kill "$pid" >/dev/null 2>&1 || true; fi
+            fi
+          }
+          trap cleanup EXIT
+          mkdir -p "$dir/rootfs/usr/bin"
+          cat > "$dir/probe.go" <<'FIRSTPARTY_GO'
+          package main
+
+          import (
+            "fmt"
+            "os"
+            "strconv"
+            "strings"
+            "time"
+          )
+          func read(p string) string {
+            data, err := os.ReadFile(p)
+            if err != nil || len(data) > 131072 { fail("kernel input unavailable") }
+            return string(data)
+          }
+          func fail(why string) {
+            fmt.Println("BLOCKED: "+why)
+            os.Exit(1)
+          }
+          func field(text, key string) string {
+            prefix:=key+":"
+            for _,line:=range strings.Split(text,"\n") {
+              if strings.HasPrefix(line,prefix) { return strings.TrimSpace(strings.TrimPrefix(line,prefix)) }
+            }
+            return "<missing>"
+          }
+          func numeric(p string) int64 {
+            v,err:=strconv.ParseInt(strings.TrimSpace(read(p)),10,64)
+            if err!=nil { fail("cgroup numeric limit") }
+            return v
+          }
+          func main(){
+            if os.Geteuid()!=65534 || os.Getegid()!=65534 { fail("process identity") }
+            status:=read("/proc/self/status")
+            if field(status,"NoNewPrivs")!="1" || field(status,"Seccomp")!="2" ||
+              field(status,"TracerPid")!="0" || field(status,"Groups")!="" ||
+              field(status,"CapEff")!="0000000000000000" { fail("kernel privilege flags") }
+            if field(status,"Seccomp_filters")=="0" || field(status,"Seccomp_filters")=="<missing>" { fail("seccomp filter count") }
+            uid:=strings.Fields(read("/proc/self/uid_map"))
+            gid:=strings.Fields(read("/proc/self/gid_map"))
+            if len(uid)!=3 || len(gid)!=3 || uid[1]=="0" || gid[1]=="0" { fail("nonroot outside user namespace mapping") }
+            if !strings.Contains(read("/proc/self/attr/current"),"(enforce)") { fail("AppArmor enforcement") }
+            netLines:=strings.Split(strings.TrimSpace(read("/proc/net/dev")),"\n")
+            count:=0
+            for _,line:=range netLines[2:] {
+              if index:=strings.Index(line,":"); index>=0 {
+                if strings.TrimSpace(line[:index])!="lo" { fail("unexpected network interface") }
+                count++
+              }
+            }
+            if count!=1 { fail("loopback interface evidence") }
+            mem:=numeric("/sys/fs/cgroup/memory.max")
+            swap:=numeric("/sys/fs/cgroup/memory.swap.max")
+            pids:=numeric("/sys/fs/cgroup/pids.max")
+            if mem<67108864 || mem>536870912 || swap!=0 || pids<1 || pids>32 { fail("cgroup memory/swap/PIDs") }
+            cpu:=strings.Fields(read("/sys/fs/cgroup/cpu.max"))
+            if len(cpu)!=2 { fail("CPU quota") }
+            q,e1:=strconv.ParseInt(cpu[0],10,64)
+            period,e2:=strconv.ParseInt(cpu[1],10,64)
+            if e1!=nil || e2!=nil || q<1 || period<1 || q>period { fail("CPU quota") }
+            seen:=map[string]bool{}
+            for _,line:=range strings.Split(strings.TrimSpace(read("/proc/self/mountinfo")),"\n") {
+              parts:=strings.Fields(line)
+              if len(parts)<6 { fail("mount evidence format") }
+              name:=parts[4]
+              if seen[name] { fail("stacked mountpoint") }
+              seen[name]=true
+              opts:=strings.Split(parts[5],",")
+              has:=func(v string) bool { for _,s:=range opts { if s==v{return true} }; return false }
+              if name=="/" || name=="/source" { if !has("ro") { fail("writable root/source") } }
+              if name=="/scratch" || name=="/tmp" {
+                if !has("rw") || !has("nosuid") || !has("nodev") || !has("noexec") { fail("scratch mount flags") }
+              }
+              if strings.HasPrefix(name,"/source/") || strings.HasPrefix(name,"/scratch/") || strings.HasPrefix(name,"/tmp/") { fail("nested mount") }
+            }
+            for _,name:=range []string{"/","/source","/scratch","/tmp"} { if !seen[name] { fail("required mount missing") } }
+            fmt.Println("FIRST-PARTY KERNEL PROBE MATCH ONLY: host witness and approved Node profile are separate gates")
+            time.Sleep(16*time.Second)
+          }
+          FIRSTPARTY_GO
+          GOPROXY=off GOSUMDB=off GO111MODULE=off GOTOOLCHAIN=local CGO_ENABLED=0 \
+            go build -trimpath -ldflags='-s -w' -o "$dir/rootfs/usr/bin/wardveil-probe" "$dir/probe.go"
+          test -s "$dir/rootfs/usr/bin/wardveil-probe"
+          # This is a NEW daemon with separate socket, PID, data and exec roots.
+          # Never restart or reconfigure the runner's preinstalled Docker daemon.
+          sudo dockerd \
+            --host "$socket" --pidfile "$pidfile" \
+            --data-root "$dir/data" --exec-root "$dir/exec" \
+            --userns-remap=default --bridge=none --iptables=false --ip6tables=false \
+            --containerd=/run/containerd/containerd.sock --log-level=error \
+            > "$dir/daemon.log" 2>&1 &
+          for n in $(seq 1 40); do
+            [[ -S "$dir/dockerd.sock" ]] && break
+            sleep 0.5
+          done
+          [[ -S "$dir/dockerd.sock" ]] || { echo 'BLOCKED: isolated remapped daemon unavailable'; exit 1; }
+          options="$(sudo docker --host "$socket" info --format '{{json .SecurityOptions}}' 2>/dev/null || true)"
+          [[ "$options" == *"name=userns"* && "$options" == *"name=apparmor"* && "$options" == *"name=seccomp"* ]] ||
+            { echo 'BLOCKED: daemon missing userns, AppArmor or seccomp'; exit 1; }
+          [[ "$(sudo docker --host "$socket" info --format '{{.CgroupVersion}}')" == "2" ]] ||
+            { echo 'BLOCKED: Docker not using cgroup v2'; exit 1; }
+          # Local scratch image: only a first-party static Go binary; FROM scratch
+          # equivalent, no registry pull, dependencies, network build or target code.
+          image="$(tar -C "$dir/rootfs" -cf - . | sudo docker --host "$socket" import - wardveil-firstparty-runtime:local)"
+          [[ "$image" == sha256:* ]] || { echo 'BLOCKED: local image creation failed'; exit 1; }
+          sudo install -d -m 0755 /srv/wardveil-audit-pilot/source/firstparty-smoke
+          container="$(sudo docker --host "$socket" create \
+            --name wardveil-firstparty-probe --network none --ipc private --cgroupns private \
+            --read-only --cap-drop ALL --security-opt no-new-privileges:true \
+            --user 65534:65534 --pids-limit 24 --memory 256m --memory-swap 256m --cpus 0.5 \
+            --tmpfs /scratch:rw,nosuid,nodev,noexec,size=67108864 \
+            --tmpfs /tmp:rw,nosuid,nodev,noexec,size=33554432 \
+            --mount type=bind,src=/srv/wardveil-audit-pilot/source/firstparty-smoke,dst=/source,readonly,bind-propagation=rprivate \
+            --log-driver none --entrypoint /usr/bin/wardveil-probe "$image")"
+          [[ "$(sudo docker --host "$socket" inspect -f '{{.State.Status}}' "$container")" == "created" ]] ||
+            { echo 'BLOCKED: unexpected pre-start state'; exit 1; }
+          sudo docker --host "$socket" start "$container" >/dev/null
+          hostpid=0
+          for n in $(seq 1 15); do
+            hostpid="$(sudo docker --host "$socket" inspect -f '{{.State.Pid}}' "$container")"
+            [[ "$hostpid" =~ ^[1-9][0-9]+$ ]] && break
+            sleep 0.25
+          done
+          [[ "$hostpid" =~ ^[1-9][0-9]+$ ]] || { echo 'BLOCKED: first-party probe never entered running state'; exit 1; }
+          for ns in user pid mnt net ipc uts cgroup; do
+            [[ "$(sudo readlink "/proc/$hostpid/ns/$ns")" != "$(sudo readlink "/proc/1/ns/$ns")" ]] ||
+              { echo "BLOCKED: host and probe $ns namespace were identical"; exit 1; }
+          done
+          hostmap="$(sudo cat "/proc/$hostpid/uid_map")"
+          outside="$(awk 'NR==1 {print $2}' <<< "$hostmap")"
+          [[ "$outside" =~ ^[1-9][0-9]*$ ]] || { echo 'BLOCKED: UID 0 maps to host root'; exit 1; }
+          [[ "$(sudo awk '/^NoNewPrivs:/ {print $2}' "/proc/$hostpid/status")" == "1" ]] ||
+            { echo 'BLOCKED: host-observed no_new_privs not enforced'; exit 1; }
+          [[ "$(sudo awk '/^Seccomp:/ {print $2}' "/proc/$hostpid/status")" == "2" ]] ||
+            { echo 'BLOCKED: host-observed seccomp not filtering'; exit 1; }
+          echo 'HOST NAMESPACE/SECCOMP MATCH ONLY: ephemeral remapped Docker process observed'
+          code="$(timeout 30s sudo docker --host "$socket" wait "$container")" ||
+            { echo 'BLOCKED: probe exceeded bounded run time'; exit 1; }
+          [[ "$code" == "0" ]] || { echo "BLOCKED: first-party self-probe failed (exit $code)"; exit 1; }
+          echo 'FIRST-PARTY RUNTIME SMOKE MATCH ONLY. No approved Node image, authenticated Docker snapshot, exact Wardveil host witness, egress attestation, or third-party audit execution.'
