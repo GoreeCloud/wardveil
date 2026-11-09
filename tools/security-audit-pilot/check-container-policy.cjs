@@ -36,6 +36,9 @@ function validExpected(expected) {
       !/^[-\w./]+@sha256:[a-f0-9]{64}$/.test(expected.image)) {
     throw new Error('expected image must be an explicitly pinned image@sha256 digest');
   }
+  if (typeof expected.imageId !== 'string' || !/^sha256:[a-f0-9]{64}$/.test(expected.imageId)) {
+    throw new Error('expected resolved image ID must be a separately reviewed sha256 digest');
+  }
   const src = expected.source;
   if (typeof src !== 'string' || !src.startsWith(SAFE_SOURCE_PREFIX) ||
       path.posix.normalize(src) !== src || src.includes('//') ||
@@ -100,8 +103,8 @@ function evaluateContainerConfig(input, expected) {
   requireField(config.Tty === false && config.OpenStdin === false &&
     config.StdinOnce === false && config.AttachStdin === false,
     'interactive terminal or inherited stdin is not allowed');
-  requireField(typeof doc.Image === 'string' && /^sha256:[a-f0-9]{64}$/.test(doc.Image),
-    'resolved image ID must be an explicit sha256 digest');
+  requireField(doc.Image === expected.imageId,
+    'resolved image ID must exactly match the separately approved local image ID');
   requireField(config.WorkingDir === '/scratch', 'working directory must be scratch');
   requireField(Array.isArray(config.Env) && config.Env.length === Object.keys(EXPECTED_ENVS).length &&
     config.Env.every(x => typeof x === 'string' && /^(HOME|TMPDIR|PATH|LANG)=/.test(x)) &&
@@ -214,16 +217,17 @@ function readInspectFile(file) {
 }
 function main(args) {
   if (args.length===1 && args[0]==='--help') {
-    process.stdout.write('Static, offline gate only: node check-container-policy.cjs /absolute/inspect.json --image name@sha256:<64hex> --source /srv/wardveil-audit-pilot/source/<name>\n');
+    process.stdout.write('Static, offline gate only: node check-container-policy.cjs /absolute/inspect.json --image name@sha256:<64hex> --image-id sha256:<64hex> --source /srv/wardveil-audit-pilot/source/<name>\n');
     return 0;
   }
-  if(args.length!==5 || !path.isAbsolute(args[0]) || args[1]!=='--image' || args[3]!=='--source') {
-    process.stderr.write('BLOCKED: expected inspect JSON, exact image digest and approved source path\n');
+  if(args.length!==7 || !path.isAbsolute(args[0]) || args[1]!=='--image' ||
+     args[3]!=='--image-id' || args[5]!=='--source') {
+    process.stderr.write('BLOCKED: inspect JSON, pinned image reference, approved local image ID and approved source path required\n');
     return 2;
   }
   try {
     const obj=readInspectFile(args[0]);
-    const verdict=evaluateContainerConfig(obj,{image:args[2],source:args[4]});
+    const verdict=evaluateContainerConfig(obj,{image:args[2],imageId:args[4],source:args[6]});
     if(!verdict.ok) {
       // No raw inspection data, secrets, or environment values are echoed.
       for(const why of verdict.errors) process.stderr.write('BLOCKED: '+why+'\n');
