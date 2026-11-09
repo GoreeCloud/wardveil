@@ -91,6 +91,8 @@ function safeHostWitness(inspect, observed, expected) {
   check(observed.startBefore != null && observed.startBefore === observed.startAfter &&
     /^\d+$/.test(observed.startBefore || ''), 'PID start time must remain stable during witness capture');
   check(observed.comm === 'node', 'host-observed process name must be node');
+  check(observed.exe === APPROVED_BIN,
+    'host-observed executable must match approved Node binary without deletion or redirection');
   check(matchesProbeCommandLine(observed.cmdline),
     'host-observed process argv must equal the exact first-party witness command');
   check(typeof observed.cgroup === 'string' &&
@@ -103,6 +105,17 @@ function safeHostWitness(inspect, observed, expected) {
       ns + ' namespace must be distinct from host PID1');
   }
   const status=observed.status || '';
+  // Inspect the kernel's own process IDs, not only the daemon-supplied PID.
+  const kernelPid=getField(status,'Pid');
+  const nsPid=getField(status,'NSpid');
+  check(kernelPid === String(pid),
+    'host-observed kernel PID must match inspected container PID');
+  const pidChain=typeof nsPid === 'string' && /^\d+(?:\s+\d+)*$/.test(nsPid) ?
+    nsPid.split(/\s+/).map(Number) : [];
+  check(pidChain.length >= 2 && pidChain[0] === pid &&
+    pidChain[pidChain.length-1] === 1 &&
+    pidChain.every(Number.isSafeInteger),
+    'probe must be PID 1 in an isolated child PID namespace');
   const uid=getField(status,'Uid'),gid=getField(status,'Gid');
   const parseIds=line=>typeof line==='string'&&/^\d+(?:\s+\d+){3}$/.test(line) ?
     line.split(/\s+/).map(Number) : [];
@@ -154,6 +167,7 @@ function captureFromHost(inspect, expected) {
   const readCg=name=>readBounded(path.join(dir,name));
   const witness={
     pid,startBefore,comm:readBounded(proc+'/comm').trim(),
+    exe:fs.readlinkSync(proc+'/exe'),
     cmdline:readBounded(proc+'/cmdline'),
     cgroup,hostNamespaces,containerNamespaces,
     status:readBounded(proc+'/status'),
