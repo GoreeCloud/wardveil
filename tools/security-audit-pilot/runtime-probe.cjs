@@ -72,6 +72,28 @@ function checkMounts(text) {
   }
   const byName = Object.fromEntries(mounts.filter(x => expected.includes(x.mount))
     .map(x => [x.mount, x]));
+  // A writable root can hide an additional host bind at an unrelated path.
+  // A process-only probe cannot identify the host source of a bind, so accept
+  // only documented container-system mountpoints, and still require host checks.
+  const systemMounts = new Map([
+    ['/proc', {type:'proc', required:['nosuid','nodev','noexec']}],
+    ['/sys', {type:'sysfs', required:['ro']}],
+    ['/sys/fs/cgroup', {type:'cgroup2', required:['ro']}],
+    ['/dev', {type:'tmpfs', required:['nosuid']}],
+    ['/dev/pts', {type:'devpts', required:['nosuid','noexec']}],
+    ['/dev/shm', {type:'tmpfs', required:['nosuid','nodev','noexec']}],
+    ['/dev/mqueue', {type:'mqueue', required:['nosuid','nodev','noexec']}],
+    ['/etc/hostname', {required:['ro']}],
+    ['/etc/hosts', {required:['ro']}],
+    ['/etc/resolv.conf', {required:['ro']}],
+  ]);
+  if (mounts.some(m => {
+    if (m.mount.includes('\\') || !m.mount.startsWith('/')) return true;
+    if (expected.includes(m.mount)) return false;
+    const rule = systemMounts.get(m.mount);
+    return !rule || (rule.type && m.fsType !== rule.type) ||
+      !rule.required.every(flag => m.options.includes(flag));
+  })) return false;
   if (!byName['/'].options.includes('ro') || !byName['/source'].options.includes('ro')) return false;
   if (byName['/source'].optional.some(x => /^(shared|master|propagate_from):/.test(x))) return false;
   for (const name of ['/scratch', '/tmp']) {
