@@ -168,27 +168,49 @@ function tmpfsSafe(raw,maxSize) {
   return tokens.length===required.length && required.every(x => tokens.includes(x));
 }
 function readInspectFile(file) {
-  if (process.platform !== 'linux' || !Number.isInteger(fs.constants.O_NOFOLLOW) ||
-      !Number.isInteger(fs.constants.O_NONBLOCK)) {
-    throw new Error('Linux safe-open support is required');
+  const flags=fs.constants.O_RDONLY|fs.constants.O_NOFOLLOW|fs.constants.O_NONBLOCK;
+  if(process.platform !== 'linux' || !path.isAbsolute(file) ||
+     !Number.isInteger(fs.constants.O_NOFOLLOW) || !fs.constants.O_NOFOLLOW ||
+     !Number.isInteger(fs.constants.O_NONBLOCK) || !fs.constants.O_NONBLOCK ||
+     !Number.isInteger(fs.constants.O_DIRECTORY) || !fs.constants.O_DIRECTORY ||
+     !fs.existsSync('/proc/self/fd')) {
+    throw new Error('Linux descriptor-safe absolute input path required');
   }
-  const stat=fs.lstatSync(file);
-  if (!stat.isFile() || stat.isSymbolicLink() || stat.size > MAX_BYTES) {
-    throw new Error('inspect input must be a bounded ordinary file');
+  const parts=file.slice(path.parse(file).root.length).split(path.sep);
+  if(parts.length<1 || parts.some(part=>!part||part==='.'||part==='..')) {
+    throw new Error('noncanonical input path');
   }
-  const fd=fs.openSync(file,fs.constants.O_RDONLY|fs.constants.O_NOFOLLOW|fs.constants.O_NONBLOCK);
+  // Open every ancestor relative to an already-pinned directory descriptor.
+  // A parent-path symlink cannot swap in another file between lookup and read.
+  let dirFd=fs.openSync(path.parse(file).root,flags|fs.constants.O_DIRECTORY);
   try {
-    const opened=fs.fstatSync(fd);
-    if (!opened.isFile() || opened.size > MAX_BYTES || stat.ino !== opened.ino || stat.dev !== opened.dev) {
-      throw new Error('inspect input changed or is not ordinary');
+    for(const part of parts.slice(0,-1)){
+      const child=fs.openSync('/proc/self/fd/'+dirFd+'/'+part,flags|fs.constants.O_DIRECTORY);
+      fs.closeSync(dirFd);
+      dirFd=child;
     }
-    const bytes=Buffer.alloc(opened.size);
-    let n=0;
-    while(n<bytes.length){const k=fs.readSync(fd,bytes,n,bytes.length-n,null);if(!k)throw new Error('inspect input short read');n+=k;}
-    if (fs.fstatSync(fd).size!==opened.size) throw new Error('inspect input changed during read');
-    const json=new TextDecoder('utf-8',{fatal:true}).decode(bytes);
-    return JSON.parse(json);
-  } finally {fs.closeSync(fd);}
+    const fd=fs.openSync('/proc/self/fd/'+dirFd+'/'+parts[parts.length-1],flags);
+    try{
+      const first=fs.fstatSync(fd);
+      if(!first.isFile() || first.size>MAX_BYTES) {
+        throw new Error('inspect input must be bounded ordinary file');
+      }
+      const data=Buffer.alloc(first.size);
+      let n=0;
+      while(n<data.length){
+        const k=fs.readSync(fd,data,n,data.length-n,null);
+        if(!k) throw new Error('inspect input short read');
+        n+=k;
+      }
+      const after=fs.fstatSync(fd);
+      if(first.size!==after.size || first.mtimeMs!==after.mtimeMs ||
+         first.ctimeMs!==after.ctimeMs || first.ino!==after.ino ||
+         first.dev!==after.dev) {
+        throw new Error('inspect input changed during read');
+      }
+      return JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(data));
+    } finally {fs.closeSync(fd);}
+  } finally {fs.closeSync(dirFd);}
 }
 function main(args) {
   if (args.length===1 && args[0]==='--help') {
