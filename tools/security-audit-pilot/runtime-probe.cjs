@@ -174,6 +174,7 @@ function readBoundedBytes(file) {
   try {
     const stat = fs.fstatSync(fd);
     if (!stat.isFile()) throw new Error('non-regular kernel observation');
+    if (stat.size > MAX_BYTES) throw new Error('kernel observation exceeds bound');
     const bytes = Buffer.alloc(MAX_BYTES+1);
     let offset = 0;
     while (offset < bytes.length) {
@@ -182,6 +183,16 @@ function readBoundedBytes(file) {
       offset += n;
     }
     if (offset > MAX_BYTES) throw new Error('kernel observation exceeds bound');
+    const after=fs.fstatSync(fd);
+    // Ordinary probe files have stable inode/size/metadata. Procfs virtual
+    // observations commonly report a size of zero and cannot use this check.
+    // Reject changed source bytes before using them for integrity comparison.
+    if (stat.size > 0 &&
+        (after.dev !== stat.dev || after.ino !== stat.ino ||
+         after.size !== stat.size || after.mtimeMs !== stat.mtimeMs ||
+         after.ctimeMs !== stat.ctimeMs || offset !== stat.size)) {
+      throw new Error('regular observation changed during bounded read');
+    }
     // Return the exact original bytes, including a possible UTF-8 BOM.
     // Hashing decoded text could omit these bytes and mask source changes.
     return bytes.subarray(0,offset);
