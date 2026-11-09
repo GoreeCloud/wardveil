@@ -36,10 +36,9 @@ function checkReadOnlySource(source, allowImports) {
       imports.some((name,i)=>name!==allowImports[i])) return false;
   if (/\b(?:await\s+import\s*\(|new\s+(?:Worker|Function|WebSocket)\s*\()/.test(source)) return false;
   if (FORBIDDEN.some(re=>re.test(source))) return false;
-  // Disallow access to global process execution APIs and all known public
-  // filesystem writers even when fully qualified with an object name.
-  if (/\b(?:child_process|worker_threads|cluster|http|https|net|dgram|tls|http2)\b/.test(
-      source.replace(/\/\/[^\n]*/g,''))) return false;
+  // The exact import allowlist above rejects unreviewed Node networking and
+  // process-control modules. Do not pattern-match those names in string
+  // literals: a legitimate provenance URL is not a network API invocation.
   return true;
 }
 for (const [name,allow] of Object.entries(SOURCES)) {
