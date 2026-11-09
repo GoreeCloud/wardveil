@@ -143,6 +143,10 @@ function safeHostWitness(inspect, observed, expected) {
   check(gids.length===4 && gids.every(n=>n>0&&n===gids[0]) &&
     mappedWithoutHostRoot(observed.gidMap || '',gids[0]),
     'host-observed GID must be nonroot and remapped');
+  check(getField(status,'TracerPid')==='0',
+    'host-observed witness process must not have an attached tracer');
+  check(getField(status,'Groups')==='',
+    'host-observed process must have no supplementary groups');
   check(getField(status,'NoNewPrivs')==='1' && getField(status,'Seccomp')==='2' &&
     Number(getField(status,'Seccomp_filters'))>=1,
     'host-observed process must have no_new_privs and active seccomp filters');
