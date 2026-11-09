@@ -98,6 +98,9 @@ function safeHostWitness(inspect, observed, expected) {
   check(typeof observed.cgroup === 'string' &&
     !!cgroupRelativePath(observed.cgroup,expected.id),
     'host cgroup must include container ID and use cgroup v2');
+  check(typeof observed.cgroupAfter === 'string' &&
+    observed.cgroupAfter === observed.cgroup,
+    'process cgroup identity must remain stable through host witness capture');
   for (const ns of NS_TYPES) {
     const h=observed.hostNamespaces && observed.hostNamespaces[ns];
     const c=observed.containerNamespaces && observed.containerNamespaces[ns];
@@ -181,6 +184,7 @@ function captureFromHost(inspect, expected) {
     cpu:readCg('cpu.max'),
     pids:readCg('pids.max'),
   };
+  witness.cgroupAfter=readBounded(proc+'/cgroup');
   witness.startAfter=parseStartTicks(readBounded(proc+'/stat'));
   return witness;
 }
