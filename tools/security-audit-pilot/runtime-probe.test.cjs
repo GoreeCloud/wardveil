@@ -69,6 +69,11 @@ bad('source submount',r=>{r.mountinfo+='\n'+mount(6,'/source/host-private','rw,r
 bad('unapproved host bind at unrelated mountpoint',r=>{r.mountinfo+='\n'+mount(6,'/host','ro,relatime','ext4','/dev/sda','ro');});
 bad('unapproved mount under dev',r=>{r.mountinfo+='\n'+mount(6,'/dev/secret','ro,relatime','ext4','/dev/sda','ro');});
 bad('unapproved mount under proc',r=>{r.mountinfo+='\n'+mount(6,'/proc/mount-leak','ro,relatime','tmpfs','tmpfs','ro');});
+bad('stacked duplicate proc mount',r=>{r.mountinfo+='\n'+mount(6,'/proc','rw,nosuid,nodev,noexec','proc','proc');});
+bad('stacked duplicate allowlisted hosts bind',r=>{r.mountinfo+='\n'+mount(6,'/etc/hosts','ro,relatime','ext4','/dev/sdb','ro')+
+  '\n'+mount(7,'/etc/hosts','ro,relatime','ext4','/dev/sdc','ro');});
+bad('noncanonical mountpoint alias',r=>{r.mountinfo+='\n'+mount(6,'/proc/../proc','rw,nosuid,nodev,noexec','proc','proc');});
+
 bad('unapproved mount under etc',r=>{r.mountinfo+='\n'+mount(6,'/etc/shadow','ro,relatime','ext4','/dev/sda','ro');});
 bad('writable Docker hosts bind',r=>{r.mountinfo+='\n'+mount(6,'/etc/hosts','rw,relatime','ext4','/dev/sda','rw');});
 bad('unsafe proc mount flags',r=>{r.mountinfo=r.mountinfo.replace('/proc rw,nosuid,nodev,noexec','/proc rw,nosuid,nodev');});
