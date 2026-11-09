@@ -8,6 +8,7 @@ permissions:
 jobs:
   go-tests:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -24,11 +25,12 @@ jobs:
         run: go test -race ./...
   source-audit-pilot-tests:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
       - name: Verify Node is available
         run: node --version
-      - name: Offline source-integrity and container-policy unit tests (no upstream execution)
+      - name: Offline integrity, static policy, kernel and host witness tests (no upstream execution)
         run: node --test tools/security-audit-pilot/*.test.cjs
