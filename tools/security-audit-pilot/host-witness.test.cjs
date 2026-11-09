@@ -29,7 +29,7 @@ function inspect() {
       Mounts:[{Type:'bind',Source:source,Target:'/source',ReadOnly:true,
         BindOptions:{Propagation:'rprivate'}}],
       Binds:[],Devices:[],DeviceRequests:[],VolumesFrom:[],Links:[],GroupAdd:[],
-      PublishAllPorts:false,PortBindings:{},LogConfig:{Type:'none'},RestartPolicy:{Name:'no'},
+      PublishAllPorts:false,PortBindings:{},LogConfig:{Type:'none'},RestartPolicy:{Name:'no'},AutoRemove:false,
     },
     Mounts:[{Type:'bind',Source:source,Destination:'/source',RW:false,Mode:'ro',Propagation:'rprivate'}],
     NetworkSettings:{Ports:{},Networks:{none:{}}},
@@ -128,6 +128,7 @@ reject('unlimited PIDs',(d,w)=>{w.pids='max';});
 reject('swap enabled',(d,w)=>{w.swap='10000';});
 reject('unapproved additional exec process',(d)=>{d[0].ExecIDs=['unknown'];});
 reject('already restarted container',(d)=>{d[0].RestartCount=1;});
+reject('automatic container cleanup',d=>{d[0].HostConfig.AutoRemove=true;});
 reject('halted container',(d)=>{d[0].State.Running=false;d[0].State.Status='exited';});
 test('exact proc argv parser refuses missing NUL or executable changes',()=>{
  assert.equal(matchesProbeCommandLine([entry,cmd,witnessArg,''].join('\0')),true);
