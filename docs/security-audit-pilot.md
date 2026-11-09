@@ -4,7 +4,7 @@
 | --- | --- |
 | Owner | GoreeCloud / Wardveil |
 | Date | November 8, 2026 (follow-up engineering review; original pilot research November 7) |
-| Status | **Four first-party verification gates implemented on draft PR only; actual disposable-host acceptance, upstream execution, integration and deployment NOT approved or performed** |
+| Status | **Four first-party verification gates implemented; independent disposable-host runtime smoke performed and BLOCKED by supplementary group membership; exact Node-probe/host-witness acceptance, upstream execution, integration and deployment NOT approved or performed** |
 | Candidate upstream | [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill) |
 | Reviewed source revision | [`c1c8a8c1471069fb0e188eeaff69b8e8db6564a8`](https://github.com/cloudflare/security-audit-skill/commit/c1c8a8c1471069fb0e188eeaff69b8e8db6564a8) (`main` as checked November 7, 2026) |
 | License / author | MIT; Cloudflare, Inc. Copyright notice belongs to upstream |
@@ -158,6 +158,14 @@ The host witness's first-party probe-file hash reader anchors the observed proce
 **Read-only behavior guard.** The separate source-pattern regression guard now flags additional file-descriptor write APIs, destructive file operations, computed filesystem-writing calls and write-enabled file-open flags. Its coverage is still heuristic: code review and sandbox isolation remain mandatory and untrusted code must never be executed simply because a source-pattern test passed.
 
 **Evidence:** On implementing code head `49012c92be9867a7fd3ccb0f015647168ef2f38b`, all **230 first-party Node tests passed, zero failures/skips**, alongside Go formatting/vet/race, immutable upstream byte verification and editorial review in separate successful workflows. These are synthetic and read-only source tests. No real Docker/container-runtime acceptance, host LSM policy proof, image provenance verification, or third-party audit authorization is implied. A dual sample cannot establish every intermediate state or prevent a malicious privileged host from fabricating evidence.
+
+## Independent runtime execution — blocked, not approved (November 8, 2026)
+
+A dedicated [runtime isolation evidence report](./security-audit-runtime-isolation-evidence.md) now records **actual** kernel and hosted runner testing, rather than only synthetic Node fixture tests. The temporary local namespace test did create distinct namespace IDs but failed user-ID remapping, seccomp, no-new-privileges, effective capabilities, AppArmor proof and resource limits.
+
+A GitHub-hosted Ubuntu runner's **default** Docker daemon passed eight read-only kernel/engine prerequisites but lacked daemon-wide user-namespace remapping: [host preflight run 42557758944](https://github.com/GoreeCloud/wardveil/actions/runs/42557758944). A **separate, disposable remapped Docker daemon** was then created on a hosted runner with isolated data/socket/exec roots. A source-only static Go probe was built with Go's standard library and no registry image pulls, target code or third-party audit agent execution. On [runtime run 42559488217](https://github.com/GoreeCloud/wardveil/actions/runs/42559488217), independent host-side checks confirmed distinct user/PID/mount/network/IPC/UTS/cgroup namespace identities, nonroot outside UID mapping, `NoNewPrivs: 1` and `Seccomp: 2`. The in-container probe nevertheless returned **`BLOCKED: supplementary group membership`** and exited nonzero.
+
+**Mandatory disposition: FAIL/BLOCKED.** Do not weaken the no-supplementary-groups requirement, treat the hosted default daemon as suitable, or equate the partial Go smoke with the exact Wardveil Node kernel-probe and host-witness exchange. Additional image provenance, real network egress and mount enforcement, AppArmor/seccomp policy review, independently verified cleanup and GoreeShield privacy approval remain untested. No GoreeCloud owner VPS, laptop, production service or private data was modified; draft PR #24 and its existing acceptance task remain open.
 
 ## Threats and currently open upstream issues
 
