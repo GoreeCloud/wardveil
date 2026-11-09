@@ -8,7 +8,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const {readInspectFile, evaluateContainerConfig} = require('./check-container-policy.cjs');
-const {readBounded, getField, mappedWithoutHostRoot, checkMounts, checkNetwork, checkQuota} = require('./runtime-probe.cjs');
+const {readBounded, readBoundedBytes, getField, mappedWithoutHostRoot, checkMounts, checkNetwork, checkQuota} = require('./runtime-probe.cjs');
 
 const NS_TYPES = Object.freeze(['user','pid','mnt','net','ipc','uts','cgroup']);
 const MAX_MEMORY = 512 * 1024 * 1024;
@@ -182,7 +182,7 @@ function captureFromHost(inspect, expected) {
     // O_NOFOLLOW on the final regular file prevents substituting a symlink
     // for the approved first-party probe script.
     probeSha256:'sha256:'+crypto.createHash('sha256')
-      .update(readBounded(proc+'/root/opt/wardveil/runtime-probe.cjs'))
+      .update(readBoundedBytes(proc+'/root/opt/wardveil/runtime-probe.cjs'))
       .digest('hex'),
     cgroup,hostNamespaces,containerNamespaces,
     status:readBounded(proc+'/status'),
