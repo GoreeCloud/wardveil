@@ -1,7 +1,7 @@
 'use strict';
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const {safeHostWitness,parseStartTicks,cgroupRelativePath,main} = require('./host-witness.cjs');
+const {safeHostWitness,parseStartTicks,cgroupRelativePath,matchesProbeCommandLine,main} = require('./host-witness.cjs');
 const id = 'a'.repeat(64);
 const image = 'wardveil-audit@sha256:'+'b'.repeat(64);
 const source = '/srv/wardveil-audit-pilot/source/public-fixture';
@@ -42,6 +42,7 @@ function observed() {
     containerNamespaces[type]=type+':['+(200+i)+']';});
   return {
     pid:34567,startBefore:'123456',startAfter:'123456',comm:'node',
+    cmdline:[entry,cmd,witnessArg,''].join('\0'),
     hostNamespaces,containerNamespaces,
     cgroup:'0::/system.slice/docker-'+id+'.scope',
     status:['Name:\tnode','Uid:\t65534\t65534\t65534\t65534',
@@ -86,6 +87,9 @@ reject('incorrect host namespace type',(d,w)=>{w.containerNamespaces.user='net:[
 reject('mismatched process PID',(d,w)=>{w.pid=1;});
 reject('PID reuse/start time changed',(d,w)=>{w.startAfter='123457';});
 reject('wrong process name',(d,w)=>{w.comm='bash';});
+reject('unapproved host-observed process arguments',(d,w)=>{w.cmdline=[entry,'/tmp/other.cjs',witnessArg,''].join('\0');});
+reject('unapproved extra host-observed arguments',(d,w)=>{w.cmdline=[entry,cmd,witnessArg,'--unexpected',''].join('\0');});
+reject('truncated proc cmdline',(d,w)=>{w.cmdline=[entry,cmd,witnessArg].join('\0');});
 reject('no cgroup identifier binding',(d,w)=>{w.cgroup='0::/system.slice/unrelated.scope';});
 reject('cgroup v1 record',(d,w)=>{w.cgroup='12:pids:/docker/'+id;});
 reject('host-root mapping',(d,w)=>{w.uidMap='0 0 65536';});
@@ -102,9 +106,19 @@ reject('swap enabled',(d,w)=>{w.swap='10000';});
 reject('unapproved additional exec process',(d)=>{d[0].ExecIDs=['unknown'];});
 reject('already restarted container',(d)=>{d[0].RestartCount=1;});
 reject('halted container',(d)=>{d[0].State.Running=false;d[0].State.Status='exited';});
+test('exact proc argv parser refuses missing NUL or executable changes',()=>{
+ assert.equal(matchesProbeCommandLine([entry,cmd,witnessArg,''].join('\0')),true);
+ for(const bad of ['', [entry,cmd,witnessArg].join('\0'),['node',cmd,witnessArg,''].join('\0'),
+  [entry,cmd,'--witness-window=3600',''].join('\0'),[entry,cmd,witnessArg,'hidden',''].join('\0')]){
+  assert.equal(matchesProbeCommandLine(bad),false);
+ }
+});
 test('cgroup identity requires single bounded v2 container path',()=>{
   assert.equal(cgroupRelativePath('0::/system.slice/docker-'+id+'.scope',id),'/system.slice/docker-'+id+'.scope');
-  for(const bad of ['1:cpu:/docker/'+id,'0::/../docker/'+id,'0::/docker/'+id+'\n0::/foo', '0::/']){
+  for(const bad of ['1:cpu:/docker/'+id,'0::/../docker/'+id,'0::/docker/'+id+'\n0::/foo', '0::/',
+     '0::/docker/'+id.slice(0,12), '0::/docker-'+id.slice(0,12)+'.scope',
+     '0::/notdocker-'+id+'.scope', '0::/prefix'+id+'suffix',
+     '0::/system.slice/docker-'+id.slice(0,12)+'0'.repeat(52)+'.scope']){
     assert.equal(cgroupRelativePath(bad,id),null,bad);
   }
 });
