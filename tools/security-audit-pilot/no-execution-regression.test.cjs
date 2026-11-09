@@ -11,8 +11,9 @@ const {test} = require('node:test');
 const SOURCES = Object.freeze({
   'preflight.cjs': ['node:fs','node:path','node:crypto'],
   'check-container-policy.cjs': ['node:fs','node:path','node:util'],
-  'check-oci-identity.cjs': ['./check-container-policy.cjs'],
-  'check-oci-bundle-policy.cjs': ['./check-container-policy.cjs','./check-oci-identity.cjs'],
+  'check-oci-identity.cjs': ['./check-container-policy.cjs','./unique-json.cjs'],
+  'check-oci-bundle-policy.cjs': ['./check-container-policy.cjs','./check-oci-identity.cjs','./unique-json.cjs'],
+  'unique-json.cjs': [],
   'runtime-probe.cjs': ['node:fs','node:util'],
   'host-witness.cjs': ['node:fs','node:path','node:crypto','./check-container-policy.cjs','./runtime-probe.cjs'],
 });
