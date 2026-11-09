@@ -58,6 +58,9 @@ invalid('device cgroup override',obj=>{obj.HostConfig.DeviceCgroupRules=['c 1:3 
 invalid('capability additions',obj=>{obj.HostConfig.CapAdd=['SYS_ADMIN'];});
 invalid('missing cap drop',obj=>{obj.HostConfig.CapDrop=[];});
 invalid('unconfined profile',obj=>{obj.AppArmorProfile='unconfined';});
+invalid('additional security option overriding policy',obj=>{obj.HostConfig.SecurityOpt.push('label=disable');});
+invalid('duplicate security option',obj=>{obj.HostConfig.SecurityOpt.push('no-new-privileges:true');});
+invalid('disabled systempaths masking option',obj=>{obj.HostConfig.SecurityOpt.push('systempaths=unconfined');});
 invalid('disabled no-new-privileges',obj=>{obj.HostConfig.SecurityOpt=[];});
 invalid('host PID namespace',obj=>{obj.HostConfig.PidMode='host';});
 invalid('host UTS namespace',obj=>{obj.HostConfig.UTSMode='host';});
