@@ -128,7 +128,7 @@ jobs:
           # Ignore the runner's default Docker daemon.json to avoid inheriting
           # unrelated settings and conflicts with the separate daemon flags.
           printf '{}\n' > "$dir/daemon.json"
-          sudo dockerd \
+          sudo "$(command -v dockerd)" \
             --config-file "$dir/daemon.json" \
             --host "$socket" --pidfile "$pidfile" \
             --data-root "$dir/data" --exec-root "$dir/exec" \
@@ -143,8 +143,10 @@ jobs:
             # Restrict public CI output to a few Docker-generated error lines.
             # Sanitize path-like tokens; never print raw process environments.
             if [[ -f "$dir/daemon.log" ]]; then
-              grep -Ei 'failed to start|fatal|initializ|permission denied|operation not permitted|storage driver|userns|configuration|conflict' "$dir/daemon.log" |
-                tail -n 5 | sed -E 's%/[a-zA-Z0-9_./-]+%<ephemeral-path>%g' | cut -c 1-220 || true
+              tail -n 8 "$dir/daemon.log" |
+                sed -E 's%/[a-zA-Z0-9_./-]+%<ephemeral-path>%g' |
+                sed -E 's%[0-9]{1,3}(\.[0-9]{1,3}){3}%<host-ip>%g' |
+                cut -c 1-220 || true
             fi
             echo 'BLOCKED: isolated remapped daemon unavailable'
             exit 1
