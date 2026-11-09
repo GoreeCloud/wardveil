@@ -65,11 +65,31 @@ The last run **failed acceptance**. Supplementary process group membership viola
 
 **Disposition C: BLOCKED on real in-container kernel process groups.** The default hosted daemon remains independently **BLOCKED** on user-namespace remapping. Keep draft PR #24 and the Todoist acceptance task open.
 
+## Independent test D — why the Docker group cannot be cleared by GroupAdd configuration
+
+A fresh [GitHub-hosted runtime diagnostic (run 42620805738)](https://github.com/GoreeCloud/wardveil/actions/runs/42620805738) explicitly compared the **host-observed** supplemental group array to the host-observed primary GID, without printing either numeric identity. Its sanitized result was:
+
+> HOST GROUP EVIDENCE: primary GID also assigned as supplementary (strict zero-group policy still fails)
+
+The in-container first-party Go probe separately returned **\`BLOCKED: supplementary group membership\`**. Docker inspection reported no intentional GroupAdd entries. Thus the exact runtime mechanism is now verified: the Docker-backed process carries the primary GID again within its supplementary group list, contrary to Wardveil's strict zero-supplementary-groups acceptance policy.
+
+This agrees with Moby's [\`getUser\` OCI generation](https://github.com/moby/moby/blob/master/daemon/oci_linux.go), which initializes \`usr.AdditionalGids = []uint32{usr.GID}\` before adding user/GroupAdd memberships. The upstream source is a corroborating implementation explanation, not an independently authenticated attestation of the exact Docker build on every future host. In particular, \`--group-add\` being absent does **not** prove \`AdditionalGids\` is empty. **Do not reinterpret the primary GID appearing in the supplementary group array as a pass, and do not relax the zero-group kernel requirement.**
+
+### New offline OCI process identity gate
+
+A first-party, no-execution checker, [\`check-oci-identity.cjs\`](../tools/security-audit-pilot/check-oci-identity.cjs), now rejects any OCI \`process.user.additionalGids\` other than an **explicit empty array**, including the Moby-style primary-GID duplicate. It also requires exact non-root numeric credentials, private user/PID/mount/network/IPC/UTS/cgroup namespaces, non-root outside user and group maps covering the process, all five capability sets empty, \`noNewPrivileges\`, a non-unconfined AppArmor request, a deny-by-default seccomp declaration, exact first-party Node startup, restricted environment and a read-only root. The only input is a bounded, no-follow, descriptor-read OCI \`config.json\`. The checker **never runs an OCI runtime or modifies a bundle**. Its result is labeled \`OCI STATIC IDENTITY MATCH ONLY\`, not runtime validation.
+
+At [Node CI run 42621144506](https://github.com/GoreeCloud/wardveil/actions/runs/42621144506), **275/275 first-party Node tests passed**, including new negative OCI identity tests and a regression that locks the hosted smoke's strict group rejection. Go formatting/vet/race, pinned public Cloudflare file bytes and editorial checks passed separately on that code revision. As before, the independent Docker host and runtime acceptance checks **remain red by design**.
+
+### Required next architecture decision
+
+The current Docker create/run pathway cannot satisfy the strict zero-group requirement merely through \`--user UID:GID\` and an empty \`GroupAdd\`. A candidate **separately reviewed OCI-runtime path** must demonstrate that the actual \`process.user.additionalGids\` is empty *without* gaining initial privilege, bypassing AppArmor/seccomp, altering the policy, or sharing host namespaces. A static spec match is insufficient; a disposable runtime must verify actual \`/proc/<pid>/status\`, UID/GID maps, namespace inodes, mounts, cgroups, network isolation and cleanup. Any runtime change requires matching first-party host-witness, build provenance, privacy review and rollback gates. **No alternative runtime is implemented, launched, accepted or deployed by this change.**
+
 ## Unresolved acceptance requirements
 
 1. A demonstrably disposable, independently owned or approved Linux host with **effective Docker user-namespace remapping**, AppArmor enforcement, cgroup v2 CPU/memory/PID limits, and restrictive seccomp. Docker [userns-remap](https://docs.docker.com/engine/security/userns-remap/) is not equivalent to merely setting `UsernsMode` to an empty string; rootless Docker alone does not meet this profile's AppArmor requirement.
 2. An independently reviewed, pinned, immutable image build; matching approved registry manifest and local image ID; source mount permissions and recursive read-only behavior; protected first-party probe SHA-256 and explicit ephemeral-host cleanup/recovery.
-3. Resolve the **actual in-container supplementary-group rejection** from run 42559488217 without weakening the policy, then repeat a fresh first-party isolation smoke. Separately, for the exact Wardveil Node profile, compare a real `docker inspect` created-container snapshot with `check-container-policy.cjs` before the first start.
+3. Resolve the now-confirmed **primary GID duplicated in Docker's supplementary group list** (runs 42559488217 and 42620805738) **without weakening the zero-supplementary-group policy**. The new OCI-spec identity gate provides offline validation for a future separately reviewed OCI-native runtime; it does not make the Docker path acceptable. For an exact Wardveil Node profile, independently inspect the proposed runtime, trust its immutable image, and verify its host/process semantics before first start.
 4. The in-container `runtime-probe.cjs --witness-window=90` and separate host-side `host-witness.cjs` must **both** pass on the identical process, with actual kernel namespace identities, UID/GID mappings, AppArmor, seccomp, mounts, network interfaces, and cgroups independently confirmed.
 5. Independent verification of effective network egress denial, mount subtrees, process resource limits, image/probe provenance, failure recovery, privacy/retention boundaries and audit-agent execution prohibition. Only after all gates pass could an optional Cloudflare source audit be considered for separate authorization.
 
