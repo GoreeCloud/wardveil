@@ -12,6 +12,7 @@ const {readBounded, getField, mappedWithoutHostRoot, checkMounts, checkNetwork, 
 const NS_TYPES = Object.freeze(['user','pid','mnt','net','ipc','uts','cgroup']);
 const MAX_MEMORY = 512 * 1024 * 1024;
 const APPROVED_COMMAND = '/opt/wardveil/runtime-probe.cjs';
+const APPROVED_WITNESS_ARGUMENT = '--witness-window=90';
 const APPROVED_BIN = '/usr/bin/node';
 
 function parseStartTicks(stat) {
@@ -51,7 +52,8 @@ function safeSnapshot(inspect, expected) {
     Number.isSafeInteger(pid) && pid > 1 && doc.RestartCount === 0,
     'the expected first-start probe process must still be running');
   check(doc.Path === APPROVED_BIN && Array.isArray(doc.Args) &&
-    doc.Args.length === 1 && doc.Args[0] === APPROVED_COMMAND,
+    doc.Args.length === 2 && doc.Args[0] === APPROVED_COMMAND &&
+    doc.Args[1] === APPROVED_WITNESS_ARGUMENT,
     'running process must be the reviewed first-party probe command');
   check(Array.isArray(doc.ExecIDs) ? doc.ExecIDs.length === 0 : doc.ExecIDs == null,
     'container must not have additional exec processes');
