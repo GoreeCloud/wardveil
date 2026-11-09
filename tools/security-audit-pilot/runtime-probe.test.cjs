@@ -59,6 +59,15 @@ bad('writable root filesystem',r=>{r.mountinfo=r.mountinfo.replace('/ ro,relatim
 bad('writable source',r=>{r.mountinfo=r.mountinfo.replace('/source ro,relatime','/source rw,relatime');});
 bad('missing scratch noexec',r=>{r.mountinfo=r.mountinfo.replace('/scratch rw,nosuid,nodev,noexec,relatime','/scratch rw,nosuid,nodev,relatime');});
 bad('source submount',r=>{r.mountinfo+='\n'+mount(6,'/source/host-private','rw,relatime','ext4','/dev/sdc');});
+bad('unapproved host bind at unrelated mountpoint',r=>{r.mountinfo+='\n'+mount(6,'/host','ro,relatime','ext4','/dev/sda','ro');});
+bad('unapproved mount under dev',r=>{r.mountinfo+='\n'+mount(6,'/dev/secret','ro,relatime','ext4','/dev/sda','ro');});
+bad('unapproved mount under proc',r=>{r.mountinfo+='\n'+mount(6,'/proc/mount-leak','ro,relatime','tmpfs','tmpfs','ro');});
+bad('unapproved mount under etc',r=>{r.mountinfo+='\n'+mount(6,'/etc/shadow','ro,relatime','ext4','/dev/sda','ro');});
+bad('writable Docker hosts bind',r=>{r.mountinfo+='\n'+mount(6,'/etc/hosts','rw,relatime','ext4','/dev/sda','rw');});
+bad('unsafe proc mount flags',r=>{r.mountinfo=r.mountinfo.replace('/proc rw,nosuid,nodev,noexec','/proc rw,nosuid,nodev');});
+bad('sysfs writable mount',r=>{r.mountinfo+='\n'+mount(6,'/sys','rw,relatime','sysfs','sysfs','rw');});
+bad('escaped mount path rejected',r=>{r.mountinfo+='\n'+mount(6,'/escape\\\\040directory','ro,relatime','ext4','/dev/sdb','ro');});
+
 bad('scratch submount',r=>{r.mountinfo+='\n'+mount(6,'/scratch/secrets','rw,relatime','ext4','/dev/sdc');});
 bad('duplicate source mount',r=>{r.mountinfo+='\n'+mount(7,'/source','ro,relatime','ext4','/dev/sdc');});
 bad('missing source mount',r=>{r.mountinfo=r.mountinfo.split('\n').filter(x=>!x.includes('/source ')).join('\n');});
