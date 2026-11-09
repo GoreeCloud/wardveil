@@ -11,8 +11,8 @@ const source='/srv/wardveil-audit-pilot/source/test-target';
 const expected={image,source};
 function good(){return {
   State:{Status:'created',Running:false,Pid:0,Restarting:false,Paused:false,Dead:false},
-  RestartCount:0,ExecIDs:[],Path:'/usr/bin/node',Args:['/opt/wardveil/runtime-probe.cjs'],Image:'sha256:'+'c'.repeat(64),AppArmorProfile:'docker-default',
-  Config:{User:'65534:65534',Image:image,WorkingDir:'/scratch',Entrypoint:['/usr/bin/node'],Cmd:['/opt/wardveil/runtime-probe.cjs'],Tty:false,OpenStdin:false,StdinOnce:false,AttachStdin:false,Env:['HOME=/scratch/home','TMPDIR=/tmp','PATH=/usr/local/bin:/usr/bin:/bin','LANG=C.UTF-8']},
+  RestartCount:0,ExecIDs:[],Path:'/usr/bin/node',Args:['/opt/wardveil/runtime-probe.cjs','--witness-window=90'],Image:'sha256:'+'c'.repeat(64),AppArmorProfile:'docker-default',
+  Config:{User:'65534:65534',Image:image,WorkingDir:'/scratch',Entrypoint:['/usr/bin/node'],Cmd:['/opt/wardveil/runtime-probe.cjs','--witness-window=90'],Tty:false,OpenStdin:false,StdinOnce:false,AttachStdin:false,Env:['HOME=/scratch/home','TMPDIR=/tmp','PATH=/usr/local/bin:/usr/bin:/bin','LANG=C.UTF-8']},
   HostConfig:{NetworkMode:'none',Privileged:false,ReadonlyRootfs:true,CapDrop:['ALL'],CapAdd:[],SecurityOpt:['no-new-privileges:true'],
     PidMode:'',IpcMode:'private',CgroupnsMode:'private',UsernsMode:'',PidsLimit:24,Memory:256*1024*1024,MemorySwap:256*1024*1024,NanoCpus:500000000,
     OomKillDisable:false,Init:false,Runtime:'runc',Isolation:'default',CgroupParent:'',Ulimits:[],Tmpfs:{'/scratch':'rw,nosuid,nodev,noexec,size=67108864','/tmp':'rw,nosuid,nodev,noexec,size=33554432'},
@@ -34,6 +34,8 @@ invalid('unexpected container entrypoint',obj=>{obj.Config.Entrypoint=['/bin/sh'
 invalid('shell startup command',obj=>{obj.Config.Cmd=['-c','rm -rf /scratch'];});
 invalid('mismatched resolved process path',obj=>{obj.Path='/bin/sh';});
 invalid('mismatched resolved process arguments',obj=>{obj.Args=['/tmp/other.cjs'];});
+invalid('missing bounded witness argument',obj=>{obj.Config.Cmd=['/opt/wardveil/runtime-probe.cjs'];});
+invalid('extended unapproved witness window',obj=>{obj.Args[1]='--witness-window=3600';});
 invalid('container with a TTY',obj=>{obj.Config.Tty=true;});
 invalid('interactive stdin',obj=>{obj.Config.OpenStdin=true;});
 invalid('host container init wrapper',obj=>{obj.HostConfig.Init=true;});
