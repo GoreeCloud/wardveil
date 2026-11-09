@@ -115,3 +115,23 @@ test('read rejects oversized input without echoing its content',()=>{
  try{const file=path.join(dir,'huge.json');fs.writeFileSync(file,'x'.repeat(128*1024+1));assert.throws(()=>readInspectFile(file));}
  finally{fs.rmSync(dir,{recursive:true,force:true});}
 });
+
+test('read rejects symlinked ancestors before opening the evidence file',()=>{
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'wardveil-parent-check-'));
+ try {
+  const real=path.join(dir,'real');fs.mkdirSync(real);
+  const file=path.join(real,'inspect.json');fs.writeFileSync(file,JSON.stringify([good()]));
+  const link=path.join(dir,'redirect');fs.symlinkSync(real,link);
+  assert.throws(()=>readInspectFile(path.join(link,'inspect.json')));
+  assert.equal(evaluateContainerConfig(readInspectFile(file),expected).ok,true);
+ }finally{fs.rmSync(dir,{recursive:true,force:true});}
+});
+test('read rejects noncanonical path components',()=>{
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'wardveil-canonical-'));
+ try {
+  const file=path.join(dir,'inspect.json');fs.writeFileSync(file,JSON.stringify([good()]));
+  fs.mkdirSync(path.join(dir,'child'));
+  assert.throws(()=>readInspectFile(dir+'/child/../inspect.json'));
+  assert.throws(()=>readInspectFile(dir+'//inspect.json'));
+ }finally{fs.rmSync(dir,{recursive:true,force:true});}
+});
