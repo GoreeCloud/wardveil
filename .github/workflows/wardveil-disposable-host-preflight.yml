@@ -1,0 +1,113 @@
+name: Wardveil disposable-host isolation preflight (no containers)
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+    paths:
+      - .github/workflows/wardveil-disposable-host-preflight.yml
+      - tools/security-audit-pilot/**
+      - docs/security-audit-pilot.md
+
+# Explicitly read-only. Never use pull_request_target, repository secrets,
+# a privileged container, an existing owner VPS, or a personal workstation.
+permissions:
+  contents: read
+
+jobs:
+  readonly-host-check:
+    if: ${{ github.event.number == 24 && github.event.pull_request.head.repo.full_name == 'GoreeCloud/wardveil' && github.event.pull_request.head.ref == 'feat/security-audit-integrity-pilot-20261107' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Independently inspect ephemeral Linux host prerequisites
+        shell: bash
+        run: |
+          set -euo pipefail
+          failures=0
+          {
+            echo '## Wardveil runtime-isolation host preflight'
+            echo
+            echo 'Evidence scope: fresh GitHub-hosted Ubuntu runner, host configuration only.'
+            echo '**No container or Docker daemon was started or changed; no image, third-party code, or target source was executed.**'
+            echo
+            echo '| Requirement | Observed result |'
+            echo '| --- | --- |'
+          } >> "$GITHUB_STEP_SUMMARY"
+          check() {
+            local label="$1" result="$2"
+            if [[ "$result" == "PASS" ]]; then
+              echo "| $label | PASS |" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "| $label | BLOCKED |" >> "$GITHUB_STEP_SUMMARY"
+              failures=$((failures + 1))
+            fi
+          }
+
+          if [[ "$(uname -s)" == "Linux" && "$(uname -m)" == "x86_64" ]]; then
+            check "Linux x86_64 host" PASS
+          else
+            check "Linux x86_64 host" BLOCKED
+          fi
+          if [[ "$(stat -fc %T /sys/fs/cgroup 2>/dev/null || true)" == "cgroup2fs" ]]; then
+            check "Unified cgroup v2 filesystem" PASS
+          else
+            check "Unified cgroup v2 filesystem" BLOCKED
+          fi
+          cgroups="$(cat /sys/fs/cgroup/cgroup.controllers 2>/dev/null || true)"
+          if [[ " $cgroups " == *" cpu "* && " $cgroups " == *" memory "* && " $cgroups " == *" pids "* ]]; then
+            check "Available cgroup CPU / memory / PID controllers" PASS
+          else
+            check "Available cgroup CPU / memory / PID controllers" BLOCKED
+          fi
+          if [[ "$(cat /sys/module/apparmor/parameters/enabled 2>/dev/null || true)" == "Y" ]]; then
+            check "Host AppArmor module enabled" PASS
+          else
+            check "Host AppArmor module enabled" BLOCKED
+          fi
+          if [[ -S /var/run/docker.sock && -x "$(command -v docker || true)" ]]; then
+            check "Local Docker daemon/socket available" PASS
+            # Query a fixed Unix-domain socket, never arbitrary DOCKER_HOST or
+            # owner-supplied remote contexts. Do not issue lifecycle commands.
+            security="$(docker --host unix:///var/run/docker.sock info --format '{{json .SecurityOptions}}' 2>/dev/null || true)"
+            daemon_cgv="$(docker --host unix:///var/run/docker.sock info --format '{{.CgroupVersion}}' 2>/dev/null || true)"
+            if [[ "$security" == *"name=userns"* ]]; then
+              check "Daemon-wide user namespace remapping" PASS
+            else
+              check "Daemon-wide user namespace remapping" BLOCKED
+            fi
+            if [[ "$security" == *"name=apparmor"* ]]; then
+              check "Docker AppArmor integration" PASS
+            else
+              check "Docker AppArmor integration" BLOCKED
+            fi
+            if [[ "$security" == *"name=seccomp"* ]]; then
+              check "Docker seccomp integration" PASS
+            else
+              check "Docker seccomp integration" BLOCKED
+            fi
+            if [[ "$daemon_cgv" == "2" ]]; then
+              check "Docker daemon uses cgroup v2" PASS
+            else
+              check "Docker daemon uses cgroup v2" BLOCKED
+            fi
+          else
+            check "Local Docker daemon/socket available" BLOCKED
+            check "Daemon-wide user namespace remapping" BLOCKED
+            check "Docker AppArmor integration" BLOCKED
+            check "Docker seccomp integration" BLOCKED
+            check "Docker daemon uses cgroup v2" BLOCKED
+          fi
+
+          {
+            echo
+            echo 'Actual host enforcement and the existing container engine were inspected read-only;'
+            echo 'this preflight alone does not validate an image, a live container, network egress isolation,'
+            echo 'seccomp filter strength, AppArmor policy semantics, host witness, or secure cleanup.'
+            echo
+          } >> "$GITHUB_STEP_SUMMARY"
+          if (( failures > 0 )); then
+            echo "**BLOCKED:** $failures host prerequisite(s) unavailable. No container was created or run." >> "$GITHUB_STEP_SUMMARY"
+            printf 'BLOCKED: %s host isolation prerequisite(s) unmet. No container created.\n' "$failures"
+            exit 1
+          fi
+          echo '**CANDIDATE HOST ONLY:** host prerequisites visible. Independent image/container/probe acceptance is still required.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'CANDIDATE HOST ONLY: preflight passed; no container was created.'
