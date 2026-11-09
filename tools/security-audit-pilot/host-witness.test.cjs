@@ -51,7 +51,7 @@ function observed() {
     cgroup:'0::/system.slice/docker-'+id+'.scope',
     cgroupAfter:'0::/system.slice/docker-'+id+'.scope',
     status:['Name:\tnode','Pid:\t34567','NSpid:\t34567\t1','Uid:\t65534\t65534\t65534\t65534',
-      'Gid:\t65534\t65534\t65534\t65534','NoNewPrivs:\t1',
+      'Gid:\t65534\t65534\t65534\t65534','Groups:\t','TracerPid:\t0','NoNewPrivs:\t1',
       'Seccomp:\t2','Seccomp_filters:\t1',
       ...['CapInh','CapPrm','CapEff','CapBnd','CapAmb'].map(x=>x+':\t0000000000000000')].join('\n')+'\n',
     uidMap:'0 100000 65536\n',gidMap:'0 200000 65536\n',
@@ -125,6 +125,10 @@ reject('missing cgroup reread',(d,w)=>{delete w.cgroupAfter;});
 reject('cgroup v1 record',(d,w)=>{w.cgroup='12:pids:/docker/'+id;});
 reject('host-root mapping',(d,w)=>{w.uidMap='0 0 65536';});
 reject('zero effective UID',(d,w)=>{w.status=w.status.replaceAll('65534','0');});
+reject('attached tracer',(d,w)=>{w.status=w.status.replace('TracerPid:\t0','TracerPid:\t100');});
+reject('missing tracer evidence',(d,w)=>{w.status=w.status.replace('TracerPid:\t0','');});
+reject('unexpected supplementary group',(d,w)=>{w.status=w.status.replace('Groups:\t','Groups:\t0');});
+reject('missing supplementary group evidence',(d,w)=>{w.status=w.status.replace('Groups:\t','');});
 reject('disabled seccomp',(d,w)=>{w.status=w.status.replace('Seccomp:\t2','Seccomp:\t0');});
 reject('nonzero capabilities',(d,w)=>{w.status=w.status.replace('CapBnd:\t0000000000000000','CapBnd:\t0000000000000001');});
 reject('unapproved host bind',(d,w)=>{w.mountinfo+='\n'+mount(6,'/host','ro','ext4','/dev/sdb','ro');});
