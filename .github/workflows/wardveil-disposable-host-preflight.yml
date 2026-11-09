@@ -34,6 +34,9 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
           check() {
             local label="$1" result="$2"
+            # Labels and pass/block status only; never print daemon options,
+            # host paths, environment values, secrets or raw process state.
+            printf '%s: %s\n' "$label" "$result"
             if [[ "$result" == "PASS" ]]; then
               echo "| $label | PASS |" >> "$GITHUB_STEP_SUMMARY"
             else
