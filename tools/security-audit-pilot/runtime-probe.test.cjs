@@ -122,6 +122,51 @@ test('raw byte reader preserves non-UTF8 content while text reader rejects it',(
     assert.throws(()=>readBounded(name));
   } finally {fs.rmSync(dir,{recursive:true,force:true});}
 });
+test('bounded raw reader detects ordinary file growth during read',()=>{
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'wardveil-probe-grow-'));
+  const file=path.join(dir,'probe.cjs');
+  const original=fs.readSync;
+  try {
+    fs.writeFileSync(file,'known source bytes');
+    let modified=false;
+    fs.readSync=function(fd, ...args) {
+      const n=original.call(fs,fd,...args);
+      if (!modified) {
+        modified=true;
+        fs.appendFileSync(file,' injected');
+      }
+      return n;
+    };
+    assert.throws(()=>readBoundedBytes(file),/changed during bounded read/);
+    assert.equal(modified,true);
+  } finally {
+    fs.readSync=original;
+    fs.rmSync(dir,{recursive:true,force:true});
+  }
+});
+test('bounded raw reader rejects same-size file replacement during read',()=>{
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'wardveil-probe-change-'));
+  const file=path.join(dir,'probe.cjs');
+  const original=fs.readSync;
+  try {
+    fs.writeFileSync(file,'known source bytes');
+    let modified=false;
+    fs.readSync=function(fd, ...args) {
+      const n=original.call(fs,fd,...args);
+      if (!modified) {
+        modified=true;
+        fs.writeFileSync(file,'other source bytes');
+        fs.utimesSync(file,new Date('2000-01-01T00:00:00Z'),new Date('2000-01-01T00:00:00Z'));
+      }
+      return n;
+    };
+    assert.throws(()=>readBoundedBytes(file),/changed during bounded read/);
+    assert.equal(modified,true);
+  } finally {
+    fs.readSync=original;
+    fs.rmSync(dir,{recursive:true,force:true});
+  }
+});
 test('mount reader rejects unparseable records',()=>{
   assert.equal(checkMounts('garbage'),false);
   assert.equal(checkNetwork(''),false);
