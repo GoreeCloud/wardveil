@@ -26,6 +26,10 @@ jobs:
           [[ "$(stat -fc %T /sys/fs/cgroup)" == cgroup2fs ]]
           [[ "$(cat /sys/module/apparmor/parameters/enabled)" == Y ]]
           dir="$(mktemp -d "$RUNNER_TEMP/wardveil-isolation.XXXXXXXX")"
+          # Docker userns-remap needs *traversal* into its graphroot parent.
+          # 0711 permits traversal only; it does NOT expose directory listings
+          # or relax the 0600 permissions on lab files and daemon artifacts.
+          chmod 0711 "$dir"
           socket="unix://$dir/dockerd.sock"
           pidfile="$dir/dockerd.pid"
           container=""
