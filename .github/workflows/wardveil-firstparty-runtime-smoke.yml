@@ -62,6 +62,9 @@ jobs:
             return string(data)
           }
           func fail(why string) {
+            // Keep this first-party process briefly observable even on failure.
+            // No target code, subprocesses, network connections or writes.
+            time.Sleep(12*time.Second)
             fmt.Println("BLOCKED: "+why)
             os.Exit(1)
           }
@@ -202,6 +205,9 @@ jobs:
           [[ "$(sudo awk '/^Seccomp:/ {print $2}' "/proc/$hostpid/status")" == "2" ]] ||
             { echo 'BLOCKED: host-observed seccomp not filtering'; exit 1; }
           echo 'HOST NAMESPACE/SECCOMP MATCH ONLY: ephemeral remapped Docker process observed'
+          # The Docker log driver stays disabled. Attach reads only the
+          # first-party probe's bounded verdict over the local daemon socket.
+          timeout 24s sudo docker --host "$socket" attach --no-stdin --sig-proxy=false "$container" || true
           code="$(timeout 30s sudo docker --host "$socket" wait "$container")" ||
             { echo 'BLOCKED: probe exceeded bounded run time'; exit 1; }
           [[ "$code" == "0" ]] || { echo "BLOCKED: first-party self-probe failed (exit $code)"; exit 1; }
