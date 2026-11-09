@@ -55,10 +55,15 @@ function safeSnapshot(inspect, expected) {
   const doc = inspect[0];
   const e = [];
   const check = (yes, msg) => {if (!yes) e.push(msg);};
-  check(expected && /^[0-9a-f]{64}$/.test(expected.id || ''), 'expected ID must be a full container digest');
-  check(expected && /^sha256:[a-f0-9]{64}$/.test(expected.probeSha256 || ''),
+  const validExpected = expected !== null && typeof expected === 'object' &&
+    !Array.isArray(expected);
+  check(validExpected && /^[0-9a-f]{64}$/.test(expected.id || ''),
+    'expected ID must be a full container digest');
+  check(validExpected && /^sha256:[a-f0-9]{64}$/.test(expected.probeSha256 || ''),
     'reviewed first-party probe source SHA-256 is mandatory');
-  check(doc && typeof doc === 'object' && doc.Id === expected.id, 'container ID must match explicit approved target');
+  check(doc && typeof doc === 'object' && !Array.isArray(doc) &&
+    validExpected && doc.Id === expected.id,
+    'container ID must match explicit approved target');
   if (!doc || typeof doc !== 'object') return {ok:false,errors:e};
   const st = doc.State || {};
   const pid = st.Pid;
