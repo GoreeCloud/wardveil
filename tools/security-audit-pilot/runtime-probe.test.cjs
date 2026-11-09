@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const {spawnSync} = require('node:child_process');
-const {EXPLICIT_ENV,parseMap,checkMounts,checkNetwork,evaluate,readBounded,main} = require('./runtime-probe.cjs');
+const {EXPLICIT_ENV,parseMap,checkMounts,checkNetwork,evaluate,readBounded,readBoundedBytes,main} = require('./runtime-probe.cjs');
 const mount = (n,mp,opts,kind,src,superopts='rw') =>
   [n,1,'0:'+n,'/',mp,opts,'-',kind,src,superopts].join(' ');
 function good() {
@@ -101,6 +101,25 @@ test('bounded read rejects symlink and huge file',()=>{
     const cmd=spawnSync('mkfifo',[fifo],{encoding:'utf8',timeout:2000});
     assert.equal(cmd.status,0,cmd.stderr);
     assert.throws(()=>readBounded(fifo));
+  } finally {fs.rmSync(dir,{recursive:true,force:true});}
+});
+test('byte-preserving reader includes a UTF-8 BOM exactly',()=>{
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'wardveil-probe-raw-'));
+  try {
+    const name=path.join(dir,'probe.cjs');
+    const raw=Buffer.from([0xef,0xbb,0xbf,0x61,0x62,0x63]);
+    fs.writeFileSync(name,raw);
+    assert.deepEqual(readBoundedBytes(name),raw);
+  } finally {fs.rmSync(dir,{recursive:true,force:true});}
+});
+test('raw byte reader preserves non-UTF8 content while text reader rejects it',()=>{
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'wardveil-probe-binary-'));
+  try {
+    const name=path.join(dir,'probe.cjs');
+    const raw=Buffer.from([0xff,0x80,0x00,0x61]);
+    fs.writeFileSync(name,raw);
+    assert.deepEqual(readBoundedBytes(name),raw);
+    assert.throws(()=>readBounded(name));
   } finally {fs.rmSync(dir,{recursive:true,force:true});}
 });
 test('mount reader rejects unparseable records',()=>{
