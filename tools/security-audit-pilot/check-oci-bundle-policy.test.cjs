@@ -74,6 +74,11 @@ rejects('nonempty supplementary groups',x=>x.process.user.additionalGids=[65534]
 rejects('unprivileged process swapped for root',x=>x.process.user.uid=0);
 rejects('unexpected startup command',x=>x.process.args.push('bash'));
 rejects('root path absolute',x=>x.root.path='/tmp/rootfs');
+rejects('top-level Windows platform extension',x=>x.windows={});
+rejects('top-level VM runtime extension',x=>x.vm={hypervisor:{path:'/usr/bin/unknown'}});
+rejects('top-level unknown lifecycle extension',x=>x.extraLifecycle={});
+rejects('unreviewed process flags',x=>x.process.ioPriority={class:'IOPRIO_CLASS_RT'});
+
 rejects('root parent traversal',x=>x.root.path='../rootfs');
 rejects('root unexpectedly writable',x=>x.root.readonly=false);
 rejects('root extension',x=>x.root.maskedPaths=[]);
