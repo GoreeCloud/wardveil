@@ -43,8 +43,10 @@ function observed() {
   ns.forEach((type,i)=>{hostNamespaces[type]=type+':['+(100+i)+']';
     containerNamespaces[type]=type+':['+(200+i)+']';});
   return {
-    pid:34567,startBefore:'123456',startAfter:'123456',comm:'node',exe:entry,probeSha256,
+    pid:34567,startBefore:'123456',startAfter:'123456',comm:'node',
+    exe:entry,exeAfter:entry,probeSha256,probeSha256After:probeSha256,
     cmdline:[entry,cmd,witnessArg,''].join('\0'),
+    cmdlineAfter:[entry,cmd,witnessArg,''].join('\0'),
     hostNamespaces,containerNamespaces,
     cgroup:'0::/system.slice/docker-'+id+'.scope',
     cgroupAfter:'0::/system.slice/docker-'+id+'.scope',
@@ -105,6 +107,12 @@ reject('PID reuse/start time changed',(d,w)=>{w.startAfter='123457';});
 reject('wrong process name',(d,w)=>{w.comm='bash';});
 reject('host process binary changed',(d,w)=>{w.exe='/usr/bin/python3';});
 reject('host process executable deleted',(d,w)=>{w.exe='/usr/bin/node (deleted)';});
+reject('process executable changed during witness',(d,w)=>{w.exeAfter='/usr/bin/python3';});
+reject('missing process executable reread',(d,w)=>{delete w.exeAfter;});
+reject('command line changed during witness',(d,w)=>{w.cmdlineAfter=[entry,'/tmp/altered.cjs',witnessArg,''].join('\0');});
+reject('missing command line reread',(d,w)=>{delete w.cmdlineAfter;});
+reject('first-party script changed during witness',(d,w)=>{w.probeSha256After='sha256:'+'2'.repeat(64);});
+reject('missing first-party script hash reread',(d,w)=>{delete w.probeSha256After;});
 reject('host kernel PID mismatch',(d,w)=>{w.status=w.status.replace('Pid:\t34567','Pid:\t34568');});
 reject('host process not PID 1 inside namespace',(d,w)=>{w.status=w.status.replace('NSpid:\t34567\t1','NSpid:\t34567\t2');});
 reject('missing NSpid evidence',(d,w)=>{w.status=w.status.replace('NSpid:\t34567\t1','');});
