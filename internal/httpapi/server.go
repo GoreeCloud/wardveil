@@ -42,9 +42,9 @@ func NewWithStatus(data *store.Store, ingestToken, readToken, statusToken string
 		return nil, errors.New("status token must be distinct and 32..1024 bytes")
 	}
 	server := &Server{
-		store: data,
+		store:      data,
 		ingestHash: sha256.Sum256([]byte(ingestToken)),
-		readHash: sha256.Sum256([]byte(readToken)),
+		readHash:   sha256.Sum256([]byte(readToken)),
 	}
 	if statusToken != "" {
 		server.statusHash = sha256.Sum256([]byte(statusToken))
@@ -78,8 +78,8 @@ func (s *Server) Handler() http.Handler {
 				ObservedAt    string `json:"observed_at"`
 			}{
 				SchemaVersion: "wardveil.status.v1",
-				State: state,
-				ObservedAt: time.Now().UTC().Format("2006-01-02T15:04:05.000Z"),
+				State:         state,
+				ObservedAt:    time.Now().UTC().Format("2006-01-02T15:04:05.000Z"),
 			})
 		})
 	}
