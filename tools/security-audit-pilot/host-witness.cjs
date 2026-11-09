@@ -99,13 +99,16 @@ function safeHostWitness(inspect, observed, expected) {
   check(observed.startBefore != null && observed.startBefore === observed.startAfter &&
     /^\d+$/.test(observed.startBefore || ''), 'PID start time must remain stable during witness capture');
   check(observed.comm === 'node', 'host-observed process name must be node');
-  check(observed.exe === APPROVED_BIN,
-    'host-observed executable must match approved Node binary without deletion or redirection');
+  check(observed.exe === APPROVED_BIN &&
+    observed.exeAfter === observed.exe,
+    'host-observed executable must remain the approved Node binary through capture');
   check(typeof observed.probeSha256 === 'string' &&
-    observed.probeSha256 === expected.probeSha256,
-    'host-observed probe source SHA-256 must match independently reviewed source');
-  check(matchesProbeCommandLine(observed.cmdline),
-    'host-observed process argv must equal the exact first-party witness command');
+    observed.probeSha256 === expected.probeSha256 &&
+    observed.probeSha256After === observed.probeSha256,
+    'probe source SHA-256 must match reviewed bytes at both ends of capture');
+  check(matchesProbeCommandLine(observed.cmdline) &&
+    observed.cmdlineAfter === observed.cmdline,
+    'first-party command line must remain unchanged through capture');
   check(typeof observed.cgroup === 'string' &&
     !!cgroupRelativePath(observed.cgroup,expected.id),
     'host cgroup must include container ID and use cgroup v2');
@@ -202,6 +205,11 @@ function captureFromHost(inspect, expected) {
     pids:readCg('pids.max'),
   };
   witness.cgroupAfter=readBounded(proc+'/cgroup');
+  witness.exeAfter=fs.readlinkSync(proc+'/exe');
+  witness.cmdlineAfter=readBounded(proc+'/cmdline');
+  witness.probeSha256After='sha256:'+crypto.createHash('sha256')
+    .update(readBoundedBytes(proc+'/root/opt/wardveil/runtime-probe.cjs'))
+    .digest('hex');
   witness.startAfter=parseStartTicks(readBounded(proc+'/stat'));
   return witness;
 }
