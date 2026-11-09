@@ -1,6 +1,6 @@
 'use strict';
 
-// Regression tripwire for the four first-party read-only audit evidence
+// Regression tripwire for the first-party read-only audit evidence
 // programs. Source pattern checks are defense-in-depth, not a sandbox or a
 // comprehensive malware/source-code audit.
 const assert = require('node:assert/strict');
@@ -12,6 +12,7 @@ const SOURCES = Object.freeze({
   'preflight.cjs': ['node:fs','node:path','node:crypto'],
   'check-container-policy.cjs': ['node:fs','node:path','node:util'],
   'check-oci-identity.cjs': ['./check-container-policy.cjs'],
+  'check-oci-bundle-policy.cjs': ['./check-container-policy.cjs','./check-oci-identity.cjs'],
   'runtime-probe.cjs': ['node:fs','node:util'],
   'host-witness.cjs': ['node:fs','node:path','node:crypto','./check-container-policy.cjs','./runtime-probe.cjs'],
 });
