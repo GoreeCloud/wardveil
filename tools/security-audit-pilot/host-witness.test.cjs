@@ -41,11 +41,11 @@ function observed() {
   ns.forEach((type,i)=>{hostNamespaces[type]=type+':['+(100+i)+']';
     containerNamespaces[type]=type+':['+(200+i)+']';});
   return {
-    pid:34567,startBefore:'123456',startAfter:'123456',comm:'node',
+    pid:34567,startBefore:'123456',startAfter:'123456',comm:'node',exe:entry,
     cmdline:[entry,cmd,witnessArg,''].join('\0'),
     hostNamespaces,containerNamespaces,
     cgroup:'0::/system.slice/docker-'+id+'.scope',
-    status:['Name:\tnode','Uid:\t65534\t65534\t65534\t65534',
+    status:['Name:\tnode','Pid:\t34567','NSpid:\t34567\t1','Uid:\t65534\t65534\t65534\t65534',
       'Gid:\t65534\t65534\t65534\t65534','NoNewPrivs:\t1',
       'Seccomp:\t2','Seccomp_filters:\t1',
       ...['CapInh','CapPrm','CapEff','CapBnd','CapAmb'].map(x=>x+':\t0000000000000000')].join('\n')+'\n',
@@ -87,6 +87,11 @@ reject('incorrect host namespace type',(d,w)=>{w.containerNamespaces.user='net:[
 reject('mismatched process PID',(d,w)=>{w.pid=1;});
 reject('PID reuse/start time changed',(d,w)=>{w.startAfter='123457';});
 reject('wrong process name',(d,w)=>{w.comm='bash';});
+reject('host process binary changed',(d,w)=>{w.exe='/usr/bin/python3';});
+reject('host process executable deleted',(d,w)=>{w.exe='/usr/bin/node (deleted)';});
+reject('host kernel PID mismatch',(d,w)=>{w.status=w.status.replace('Pid:\t34567','Pid:\t34568');});
+reject('host process not PID 1 inside namespace',(d,w)=>{w.status=w.status.replace('NSpid:\t34567\t1','NSpid:\t34567\t2');});
+reject('missing NSpid evidence',(d,w)=>{w.status=w.status.replace('NSpid:\t34567\t1','');});
 reject('unapproved host-observed process arguments',(d,w)=>{w.cmdline=[entry,'/tmp/other.cjs',witnessArg,''].join('\0');});
 reject('unapproved extra host-observed arguments',(d,w)=>{w.cmdline=[entry,cmd,witnessArg,'--unexpected',''].join('\0');});
 reject('truncated proc cmdline',(d,w)=>{w.cmdline=[entry,cmd,witnessArg].join('\0');});
