@@ -73,6 +73,28 @@ A successful result says **ROOTFS STATIC BYTE MATCH ONLY**. An untrusted author 
 
 [Exact-code-head CI 42980723870](https://github.com/GoreeCloud/wardveil/actions/runs/42980723870) passed **412/412 Node tests**, Go formatting/vet/race, with [pinned upstream byte verification 42980723892](https://github.com/GoreeCloud/wardveil/actions/runs/42980723892) and [editorial advisory 42980724830](https://github.com/GoreeCloud/wardveil/actions/runs/42980724830) also passing at commit `2d27c869498619ed1d94e320761c5b8457adb19d`. The separate disposable-host and first-party Docker runtime acceptance workflows still failed and must remain release blockers.
 
+## Linked OCI config, manifest and rootfs evidence (November 11, 2026)
+
+The individual OCI identity, bundle-policy and rootfs checks can all pass on **different artifacts**. Their independent success alone does not prove they describe a single reviewed OCI bundle. To prevent accidentally combining unrelated successful reports, the first-party read-only [`check-oci-evidence.cjs`](../tools/security-audit-pilot/check-oci-evidence.cjs) now performs a *linked* check.
+
+It requires (1) a canonical `/absolute/bundle/config.json`, (2) an independently placed `/absolute/reviewer/manifest.json` that is **outside the candidate bundle**, and (3) two independent, lowercase 64-character SHA-256 pins. It hashes the original descriptor-read bytes of both JSON documents, rejects duplicate JSON keys and invalid OCI policies, and derives the rootfs location as **exactly the `rootfs` directory beside that `config.json`**. It then calls the same pinned-byte rootfs verifier. The caller cannot substitute a different `--rootfs` argument. A matching result is `OCI LINKED STATIC EVIDENCE MATCH ONLY`; it does not authenticate the reviewer, the proposed container runtime, or any future filesystem state.
+
+Example (static check only; pins must be supplied from an independent trusted review):
+
+```sh
+node tools/security-audit-pilot/check-oci-evidence.cjs \
+  /absolute/bundle/config.json \
+  /absolute/reviewer/manifest.json \
+  --config-sha256 "${REVIEWED_CONFIG_SHA256}" \
+  --manifest-sha256 "${REVIEWED_MANIFEST_SHA256}"
+```
+
+Separate hardening now inspects the current Linux mount table **before and after** the rootfs scan. It rejects stacked mounts at the rootfs path, any nested mountpoint beneath that path, and a change in the rootfs mount ID between observations. File and directory device IDs must agree with the opened rootfs, and directories may use only reviewed modes `0555` or `0755`, excluding setuid, setgid, sticky and hidden permission bits. Mountinfo parsing has bounded bytes/entries and rejects ambiguous escaped paths. It remains a point-in-time check, not continuous or cryptographically authenticated kernel mount evidence.
+
+**Raw-byte hash correction:** The shared descriptor-safe reader now exposes the actual bounded file bytes to opting-in verification callbacks. Both the manifest verifier and linked bundle tool hash **those bytes**, not decoded-and-reencoded JSON text. A regression test confirms that adding a UTF-8 byte-order mark changes the expected digest, even when decoded JSON fields remain equivalent.
+
+[First-party Node CI on implementing code 42983057911](https://github.com/GoreeCloud/wardveil/actions/runs/42983057911) has independently reported **446/446 passing tests, zero failures/skips**, including positive linked inert fixtures and negative pin, symlink, OCI-policy, missing-file, mountpoint and BOM tests. The full Go job was still finishing when this document revision was authored; do not interpret the Node result as a complete runtime verification. The dedicated host and Docker-runtime workflows continue to fail required isolation controls, and **no OCI-native runtime has been started**.
+
 ## Release gates not met
 
 Before executing even a first-party probe under an OCI-native runtime, independently review the runtime binary and its full dependency/supply chain, the rootfs contents, the immutable first-party probe hash, the OCI spec, the host system, AppArmor and seccomp *effective policy*, user namespace mappings, cgroup v2 resource enforcement, recursive mount restrictions, real network egress denial, and protected host-witness exchange. Scope any trial to a separately approved disposable nonproduction Linux host. Capture a reproducible failure category and securely clean up only trial-owned resources. A successful static bundle check never overrides a failed kernel probe.
