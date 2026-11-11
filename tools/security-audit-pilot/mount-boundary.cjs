@@ -9,13 +9,15 @@ const FLAGS=fs.constants.O_RDONLY|fs.constants.O_NONBLOCK|fs.constants.O_NOFOLLO
 function decodeKernelMountpoint(encoded){
   if(typeof encoded!=='string'||!encoded.startsWith('/')||encoded.length>4096)
     throw Error('invalid kernel mountpoint');
+  // Reject unknown raw backslash escapes even when another valid escape
+  // appears in the same path; mixed encodings must never pass review.
+  if(encoded.replace(/\\(?:040|011|012|134)/g,'').includes('\\'))
+    throw Error('unrecognized mountpoint escape');
   const path=encoded.replace(/\\([0-7]{3})/g,(_,oct)=>{
     if(!['040','011','012','134'].includes(oct))
       throw Error('unreviewed kernel mountpoint escape');
     return String.fromCharCode(parseInt(oct,8));
   });
-  if(path.includes('\\')&&encoded.indexOf('\\134')===-1)
-    throw Error('unrecognized mountpoint escape');
   if(path.includes('\0')||path.includes('\r')||path.includes('\n')||
      path.includes('\t'))throw Error('mountpoint control character');
   return path;
