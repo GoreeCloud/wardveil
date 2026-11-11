@@ -152,8 +152,11 @@ function main(argv){
   }
   try{
     let observed=null;
-    const manifest=readInspectFile(argv[1],txt=>{
-      observed=crypto.createHash('sha256').update(Buffer.from(txt,'utf8')).digest('hex');
+    const manifest=readInspectFile(argv[1],(txt,rawBytes)=>{
+      // Hash the actual bounded descriptor-read bytes, not decoded text.
+      // TextDecoder may remove the UTF-8 BOM; a text-based digest is not
+      // an out-of-band pin of the original on-disk file.
+      observed=crypto.createHash('sha256').update(rawBytes).digest('hex');
       return parseUniqueJson(txt);
     });
     if(observed!==argv[3])throw Error('out-of-band manifest digest mismatch');
