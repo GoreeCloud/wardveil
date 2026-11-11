@@ -216,7 +216,9 @@ function readInspectFile(file, parse=JSON.parse) {
       // The exact same bounded descriptor-backed bytes feed the selected parser.
       // Docker inspect keeps its existing behavior; OCI config uses duplicate-
       // rejecting JSON parsing without a second racy file read.
-      return parse(new TextDecoder('utf-8',{fatal:true}).decode(data));
+      // Provide original bytes to opt-in verification callbacks so hashes
+      // cannot be weakened by UTF-8 BOM stripping or text round-tripping.
+      return parse(new TextDecoder('utf-8',{fatal:true}).decode(data),data);
     } finally {fs.closeSync(fd);}
   } finally {fs.closeSync(dirFd);}
 }
