@@ -16,6 +16,7 @@ const SOURCES = Object.freeze({
   'unique-json.cjs': [],
   'check-oci-rootfs.cjs': ['node:fs','node:path','node:crypto','./check-container-policy.cjs','./unique-json.cjs','./mount-boundary.cjs'],
   'mount-boundary.cjs': ['node:fs'],
+  'check-source-mount.cjs': ['node:fs','./check-container-policy.cjs','./mount-boundary.cjs'],
   'check-oci-evidence.cjs': ['node:crypto','node:path','./check-container-policy.cjs','./unique-json.cjs','./check-oci-bundle-policy.cjs','./check-oci-rootfs.cjs'],
   'runtime-probe.cjs': ['node:fs','node:util'],
   'host-witness.cjs': ['node:fs','node:path','node:crypto','./check-container-policy.cjs','./runtime-probe.cjs'],
