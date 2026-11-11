@@ -69,12 +69,31 @@ jobs:
             if [[ "$digest" =~ ^[a-f0-9]{64}$ ]]; then
               echo 'OCI runtime candidate SHA-256 observed; trust anchor and independent review **NOT** established.' >> "$GITHUB_STEP_SUMMARY"
               label 'Candidate binary readable and hashable' 'PRESENT (UNTRUSTED)'
+              # Determine package provenance from existing local package
+              # metadata only. Dpkg ownership and version are not an
+              # independently authenticated binary signature.
+              binary="$(readlink -f "$runc" || true)"
+              pkg="$(dpkg-query -S "$binary" 2>/dev/null | head -n 1 | cut -d: -f1 || true)"
+              if [[ -n "$pkg" && "$pkg" =~ ^[a-zA-Z0-9.+_-]+$ ]]; then
+                version="$(dpkg-query -s "$pkg" 2>/dev/null |
+                  awk '$1=="Version:" {print $2}' | head -n 1 || true)"
+                if [[ "$version" =~ ^[a-zA-Z0-9.+:~_-]+$ ]]; then
+                  label 'OS package claims ownership of runtime binary' 'PRESENT (UNVERIFIED)'
+                  printf 'Candidate package/version from untrusted local metadata: %s %s\n' "$pkg" "$version" >> "$GITHUB_STEP_SUMMARY"
+                else
+                  label 'OS package claims ownership of runtime binary' 'BLOCKED'
+                fi
+              else
+                label 'OS package claims ownership of runtime binary' 'BLOCKED'
+              fi
             else
               label 'Candidate binary readable and hashable' 'BLOCKED'
+              label 'OS package claims ownership of runtime binary' 'BLOCKED'
             fi
           else
             label 'OCI-native runc executable installed' 'ABSENT'
             label 'Candidate binary readable and hashable' 'ABSENT'
+            label 'OS package claims ownership of runtime binary' 'ABSENT'
           fi
           {
             echo
