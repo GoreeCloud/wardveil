@@ -118,6 +118,21 @@ test('CLI requires a separately pinned manifest digest',()=>withFixture(x=>{
   assert.notEqual(noSha.status,0);
   assert.match(noSha.stderr,/BLOCKED/);
 }));
+test('manifest SHA-256 pins original bytes including a UTF-8 BOM',()=>withFixture(x=>{
+  const file=path.join(x.temp,'manifest-bom.json');
+  const json=Buffer.from(JSON.stringify(x.manifest),'utf8');
+  const raw=Buffer.concat([Buffer.from([0xef,0xbb,0xbf]),json]);
+  fs.writeFileSync(file,raw);
+  const plainDigest=crypto.createHash('sha256').update(json).digest('hex');
+  const rawDigest=crypto.createHash('sha256').update(raw).digest('hex');
+  assert.notEqual(plainDigest,rawDigest);
+  const incorrectPin=cli(x.root,file,plainDigest);
+  assert.notEqual(incorrectPin.status,0,'BOM must not be stripped before hashing');
+  assert.match(incorrectPin.stderr,/BLOCKED/);
+  const exactPin=cli(x.root,file,rawDigest);
+  assert.equal(exactPin.status,0,exactPin.stderr);
+  assert.match(exactPin.stdout,/ROOTFS STATIC BYTE MATCH ONLY/);
+}));
 test('CLI refuses symlinked manifest file and parent directory',()=>withFixture(x=>{
   const src=path.join(x.temp,'manifest.json'),alias=path.join(x.temp,'alias.json');
   const data=JSON.stringify(x.manifest);
