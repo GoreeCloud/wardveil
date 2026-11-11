@@ -86,6 +86,11 @@ bad('writable first-party script mode',x=>{
 });
 bad('writable rootfs directory',x=>fs.chmodSync(x.root,0o777));
 bad('writable nested directory',x=>fs.chmodSync(path.join(x.root,'usr'),0o777));
+bad('setgid root directory',x=>fs.chmodSync(x.root,0o2755));
+bad('sticky nested directory',x=>fs.chmodSync(path.join(x.root,'usr'),0o1755));
+bad('setuid nested directory',x=>fs.chmodSync(path.join(x.root,'opt'),0o4755));
+bad('no-traverse root directory',x=>fs.chmodSync(x.root,0o700));
+bad('unreviewed mode on nested directory',x=>fs.chmodSync(path.join(x.root,'opt'),0o711));
 bad('different expected manifest digest',x=>x.manifest.files[1].sha256='0'.repeat(64));
 bad('unreviewed manifest file mode',x=>x.manifest.files[1].mode='0777');
 bad('out-of-order manifest file list',x=>x.manifest.files.reverse());
