@@ -50,10 +50,31 @@ node tools/security-audit-pilot/check-oci-identity.cjs /absolute/path/to/reviewe
 node tools/security-audit-pilot/check-oci-bundle-policy.cjs /absolute/path/to/reviewed/config.json
 ```
 
-A successful result says **OCI STATIC IDENTITY MATCH ONLY** or **OCI STATIC BUNDLE POLICY MATCH ONLY**. It does not certify any bytes within `rootfs`, symlink descendants, host permissions, kernel enforcement or the integrity of the runtime binary. The second tool currently checks proposed mount source *strings*, not the source inode or whether a host source mount is already exposed.
+The first two successful results say **OCI STATIC IDENTITY MATCH ONLY** or **OCI STATIC BUNDLE POLICY MATCH ONLY**. Their JSON checks alone cannot certify files within `rootfs`. The separate third gate below can compare rootfs file bytes against a reviewer-supplied manifest, but even a file match does not prove runtime execution, trustworthy manifest authorship, host integrity, kernel enforcement or future immutability. The bundle-policy checker still only checks proposed `/source` bind source *strings*, not the mounted inode or whether other host data is exposed.
+
+## Manifest-pinned read-only OCI rootfs evidence
+
+A third, independent offline checker, [`check-oci-rootfs.cjs`](../tools/security-audit-pilot/check-oci-rootfs.cjs), verifies the **exact file set and bytes** of a proposed root filesystem before any runtime is used. It requires an out-of-band, independently reviewed SHA-256 digest for the **manifest**, not merely a manifest stored beside its own contents.
+
+Manifest schema: `wardveil-oci-rootfs-v1`, with lexicographically ordered, unique `files` entries, each containing exactly `path`, `size`, lowercase SHA-256 `sha256`, and restrictive `mode` (`0444` or `0555`). Required paths are `usr/bin/node` (mode `0555`) and `opt/wardveil/runtime-probe.cjs` (mode `0444`). Additional runtime libraries must be explicitly named and pinned, not inferred. The 512-file manifest limit, 128 MiB per-file limit, 512 MiB aggregate limit, and 12-component path depth are **preflight bounds**, not an assertion that a working Node image fits these limits.
+
+The checker opens every ancestor relative to a Linux directory descriptor with `O_NOFOLLOW`, walks every directory without following symlinks, refuses unlisted files and empty/unlisted directories, and refuses hardlinked, nonregular or writable-by-group/other entries. It hashes actual file contents in bounded chunks and compares file and directory metadata before and after reading to detect observed mutations. It also uses the duplicate-safe parser on the original single bounded manifest-file read. No bundle extraction, chmod, chown, network request, subprocess, or OCI runtime action occurs.
+
+Example (static check only; `REVIEWED_MANIFEST_DIGEST` must be obtained from an independent trusted review):
+
+```sh
+node tools/security-audit-pilot/check-oci-rootfs.cjs \
+  /absolute/reviewed/rootfs \
+  /absolute/reviewed/manifest.json \
+  --manifest-sha256 "${REVIEWED_MANIFEST_DIGEST}"
+```
+
+A successful result says **ROOTFS STATIC BYTE MATCH ONLY**. An untrusted author can manufacture a manifest and matching digest; consequently a digest becomes meaningful only if the manifest itself is reviewed and pinned independently. This checker does not authenticate OCI binaries, kernel mounts, libraries after validation, memory execution, dynamic-loader behavior, or subsequent image-layer changes. The strict no-symlink profile may reject otherwise legitimate Linux rootfs layouts and must not be relaxed without independent review.
+
+[Exact-code-head CI 42980723870](https://github.com/GoreeCloud/wardveil/actions/runs/42980723870) passed **412/412 Node tests**, Go formatting/vet/race, with [pinned upstream byte verification 42980723892](https://github.com/GoreeCloud/wardveil/actions/runs/42980723892) and [editorial advisory 42980724830](https://github.com/GoreeCloud/wardveil/actions/runs/42980724830) also passing at commit `2d27c869498619ed1d94e320761c5b8457adb19d`. The separate disposable-host and first-party Docker runtime acceptance workflows still failed and must remain release blockers.
 
 ## Release gates not met
 
 Before executing even a first-party probe under an OCI-native runtime, independently review the runtime binary and its full dependency/supply chain, the rootfs contents, the immutable first-party probe hash, the OCI spec, the host system, AppArmor and seccomp *effective policy*, user namespace mappings, cgroup v2 resource enforcement, recursive mount restrictions, real network egress denial, and protected host-witness exchange. Scope any trial to a separately approved disposable nonproduction Linux host. Capture a reproducible failure category and securely clean up only trial-owned resources. A successful static bundle check never overrides a failed kernel probe.
 
-**Do not run the Cloudflare agent, target-controlled code, or this unverified OCI configuration on a connected laptop, VPS, production server or shared environment.** Keep PR #24 draft and the existing Todoist acceptance task open until the full runtime and GoreeShield privacy gates pass.
+**Do not run the Cloudflare agent, target-controlled code, or this unverified OCI configuration on a connected laptop, VPS, production server or shared environment.** Keep PR #24 draft until the full runtime and GoreeShield privacy gates pass. The formerly tracked Todoist task ID was inaccessible (HTTP 404 on November 11, 2026); its acceptance obligation must be reconciled in the authorized task system.
