@@ -8,6 +8,7 @@ const path=require('node:path');
 const crypto=require('node:crypto');
 const {readInspectFile}=require('./check-container-policy.cjs');
 const {parseUniqueJson}=require('./unique-json.cjs');
+const {checkRootfsMountBoundary,readKernelMountinfo}=require('./mount-boundary.cjs');
 
 const MAX_FILES=512,MAX_BYTES=512*1024*1024,MAX_SINGLE=128*1024*1024,MAX_ENTRIES=8192;
 const REQUIRED_FILES=['opt/wardveil/runtime-probe.cjs','usr/bin/node'];
@@ -19,6 +20,12 @@ function plain(x){return x!==null&&typeof x==='object'&&!Array.isArray(x)&&
   (Object.getPrototypeOf(x)===Object.prototype||Object.getPrototypeOf(x)===null)}
 function sameStat(a,b){return a.dev===b.dev&&a.ino===b.ino&&a.mode===b.mode&&
   a.size===b.size&&a.mtimeMs===b.mtimeMs&&a.ctimeMs===b.ctimeMs}
+function safeDirectory(st,rootDev){
+  // Directory ownership is not attested by this gate. Even so, reject
+  // sticky, setgid, setuid and other unreviewed mode configurations.
+  return st.isDirectory()&&st.dev===rootDev&&
+    [0o555,0o755].includes(st.mode&0o7777);
+}
 function partsOf(p){
   if(typeof p!=='string'||!p.startsWith('/')||p==='/'||
      p.includes('//')||p.endsWith('/')||p.includes('\0'))throw Error('noncanonical absolute path');
@@ -72,12 +79,16 @@ function openPinnedDirectory(absolute){
       fd=child;
     }
     const s=fs.fstatSync(fd);
-    if(!s.isDirectory()||(s.mode&0o022)!==0)throw Error('rootfs directory must not be group/other writable');
+    if(!safeDirectory(s,s.dev))throw Error('rootfs directory must have reviewed read/traverse permissions');
     return fd;
   }catch(e){fs.closeSync(fd);throw e}
 }
 function verifyRootfs(rootfs,manifest){
   const expected=validateManifest(manifest);
+  // Snapshot mount topology BEFORE opening the proposed rootfs and after
+  // reading the complete file tree. A nested bind mount (even one whose
+  // contents match the manifest) is not accepted as original image bytes.
+  const startRootMount=checkRootfsMountBoundary(rootfs,readKernelMountinfo());
   let rootFd=openPinnedDirectory(rootfs);
   const rootBefore=fs.fstatSync(rootFd);
   let filesSeen=0,entriesSeen=0,totalRead=0;
@@ -85,7 +96,7 @@ function verifyRootfs(rootfs,manifest){
   function walk(dirFd,rel,depth){
     if(depth>12)throw Error('rootfs walk depth exceeded');
     const before=fs.fstatSync(dirFd);
-    if(!before.isDirectory()||(before.mode&0o022)!==0)throw Error('untrusted mutable directory permissions');
+    if(!safeDirectory(before,rootBefore.dev))throw Error('unreviewed directory, device or special mode bits');
     const list=fs.readdirSync('/proc/self/fd/'+dirFd);
     for(const name of list){
       if(++entriesSeen>MAX_ENTRIES||!name||name==='.'||name==='..'||name.includes('/'))
@@ -101,7 +112,7 @@ function verifyRootfs(rootfs,manifest){
       const file=fs.openSync('/proc/self/fd/'+dirFd+'/'+name,FILE_FLAGS);
       try{
         const st=fs.fstatSync(file);
-        if(!st.isFile()||st.nlink!==1||st.size!==pin.size||
+        if(!st.isFile()||st.dev!==rootBefore.dev||st.nlink!==1||st.size!==pin.size||
            (st.mode&0o7777)!==Number.parseInt(pin.mode,8))
           throw Error('nonregular, linked, oversized or differently permissioned file');
         const hash=crypto.createHash('sha256');
@@ -125,6 +136,8 @@ function verifyRootfs(rootfs,manifest){
     walk(rootFd,'',0);
     if(filesSeen!==expected.files.size||found.size!==expected.files.size||
        !sameStat(rootBefore,fs.fstatSync(rootFd)))throw Error('rootfs file set inconsistent');
+    const endRootMount=checkRootfsMountBoundary(rootfs,readKernelMountinfo());
+    if(endRootMount!==startRootMount)throw Error('rootfs mount identity changed during inspection');
     return {ok:true,files:filesSeen,bytes:totalRead};
   }finally{fs.closeSync(rootFd)}
 }
