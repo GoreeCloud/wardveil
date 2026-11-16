@@ -9,6 +9,7 @@ import (
 	"io"
 	"mime"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -18,20 +19,71 @@ import (
 )
 
 type Server struct {
-	store      *store.Store
-	ingestHash [32]byte
-	readHash   [32]byte
+	store         *store.Store
+	ingestHash    [32]byte
+	readHash      [32]byte
+	statusHash    [32]byte
+	statusEnabled bool
 }
 
+// New preserves the legacy two-scope API with no status route.
 func New(data *store.Store, ingestToken, readToken string) (*Server, error) {
-	if len(ingestToken) < 32 || len(readToken) < 32 || ingestToken == readToken {
+	return NewWithStatus(data, ingestToken, readToken, "")
+}
+
+// NewWithStatus opts a development instance into a separate, status-only scope.
+// It never gives a status reader event-read or event-ingest permissions.
+// An empty status token leaves the route unregistered (HTTP 404).
+func NewWithStatus(data *store.Store, ingestToken, readToken, statusToken string) (*Server, error) {
+	if data == nil || len(ingestToken) < 32 || len(readToken) < 32 || ingestToken == readToken {
 		return nil, errors.New("distinct ingest and read tokens of at least 32 bytes are required")
 	}
-	return &Server{store: data, ingestHash: sha256.Sum256([]byte(ingestToken)), readHash: sha256.Sum256([]byte(readToken))}, nil
+	if statusToken != "" && (len(statusToken) < 32 || len(statusToken) > 1024 ||
+		statusToken == ingestToken || statusToken == readToken) {
+		return nil, errors.New("status token must be distinct and 32..1024 bytes")
+	}
+	server := &Server{
+		store:      data,
+		ingestHash: sha256.Sum256([]byte(ingestToken)),
+		readHash:   sha256.Sum256([]byte(readToken)),
+	}
+	if statusToken != "" {
+		server.statusHash = sha256.Sum256([]byte(statusToken))
+		server.statusEnabled = true
+	}
+	return server, nil
 }
 
 func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
+	if s.statusEnabled {
+		mux.HandleFunc("GET /v1/status", func(w http.ResponseWriter, r *http.Request) {
+			// Authorize before returning any journal-writability signal.
+			if !s.authorize(w, r, s.statusHash) {
+				return
+			}
+			if r.URL.RawQuery != "" || r.URL.ForceQuery || r.ContentLength > 0 || len(r.TransferEncoding) != 0 {
+				problem(w, http.StatusBadRequest, "status request must not contain query or body")
+				return
+			}
+			// Fixed, source-owned wire contract. No event content or actor identity.
+			state := "ok"
+			code := http.StatusOK
+			if !s.store.Writable() {
+				state = "degraded"
+				code = http.StatusServiceUnavailable
+			}
+			send(w, code, struct {
+				SchemaVersion string `json:"schema_version"`
+				State         string `json:"state"`
+				ObservedAt    string `json:"observed_at"`
+			}{
+				SchemaVersion: "wardveil.status.v1",
+				State:         state,
+				ObservedAt:    time.Now().UTC().Format("2006-01-02T15:04:05.000Z"),
+			})
+		})
+	}
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
 		if !s.store.Writable() {
 			problem(w, http.StatusServiceUnavailable, "event ingestion unavailable")
@@ -53,7 +105,7 @@ func (s *Server) Handler() http.Handler {
 			decodeError(w, err)
 			return
 		}
-		if duplicateEventKeys(raw) {
+		if core.HasAmbiguousFlatJSONKeys(raw) {
 			problem(w, http.StatusBadRequest, "duplicate or invalid JSON event fields")
 			return
 		}
@@ -107,14 +159,21 @@ func (s *Server) Handler() http.Handler {
 		if !s.authorize(w, r, s.readHash) {
 			return
 		}
-		for k := range r.URL.Query() {
+		// URL.Query silently drops malformed fields. Never return private
+		// event data from a request whose entire query cannot be parsed.
+		query, err := url.ParseQuery(r.URL.RawQuery)
+		if err != nil {
+			problem(w, http.StatusBadRequest, "invalid query")
+			return
+		}
+		for k := range query {
 			if k != "limit" {
 				problem(w, http.StatusBadRequest, "unknown query parameter")
 				return
 			}
 		}
 		limit := 25
-		if values, ok := r.URL.Query()["limit"]; ok {
+		if values, ok := query["limit"]; ok {
 			if len(values) != 1 {
 				problem(w, http.StatusBadRequest, "invalid limit")
 				return
@@ -135,42 +194,13 @@ func (s *Server) Handler() http.Handler {
 	})
 }
 
-// duplicateEventKeys rejects ambiguous fields before decoding into EventInput.
-// EventInput is intentionally flat; nested values are rejected separately by
-// the typed decoder. JSON names are case-folded by encoding/json, so the check
-// must also reject case variants that could overwrite the same struct field.
-func duplicateEventKeys(raw []byte) bool {
-	dec := json.NewDecoder(bytes.NewReader(raw))
-	start, err := dec.Token()
-	if err != nil || start != json.Delim('{') {
-		return true
-	}
-	seen := make(map[string]struct{})
-	for dec.More() {
-		token, err := dec.Token()
-		if err != nil {
-			return true
-		}
-		key, ok := token.(string)
-		if !ok {
-			return true
-		}
-		folded := strings.ToLower(key)
-		if _, exists := seen[folded]; exists {
-			return true
-		}
-		seen[folded] = struct{}{}
-		var value json.RawMessage
-		if err := dec.Decode(&value); err != nil {
-			return true
-		}
-	}
-	end, err := dec.Token()
-	return err != nil || end != json.Delim('}')
-}
-
 func (s *Server) authorize(w http.ResponseWriter, r *http.Request, expected [32]byte) bool {
-	parts := strings.Fields(r.Header.Get("Authorization"))
+	values := r.Header.Values("Authorization")
+	if len(values) != 1 {
+		problem(w, http.StatusUnauthorized, "bearer token required")
+		return false
+	}
+	parts := strings.Fields(values[0])
 	if len(parts) != 2 || parts[0] != "Bearer" || len(parts[1]) > 1024 {
 		problem(w, http.StatusUnauthorized, "bearer token required")
 		return false
