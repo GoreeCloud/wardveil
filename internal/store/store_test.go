@@ -133,3 +133,41 @@ func TestOpenRejectsCorruptPersistedEventContracts(t *testing.T) {
 		}
 	})
 }
+
+func TestOpenRejectsDuplicateJournalFieldsIncludingUnicodeAliases(t *testing.T) {
+	now := time.Now().UTC().Truncate(time.Second)
+	event := core.Event{EventInput: core.EventInput{
+		SchemaVersion: core.SchemaVersion, Source: "fixture", SourceEventID: "evt-1",
+		EventType: "auth.anomaly", Severity: "high", AssetID: "asset-1", OccurredAt: now,
+	}, ID: strings.Repeat("b", 32), IngestedAt: now}
+	encoded, err := json.Marshal(event)
+	if err != nil {
+		t.Fatal(err)
+	}
+	const original = `"source":"fixture"`
+	if !strings.Contains(string(encoded), original) {
+		t.Fatal("source field absent")
+	}
+	for _, test := range []struct{ name, replacement string }{
+		{"same", `"source":"fixture","source":"spoofed"`},
+		{"casefold", `"source":"fixture","SOURCE":"spoofed"`},
+		{"unicodefold", `"source":"fixture","ſource":"spoofed"`},
+		{"escaped_unicodefold", `"source":"fixture","\u017Fource":"spoofed"`},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			private := filepath.Join(t.TempDir(), "private")
+			if err := os.Mkdir(private, 0700); err != nil {
+				t.Fatal(err)
+			}
+			body := strings.Replace(string(encoded), original, test.replacement, 1) + "\n"
+			if err := os.WriteFile(filepath.Join(private, "events.jsonl"), []byte(body), 0600); err != nil {
+				t.Fatal(err)
+			}
+			reopened, err := Open(private)
+			if err == nil {
+				_ = reopened.Close()
+				t.Fatal("ambiguous journal record accepted")
+			}
+		})
+	}
+}
