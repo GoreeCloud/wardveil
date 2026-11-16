@@ -9,6 +9,7 @@ import (
 	"io"
 	"mime"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -158,14 +159,21 @@ func (s *Server) Handler() http.Handler {
 		if !s.authorize(w, r, s.readHash) {
 			return
 		}
-		for k := range r.URL.Query() {
+		// URL.Query silently drops malformed fields. Never return private
+		// event data from a request whose entire query cannot be parsed.
+		query, err := url.ParseQuery(r.URL.RawQuery)
+		if err != nil {
+			problem(w, http.StatusBadRequest, "invalid query")
+			return
+		}
+		for k := range query {
 			if k != "limit" {
 				problem(w, http.StatusBadRequest, "unknown query parameter")
 				return
 			}
 		}
 		limit := 25
-		if values, ok := r.URL.Query()["limit"]; ok {
+		if values, ok := query["limit"]; ok {
 			if len(values) != 1 {
 				problem(w, http.StatusBadRequest, "invalid limit")
 				return
