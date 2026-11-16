@@ -24,3 +24,25 @@ func lockWriter(file *os.File) error {
 		}
 	}
 }
+
+// openPrivateJournal checks the opened inode, not only a pathname inspected
+// before open. The final O_NOFOLLOW also prevents a symlink substitution.
+// A second hard link can expose journal data or accept writes outside the
+// private directory, even with mode 0600.
+func openPrivateJournal(name string) (*os.File, error) {
+	file, err := os.OpenFile(name, os.O_CREATE|os.O_RDWR|syscall.O_NOFOLLOW, 0600)
+	if err != nil {
+		return nil, err
+	}
+	info, err := file.Stat()
+	if err != nil {
+		file.Close()
+		return nil, err
+	}
+	stat, ok := info.Sys().(*syscall.Stat_t)
+	if !ok || !info.Mode().IsRegular() || info.Mode().Perm()&0077 != 0 || stat.Nlink != 1 {
+		file.Close()
+		return nil, errors.New("journal file must be a private, singly linked regular file (0600)")
+	}
+	return file, nil
+}
