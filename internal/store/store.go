@@ -55,7 +55,7 @@ func Open(dir string) (*Store, error) {
 	} else if !os.IsNotExist(err) {
 		return nil, err
 	}
-	file, err := os.OpenFile(name, os.O_CREATE|os.O_RDWR, 0600)
+	file, err := openPrivateJournal(name)
 	if err != nil {
 		return nil, err
 	}
