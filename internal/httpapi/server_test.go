@@ -127,6 +127,8 @@ func TestDuplicateEventJSONKeysAreRejected(t *testing.T) {
 		{"conflicting_value", `"source":"identity","source":"spoofed"`},
 		{"case_variant", `"source":"identity","SOURCE":"spoofed"`},
 		{"mixed_case_variant", `"source":"identity","SoUrCe":"spoofed"`},
+		{"unicode_fold_variant", `"source":"identity","ſource":"spoofed"`},
+		{"escaped_unicode_fold_variant", `"source":"identity","\u017Fource":"spoofed"`},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			body := bytes.Replace(valid, original, []byte(tc.replacement), 1)

@@ -196,7 +196,7 @@ func duplicateEventKeys(raw []byte) bool {
 	if err != nil || start != json.Delim('{') {
 		return true
 	}
-	seen := make(map[string]struct{})
+	seen := make([]string, 0, 16)
 	for dec.More() {
 		token, err := dec.Token()
 		if err != nil {
@@ -206,11 +206,15 @@ func duplicateEventKeys(raw []byte) bool {
 		if !ok {
 			return true
 		}
-		folded := strings.ToLower(key)
-		if _, exists := seen[folded]; exists {
-			return true
+		// encoding/json resolves struct fields using Unicode simple folding.
+		// Lowercasing alone misses equivalent names such as "source" and
+		// "ſource", allowing a second field to overwrite the first.
+		for _, previous := range seen {
+			if strings.EqualFold(previous, key) {
+				return true
+			}
 		}
-		seen[folded] = struct{}{}
+		seen = append(seen, key)
 		var value json.RawMessage
 		if err := dec.Decode(&value); err != nil {
 			return true
