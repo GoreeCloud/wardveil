@@ -1,0 +1,101 @@
+name: Wardveil OCI-native host candidate inventory (no runtime execution)
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+    paths:
+      - .github/workflows/wardveil-oci-runtime-inventory.yml
+permissions:
+  contents: read
+
+jobs:
+  readonly-candidate-inventory:
+    if: ${{ github.event.number == 24 && github.event.pull_request.head.repo.full_name == 'GoreeCloud/wardveil' && github.event.pull_request.head.ref == 'feat/security-audit-integrity-pilot-20261107' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    steps:
+      - name: Read-only first-party host capability inventory
+        shell: bash
+        run: |
+          set -euo pipefail
+          # No checkout, sudo, package changes, image pulls, Docker socket,
+          # runc invocation, namespaces, mounts, or process creation.
+          # Even positive observations are only candidate evidence.
+          {
+            echo '## Wardveil OCI-native candidate host inventory'
+            echo
+            echo '**Read-only host inventory only. No OCI runtime started or executed. Not a release gate PASS.**'
+            echo
+            echo '| Observed property | Result |'
+            echo '| --- | --- |'
+          } >> "$GITHUB_STEP_SUMMARY"
+          label() {
+            local name="$1" verdict="$2"
+            printf '%s: %s\n' "$name" "$verdict"
+            printf '| %s | %s |\n' "$name" "$verdict" >> "$GITHUB_STEP_SUMMARY"
+          }
+          if [[ "$(uname -s)" == "Linux" && "$(uname -m)" == "x86_64" ]]; then
+            label 'Linux x86_64' 'PRESENT'
+          else
+            label 'Linux x86_64' 'ABSENT'
+          fi
+          if [[ "$(stat -fc %T /sys/fs/cgroup 2>/dev/null || true)" == "cgroup2fs" ]]; then
+            label 'Unified cgroup v2' 'PRESENT'
+          else
+            label 'Unified cgroup v2' 'ABSENT'
+          fi
+          controllers="$(cat /sys/fs/cgroup/cgroup.controllers 2>/dev/null || true)"
+          if [[ " $controllers " == *" cpu "* && " $controllers " == *" memory "* &&
+                " $controllers " == *" pids "* ]]; then
+            label 'CPU, memory, PID cgroup controllers' 'PRESENT'
+          else
+            label 'CPU, memory, PID cgroup controllers' 'ABSENT'
+          fi
+          if [[ "$(cat /sys/module/apparmor/parameters/enabled 2>/dev/null || true)" == "Y" ]]; then
+            label 'AppArmor kernel support' 'PRESENT'
+          else
+            label 'AppArmor kernel support' 'ABSENT'
+          fi
+          if [[ -e /proc/self/ns/user && -e /proc/self/ns/net &&
+                -e /proc/self/ns/pid && -e /proc/self/ns/cgroup ]]; then
+            label 'User/net/PID/cgroup namespace interfaces' 'PRESENT'
+          else
+            label 'User/net/PID/cgroup namespace interfaces' 'ABSENT'
+          fi
+          runc="$(command -v runc || true)"
+          if [[ -n "$runc" && -f "$runc" && -x "$runc" ]]; then
+            label 'OCI-native runc executable installed' 'PRESENT (UNREVIEWED)'
+            # Fingerprint candidate bytes only, not a signed package.
+            digest="$(sha256sum "$runc" | awk '{print $1}')"
+            if [[ "$digest" =~ ^[a-f0-9]{64}$ ]]; then
+              echo 'OCI runtime candidate SHA-256 observed; trust anchor and independent review **NOT** established.' >> "$GITHUB_STEP_SUMMARY"
+              label 'Candidate binary readable and hashable' 'PRESENT (UNTRUSTED)'
+              # Determine package provenance from existing local package
+              # metadata only. Dpkg ownership and version are not an
+              # independently authenticated binary signature.
+              binary="$(readlink -f "$runc" || true)"
+              pkg="$(dpkg-query -S "$binary" 2>/dev/null | head -n 1 | cut -d: -f1 || true)"
+              if [[ -n "$pkg" && "$pkg" =~ ^[a-zA-Z0-9.+_-]+$ ]]; then
+                version="$(dpkg-query -s "$pkg" 2>/dev/null |
+                  awk '$1=="Version:" {print $2}' | head -n 1 || true)"
+                if [[ "$version" =~ ^[a-zA-Z0-9.+:~_-]+$ ]]; then
+                  label 'OS package claims ownership of runtime binary' 'PRESENT (UNVERIFIED)'
+                  printf 'Candidate package/version from untrusted local metadata: %s %s\n' "$pkg" "$version" >> "$GITHUB_STEP_SUMMARY"
+                else
+                  label 'OS package claims ownership of runtime binary' 'BLOCKED'
+                fi
+              else
+                label 'OS package claims ownership of runtime binary' 'BLOCKED'
+              fi
+            else
+              label 'Candidate binary readable and hashable' 'BLOCKED'
+              label 'OS package claims ownership of runtime binary' 'BLOCKED'
+            fi
+          else
+            label 'OCI-native runc executable installed' 'ABSENT'
+            label 'Candidate binary readable and hashable' 'ABSENT'
+            label 'OS package claims ownership of runtime binary' 'ABSENT'
+          fi
+          {
+            echo
+            echo '**Disposition:** informational host inventory only. A separately reviewed immutable runtime binary, trusted OCI bundle, actual empty Groups field, first-party Node probe, independent host witness, seccomp, AppArmor, egress/mount and cgroup enforcement are still required. Do not execute on owner devices or approve PR #24 from this job.'
+          } >> "$GITHUB_STEP_SUMMARY"
