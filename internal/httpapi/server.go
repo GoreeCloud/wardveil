@@ -104,7 +104,7 @@ func (s *Server) Handler() http.Handler {
 			decodeError(w, err)
 			return
 		}
-		if duplicateEventKeys(raw) {
+		if core.HasAmbiguousFlatJSONKeys(raw) {
 			problem(w, http.StatusBadRequest, "duplicate or invalid JSON event fields")
 			return
 		}
@@ -184,44 +184,6 @@ func (s *Server) Handler() http.Handler {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		mux.ServeHTTP(w, r)
 	})
-}
-
-// duplicateEventKeys rejects ambiguous fields before decoding into EventInput.
-// EventInput is intentionally flat; nested values are rejected separately by
-// the typed decoder. JSON names are case-folded by encoding/json, so the check
-// must also reject case variants that could overwrite the same struct field.
-func duplicateEventKeys(raw []byte) bool {
-	dec := json.NewDecoder(bytes.NewReader(raw))
-	start, err := dec.Token()
-	if err != nil || start != json.Delim('{') {
-		return true
-	}
-	seen := make([]string, 0, 16)
-	for dec.More() {
-		token, err := dec.Token()
-		if err != nil {
-			return true
-		}
-		key, ok := token.(string)
-		if !ok {
-			return true
-		}
-		// encoding/json resolves struct fields using Unicode simple folding.
-		// Lowercasing alone misses equivalent names such as "source" and
-		// "ſource", allowing a second field to overwrite the first.
-		for _, previous := range seen {
-			if strings.EqualFold(previous, key) {
-				return true
-			}
-		}
-		seen = append(seen, key)
-		var value json.RawMessage
-		if err := dec.Decode(&value); err != nil {
-			return true
-		}
-	}
-	end, err := dec.Token()
-	return err != nil || end != json.Delim('}')
 }
 
 func (s *Server) authorize(w http.ResponseWriter, r *http.Request, expected [32]byte) bool {
