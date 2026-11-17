@@ -18,3 +18,5 @@ jobs:
         run: docker compose version
       - name: Validate private service topology without pulling or running an image
         run: python3 -m unittest discover -s tests -p 'test_clamav_deploy.py' -v
+      - name: Verify local-only auditor negative controls without a Docker daemon
+        run: python3 -m unittest discover -s tests -p 'test_clamav_vps_audit.py' -v
