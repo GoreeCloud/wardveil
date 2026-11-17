@@ -1,0 +1,20 @@
+name: Wardveil private ClamAV deployment contract
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  clamav-compose-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # official v7
+        with:
+          persist-credentials: false
+      - name: Require Docker Compose v2
+        run: docker compose version
+      - name: Validate private service topology without pulling or running an image
+        run: python3 -m unittest discover -s tests -p 'test_clamav_deploy.py' -v
