@@ -1,0 +1,48 @@
+# Wardveil backend-only ClamAV staging; no HTTP API, host mount or published port.
+# Provenance: official Cisco Talos ClamAV 1.5.4 Linux amd64 image digest,
+# independently resolved through Docker Hub registry and inspected before use.
+name: wardveil-clamav
+
+services:
+  clamd:
+    image: docker.io/clamav/clamav:1.5.4@sha256:ed2ee243029c1f3c2e13c1eadd835fbca239bbbb80bbde06627f7676a17314f2
+    platform: linux/amd64
+    pull_policy: never
+    user: clamav
+    entrypoint: ["/init-unprivileged"]
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 64
+    mem_limit: 2g
+    cpus: 2.0
+    stop_grace_period: 45s
+    environment:
+      CLAMAV_NO_MILTERD: "true"
+      CLAMD_STARTUP_TIMEOUT: "1800"
+      FRESHCLAM_CHECKS: "2"
+    volumes:
+      - signatures:/var/lib/clamav
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,noexec,size=128m
+      - /run:rw,nosuid,nodev,size=16m
+      - /var/log/clamav:rw,nosuid,nodev,uid=100,gid=101,mode=0750,size=16m
+    networks: [signature-egress]
+    healthcheck:
+      test: ["CMD-SHELL", "clamdcheck.sh"]
+      interval: 60s
+      timeout: 8s
+      retries: 3
+      start_period: 30m
+
+volumes:
+  signatures:
+    name: wardveil_clamav_signatures
+
+networks:
+  signature-egress:
+    name: wardveil_clamav_signature_egress
+    driver: bridge
+    internal: false  # FreshClam requires outbound signature updates.
+    attachable: false
