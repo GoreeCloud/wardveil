@@ -63,7 +63,11 @@ class PrivateClamavComposeTest(unittest.TestCase):
         self.assertFalse(network.get("attachable", False))
         self.assertFalse(network.get("internal", False))
         self.assertEqual(svc["environment"]["CLAMAV_NO_MILTERD"], "true")
-        self.assertTrue(svc.get("healthcheck"))
+        check = svc["healthcheck"]["test"]
+        self.assertEqual(check[0], "CMD-SHELL")
+        self.assertIn("sigtool --info /var/lib/clamav/daily.cld", check[1])
+        self.assertIn("clamdscan --version", check[1])
+        self.assertIn('test "$$loaded" = "$$disk"', check[1])
         self.assertEqual(set(self.config["volumes"]), {"signatures"})
 
 
