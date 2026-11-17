@@ -48,7 +48,7 @@ class PrivateClamavComposeTest(unittest.TestCase):
         self.assertEqual(svc["entrypoint"], ["/init-unprivileged"])
         self.assertEqual(svc["cap_drop"], ["ALL"])
         self.assertIn("no-new-privileges:true", svc["security_opt"])
-        self.assertLessEqual(int(svc["mem_limit"]), 2 * 1024**3)
+        self.assertEqual(int(svc["mem_limit"]), 4 * 1024**3)
         self.assertLessEqual(int(svc["pids_limit"]), 64)
         self.assertLessEqual(float(svc["cpus"]), 2.0)
         self.assertTrue(all(v["type"] == "volume"
@@ -69,6 +69,7 @@ class PrivateClamavComposeTest(unittest.TestCase):
         self.assertEqual(check[0], "CMD-SHELL")
         self.assertIn("sigtool --info /var/lib/clamav/daily.cld", check[1])
         self.assertIn("clamdscan --version", check[1])
+        self.assertIn("pidof freshclam", check[1])
         self.assertIn('test "$$loaded" = "$$disk"', check[1])
         self.assertEqual(set(self.config["volumes"]), {"signatures"})
 
@@ -78,6 +79,8 @@ class PrivateClamavComposeTest(unittest.TestCase):
         command = check[1].replace('$$', '$')
         tools = {
             'clamdcheck.sh': '#!/bin/sh\nexit "${MOCK_CLAMD_EXIT:-1}"\n',
+            'pidof': ('#!/bin/sh\nif [ "$MOCK_FRESHCLAM_PRESENT" = 1 ] && [ "$1" = freshclam ]; '
+                      'then exit 0; fi\nexit 1\n'),
             'sigtool': ('#!/bin/sh\nprintf "Version: %s\\n" "$MOCK_DISK_VERSION"\n'
                         'if [ "$MOCK_SIG_VERIFIED" = 1 ]; then printf "Verification OK.\\n"; fi\n'),
             'clamdscan': '#!/bin/sh\nprintf "ClamAV 1.5.4/%s/test\\n" "$MOCK_LOADED_VERSION"\n',
@@ -88,17 +91,19 @@ class PrivateClamavComposeTest(unittest.TestCase):
                 path.write_text(script, encoding='utf-8')
                 path.chmod(0o700)
             cases = [
-                ('matching', '28186', '28186', '1', '0', True),
-                ('stale_loaded_engine', '28186', '28184', '1', '0', False),
-                ('unverified_database', '28186', '28186', '0', '0', False),
-                ('unavailable_engine', '28186', '28186', '1', '1', False),
+                ('matching', '28186', '28186', '1', '0', '1', True),
+                ('stale_loaded_engine', '28186', '28184', '1', '0', '1', False),
+                ('unverified_database', '28186', '28186', '0', '0', '1', False),
+                ('unavailable_engine', '28186', '28186', '1', '1', '1', False),
+                ('stopped_updater', '28186', '28186', '1', '0', '0', False),
             ]
-            for name, disk, loaded, verified, daemon_exit, should_pass in cases:
+            for name, disk, loaded, verified, daemon_exit, updater_present, should_pass in cases:
                 with self.subTest(name=name):
                     env = dict(os.environ,
                                PATH=tmp + os.pathsep + os.environ.get('PATH', ''),
                                MOCK_DISK_VERSION=disk, MOCK_LOADED_VERSION=loaded,
-                               MOCK_SIG_VERIFIED=verified, MOCK_CLAMD_EXIT=daemon_exit)
+                               MOCK_SIG_VERIFIED=verified, MOCK_CLAMD_EXIT=daemon_exit,
+                               MOCK_FRESHCLAM_PRESENT=updater_present)
                     result = subprocess.run(['sh', '-c', command], env=env,
                                             capture_output=True, text=True,
                                             check=False, timeout=10)
