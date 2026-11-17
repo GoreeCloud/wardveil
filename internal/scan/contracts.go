@@ -85,6 +85,11 @@ type Result struct {
 // ValidateFor matches a verdict to the exact object and request; an unrelated
 // result must not be used to release a different object.
 func (r Result) ValidateFor(request Request, now time.Time) error {
+	// A caller can bypass intake validation and supply an arbitrary Request.
+	// Never accept a matching "clean" result for malformed or expired metadata.
+	if err := request.Validate(now); err != nil {
+		return errors.New("original scan request is invalid or expired")
+	}
 	if r.SchemaVersion != SchemaVersion || request.SchemaVersion != SchemaVersion {
 		return errors.New("unsupported scan result schema")
 	}
@@ -124,4 +129,15 @@ func Recommend(verdict Verdict) Disposition {
 		return EligibleForOwnerReview
 	}
 	return RetainPendingReview
+}
+
+// RecommendFor is the safe advisory entry point when the original request
+// and a returned verdict are available. A bare Clean string must never be
+// interpreted as matched scan evidence; invalid, expired or mismatched
+// results retain the owner's pre-release hold.
+func RecommendFor(request Request, result Result, now time.Time) Disposition {
+	if err := result.ValidateFor(request, now); err != nil {
+		return RetainPendingReview
+	}
+	return Recommend(result.Verdict)
 }
