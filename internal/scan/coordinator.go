@@ -180,7 +180,7 @@ func (w ScanCoordinator) Process(ctx context.Context, credential []byte, request
 	if err := ctx.Err(); err != nil {
 		return ScanAdvice{}, err
 	}
-	recommendation := Recommend(result.Verdict)
+	recommendation := RecommendFor(request, result, time.Now().UTC())
 	if err := w.Record.RecordAdvice(ctx, caller, held.LeaseID, request, result, recommendation); err != nil {
 		return ScanAdvice{}, errors.New("scan advice could not be recorded")
 	}
