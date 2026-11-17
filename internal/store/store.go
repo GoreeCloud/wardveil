@@ -55,7 +55,7 @@ func Open(dir string) (*Store, error) {
 	} else if !os.IsNotExist(err) {
 		return nil, err
 	}
-	file, err := os.OpenFile(name, os.O_CREATE|os.O_RDWR, 0600)
+	file, err := openPrivateJournal(name)
 	if err != nil {
 		return nil, err
 	}
@@ -96,6 +96,12 @@ func (s *Store) load() error {
 	for scan.Scan() {
 		if len(s.records) >= maxEvents {
 			return ErrFull
+		}
+		// A local journal record is still untrusted input. Reject ambiguous
+		// Unicode-folded keys before decoding to prevent silent source,
+		// severity or event-ID replacement during recovery.
+		if core.HasAmbiguousFlatJSONKeys(scan.Bytes()) {
+			return errors.New("invalid or ambiguous persisted event record")
 		}
 		var event core.Event
 		dec := json.NewDecoder(bytes.NewReader(scan.Bytes()))

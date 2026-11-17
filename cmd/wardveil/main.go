@@ -37,7 +37,7 @@ func run() error {
 		return err
 	}
 	defer data.Close()
-	api, err := httpapi.New(data, os.Getenv("WARDVEIL_INGEST_TOKEN"), os.Getenv("WARDVEIL_READ_TOKEN"))
+	api, err := httpapi.NewWithStatus(data, os.Getenv("WARDVEIL_INGEST_TOKEN"), os.Getenv("WARDVEIL_READ_TOKEN"), os.Getenv("WARDVEIL_STATUS_TOKEN"))
 	if err != nil {
 		return err
 	}
