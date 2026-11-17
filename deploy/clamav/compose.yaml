@@ -27,7 +27,7 @@ services:
     tmpfs:
       - /tmp:rw,nosuid,nodev,noexec,size=128m
       - /run:rw,nosuid,nodev,size=16m
-      - /var/log/clamav:rw,nosuid,nodev,size=16m
+      - /var/log/clamav:rw,nosuid,nodev,uid=100,gid=101,mode=0750,size=16m
     networks: [signature-egress]
     healthcheck:
       test: ["CMD-SHELL", "clamdcheck.sh"]
