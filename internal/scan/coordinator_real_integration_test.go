@@ -5,6 +5,7 @@ import (
 	"context"
 	"io"
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 )
@@ -32,8 +33,14 @@ func TestCoordinatorLiveClamd(t *testing.T) {
 			req := coordinatorRequest(payload)
 			reader := &trackedContent{Reader: bytes.NewReader(payload)}
 			records := 0
+			admission, err := OpenFileAdmission(filepath.Join(t.TempDir(), "private-journal"))
+			if err != nil {
+				t.Fatal(err)
+			}
 			w := ScanCoordinator{
-				Auth: coordinatorAuth(),
+				Admission: admission,
+				Capacity:  testScanLimiter(),
+				Auth:      coordinatorAuth(),
 				Source: sourceOwnerFunc(func(_ context.Context, caller VerifiedCaller, actual Request) (HeldObject, error) {
 					if caller.OwnerProduct != req.OwnerProduct || actual != req {
 						t.Fatal("owner/caller mismatch")
