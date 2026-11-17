@@ -13,7 +13,7 @@
 
 This contract defines **metadata-only requests**, **non-authoritative scan results**, and **advisory dispositions** for a future Wardveil Scan integration.
 
-The file-owning GoreeCloud product—not Wardveil—retains authority over upload visibility, quarantine, release, deletion, and access permissions. The contract does not read or execute a file, create a scan job, generate an engine verdict, invoke ClamAV, or perform security actions. It is a prerequisite for later engine adapters and service-to-service authorization work.
+The file-owning GoreeCloud product—not Wardveil—retains authority over upload visibility, quarantine, release, deletion, and access permissions. These advisory contract types do not read or execute files, create scan jobs, invoke ClamAV, or perform security actions. A separate [development-only Unix-socket adapter](clamd-adapter.md) now supports caller-provided byte streaming but is not connected to authenticated source-product integration or a running ClamAV service.
 
 ## Proposed request flow
 
@@ -37,7 +37,7 @@ The request's 1 TiB value is a **metadata validation ceiling**, not a promise of
 ## Security and failure boundaries
 
 - No arbitrary filesystem path or network URL is part of the contract.
-- There is **no upload, download, engine execution, isolation, or response adapter** in this package.
+- There is **no authenticated upload/download service, isolated daemon provisioning, job scheduling, or response adapter**. The unintegrated ClamAV protocol adapter streams only explicitly supplied bytes to a Unix socket; real engine availability and isolation are not verified.
 - The result's hash field is a claimed identity and must be verified against actual bytes by an authenticated scanning service before it may be trusted.
 - The API does not yet provide expiry, signature attestation, identity verification, multi-tenant authorization, audit persistence, cancellation, retries, job scheduling, quarantine state, or release decisions.
 - A forged but syntactically valid `clean` result remains untrusted without a signed/authenticated provider boundary and source-owner review. Validation does not establish truth.
@@ -50,4 +50,4 @@ Implementation validation should include request bounds, path-like identifier re
 
 Before the feature is integrated with a live GoreeCloud service, verify authenticated source identity, service-owned quarantine workflow, safe isolated engine execution, content-hash verification, retention rules, retries, cancellation, auditability and recovery. Integrations must not bypass GoreeCloud Vault or Identity ownership boundaries, and any native client must satisfy the governing GC UI and OS-native standards.
 
-**Status boundary:** This is implemented type and validation logic only. It is not a functioning antivirus scanner, file quarantine system, or production-ready security control.
+**Status boundary:** Advisory type/validation logic and a local Unix-socket protocol adapter exist as developer code. No real ClamAV scan, authorized upload/quarantine integration, production malware protection, or deployment has been verified.
