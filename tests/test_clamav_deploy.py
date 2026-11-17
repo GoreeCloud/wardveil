@@ -1,7 +1,9 @@
 """Fail-closed source admission for Wardveil's non-public ClamAV Compose backend."""
 import json
+import os
 import pathlib
 import subprocess
+import tempfile
 import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -69,6 +71,40 @@ class PrivateClamavComposeTest(unittest.TestCase):
         self.assertIn("clamdscan --version", check[1])
         self.assertIn('test "$$loaded" = "$$disk"', check[1])
         self.assertEqual(set(self.config["volumes"]), {"signatures"})
+
+    def test_health_gate_fails_closed_for_unloaded_or_unverified_signatures(self):
+        # Compose escapes $ as $$; Docker supplies a single $ to the shell.
+        check = self.config['services']['clamd']['healthcheck']['test']
+        command = check[1].replace('$$', '$')
+        tools = {
+            'clamdcheck.sh': '#!/bin/sh\nexit "${MOCK_CLAMD_EXIT:-1}"\n',
+            'sigtool': ('#!/bin/sh\nprintf "Version: %s\\n" "$MOCK_DISK_VERSION"\n'
+                        'if [ "$MOCK_SIG_VERIFIED" = 1 ]; then printf "Verification OK.\\n"; fi\n'),
+            'clamdscan': '#!/bin/sh\nprintf "ClamAV 1.5.4/%s/test\\n" "$MOCK_LOADED_VERSION"\n',
+        }
+        with tempfile.TemporaryDirectory(prefix='wardveil-clamav-health-') as tmp:
+            for name, script in tools.items():
+                path = pathlib.Path(tmp) / name
+                path.write_text(script, encoding='utf-8')
+                path.chmod(0o700)
+            cases = [
+                ('matching', '28186', '28186', '1', '0', True),
+                ('stale_loaded_engine', '28186', '28184', '1', '0', False),
+                ('unverified_database', '28186', '28186', '0', '0', False),
+                ('unavailable_engine', '28186', '28186', '1', '1', False),
+            ]
+            for name, disk, loaded, verified, daemon_exit, should_pass in cases:
+                with self.subTest(name=name):
+                    env = dict(os.environ,
+                               PATH=tmp + os.pathsep + os.environ.get('PATH', ''),
+                               MOCK_DISK_VERSION=disk, MOCK_LOADED_VERSION=loaded,
+                               MOCK_SIG_VERIFIED=verified, MOCK_CLAMD_EXIT=daemon_exit)
+                    result = subprocess.run(['sh', '-c', command], env=env,
+                                            capture_output=True, text=True,
+                                            check=False, timeout=10)
+                    self.assertEqual(result.returncode == 0, should_pass,
+                                     f'{name}: {result.stderr[:250]}')
+
 
 
 if __name__ == "__main__":
