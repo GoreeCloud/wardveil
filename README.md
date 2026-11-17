@@ -42,6 +42,7 @@ All interfaces must follow **GoreeCloud UI (GC UI)**, the project's governing de
 - [Security and trust model](docs/security-model.md)
 - [Delivery roadmap](docs/roadmap.md)
 - [Scan advisory contracts](docs/scan-contract.md)
+- [Local ClamAV Unix-socket adapter (development only)](docs/clamd-adapter.md) — bounded engine protocol, not yet connected to the private VPS Mesh daemon or an authorized file owner
 - [Development event service](docs/developer-setup.md)
 - [PHP2Shell offline advisory prototype](docs/php2shell-offline-advisory.md) — bounded, local-only version/role triage for explicitly supplied records; not a host scan or remediation proof
 - [ClamAV private backend Compose candidate](deploy/clamav/README.md) — VPS Mesh-only, no published ports, persistent public signature database; not yet a deployed Wardveil Scan service or authorized file-scanning API

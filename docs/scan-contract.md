@@ -4,7 +4,7 @@
 | --- | --- |
 | Document type | Technical contract |
 | Responsible owner | GoreeCloud / Wardveil |
-| Status | Development implementation; not integrated with a scanner or production service |
+| Status | Development metadata contract and local-only engine adapter; not integrated with a real source owner or production Wardveil Scan service |
 | Created / updated | 2026-10-25 |
 | Canonical location | `GoreeCloud/wardveil/docs/scan-contract.md` |
 | Code | [`internal/scan/contracts.go`](../internal/scan/contracts.go) |
@@ -37,7 +37,7 @@ The request's 1 TiB value is a **metadata validation ceiling**, not a promise of
 ## Security and failure boundaries
 
 - No arbitrary filesystem path or network URL is part of the contract.
-- There is **no upload, download, engine execution, isolation, or response adapter** in this package.
+- This package provides a **local Unix-socket ClamAV engine adapter** and synthetic tests, but no authenticated upload/download, file-owner authorization, worker isolation or production response adapter. The metadata contract alone does not scan files.
 - The result's hash field is a claimed identity and must be verified against actual bytes by an authenticated scanning service before it may be trusted.
 - The API does not yet provide expiry, signature attestation, identity verification, multi-tenant authorization, audit persistence, cancellation, retries, job scheduling, quarantine state, or release decisions.
 - A forged but syntactically valid `clean` result remains untrusted without a signed/authenticated provider boundary and source-owner review. Validation does not establish truth.
