@@ -17,20 +17,6 @@ import (
 	"testing"
 )
 
-type admissionFunc func(context.Context, VerifiedCaller, HeldObject, Request) error
-
-func (fn admissionFunc) Reserve(ctx context.Context, caller VerifiedCaller, held HeldObject, req Request) error {
-	return fn(ctx, caller, held, req)
-}
-
-func testScanLimiter() *ScanLimiter {
-	limiter, err := NewScanLimiter(2)
-	if err != nil {
-		panic(err)
-	}
-	return limiter
-}
-
 func TestFileAdmissionPersistentReplayDenial(t *testing.T) {
 	dir := filepath.Join(t.TempDir(), "private-admission")
 	journal, err := OpenFileAdmission(dir)
