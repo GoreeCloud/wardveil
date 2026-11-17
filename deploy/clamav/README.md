@@ -23,6 +23,16 @@
 5. Read back `docker compose -f deploy/clamav/compose.yaml ps`, `docker inspect` for actual ports, limits, identity and network, and `docker exec <container> clamdcheck.sh` or `clamdscan` using **only inert synthetic test fixtures**. Never submit personal files or EICAR to an unreviewed production endpoint.
 6. Verify public host ports 3310/7357 remain closed, scheduled signature refresh, freshness, disk and memory behavior, and explicit operator notification on stale signatures. Document a rollback path and test it without destroying the signature database. Keep the development-only status until the real owner-held scan handshake and privacy/authorization controls are accepted.
 
+## Read-only private backend audit
+
+The [local Python verifier](../../tools/clamav/audit_local.py) checks the **specific** Wardveil container using local `docker inspect`/`exec` without a shell, network requests, file scans or user-data output. It fails closed on missing/expired (older than 72 hours) or future-dated daily signatures, failed `sigtool --info` verification, loaded database mismatch, missing FreshClam, Docker health failures, published ports, unexpected mounts/networks or security/resource drift. It outputs a small machine-readable JSON status and exits nonzero unless ready. This is **operator-side evidence**, not signed provenance certification or user-level scan admission. Run from a pinned, reviewed source checkout on VPS Mesh with the operator's existing authorized Docker access, for example:
+
+```sh
+sg docker -c 'python3 /absolute/approved/wardveil/tools/clamav/audit_local.py --verify'
+```
+
+The audit does **not** create an alert, write to Changelogs or Monitor, schedule itself, upload telemetry or administer Docker. Dedicated monitoring, notification routing, durable scan-job audit records, successful signature reload after a later update, restore drills, and independent perimeter tests are **still pending**. Docker-group access is privileged and must not be delegated to Pages Functions or anonymous callers.
+
 ## Operational safety and rollback
 
 This compose file has no published port and never modifies an existing GoreeCloud service. For a controlled rollback of this **separate** Compose project, use `docker compose -f deploy/clamav/compose.yaml down` without `--volumes`; removing volumes would lose the downloaded signature cache. Do not use `docker system prune`, delete unrelated Docker volumes, or change the host firewall to make ClamD reachable. A rollback changes only this newly deployed private backend.
@@ -31,6 +41,6 @@ This compose file has no published port and never modifies an existing GoreeClou
 
 ## Dependency / evidence
 
-The bounded Unix-socket scan adapter and owner-held coordinator remain in unmerged development [PR #14](https://github.com/GoreeCloud/wardveil/pull/14) and its stacked successors. A lab test with synthetic signatures is **not** authoritative verification of FreshClam's real CLD/CVD database. The development-only `VerifiedCVDReadiness` draft deliberately rejects ordinary FreshClam-managed CLD databases; do not bypass it, substitute fake readiness, or promote the API until a reviewed real update-state verifier is implemented.
+The bounded Unix-socket scan adapter and development-only owner-held coordinator were ported onto protected main via [PR #37](https://github.com/GoreeCloud/wardveil/pull/37) and [PR #38](https://github.com/GoreeCloud/wardveil/pull/38). The old source branches and their stacked successors remain unmerged and should **not** be merged directly over newer main; reconcile only verified parts of the remaining dependency chain. Neither merged component is wired to a real Identity-authenticated source owner or this private VPS engine. A lab test with synthetic signatures is **not** authoritative verification of FreshClam's real CLD/CVD database. The development-only `VerifiedCVDReadiness` draft deliberately rejects ordinary FreshClam-managed CLD databases; do not bypass it, substitute fake readiness, or promote the API until a reviewed real update-state verifier is implemented.
 
 Primary references: [ClamAV official Docker deployment](https://docs.clamav.net/manual/Installing/Docker.html), [ClamAV security releases](https://www.clamav.net/downloads), [Wardveil scan contract](../../docs/scan-contract.md).
