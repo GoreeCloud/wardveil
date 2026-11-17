@@ -30,7 +30,19 @@ services:
       - /var/log/clamav:rw,nosuid,nodev,uid=100,gid=101,mode=0750,size=16m
     networks: [signature-egress]
     healthcheck:
-      test: ["CMD-SHELL", "clamdcheck.sh"]
+      # Do not accept PING while the engine still uses an older loaded
+      # daily database than FreshClam has already installed on disk.
+      test:
+        - CMD-SHELL
+        - >-
+          clamdcheck.sh &&
+          info="$$(sigtool --info /var/lib/clamav/daily.cld)" &&
+          printf '%s\n' "$$info" | grep -Fqx 'Verification OK.' &&
+          loaded="$$(clamdscan --version)" &&
+          loaded="$${loaded#*/}" &&
+          loaded="$${loaded%%/*}" &&
+          disk="$$(printf '%s\n' "$$info" | sed -n 's/^Version: //p')" &&
+          test -n "$$disk" && test "$$loaded" = "$$disk"
       interval: 60s
       timeout: 8s
       retries: 3
