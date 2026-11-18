@@ -205,12 +205,20 @@ func (c Clamd) version(ctx context.Context) (string, error) {
 func writeChunk(w io.Writer, data []byte) error {
 	var header [4]byte
 	binary.BigEndian.PutUint32(header[:], uint32(len(data)))
-	if _, err := w.Write(header[:]); err != nil {
+	n, err := w.Write(header[:])
+	if err != nil {
 		return err
 	}
+	if n != len(header) {
+		return io.ErrShortWrite
+	}
 	if len(data) > 0 {
-		if _, err := w.Write(data); err != nil {
+		n, err = w.Write(data)
+		if err != nil {
 			return err
+		}
+		if n != len(data) {
+			return io.ErrShortWrite
 		}
 	}
 	return nil
