@@ -100,7 +100,7 @@ func (c Clamd) Scan(ctx context.Context, request Request, source io.ReadCloser) 
 	stop := context.AfterFunc(ctx, func() { _ = conn.Close() })
 	defer stop()
 
-	if _, err := io.WriteString(conn, "zINSTREAM\x00"); err != nil {
+	if err := writeClamdCommand(conn, "zINSTREAM\x00"); err != nil {
 		return Result{}, fmt.Errorf("clamd command failed: %w", err)
 	}
 	hash := sha256.New()
@@ -184,7 +184,7 @@ func (c Clamd) version(ctx context.Context) (string, error) {
 	defer conn.Close()
 	stop := context.AfterFunc(ctx, func() { _ = conn.Close() })
 	defer stop()
-	if _, err := io.WriteString(conn, "zVERSION\x00"); err != nil {
+	if err := writeClamdCommand(conn, "zVERSION\x00"); err != nil {
 		return "", err
 	}
 	reply, err := readRecord(conn)
@@ -200,6 +200,21 @@ func (c Clamd) version(ctx context.Context) (string, error) {
 		return "", errors.New("invalid clamd version identifier")
 	}
 	return version, nil
+}
+
+// writeClamdCommand never reports a complete protocol command when a
+// nonconforming writer returns a short count with nil error. For a real
+// stream socket this is an additional fail-closed safeguard, not a retry:
+// the write may have already partially reached clamd.
+func writeClamdCommand(w io.Writer, command string) error {
+	n, err := io.WriteString(w, command)
+	if err != nil {
+		return err
+	}
+	if n != len(command) {
+		return io.ErrShortWrite
+	}
+	return nil
 }
 
 func writeChunk(w io.Writer, data []byte) error {
