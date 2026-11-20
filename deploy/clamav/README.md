@@ -4,7 +4,7 @@
 
 ## Boundary
 
-- Target **VPS Mesh only** under the current infrastructure policy; never create new services on legacy VPS-01 or VPS-02.
+- Target **VPS Mesh only** under the current infrastructure policy.
 - Image: official Cisco Talos `clamav/clamav` Linux/amd64 **1.5.4**, pinned to the independently resolved image manifest digest in `compose.yaml`. Treat its digest as immutable until reviewed and deliberately updated. This is third-party GPLv2 software, **not** relicensed under Wardveil Apache-2.0.
 - Run ClamD and FreshClam with the image's official `/init-unprivileged` entrypoint as `clamav`. FreshClam needs outbound network access for public signature updates. The dedicated Compose bridge has **no host port publishing**, and neither ClamD's unauthenticated TCP port 3310 nor milter 7357 is exposed.
 - The only persistent content is a named volume for public malware signature databases. Do **not** mount host directories, home folders, upload stores, backups, credentials, browser sessions or customer samples into this container. Docker volume and container control are root-equivalent: restrict operators independently.
@@ -16,7 +16,7 @@
 
 ## Admission before initial start
 
-1. Verify the host is VPS Mesh, not a legacy VPS; sufficient RAM, disk, network egress, independent recovery, and existing service continuity. Confirm the Docker/Compose execution path is authorized and do not alter SSH/firewall/DNS.
+1. Verify the host is VPS Mesh; sufficient RAM, disk, network egress, independent recovery, and existing service continuity. Confirm the Docker/Compose execution path is authorized and do not alter SSH/firewall/DNS.
 2. Inspect the official image's origin, image source, upstream licensing, current vulnerabilities and manifest; compare its downloaded digest to the pinned value. Review any security advisories and choose an updated reviewed version where needed.
 3. From this exact checked source commit, run `docker compose -f deploy/clamav/compose.yaml config --quiet` and `python3 -m unittest discover -s tests -p 'test_clamav_deploy.py' -v`. The test requires Docker Compose; it never starts a container.
 4. **First launch only after admission:** `docker compose -f deploy/clamav/compose.yaml up --detach --no-build --pull never`. Expected non-public network and one new `clamd` container. First signature download/loading can take several minutes and requires verifying a healthy daemon and FreshClam state; a running container is not proof of readiness.
