@@ -31,7 +31,7 @@ The [local Python verifier](../../tools/clamav/audit_local.py) checks the **spec
 sg docker -c 'python3 /absolute/approved/wardveil/tools/clamav/audit_local.py --verify'
 ```
 
-The audit does **not** create an alert, write to Changelogs or Monitor, schedule itself, upload telemetry or administer Docker. Dedicated monitoring, notification routing, durable scan-job audit records, successful signature reload after a later update, restore drills, and independent perimeter tests are **still pending**. Docker-group access is privileged and must not be delegated to Pages Functions or anonymous callers.
+The audit does **not** create an alert, write to Monitor, schedule itself, upload telemetry or administer Docker. Dedicated monitoring, notification routing, durable scan-job audit records, successful signature reload after a later update, restore drills, and independent perimeter tests are **still pending**. Docker-group access is privileged and must not be delegated to Pages Functions or anonymous callers.
 
 ## Operational safety and rollback
 
